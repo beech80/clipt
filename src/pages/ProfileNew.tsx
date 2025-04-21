@@ -312,7 +312,7 @@ const Profile = () => {
     {
       id: 18,
       name: 'Day One Grinder',
-      description: 'Posted on Clipt's launch day',
+      description: 'Posted on Clipt launch day',
       icon: 'Calendar',
       points: 150,
       progress: 100, // 100% progress - already achieved
