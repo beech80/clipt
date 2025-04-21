@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useParams, useNavigate } from "react-router-dom";
+import { AnimateSharedLayout } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
 import { motion, AnimatePresence } from 'framer-motion';
@@ -72,6 +73,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('clipts');
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const scrollableRef = useRef<HTMLDivElement>(null);
   
   // Safe profile ID handling
   const profileId = id || user?.id;
@@ -345,9 +348,61 @@ const Profile = () => {
     },
   ];
   
+  // Load saved trophy progress from local storage
+  useEffect(() => {
+    const loadTrophyProgress = () => {
+      try {
+        const savedTrophyData = localStorage.getItem(`trophy_progress_${profileId}`);
+        if (savedTrophyData) {
+          const parsedData = JSON.parse(savedTrophyData);
+          // Merge saved progress with trophy definitions
+          const updatedTrophies = trophies.map(trophy => {
+            const savedTrophy = parsedData.find((t: any) => t.id === trophy.id);
+            if (savedTrophy) {
+              return {
+                ...trophy,
+                progress: savedTrophy.progress,
+                unlocked: savedTrophy.unlocked
+              };
+            }
+            return trophy;
+          });
+          setAchievements(updatedTrophies);
+        } else {
+          setAchievements(trophies);
+        }
+      } catch (error) {
+        console.error('Error loading trophy data:', error);
+        setAchievements(trophies);
+      }
+    };
+    
+    loadTrophyProgress();
+  }, [profileId]);
+  
+  // Save trophy progress to local storage
+  useEffect(() => {
+    if (achievements.length > 0) {
+      // Extract only necessary data to save
+      const trophyProgressData = achievements.map(trophy => ({
+        id: trophy.id,
+        progress: trophy.progress,
+        unlocked: trophy.unlocked
+      }));
+      
+      try {
+        localStorage.setItem(`trophy_progress_${profileId}`, JSON.stringify(trophyProgressData));
+      } catch (error) {
+        console.error('Error saving trophy data:', error);
+      }
+    }
+  }, [achievements, profileId]);
+  
   // Calculate overall achievement progress
   const totalAchievements = trophies.length;
-  const achievedCount = trophies.filter(trophy => trophy.unlocked).length;
+  const achievedCount = achievements.length > 0 
+    ? achievements.filter(trophy => trophy.unlocked).length 
+    : trophies.filter(trophy => trophy.unlocked).length;
   const overallProgress = Math.round((achievedCount / totalAchievements) * 100);
 
   // Create sample posts for testing
@@ -380,26 +435,52 @@ const Profile = () => {
 
   // Fetch profile data
   useEffect(() => {
-    const fetchProfileData = async () => {
+    // Function to update a trophy's progress
+  const updateTrophyProgress = (trophyId: number, newProgress: number) => {
+    setAchievements(prev => prev.map(trophy => {
+      if (trophy.id === trophyId) {
+        const updated = {
+          ...trophy,
+          progress: Math.min(100, newProgress),
+          unlocked: newProgress >= 100
+        };
+        
+        if (updated.unlocked && !trophy.unlocked) {
+          // Trophy just unlocked - show toast
+          toast.success(`Trophy Unlocked: ${trophy.name}`);
+        }
+        
+        return updated;
+      }
+      return trophy;
+    }));
+  };
+  
+  const fetchProfileData = async () => {
       if (!profileId) return;
       
       try {
         setLoading(true);
         setError(null);
         
-        const { data: profileData, error: profileError } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', profileId)
           .single();
         
-        if (profileError) {
-          throw new Error(profileError.message);
+        if (error) {
+          setError('Failed to load profile');
+          setLoading(false);
+          return;
         }
         
-        if (profileData) {
-          setProfile(profileData);
-          
+        setProfile(data);
+        
+        // We no longer directly set achievements here because we load from localStorage
+        // in the useEffect hook to persist progress across sessions
+        
+        try {
           // For demo purposes, generate sample content if no real data
           const samplePosts = createSamplePosts();
           setUserPosts(samplePosts);
@@ -438,16 +519,17 @@ const Profile = () => {
           } catch (error) {
             console.error("Error fetching following:", error);
           }
-          
-          // Use the trophies data defined above
-          setAchievements(trophies);
+        } catch (error) {
+          console.error("Error in fetchProfileData:", error);
+          setError(error instanceof Error ? error.message : "An unknown error occurred");
+          toast.error("Failed to load profile data");
+        } finally {
+          setLoading(false);
         }
       } catch (error) {
         console.error("Error in fetchProfileData:", error);
         setError(error instanceof Error ? error.message : "An unknown error occurred");
         toast.error("Failed to load profile data");
-      } finally {
-        setLoading(false);
       }
     };
     
@@ -534,14 +616,38 @@ const Profile = () => {
                 </div>
 
                 {/* Profile Info */}
-                <div style={{ textAlign: 'center' }}>
+                <div style={{ textAlign: 'center', position: 'relative' }}>
                   <h1 style={{ color: 'white', fontSize: '1.5rem', marginBottom: '4px' }}>
                     {profile?.display_name || profile?.full_name || profile?.username || 'Gaming Pro'}
                   </h1>
                   <div style={{ color: '#9e9e9e', marginBottom: '8px' }}>@{profile?.username || 'gamer'}</div>
-                  <p style={{ color: '#e0e0e0', maxWidth: '400px' }}>
+                  <p style={{ color: '#e0e0e0', maxWidth: '400px', marginBottom: '15px' }}>
                     {profile?.bio || 'Professional gamer with a passion for games'}
                   </p>
+                  {/* Share Profile Button */}
+                  <button
+                    onClick={() => setShareModalOpen(true)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      backgroundColor: '#222',
+                      border: '1px solid #FF5500',
+                      borderRadius: '20px',
+                      padding: '8px 16px',
+                      color: 'white',
+                      fontSize: '0.9rem',
+                      cursor: 'pointer',
+                      marginTop: '8px',
+                      marginBottom: '5px',
+                      boxShadow: '0 2px 10px rgba(255, 85, 0, 0.15)',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <Share size={16} color="#FF5500" />
+                    Share Profile
+                  </button>
                 </div>
               </div>
             </div>
@@ -643,15 +749,64 @@ const Profile = () => {
               </div>
             </div>
             
-            {/* Enhanced Trophies Display - Horizontal Scrollable with Progress Rings */}
-            <div style={{ 
-              marginBottom: '30px', 
-              overflowX: 'auto', 
-              paddingBottom: '16px',
-              WebkitOverflowScrolling: 'touch',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none'
-            }}>
+            {/* Enhanced Trophies Display - Horizontal Scrollable with Progress Rings and Scroll Indicator */}
+            <div 
+              ref={scrollableRef}
+              style={{ 
+                position: 'relative',
+                marginBottom: '30px', 
+                overflowX: 'auto', 
+                paddingBottom: '16px',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                borderLeft: '4px solid rgba(255, 85, 0, 0.3)',
+                borderRight: '4px solid rgba(255, 85, 0, 0.3)'
+              }}
+            >
+              {/* Scroll indicator arrows */}
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                right: '10px',
+                transform: 'translateY(-50%)',
+                color: '#FF5500',
+                fontSize: '20px',
+                animation: 'pulse 1s infinite alternate',
+                pointerEvents: 'none',
+                zIndex: 2
+              }}>
+                ›
+              </div>
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '10px',
+                transform: 'translateY(-50%)',
+                color: '#FF5500',
+                fontSize: '20px',
+                animation: 'pulse 1s infinite alternate',
+                pointerEvents: 'none',
+                zIndex: 2
+              }}>
+                ‹
+              </div>
+              
+              {/* "Scroll for more" indicator */}
+              <div style={{
+                position: 'absolute',
+                bottom: '2px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                color: '#FF5500',
+                fontSize: '12px',
+                opacity: 0.8,
+                pointerEvents: 'none',
+                zIndex: 2,
+                whiteSpace: 'nowrap'
+              }}>
+                Scroll for more trophies
+              </div>
               <div style={{ 
                 display: 'flex', 
                 gap: '22px', 
@@ -659,7 +814,7 @@ const Profile = () => {
                 paddingRight: '16px',
                 minWidth: 'min-content'
               }}>
-                {trophies.map((trophy) => (
+                {achievements.map((trophy) => (
                   <div key={trophy.id} style={{ 
                     display: 'flex', 
                     flexDirection: 'column', 
@@ -772,6 +927,134 @@ const Profile = () => {
                 ))}
               </div>
             </div>
+            
+            {/* Share Profile Modal */}
+            {shareModalOpen && (
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 1000,
+                padding: '20px'
+              }}>
+                <div style={{
+                  backgroundColor: '#2A1A12',
+                  borderRadius: '12px',
+                  width: '90%',
+                  maxWidth: '400px',
+                  padding: '24px',
+                  boxShadow: '0 4px 30px rgba(0, 0, 0, 0.5)',
+                  border: '1px solid rgba(255, 85, 0, 0.3)'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '20px'
+                  }}>
+                    <h3 style={{ color: 'white', margin: 0 }}>Share Profile</h3>
+                    <button 
+                      onClick={() => setShareModalOpen(false)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#999',
+                        fontSize: '20px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      marginBottom: '15px',
+                      padding: '10px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '8px'
+                    }}>
+                      <img
+                        src={profile?.avatar_url || 'https://i.imgur.com/6VBx3io.png'}
+                        alt="Profile"
+                        style={{ width: '40px', height: '40px', borderRadius: '20px' }}
+                      />
+                      <div>
+                        <p style={{ margin: 0, color: 'white' }}>{profile?.display_name || profile?.username}</p>
+                        <p style={{ margin: 0, color: '#999', fontSize: '12px' }}>{achievedCount} trophies unlocked</p>
+                      </div>
+                    </div>
+                    
+                    <p style={{ color: '#EEE', fontSize: '14px' }}>
+                      Share this profile with your friends via messages or copy the link to share anywhere.
+                    </p>
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <button
+                      onClick={() => {
+                        try {
+                          navigator.clipboard.writeText(`${window.location.origin}/profile/${profileId}`);
+                          toast.success('Profile link copied to clipboard!');
+                        } catch (err) {
+                          toast.error('Failed to copy profile link');
+                        }
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '10px',
+                        backgroundColor: '#191919',
+                        border: '1px solid #333',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        color: 'white',
+                        fontSize: '14px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Link size={18} color="#FF5500" />
+                      Copy Profile Link
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        navigate(`/messages?share=${profileId}`);
+                        setShareModalOpen(false);
+                        toast.success('You can now select a contact to share with');
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '10px',
+                        backgroundColor: '#FF5500',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        color: 'white',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <MessageSquare size={18} />
+                      Share via Messages
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Tab Navigation - Improved */}
             <div style={{ 
