@@ -116,7 +116,7 @@ const Profile = () => {
       description: 'Earn 10 trophies on a post',
       icon: 'Trophy',
       points: 50,
-      progress: 40, // 40% progress
+      progress: 0, // 0% progress
       color: '#FF5500',
       category: 'trophy',
       unlocked: false
@@ -127,7 +127,7 @@ const Profile = () => {
       description: 'Get 100 trophies on a single post',
       icon: 'Flame',
       points: 100,
-      progress: 15, // 15% progress
+      progress: 0, // 0% progress
       color: '#FF5500',
       category: 'trophy',
       unlocked: false
@@ -155,14 +155,14 @@ const Profile = () => {
       unlocked: false
     },
     
-    // 📈 Follower Growth Category
+    // Follower Growth Category
     {
       id: 5,
       name: 'Rising Star',
       description: 'Reach 1,000 followers',
       icon: 'User',
       points: 100,
-      progress: 30, // 30% progress
+      progress: 0, // 0% progress
       color: '#FF5500',
       category: 'followers',
       unlocked: false
@@ -173,13 +173,13 @@ const Profile = () => {
       description: 'Gain 10,000 followers',
       icon: 'Crown',
       points: 300,
-      progress: 5, // 5% progress
+      progress: 0, // 0% progress
       color: '#FF5500',
       category: 'followers',
       unlocked: false
     },
     
-    // 🎥 Streaming Subscriber Milestones
+    // Streaming Subscriber Milestones
     {
       id: 7,
       name: 'First Supporter',
@@ -203,14 +203,14 @@ const Profile = () => {
       unlocked: false
     },
     
-    // 🤝 Engagement Boosters
+    // Engagement Boosters
     {
       id: 9,
       name: 'Hype Squad',
-      description: 'Leave 50 comments on others posts',
+      description: 'Leave 50 comments on others\'s posts',
       icon: 'MessageSquare',
       points: 60,
-      progress: 40, // 40% progress
+      progress: 0, // 0% progress
       color: '#FF5500',
       category: 'engagement',
       unlocked: false
@@ -221,7 +221,7 @@ const Profile = () => {
       description: 'Give out 100 trophies',
       icon: 'Gift',
       points: 90,
-      progress: 20, // 20% progress
+      progress: 0, // 0% progress
       color: '#FF5500',
       category: 'engagement',
       unlocked: false
@@ -232,7 +232,7 @@ const Profile = () => {
       description: 'Receive 100 replies to your comments',
       icon: 'MessageSquare',
       points: 120,
-      progress: 10, // 10% progress
+      progress: 0, // 0% progress
       color: '#FF5500',
       category: 'engagement',
       unlocked: false
@@ -243,20 +243,20 @@ const Profile = () => {
       description: 'Start a post that gets 500+ comments',
       icon: 'Users',
       points: 150,
-      progress: 5, // 5% progress
+      progress: 0, // 0% progress
       color: '#FF5500',
       category: 'engagement',
       unlocked: false
     },
     
-    // 📢 Sharing & Promotion
+    // Sharing & Promotion
     {
       id: 13,
       name: 'Signal Booster',
-      description: 'Share 10 other creators posts',
+      description: 'Share 10 other creators\'s posts',
       icon: 'Share',
       points: 70,
-      progress: 30, // 30% progress
+      progress: 0, // 0% progress
       color: '#FF5500',
       category: 'sharing',
       unlocked: false
@@ -267,13 +267,13 @@ const Profile = () => {
       description: 'Invite 5 friends to join Clipt',
       icon: 'UserPlus',
       points: 100,
-      progress: 40, // 40% progress
+      progress: 0, // 0% progress
       color: '#FF5500',
       category: 'sharing',
       unlocked: false
     },
     
-    // 🎮 Collab & Creator Support
+    // Collab & Creator Support
     {
       id: 15,
       name: 'Duo Dynamic',
@@ -297,17 +297,17 @@ const Profile = () => {
       unlocked: false
     },
     
-    // 🎉 Special & Hidden
+    // Special & Hidden
     {
       id: 17,
       name: 'OG Clipt Creator',
       description: 'Joined within 3 months of launch',
       icon: 'Star',
       points: 100,
-      progress: 100, // 100% progress - already achieved
+      progress: 0, // 0% progress
       color: '#FF5500',
       category: 'special',
-      unlocked: true
+      unlocked: false
     },
     {
       id: 18,
@@ -315,10 +315,10 @@ const Profile = () => {
       description: 'Posted on Clipt launch day',
       icon: 'Calendar',
       points: 150,
-      progress: 100, // 100% progress - already achieved
+      progress: 0, // 0% progress
       color: '#FF5500',
       category: 'special',
-      unlocked: true
+      unlocked: false
     },
     {
       id: 19,
@@ -337,7 +337,7 @@ const Profile = () => {
       description: 'Consistently like/comment on someone for a month',
       icon: 'Heart',
       points: 80,
-      progress: 50, // 50% progress
+      progress: 0, // 0% progress
       color: '#FF5500',
       category: 'special',
       unlocked: false
