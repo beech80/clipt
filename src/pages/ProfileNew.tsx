@@ -504,180 +504,250 @@ const Profile = () => {
                       color: 'white',
                       marginBottom: '2px' 
                     }}>{achievements.length}</p>
-                    <p style={{ 
-                      fontSize: '14px', 
-                      color: '#FF7700',
-                      fontWeight: '500'
-                    }}>Achievements</p>
-                  </div>
-                </div>
 
-                <RetroArcadeProfile 
-                  profile={profile}
-                  posts={userPosts}
-                  savedClipts={savedCliptsData}
-                  achievements={achievements}
-                  followersCount={followersCount}
-                  followingCount={followingCount} 
-                  isOwnProfile={isOwnProfile}
-                  onTabChange={(tab) => setActiveTab(tab)}
-                  activeTab={activeTab}
-                />
-              </div>
+    {/* User Profile Content */}
+    <div className="profile-content glassmorphic-card">
+      {/* Profile Avatar with Level Ring and Animation */}
+      <div className="profile-avatar-container">
+        <div className="profile-avatar-glow animated-glow"></div>
+        <div className="profile-avatar-level-ring">
+          <svg width="150" height="150">
+            <circle cx="75" cy="75" r="65" stroke="#FF7700" strokeWidth="7" fill="none" style={{ filter: 'drop-shadow(0 0 14px #FF5500)' }} />
+          </svg>
+          <img
+            src={profile?.avatar_url || 'https://i.imgur.com/6VBx3io.png'}
+            alt="Profile"
+            className="profile-avatar arcade-avatar-bounce"
+          />
+          {isOwnProfile && (
+            <button className="edit-avatar-button">
+              <Camera size={16} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Profile Info */}
+      <div className="profile-info">
+        <h1 className="profile-name arcade-neon-text">{profile?.full_name || 'Gaming Pro'}</h1>
+        <div className="profile-username">@{profile?.username || 'gamer'}</div>
+        <p className="profile-bio">
+          {profile?.bio || 'Professional gamer with a passion for FPS and strategy games. I stream regularly and love to connect with my fellow gamers! Check out my latest clips and join me on my next stream.'}
+        </p>
+
+        {/* Stats Section with Icons */}
+        <div className="profile-stats">
+          <div className="stat-item animated-stat">
+            <Users size={20} className="stat-icon" />
+            <div className="stat-value">{followersCount || '12.5K'}</div>
+            <div className="stat-label">Followers</div>
+          </div>
+          <div className="stat-item animated-stat">
+            <User size={20} className="stat-icon" />
+            <div className="stat-value">{followingCount || '543'}</div>
+            <div className="stat-label">Following</div>
+          </div>
+          <div className="stat-item animated-stat">
+            <Camera size={20} className="stat-icon" />
+            <div className="stat-value">{userPosts.length || '85'}</div>
+            <div className="stat-label">Clips</div>
+          </div>
+        </div>
+
+        {/* Action Buttons - Arcade Style */}
+        <div className="action-buttons">
+          {!isOwnProfile ? (
+            <>
+              <button className="action-button primary-button arcade-glow">
+                <Users size={18} />
+                Follow
+              </button>
+              <button className="action-button secondary-button arcade-glow">
+                <MessageSquare size={18} />
+                Message
+              </button>
+            </>
+          ) : (
+            <button className="action-button secondary-button" onClick={() => navigate('/profile/edit')}>
+              <Edit size={18} />
+              Edit Profile
+            </button>
+          )}
+        </div>
+
+        {/* Profile Details */}
+        <div className="profile-details">
+          {profile?.location && (
+            <div className="detail-item">
+              <MapPin size={18} />
+              <span>{profile.location}</span>
             </div>
-            
-            {/* Profile tabs */}
-            <div className="fixed top-0 left-0 right-0 z-50 px-2 py-1" style={{ 
-              background: '#1A0F08', 
-              borderBottom: '2px solid rgba(255, 85, 0, 0.3)', 
-              boxShadow: '0 4px 20px rgba(0,0,0,0.4)' 
-            }}>
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <Button 
-                    variant="ghost" 
-                    className="p-2"
-                    onClick={() => navigate(-1)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </Button>
-                  <h1 className="text-xl font-bold">{profile?.username || 'Profile'}</h1>
-                </div>
-                {isOwnProfile && (
-                  <Button 
-                    variant="ghost" 
-                    className="p-2"
-                    onClick={() => navigate('/profile/edit')}
-                  >
-                    <Settings className="w-5 h-5" />
-                  </Button>
-                )}
-              </div>
+          )}
+          <div className="detail-item">
+            <Link size={18} />
+            <span>twitch.tv/{profile?.username || 'gamer'}</span>
+          </div>
+          <div className="detail-item">
+            <Calendar size={18} />
+            <span>Joined January 2023</span>
+          </div>
+        </div>
+
+        {/* Achievements Preview */}
+        <div className="achievement-preview">
+          <div className="achievement-header">
+            <div className="achievement-title">
+              <Trophy size={18} />
+              <span>Achievements</span>
             </div>
-
-            {/* New Direct Profile Top Section */}
-            <div className="profile-header-container arcade-bg-animated">
-  {/* Animated Arcade/Retro Neon Background */}
-  <div className="profile-cover-image">
-    <div className="profile-cover-pattern arcade-pixel-pattern"></div>
-    <div className="arcade-neon-glow"></div>
-  </div>
-
-  {/* User Profile Content */}
-  <div className="profile-content glassmorphic-card">
-    {/* Profile Avatar with Level Ring and Animation */}
-    <div className="profile-avatar-container">
-      <div className="profile-avatar-glow animated-glow"></div>
-      <div className="profile-avatar-level-ring">
-        <svg width="150" height="150">
-          <circle cx="75" cy="75" r="65" stroke="#FF7700" strokeWidth="7" fill="none" style={{ filter: 'drop-shadow(0 0 14px #FF5500)' }} />
-        </svg>
-        <img
-          src={profile?.avatar_url || 'https://i.imgur.com/6VBx3io.png'}
-          alt="Profile"
-          className="profile-avatar arcade-avatar-bounce"
-        />
-        {isOwnProfile && (
-          <button className="edit-avatar-button">
-            <Camera size={16} />
-          </button>
-        )}
+            <div className="view-all">
+              <span>View All</span>
+              <ExternalLink size={14} />
+            </div>
+          </div>
+          <div className="achievements-row">
+            {createSampleAchievements().slice(0, 5).map(achievement => (
+              <div key={achievement.id} className="achievement-card">
+                <div className="achievement-card-icon">
+                  <Trophy size={16} />
+                </div>
+                <div className="achievement-card-title">{achievement.name}</div>
+                <div className="achievement-card-points">{achievement.points} pts</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
+  </div>
 
-    {/* Profile Info */}
-    <div className="profile-info">
-      <h1 className="profile-name arcade-neon-text">{profile?.full_name || 'Gaming Pro'}</h1>
-      <div className="profile-username">@{profile?.username || 'gamer'}</div>
-      <p className="profile-bio">
-        {profile?.bio || 'Professional gamer with a passion for FPS and strategy games. I stream regularly and love to connect with my fellow gamers! Check out my latest clips and join me on my next stream.'}
-      </p>
-
-      {/* Stats Section with Icons */}
-      <div className="profile-stats">
-        <div className="stat-item animated-stat">
-          <Users size={20} className="stat-icon" />
-          <div className="stat-value">{followersCount || '12.5K'}</div>
-          <div className="stat-label">Followers</div>
-        </div>
-        <div className="stat-item animated-stat">
-          <User size={20} className="stat-icon" />
-          <div className="stat-value">{followingCount || '543'}</div>
-          <div className="stat-label">Following</div>
-        </div>
-        <div className="stat-item animated-stat">
-          <Camera size={20} className="stat-icon" />
-          <div className="stat-value">{userPosts.length || '85'}</div>
-          <div className="stat-label">Clips</div>
-        </div>
-      </div>
-
-      {/* Action Buttons - Arcade Style */}
-      <div className="action-buttons">
-        {!isOwnProfile ? (
-          <>
-            <button className="action-button primary-button arcade-glow">
-              <Users size={18} />
-              Follow
-            </button>
-            <button className="action-button secondary-button arcade-glow">
-              <MessageSquare size={18} />
-              Message
-            </button>
-                      </>
-                    ) : (
-                      <button className="action-button secondary-button" onClick={() => navigate('/profile/edit')}>
-                        <Edit size={18} />
-                        Edit Profile
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Profile Details */}
-                  <div className="profile-details">
-                    {profile?.location && (
-                      <div className="detail-item">
-                        <MapPin size={18} />
-                        <span>{profile.location}</span>
-                      </div>
-                    )}
-                    <div className="detail-item">
-                      <Link size={18} />
-                      <span>twitch.tv/{profile?.username || 'gamer'}</span>
-                    </div>
-                    <div className="detail-item">
-                      <Calendar size={18} />
-                      <span>Joined January 2023</span>
-                    </div>
-                  </div>
-
-                  {/* Achievements Preview */}
-                  <div className="achievement-preview">
-                    <div className="achievement-header">
-                      <div className="achievement-title">
-                        <Trophy size={18} />
-                        <span>Achievements</span>
-                      </div>
-                      <div className="view-all">
-                        <span>View All</span>
-                        <ExternalLink size={14} />
-                      </div>
-                    </div>
-                    <div className="achievements-row">
-                      {createSampleAchievements().slice(0, 5).map(achievement => (
-                        <div key={achievement.id} className="achievement-card">
-                          <div className="achievement-card-icon">
-                            <Trophy size={16} />
-                          </div>
-                          <div className="achievement-card-title">{achievement.name}</div>
-                          <div className="achievement-card-points">{achievement.points} pts</div>
-                        </div>
-                      ))}
-                    </div>
+  {/* Content Area */}
+  <div className="profile-content-area">
+    {activeTab === 'clipts' && (
+      <div className="tab-content">
+        <h2 className="text-xl font-bold mb-4 text-white">Clipts</h2>
+        <div className="content-grid">
+          {userPosts.map((post) => (
+            <div key={post.id} className="content-card">
+              <div className="relative pb-[100%] overflow-hidden">
+                <img 
+                  src={post.image_url} 
+                  alt={post.title} 
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-3">
+                <h3 className="text-white font-semibold mb-1">{post.title}</h3>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400 text-sm">{new Date(post.created_at).toLocaleDateString()}</span>
+                  <div className="flex items-center gap-1">
+                    <Heart size={14} className="text-orange-500" />
+                    <span className="text-sm text-gray-300">{post.likes_count}</span>
                   </div>
                 </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+    
+    {activeTab === 'achievements' && (
+      <div className="tab-content">
+        <h2 className="text-xl font-bold mb-4 text-white">Trophies</h2>
+        <div className="content-grid">
+          {achievements.map((achievement) => (
+            <div key={achievement.id} className="content-card">
+              <div className="p-4 flex flex-col items-center gap-3">
+                <div className="h-16 w-16 flex items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-yellow-500">
+                  {achievement.icon === 'Trophy' && <Trophy size={32} className="text-white" />}
+                  {achievement.icon === 'VideoIcon' && <Camera size={32} className="text-white" />}
+                  {achievement.icon === 'UserPlus' && <User size={32} className="text-white" />}
+                  {achievement.icon === 'Heart' && <Heart size={32} className="text-white" />}
+                  {achievement.icon === 'Bookmark' && <Trophy size={32} className="text-white" />}
+                </div>
+                <h3 className="text-white font-semibold text-center">{achievement.name}</h3>
+                <p className="text-gray-400 text-sm text-center">{achievement.description}</p>
+                <div className="flex items-center gap-1 mt-2">
+                  <Trophy size={14} className="text-yellow-500" />
+                  <span className="text-yellow-500">{achievement.points} pts</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+    
+    {activeTab === 'saved' && (
+      <div className="tab-content">
+        <h2 className="text-xl font-bold mb-4 text-white">Saved Clipts</h2>
+        {savedCliptsData.length > 0 ? (
+          <div className="content-grid">
+            {savedCliptsData.map((clipt) => (
+              <div key={clipt.id} className="content-card">
+                <div className="relative pb-[100%] overflow-hidden">
+                  <img 
+                    src={clipt.image_url || "https://placehold.co/600x600/121212/FF5500?text=Saved+Clipt"} 
+                    alt={clipt.title || "Saved Clipt"} 
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-3">
+                  <h3 className="text-white font-semibold mb-1">{clipt.title || "Awesome Clipt"}</h3>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 text-sm">Saved</span>
+                    <Heart size={16} className="text-red-500" fill="#ef4444" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-10">
+            <Heart size={48} className="text-gray-500 mb-4" />
+            <p className="text-gray-400">No saved clipts yet</p>
+            <button 
+              className="mt-4 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg text-white font-semibold"
+              onClick={() => navigate('/discovery')}
+            >
+              Discover Clipts
+            </button>
+          </div>
+        )}
+      </div>
+    )}
+    
+    {activeTab === 'about' && (
+      <div className="tab-content">
+        <h2 className="text-xl font-bold mb-4 text-white">About</h2>
+        <div className="bg-[#2A1A12] p-4 rounded-lg border border-orange-500/30">
+          <p className="text-white mb-4">{profile?.bio || "No bio available yet."}</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div className="flex flex-col gap-3">
+              <h3 className="text-orange-500 font-semibold">Info</h3>
+              <div className="flex items-center gap-2">
+                <User className="text-orange-500" size={16} />
+                <span className="text-gray-300">Username: @{profile?.username}</span>
+              </div>
+              {profile?.location && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="text-orange-500" size={16} />
+                  <span className="text-gray-300">{profile.location}</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex flex-col gap-3">
+              <h3 className="text-orange-500 font-semibold">Stats</h3>
+              <div className="flex items-center gap-2">
+                <Trophy className="text-orange-500" size={16} />
+                <span className="text-gray-300">{achievements.length} Achievements</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="text-orange-500" size={16} />
+                <span className="text-gray-300">{followersCount} Followers</span>
               </div>
             </div>
 
