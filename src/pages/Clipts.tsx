@@ -13,7 +13,7 @@ import { getVideoUrlWithProperExtension } from "@/utils/videoUtils";
 import '../styles/clipts-effects.css';
 import '../styles/clipts-enhanced.css';
 import '../styles/navigation-bar.css';
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import NavigationBar from "@/components/NavigationBar";
 
 // Define an extended type that includes our runtime properties
