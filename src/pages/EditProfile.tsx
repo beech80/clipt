@@ -83,8 +83,7 @@ const EditProfile = () => {
             backgroundColor: '#121212',
             color: 'white',
             minHeight: '100vh',
-            paddingTop: '60px',
-            paddingBottom: '70px'
+            paddingTop: '60px'
           }}
         >
           {/* Top Navigation Bar */}
@@ -113,12 +112,7 @@ const EditProfile = () => {
               >
                 <ArrowLeft size={20} />
               </button>
-              <h1 style={{ 
-                margin: 0, 
-                marginLeft: '8px',
-                fontSize: '1.25rem',
-                fontWeight: 'bold'
-              }}>Edit Profile</h1>
+              {/* Title removed */}
             </div>
           </div>
 
@@ -138,112 +132,7 @@ const EditProfile = () => {
             </div>
           </div>
 
-          {/* Bottom Navigation Bar */}
-          <div style={{ 
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '8px 4px',
-            backgroundColor: '#1A0F08', 
-            borderTop: '1px solid #FF5500',
-            zIndex: 50
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-              <button 
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  padding: '6px',
-                  color: '#9e9e9e',
-                  cursor: 'pointer'
-                }}
-                onClick={() => navigate('/clipts')}
-              >
-                <User size={20} />
-                <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Clipts</span>
-              </button>
-              
-              <button 
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  padding: '6px',
-                  color: '#9e9e9e',
-                  cursor: 'pointer'
-                }}
-                onClick={() => navigate('/trophies')}
-              >
-                <Medal size={20} />
-                <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Trophies</span>
-              </button>
-              
-              <button 
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  padding: '6px',
-                  color: '#9e9e9e',
-                  cursor: 'pointer'
-                }}
-                onClick={() => navigate('/discovery')}
-              >
-                <Clock size={20} />
-                <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Discover</span>
-              </button>
-              
-              <button 
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  padding: '6px',
-                  color: '#FF5500',
-                  cursor: 'pointer',
-                  position: 'relative'
-                }}
-                onClick={() => navigate('/profile')}
-              >
-                <div style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  width: '20px',
-                  height: '2px',
-                  backgroundColor: '#FF5500'
-                }} />
-                <User size={20} />
-                <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Profile</span>
-              </button>
-              
-              <button 
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  padding: '6px',
-                  color: '#9e9e9e',
-                  cursor: 'pointer'
-                }}
-                onClick={() => navigate('/messages')}
-              >
-                <MessageSquare size={20} />
-                <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Chat</span>
-              </button>
-            </div>
-          </div>
+          {/* Bottom Navigation Removed */}
         </motion.div>
       )}
     </AnimatePresence>
