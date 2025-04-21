@@ -574,7 +574,7 @@ const Profile = () => {
   return (
     <>
       <GlobalStyle />
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {loading ? (
           <div className="flex justify-center items-center h-screen">
             <div className="animate-spin w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full" />
