@@ -307,121 +307,227 @@ const Profile = () => {
             </div>
 
             {/* Stats bar */}
+            {/* Hidden stats bar */}
+
+            {/* Trophies Header */}
             <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-around', 
-              padding: '16px', 
-              backgroundColor: '#1A0F08', 
-              borderRadius: '8px', 
-              marginBottom: '20px' 
+              marginBottom: '20px', 
+              backgroundColor: '#0c0c0c',
+              padding: '12px 16px',
+              borderBottom: '1px solid #222'
             }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ color: 'white', fontWeight: 'bold' }}>0</div>
-                <div style={{ color: '#FF5500', fontSize: '0.8rem' }}>Posts</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ color: 'white', fontWeight: 'bold' }}>0</div>
-                <div style={{ color: '#FF5500', fontSize: '0.8rem' }}>Followers</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ color: 'white', fontWeight: 'bold' }}>0</div>
-                <div style={{ color: '#FF5500', fontSize: '0.8rem' }}>Following</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ color: 'white', fontWeight: 'bold' }}>0</div>
-                <div style={{ color: '#FF5500', fontSize: '0.8rem' }}>Trophies</div>
-              </div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>Trophies</h2>
             </div>
-
-            {/* Trophies Section */}
-            <div style={{ marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '16px', color: 'white' }}>Trophies</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '16px' }}>
-                {achievements.map((achievement) => (
-                  <div key={achievement.id} style={{ backgroundColor: '#1A0F08', borderRadius: '8px', padding: '16px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ height: '56px', width: '56px', backgroundColor: '#FF5500', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {achievement.icon === 'Trophy' && <Trophy size={28} color="white" />}
-                        {achievement.icon === 'VideoIcon' && <Camera size={28} color="white" />}
-                        {achievement.icon === 'UserPlus' && <User size={28} color="white" />}
-                        {achievement.icon === 'Heart' && <Heart size={28} color="white" />}
-                        {achievement.icon === 'Bookmark' && <Trophy size={28} color="white" />}
-                      </div>
-                      <h3 style={{ color: 'white', fontWeight: '600', textAlign: 'center', fontSize: '0.9rem' }}>{achievement.name}</h3>
-                      <p style={{ color: '#9e9e9e', fontSize: '0.8rem', textAlign: 'center' }}>{achievement.description}</p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Trophy size={14} color="#FFD700" />
-                        <span style={{ color: '#FFD700' }}>{achievement.points} pts</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Tab Navigation - Simplified */}
+            
+            {/* Trophies Display - Horizontal Scrollable */}
             <div style={{ 
-              display: 'flex', 
+              marginBottom: '30px', 
+              overflowX: 'auto', 
+              paddingBottom: '16px',
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                gap: '20px', 
+                paddingLeft: '16px', 
+                paddingRight: '16px',
+                minWidth: 'min-content'
+              }}>
+                {/* Trophy 1 */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px' }}>
+                  <div style={{ 
+                    height: '60px', 
+                    width: '60px', 
+                    borderRadius: '50%', 
+                    backgroundColor: '#FF5500', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    marginBottom: '8px'
+                  }}>
+                    <Trophy size={30} color="white" />
+                  </div>
+                  <p style={{ color: 'white', fontSize: '0.75rem', textAlign: 'center', margin: '0', marginBottom: '2px' }}>First Victory</p>
+                  <p style={{ color: '#FFD700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    <Trophy size={10} color="#FFD700" /> 50 pts
+                  </p>
+                </div>
+
+                {/* Trophy 2 */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px' }}>
+                  <div style={{ 
+                    height: '60px', 
+                    width: '60px', 
+                    borderRadius: '50%', 
+                    backgroundColor: '#FF5500', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    marginBottom: '8px'
+                  }}>
+                    <Camera size={30} color="white" />
+                  </div>
+                  <p style={{ color: 'white', fontSize: '0.75rem', textAlign: 'center', margin: '0', marginBottom: '2px' }}>Content Creator</p>
+                  <p style={{ color: '#FFD700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    <Trophy size={10} color="#FFD700" /> 25 pts
+                  </p>
+                </div>
+
+                {/* Trophy 3 */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px' }}>
+                  <div style={{ 
+                    height: '60px', 
+                    width: '60px', 
+                    borderRadius: '50%', 
+                    backgroundColor: '#FF5500', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    marginBottom: '8px'
+                  }}>
+                    <User size={30} color="white" />
+                  </div>
+                  <p style={{ color: 'white', fontSize: '0.75rem', textAlign: 'center', margin: '0', marginBottom: '2px' }}>Popular Player</p>
+                  <p style={{ color: '#FFD700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    <Trophy size={10} color="#FFD700" /> 100 pts
+                  </p>
+                </div>
+
+                {/* Trophy 4 */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px' }}>
+                  <div style={{ 
+                    height: '60px', 
+                    width: '60px', 
+                    borderRadius: '50%', 
+                    backgroundColor: '#FF5500', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    marginBottom: '8px'
+                  }}>
+                    <Heart size={30} color="white" />
+                  </div>
+                  <p style={{ color: 'white', fontSize: '0.75rem', textAlign: 'center', margin: '0', marginBottom: '2px' }}>Like Machine</p>
+                  <p style={{ color: '#FFD700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    <Trophy size={10} color="#FFD700" /> 75 pts
+                  </p>
+                </div>
+
+                {/* Trophy 5 */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px' }}>
+                  <div style={{ 
+                    height: '60px', 
+                    width: '60px', 
+                    borderRadius: '50%', 
+                    backgroundColor: '#FF5500', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    marginBottom: '8px'
+                  }}>
+                    <Trophy size={30} color="white" />
+                  </div>
+                  <p style={{ color: 'white', fontSize: '0.75rem', textAlign: 'center', margin: '0', marginBottom: '2px' }}>Collector</p>
+                  <p style={{ color: '#FFD700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    <Trophy size={10} color="#FFD700" /> 40 pts
+                  </p>
+                </div>
+
+                {/* More trophies can be added here */}
+              </div>
+            </div>
+
+            {/* Tab Navigation - Improved */}
+            <div style={{ 
+              display: 'flex',
+              justifyContent: 'center',
               borderBottom: '1px solid #333',
               marginBottom: '20px'
             }}>
-              <button 
-                style={{ 
-                  flex: 1,
-                  padding: '10px',
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: activeTab === 'clipts' ? '2px solid #FF5500' : '2px solid transparent',
-                  color: activeTab === 'clipts' ? '#FF5500' : '#9e9e9e',
-                  fontWeight: activeTab === 'clipts' ? 'bold' : 'normal',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '4px',
-                  cursor: 'pointer'
-                }}
-                onClick={() => setActiveTab('clipts')}
-              >
-                <Gamepad size={18} />
-                <span>Clipts</span>
-              </button>
-              <button 
-                style={{ 
-                  flex: 1,
-                  padding: '10px',
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: activeTab === 'saved' ? '2px solid #FF5500' : '2px solid transparent',
-                  color: activeTab === 'saved' ? '#FF5500' : '#9e9e9e',
-                  fontWeight: activeTab === 'saved' ? 'bold' : 'normal',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '4px',
-                  cursor: 'pointer'
-                }}
-                onClick={() => setActiveTab('saved')}
-              >
-                <Heart size={18} />
-                <span>Saved</span>
-              </button>
+              <div style={{ maxWidth: '400px', width: '100%', display: 'flex' }}>
+                <button 
+                  style={{ 
+                    flex: 1,
+                    padding: '15px 10px',
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: activeTab === 'clipts' ? '3px solid #FF5500' : '3px solid transparent',
+                    color: activeTab === 'clipts' ? '#FF5500' : '#9e9e9e',
+                    fontWeight: activeTab === 'clipts' ? 'bold' : 'normal',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setActiveTab('clipts')}
+                >
+                  <Gamepad size={20} />
+                  <span>Clipts</span>
+                </button>
+                <button 
+                  style={{ 
+                    flex: 1,
+                    padding: '15px 10px',
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: activeTab === 'saved' ? '3px solid #FF5500' : '3px solid transparent',
+                    color: activeTab === 'saved' ? '#FF5500' : '#9e9e9e',
+                    fontWeight: activeTab === 'saved' ? 'bold' : 'normal',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setActiveTab('saved')}
+                >
+                  <Heart size={20} />
+                  <span>Saved</span>
+                </button>
+              </div>
             </div>
 
             {/* Content Area */}
             <div style={{ padding: '0 10px' }}>
               {activeTab === 'clipts' && (
-                <div>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '16px', color: 'white' }}>Clipts</h2>
+                <div style={{ padding: '0 16px' }}>
+                  <h2 style={{ 
+                    color: 'white', 
+                    fontSize: '1.25rem', 
+                    fontWeight: 'normal', 
+                    marginBottom: '16px', 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}>
+                    <Gamepad size={24} style={{ opacity: 0.8 }} />
+                    <span>Clipts</span>
+                  </h2>
                   <div style={{ 
                     display: 'flex', 
                     flexDirection: 'column', 
                     alignItems: 'center', 
                     justifyContent: 'center',
-                    padding: '32px',
-                    backgroundColor: '#1A0F08',
+                    padding: '40px 16px',
+                    backgroundColor: '#120c08',
                     borderRadius: '8px'
                   }}>
-                    <Gamepad size={48} color="#555" style={{ marginBottom: '16px' }} />
+                    <div style={{ 
+                      width: '50px',
+                      height: '50px',
+                      backgroundColor: '#1d1d1d',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '16px'
+                    }}>
+                      <Gamepad size={30} color="#555" />
+                    </div>
                     <p style={{ color: '#9e9e9e', textAlign: 'center' }}>No clipts available</p>
                   </div>
                 </div>
@@ -430,50 +536,59 @@ const Profile = () => {
 
               
               {activeTab === 'saved' && (
-                <div>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '16px', color: 'white' }}>Saved Clipts</h2>
-                  {savedCliptsData.length > 0 ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '16px' }}>
-                      {savedCliptsData.map((clipt) => (
-                        <div key={clipt.id} style={{ backgroundColor: '#1A0F08', borderRadius: '8px', overflow: 'hidden' }}>
-                          <div style={{ position: 'relative', paddingBottom: '100%', overflow: 'hidden' }}>
-                            <img 
-                              src={clipt.image_url || "https://placehold.co/600x600/121212/FF5500?text=Saved+Clipt"} 
-                              alt={clipt.title || "Saved Clipt"} 
-                              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                          </div>
-                          <div style={{ padding: '12px' }}>
-                            <h3 style={{ color: 'white', fontWeight: '600', marginBottom: '4px', fontSize: '0.9rem' }}>{clipt.title || "Awesome Clipt"}</h3>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ color: '#9e9e9e', fontSize: '0.8rem' }}>Saved</span>
-                              <Heart size={16} color="#ef4444" fill="#ef4444" />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                <div style={{ padding: '0 16px' }}>
+                  <h2 style={{ 
+                    color: 'white', 
+                    fontSize: '1.25rem', 
+                    fontWeight: 'normal', 
+                    marginBottom: '16px', 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}>
+                    <Heart size={22} style={{ opacity: 0.8 }} />
+                    <span>Saved</span>
+                  </h2>
+                  <div style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    padding: '40px 16px',
+                    backgroundColor: '#120c08',
+                    borderRadius: '8px'
+                  }}>
+                    <div style={{ 
+                      width: '50px',
+                      height: '50px',
+                      backgroundColor: '#1d1d1d',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '16px'
+                    }}>
+                      <Heart size={26} color="#555" />
                     </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
-                      <Heart size={40} color="#666" style={{ marginBottom: '16px' }} />
-                      <p style={{ color: '#9e9e9e' }}>No saved clipts yet</p>
-                      <button 
-                        style={{ 
-                          marginTop: '16px', 
-                          padding: '8px 16px', 
-                          backgroundColor: '#FF5500', 
-                          border: 'none',
-                          borderRadius: '6px', 
-                          color: 'white', 
-                          fontWeight: 'bold',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => navigate('/discovery')}
-                      >
-                        Discover Clipts
-                      </button>
-                    </div>
-                  )}
+                    <p style={{ color: '#9e9e9e', textAlign: 'center' }}>No saved clipts yet</p>
+                    <button 
+                      style={{ 
+                        marginTop: '20px', 
+                        padding: '10px 16px', 
+                        backgroundColor: '#FF5500', 
+                        border: 'none',
+                        borderRadius: '6px', 
+                        color: 'white', 
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem'
+                      }}
+                      onClick={() => navigate('/discovery')}
+                    >
+                      Discover Clipts
+                    </button>
+                  </div>
                 </div>
               )}
               
