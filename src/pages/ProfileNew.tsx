@@ -113,7 +113,7 @@ const Profile = () => {
     {
       id: 1,
       name: 'First Taste of Gold',
-      description: 'Earn 10 trophies on a post',
+      description: 'Earn 10 trophies on a post.',
       icon: 'Trophy',
       points: 50,
       progress: 0, // 0% progress
@@ -124,7 +124,7 @@ const Profile = () => {
     {
       id: 2,
       name: 'Viral Sensation',
-      description: 'Get 100 trophies on a single post',
+      description: 'Get 100 trophies on a single post.',
       icon: 'Flame',
       points: 100,
       progress: 0, // 0% progress
@@ -135,7 +135,7 @@ const Profile = () => {
     {
       id: 3,
       name: 'Breaking In',
-      description: 'Rank in the Top 10 of the weekly leaderboard once',
+      description: 'Rank in the Top 10 of the weekly leaderboard once.',
       icon: 'Target',
       points: 75,
       progress: 0, // 0% progress
@@ -146,7 +146,7 @@ const Profile = () => {
     {
       id: 4,
       name: 'Hot Streak',
-      description: 'Stay in the Top 10 for 5 weeks in a row',
+      description: 'Stay in the Top 10 for 5 weeks in a row.',
       icon: 'Zap',
       points: 200,
       progress: 0, // 0% progress
@@ -155,11 +155,11 @@ const Profile = () => {
       unlocked: false
     },
     
-    // Follower Growth Category
+    // 📈 Follower Growth Category
     {
       id: 5,
       name: 'Rising Star',
-      description: 'Reach 1,000 followers',
+      description: 'Reach 1,000 followers.',
       icon: 'User',
       points: 100,
       progress: 0, // 0% progress
@@ -170,7 +170,7 @@ const Profile = () => {
     {
       id: 6,
       name: 'Influencer Status',
-      description: 'Gain 10,000 followers',
+      description: 'Gain 10,000 followers.',
       icon: 'Crown',
       points: 300,
       progress: 0, // 0% progress
@@ -179,11 +179,11 @@ const Profile = () => {
       unlocked: false
     },
     
-    // Streaming Subscriber Milestones
+    // 🎥 Streaming Subscriber Milestones
     {
       id: 7,
       name: 'First Supporter',
-      description: 'Get your first streaming sub',
+      description: 'Get your first streaming sub.',
       icon: 'Heart',
       points: 50,
       progress: 0, // 0% progress
@@ -194,7 +194,7 @@ const Profile = () => {
     {
       id: 8,
       name: 'Streaming Star',
-      description: 'Reach 100 streaming subscribers',
+      description: 'Reach 100 streaming subscribers.',
       icon: 'Star',
       points: 200,
       progress: 0, // 0% progress
@@ -203,11 +203,11 @@ const Profile = () => {
       unlocked: false
     },
     
-    // Engagement Boosters
+    // 🤝 Engagement Boosters
     {
       id: 9,
       name: 'Hype Squad',
-      description: 'Leave 50 comments on others\'s posts',
+      description: 'Leave 50 comments on others\'s posts.',
       icon: 'MessageSquare',
       points: 60,
       progress: 0, // 0% progress
@@ -218,7 +218,7 @@ const Profile = () => {
     {
       id: 10,
       name: 'Super Supporter',
-      description: 'Give out 100 trophies',
+      description: 'Give out 100 trophies.',
       icon: 'Gift',
       points: 90,
       progress: 0, // 0% progress
@@ -229,7 +229,7 @@ const Profile = () => {
     {
       id: 11,
       name: 'Conversation Starter',
-      description: 'Receive 100 replies to your comments',
+      description: 'Receive 100 replies to your comments.',
       icon: 'MessageSquare',
       points: 120,
       progress: 0, // 0% progress
@@ -240,7 +240,7 @@ const Profile = () => {
     {
       id: 12,
       name: 'Community Builder',
-      description: 'Start a post that gets 500+ comments',
+      description: 'Start a post that gets 500+ comments.',
       icon: 'Users',
       points: 150,
       progress: 0, // 0% progress
@@ -249,11 +249,11 @@ const Profile = () => {
       unlocked: false
     },
     
-    // Sharing & Promotion
+    // 📢 Sharing & Promotion
     {
       id: 13,
       name: 'Signal Booster',
-      description: 'Share 10 other creators\'s posts',
+      description: 'Share 10 other creators\' posts.',
       icon: 'Share',
       points: 70,
       progress: 0, // 0% progress
@@ -264,7 +264,7 @@ const Profile = () => {
     {
       id: 14,
       name: 'Clipt Evangelist',
-      description: 'Invite 5 friends to join Clipt',
+      description: 'Invite 5 friends to join Clipt.',
       icon: 'UserPlus',
       points: 100,
       progress: 0, // 0% progress
@@ -273,11 +273,11 @@ const Profile = () => {
       unlocked: false
     },
     
-    // Collab & Creator Support
+    // 🎮 Collab & Creator Support
     {
       id: 15,
       name: 'Duo Dynamic',
-      description: 'Collab on a post that earns 50 trophies',
+      description: 'Collab on a post that earns 50 trophies.',
       icon: 'Users',
       points: 100,
       progress: 0, // 0% progress
@@ -288,7 +288,7 @@ const Profile = () => {
     {
       id: 16,
       name: 'Mentor Mode',
-      description: 'Help a small creator reach 1,000 followers',
+      description: 'Help a small creator reach 1,000 followers.',
       icon: 'Award',
       points: 200,
       progress: 0, // 0% progress
@@ -297,11 +297,11 @@ const Profile = () => {
       unlocked: false
     },
     
-    // Special & Hidden
+    // 🎉 Special & Hidden
     {
       id: 17,
       name: 'OG Clipt Creator',
-      description: 'Joined within 3 months of launch',
+      description: 'Joined within 3 months of launch.',
       icon: 'Star',
       points: 100,
       progress: 0, // 0% progress
@@ -312,7 +312,7 @@ const Profile = () => {
     {
       id: 18,
       name: 'Day One Grinder',
-      description: 'Posted on Clipt launch day',
+      description: 'Posted on Clipt\'s launch day.',
       icon: 'Calendar',
       points: 150,
       progress: 0, // 0% progress
@@ -323,7 +323,7 @@ const Profile = () => {
     {
       id: 19,
       name: 'Mystery Viral',
-      description: 'An old post goes viral after 30 days',
+      description: 'An old post goes viral after 30 days.',
       icon: 'Zap',
       points: 120,
       progress: 0, // 0% progress
@@ -334,7 +334,7 @@ const Profile = () => {
     {
       id: 20,
       name: 'Shadow Supporter',
-      description: 'Consistently like/comment on someone for a month',
+      description: 'Consistently like/comment on someone\'s posts for a month.',
       icon: 'Heart',
       points: 80,
       progress: 0, // 0% progress
