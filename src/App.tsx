@@ -28,7 +28,7 @@ import '@/components/enhanced-joystick.css';
 import './styles/orange-theme-override.css'; // Import the orange theme for all pages
 import './styles/global-orange-theme.css'; // More comprehensive orange theme
 
-// Global style to prevent scrolling past content
+// Enhanced global style to prevent scrolling past content
 const GlobalStyle = createGlobalStyle`
   html, body, #root {
     background-color: #0C0C0C !important;
@@ -37,11 +37,20 @@ const GlobalStyle = createGlobalStyle`
     min-height: 100vh;
     height: 100%;
     overflow: hidden !important;
+    overscroll-behavior: none;
+    position: fixed;
+    width: 100%;
   }
   
   body {
     overscroll-behavior: none;
     background-color: #0C0C0C !important;
+    touch-action: none;
+  }
+  
+  /* Prevent any element from causing scrolling issues */
+  * {
+    overscroll-behavior: none;
   }
 `;
 import TabsNavigation from '@/components/TabsNavigation';
@@ -239,11 +248,28 @@ function App() {
       console.error("Error ensuring tables exist:", error);
     });
     
-    // Apply overflow control to prevent scrolling past content
+    // Apply enhanced overflow control to prevent scrolling past content
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
     document.body.style.height = '100%';
+    document.body.style.width = '100%';
+    document.body.style.position = 'fixed';
     document.body.style.backgroundColor = '#0C0C0C';
+    document.body.style.touchAction = 'none';
+    
+    // Disable scroll events
+    const preventScroll = (e) => {
+      // Allow scrolling only within content areas that need it
+      if (e.target.closest('.scrollable-content')) {
+        return true;
+      }
+      e.preventDefault();
+      return false;
+    };
+    
+    // Add preventScroll to various scroll events
+    window.addEventListener('wheel', preventScroll, { passive: false });
+    window.addEventListener('touchmove', preventScroll, { passive: false });
     
     // Use a more forceful approach with direct style injection
     const style = document.createElement('style');
@@ -252,18 +278,33 @@ function App() {
         background-color: #0C0C0C !important;
         min-height: 100vh !important;
         height: 100% !important;
+        width: 100% !important;
         overflow: hidden !important;
+        position: fixed !important;
+        overscroll-behavior: none !important;
+        touch-action: none !important;
       }
       
       /* Force dark background on all pages */
       .app-content-wrapper, .page-container, main {
         background-color: #0C0C0C !important;
       }
+      
+      /* Allow scrolling only in content containers */
+      .scrollable-content {
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        height: 100%;
+        -webkit-overflow-scrolling: touch;
+      }
     `;
     document.head.appendChild(style);
     
     return () => {
       document.head.removeChild(style);
+      window.removeEventListener('wheel', preventScroll);
+      window.removeEventListener('touchmove', preventScroll);
     };
   }, []);
 
@@ -289,15 +330,17 @@ function App() {
                 <Toaster richColors position="top-center" />
                 <ScrollToTop />
                 {shouldShowTabNavigation && <TabsNavigation />}
-                <div className="app-content-wrapper" style={{ 
+                <div className="app-content-wrapper scrollable-content" style={{ 
                   paddingTop: shouldShowTabNavigation ? '60px' : '0',
                   minHeight: '100vh',
                   maxHeight: '100vh',
                   paddingBottom: '60px', /* Add padding to account for navigation bar */
                   overflow: 'auto',
-                  overscrollBehavior: 'none',
+                  overscrollBehavior: 'contain',
                   backgroundColor: '#0C0C0C',
-                  position: 'relative'
+                  position: 'relative',
+                  touchAction: 'pan-y',
+                  WebkitOverflowScrolling: 'touch'
                 }}>
                   <AppContent />
                 </div>
