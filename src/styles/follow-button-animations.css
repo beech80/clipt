@@ -1,0 +1,84 @@
+/* Animation for the follow button */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Make follow button more noticeable */
+.follow-button.active svg {
+  filter: drop-shadow(0 0 5px rgba(255, 69, 0, 0.8)) !important;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Show following text on hover */
+.follow-button .follow-text {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.follow-button:hover .follow-text {
+  opacity: 1;
+}
+
+/* Enhanced button styling for all navigation buttons */
+.nav-button {
+  transition: transform 0.2s ease, background-color 0.3s ease;
+  transform: translateZ(0); /* Force GPU acceleration */
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-button:hover {
+  transform: scale(1.15);
+}
+
+.nav-button:active {
+  transform: scale(1.05); /* Subtle scale instead of movement */
+}
+
+.nav-button.active {
+  background-color: rgba(255, 140, 0, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 140, 0, 0.3);
+}
+
+/* Prevent any vertical movement */
+.nav-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
+
+/* Button tooltip styles */
+.nav-button::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.nav-button:hover::after {
+  opacity: 1;
+  visibility: visible;
+}

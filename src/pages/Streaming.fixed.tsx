@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,7 +23,7 @@ export default function Streaming() {
   const RTMP_URL = "rtmp://live.clipt.cc/live";
   const STREAM_KEY = "live_5f9b3a2e1d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a";
   
-  // Example schedule data
+  // Example schedule data - in real app, this would come from API
   const [scheduleItems, setScheduleItems] = useState([
     {
       id: 1,
@@ -51,7 +51,7 @@ export default function Streaming() {
   });
   
   // Copy to clipboard function
-  const copyToClipboard = async (text, type) => {
+  const copyToClipboard = async (text: string, type: string) => {
     try {
       await navigator.clipboard.writeText(text);
       toast({
@@ -78,73 +78,40 @@ export default function Streaming() {
   };
 
   return (
-    <div className="streaming-container" style={{
+    <div style={{
       backgroundColor: '#0D0D0D',
       minHeight: '100vh',
       color: 'white',
-      backgroundImage: 'linear-gradient(to bottom, #1A1A1A, #0D0D0D, #0a0a14)',
-      overflow: 'auto',
-      position: 'relative'
+      backgroundImage: 'linear-gradient(to bottom, #1A1A1A, #0D0D0D)',
+      overflow: 'auto'
     }}>
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute h-40 w-40 rounded-full bg-orange-500 opacity-5 blur-3xl -top-10 left-1/4"></div>
-        <div className="absolute h-60 w-60 rounded-full bg-purple-500 opacity-5 blur-3xl bottom-20 right-10"></div>
-        <div className="absolute h-40 w-40 rounded-full bg-blue-500 opacity-5 blur-3xl bottom-40 left-10"></div>
-      </div>
-      
-      {/* Enhanced Header with centered Stream Setup title */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-black opacity-50 z-10"></div>
-        <div 
-          className="absolute inset-0 z-0" 
-          style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1593305841991-05c297ba4575?q=80&w=1000)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'blur(1px)'
-          }}
-        ></div>
-        <div 
-          style={{
-            background: 'linear-gradient(90deg, rgba(255,85,0,0) 0%, rgba(255,85,0,0.8) 50%, rgba(255,85,0,0) 100%)',
-            padding: '30px 20px',
-            position: 'relative',
-            zIndex: 20,
-            boxShadow: '0 4px 20px rgba(255, 88, 0, 0.4)',
-            borderBottom: '2px solid rgba(255, 136, 0, 0.5)'
-          }}
-        >
-          <div className="container mx-auto flex flex-col items-center justify-center">
-            <div className="flex items-center justify-center mb-2">
-              <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse mr-2"></div>
-              <h1 className="text-3xl font-bold text-center text-white drop-shadow-lg" style={{textShadow: '0 0 10px rgba(255, 85, 0, 0.7)'}}>
-                Stream Setup
-              </h1>
-              <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse ml-2"></div>
-            </div>
-            <p className="text-white text-opacity-90 text-center text-sm mb-3">Configure your livestream settings and get ready to go live</p>
-            
-            <div className="flex items-center gap-4 mt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 border-none text-white"
-              >
-                <Play className="h-4 w-4" />
-                <span>Start Streaming</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 bg-black bg-opacity-50 hover:bg-opacity-70 border border-orange-500/30"
-              >
-                <Eye className="h-4 w-4" />
-                <span>View Stream</span>
-              </Button>
-            </div>
-          </div>
+      {/* Header with navigation */}
+      <div style={{
+        background: 'linear-gradient(to right, #FF8A00, #FF5800)',
+        padding: '15px 20px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        boxShadow: '0 4px 12px rgba(255, 88, 0, 0.3)'
+      }}>
+        <div className="flex items-center">
+          <h1 className="text-xl font-bold">Stream Setup</h1>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            style={{
+              background: 'rgba(0, 0, 0, 0.2)',
+              borderColor: 'rgba(255, 255, 255, 0.2)',
+              color: 'white'
+            }}
+          >
+            <Eye className="h-4 w-4" />
+            <span className="hidden sm:inline">View Stream</span>
+          </Button>
         </div>
       </div>
       
@@ -182,59 +149,53 @@ export default function Streaming() {
 
           <div className="mt-6">
             <TabsContent value="live" className="mt-0 space-y-4">
-              <Card className="border border-orange-900/30 bg-gradient-to-br from-black to-slate-900/50 overflow-hidden shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-orange-950/30 to-slate-900/30 border-b border-orange-900/20">
-                  <CardTitle className="text-orange-400">Stream Configuration</CardTitle>
-                  <CardDescription className="text-orange-300/70">Configure your stream with OBS or other streaming software</CardDescription>
+              <Card className="border border-slate-800 overflow-hidden">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg md:text-xl">Stream Configuration</CardTitle>
+                  <CardDescription className="text-xs md:text-sm">Configure your stream with OBS or other streaming software</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6 p-6">
-                  <div className="bg-black/30 p-4 rounded-lg border border-orange-900/20">
-                    <h3 className="text-base font-medium mb-2 text-orange-300 flex items-center">
-                      <Layers className="h-4 w-4 mr-2 text-orange-500" />
-                      RTMP URL
+                <CardContent className="space-y-6">
+                  <div>
+                    <h3 className="text-md font-medium mb-2 text-orange-500 flex items-center gap-2">
+                      <Layers className="h-4 w-4 inline" />
+                      Stream URL
                     </h3>
-                    <div className="flex gap-2">
-                      <Input
-                        value={RTMP_URL}
-                        readOnly
-                        className="flex-1 bg-black/40 border-orange-900/30 text-orange-100"
+                    <div className="flex">
+                      <Input 
+                        value={RTMP_URL} 
+                        readOnly 
+                        className="bg-black/30 border-slate-700 text-slate-200"
                       />
                       <Button 
-                        variant="outline" 
-                        size="icon"
-                        onClick={() => copyToClipboard(RTMP_URL, "RTMP URL")}
-                        className="flex-shrink-0 border-orange-500/40 hover:bg-orange-900/30 hover:border-orange-500/60 text-orange-400"
+                        onClick={() => copyToClipboard(RTMP_URL, "Stream URL")}
+                        className="ml-2 bg-orange-600 hover:bg-orange-700"
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
 
-                  <div className="bg-black/30 p-4 rounded-lg border border-orange-900/20">
-                    <h3 className="text-base font-medium mb-2 text-orange-300 flex items-center">
-                      <Settings2 className="h-4 w-4 mr-2 text-orange-500" />
+                  <div>
+                    <h3 className="text-md font-medium mb-2 text-orange-500 flex items-center gap-2">
+                      <Settings2 className="h-4 w-4 inline" />
                       Stream Key
                     </h3>
-                    <div className="flex gap-2">
-                      <Input
-                        type={showKey ? "text" : "password"}
-                        value={STREAM_KEY}
-                        readOnly
-                        className="flex-1 bg-black/40 border-orange-900/30 text-orange-100"
+                    <div className="flex">
+                      <Input 
+                        type={showKey ? "text" : "password"} 
+                        value={STREAM_KEY} 
+                        readOnly 
+                        className="bg-black/30 border-slate-700 text-slate-200"
                       />
                       <Button 
-                        variant="outline" 
-                        size="icon"
                         onClick={() => setShowKey(!showKey)}
-                        className="flex-shrink-0 border-orange-500/40 hover:bg-orange-900/30 hover:border-orange-500/60 text-orange-400"
+                        className="ml-2 bg-slate-700 hover:bg-slate-600"
                       >
                         {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
                       <Button 
-                        variant="outline" 
-                        size="icon"
                         onClick={() => copyToClipboard(STREAM_KEY, "Stream Key")}
-                        className="flex-shrink-0 border-orange-500/40 hover:bg-orange-900/30 hover:border-orange-500/60 text-orange-400"
+                        className="ml-2 bg-orange-600 hover:bg-orange-700"
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
@@ -245,7 +206,7 @@ export default function Streaming() {
                   <Separator />
 
                   <div>
-                    <h3 className="text-lg font-medium text-orange-400 mb-3">Recommended Settings</h3>
+                    <h3 className="text-md font-medium mb-3 text-orange-500">Recommended Settings</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-slate-800/30 p-3 rounded-md">
                         <h4 className="text-sm font-medium text-slate-200">Video</h4>
@@ -268,38 +229,26 @@ export default function Streaming() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                    <Button 
-                      variant="default" 
-                      className="w-full sm:w-auto bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 border-none shadow-md shadow-orange-900/30 text-white"
-                      onClick={handleInitializeStream}
-                    >
-                      Initialize Stream
-                    </Button>
-                    <Select defaultValue="720p">
-                      <SelectTrigger className="w-full sm:w-auto bg-black/40 border-orange-900/30 text-orange-100">
-                        <SelectValue placeholder="Quality" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-900 border-orange-900/30">
-                        <SelectItem value="1080p" className="text-orange-100 hover:bg-orange-900/30">1080p (High)</SelectItem>
-                        <SelectItem value="720p" className="text-orange-100 hover:bg-orange-900/30">720p (Medium)</SelectItem>
-                        <SelectItem value="480p" className="text-orange-100 hover:bg-orange-900/30">480p (Low)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Button 
+                    className="w-full bg-orange-600 hover:bg-orange-700 mt-4" 
+                    onClick={handleInitializeStream}
+                  >
+                    <Play className="h-4 w-4 mr-2" /> 
+                    Initialize Stream
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="schedule" className="mt-0 space-y-4">
-              <Card className="border border-orange-900/30 bg-gradient-to-br from-black to-slate-900/50 overflow-hidden shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-orange-950/30 to-slate-900/30 border-b border-orange-900/20">
-                  <CardTitle className="text-orange-400">Stream Schedule</CardTitle>
-                  <CardDescription className="text-orange-300/70">Plan and announce your upcoming streams</CardDescription>
+              <Card className="border border-slate-800 overflow-hidden">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg md:text-xl">Stream Schedule</CardTitle>
+                  <CardDescription className="text-xs md:text-sm">Plan and announce your upcoming streams</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 p-6">
+                <CardContent className="space-y-4">
                   <Button 
-                    className="w-full sm:w-auto bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 border-none shadow-md shadow-orange-900/30 text-white"
+                    className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700" 
                     onClick={() => setIsEditing(true)}
                   >
                     <Calendar className="h-4 w-4 mr-2" /> 
@@ -350,17 +299,129 @@ export default function Streaming() {
                       <p className="text-sm mt-1">Create a schedule to let your viewers know when you'll be live.</p>
                     </div>
                   )}
+                  
+                  {isEditing && (
+                    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                      <div className="bg-slate-900 p-6 rounded-lg w-full max-w-md">
+                        <h3 className="text-lg font-medium mb-4 text-orange-400">
+                          {scheduleItems.some(item => item.id === editingItem.id) ? "Edit Stream" : "Schedule New Stream"}
+                        </h3>
+                        
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">Stream Title</label>
+                            <Input 
+                              placeholder="Weekly Gaming Stream" 
+                              value={editingItem.title}
+                              onChange={(e) => setEditingItem({...editingItem, title: e.target.value})}
+                              className="bg-slate-800 border-slate-700"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">Date</label>
+                            <Input 
+                              placeholder="April 30, 2025" 
+                              value={editingItem.date}
+                              onChange={(e) => setEditingItem({...editingItem, date: e.target.value})}
+                              className="bg-slate-800 border-slate-700"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">Time</label>
+                            <Input 
+                              placeholder="7:00 PM - 9:00 PM" 
+                              value={editingItem.time}
+                              onChange={(e) => setEditingItem({...editingItem, time: e.target.value})}
+                              className="bg-slate-800 border-slate-700"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                            <Input 
+                              placeholder="Playing the latest releases and chatting with viewers" 
+                              value={editingItem.description}
+                              onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
+                              className="bg-slate-800 border-slate-700"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-end gap-2 mt-6">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => {
+                              setIsEditing(false);
+                              setEditingItem({id: 0, title: "", date: "", time: "", description: ""});
+                            }}
+                            className="border-slate-600"
+                          >
+                            Cancel
+                          </Button>
+                          
+                          <Button 
+                            className="bg-orange-600 hover:bg-orange-700"
+                            onClick={() => {
+                              // Validate form fields
+                              if (
+                                editingItem.title.trim() !== "" && 
+                                editingItem.date.trim() !== "" && 
+                                editingItem.time.trim() !== ""
+                              ) {
+                                // Update existing item
+                                if (scheduleItems.some(item => item.id === editingItem.id)) {
+                                  setScheduleItems(
+                                    scheduleItems.map(item => 
+                                      item.id === editingItem.id ? editingItem : item
+                                    )
+                                  );
+                                  toast({
+                                    title: "Stream updated",
+                                    description: "Your scheduled stream has been updated",
+                                  });
+                                } 
+                                // Add new item
+                                else {
+                                  setScheduleItems([...scheduleItems, {
+                                    ...editingItem,
+                                    id: Math.max(0, ...scheduleItems.map(i => i.id)) + 1
+                                  }]);
+                                  toast({
+                                    title: "Stream scheduled",
+                                    description: "Your new stream has been scheduled",
+                                  });
+                                }
+                                setIsEditing(false);
+                                setEditingItem({id: 0, title: "", date: "", time: "", description: ""});
+                              } else {
+                                toast({
+                                  title: "Incomplete form",
+                                  description: "Please fill in all required fields",
+                                  variant: "destructive"
+                                });
+                              }
+                            }}
+                          >
+                            {scheduleItems.some(item => item.id === editingItem.id) ? "Update" : "Schedule"} Stream
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
             
+            {/* Dashboard Tab */}
             <TabsContent value="dashboard" className="mt-0 space-y-4">
-              <Card className="border border-orange-900/30 bg-gradient-to-br from-black to-slate-900/50 overflow-hidden shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-orange-950/30 to-slate-900/30 border-b border-orange-900/20">
-                  <CardTitle className="text-orange-400">Stream Dashboard</CardTitle>
-                  <CardDescription className="text-orange-300/70">Monitor your stream performance and analytics</CardDescription>
+              <Card className="border border-slate-800 overflow-hidden">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg md:text-xl">Stream Dashboard</CardTitle>
+                  <CardDescription className="text-xs md:text-sm">Monitor your stream performance and analytics</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 p-6">
+                <CardContent className="space-y-4 pt-0">
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <Card className="bg-orange-950/30 border-orange-600/30">
                       <CardHeader className="pb-2">
@@ -391,11 +452,19 @@ export default function Streaming() {
                   <Separator />
                   
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-orange-400">Stream Analytics</h3>
+                    <h3 className="text-lg font-medium">Stream Analytics</h3>
                     <div className="aspect-video bg-black/30 rounded-md flex items-center justify-center">
                       <p className="text-gray-400">Analytics visualization will appear here during active streams</p>
                     </div>
                   </div>
+                  
+                  <Separator />
+                  
+                  <EnhancedGamingDashboard streamId="example-stream" isLoading={false} isActive={false} />
+                  
+                  <Separator />
+                  
+                  <ChatModerationDashboard streamId="example-stream" />
                 </CardContent>
               </Card>
             </TabsContent>

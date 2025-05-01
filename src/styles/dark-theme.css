@@ -1,0 +1,122 @@
+/* Dark theme for Clipt app - Minimalist UI */
+
+/* Base styles */
+body {
+  background-color: #000;
+  color: #fff;
+}
+
+/* Full black background */
+.bg-black {
+  background-color: #000000;
+}
+
+/* Content areas */
+.content-wrapper {
+  background-color: #000000;
+  padding-bottom: 80px; /* Space for bottom nav */
+}
+
+/* Header styles */
+.discovery-header {
+  height: 60px;
+  box-shadow: none;
+}
+
+/* Bottom navigation */
+.bottom-nav {
+  background-color: #000;
+  border-top: 1px solid #222;
+  padding: 8px 0;
+}
+
+.bottom-nav-icon {
+  color: #555;
+}
+
+.bottom-nav-icon.active {
+  color: #fff;
+}
+
+/* Make buttons more subtle */
+button {
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+/* Override any previous bright colors */
+.glow-text {
+  text-shadow: none;
+}
+
+.retro-card, .retro-trophy-item {
+  background: #111;
+  border: 1px solid #222;
+  box-shadow: none;
+}
+
+/* Dark cards and items */
+.retro-trophy-board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.retro-trophy-item {
+  background: #0a0a0a;
+  border: 1px solid #222;
+  box-shadow: none;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.retro-trophy-item:hover {
+  background: #111;
+  transform: none;
+}
+
+/* Streamers section */
+.streamers-section {
+  background-color: #000;
+}
+
+/* Image placeholders */
+.retro-avatar-placeholder {
+  background-color: #111;
+  color: #444;
+}
+
+/* Make form elements dark */
+input, select, textarea {
+  background-color: #111 !important;
+  border: 1px solid #333 !important;
+  color: #fff !important;
+}
+
+/* Tabs styling */
+.tabs button {
+  background-color: #000;
+  border: 1px solid #222;
+  color: #666;
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin: 0 4px;
+}
+
+.tabs button.active,
+.tabs button:hover {
+  background-color: #111;
+  color: #fff;
+  border-color: #333;
+}
+
+/* Remove most animations and effects */
+.glow-effect, .pixel-effect, .neon-effect {
+  text-shadow: none;
+  box-shadow: none;
+  animation: none;
+}

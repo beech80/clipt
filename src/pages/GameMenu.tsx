@@ -1,32 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Settings, Search, Film, Home, User, MessageSquare, 
-  Users, Gamepad, Sparkles, ChevronRight, Layers, Award, Camera
+  Settings, Search, Camera, User, MessageSquare, 
+  Users, Sparkles, ChevronRight, Layers
 } from 'lucide-react';
 import '../styles/game-dashboard.css';
 
+interface MenuItemType {
+  id: number;
+  name: string;
+  path: string;
+  icon: React.ComponentType<{ size?: number | string }>;
+  description: string;
+}
+
 const GameMenu: React.FC = () => {
   const navigate = useNavigate();
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [hoverIndex, setHoverIndex] = React.useState<number | null>(null);
   
-  // Define app pages
-  const appPages = [
-    { id: 1, name: 'Settings', path: '/settings', icon: Settings, description: 'Configure your experience' },
-    { id: 2, name: 'Profile', path: '/profile', icon: User, description: 'View your profile and stats' },
-    { id: 3, name: 'DISCOVERY PAGE', path: '/discover', icon: Search, description: 'Discover your new favorite streamer' },
-    { id: 4, name: 'Clipts', path: '/clipts', icon: Camera, description: 'View short gaming clips' },
-    { id: 5, name: 'Streaming', path: '/streams', icon: Layers, description: 'Watch live streams' },
-    { id: 6, name: 'Squads Clipts', path: '/squads-clipts', icon: Users, description: 'View your squad\'s best clips' },
-    { id: 7, name: 'Top Clipts', path: '/top-clipts', icon: Sparkles, description: 'Hall of fame clips' }
-  ];
-
-  const handleNavigation = (path: string) => {
-    navigate(path);
-  };
-  
-  useEffect(() => {
-    // Add background animation effect
+  // Add background animation effect
+  React.useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const x = e.clientX / window.innerWidth;
       const y = e.clientY / window.innerHeight;
@@ -38,7 +31,30 @@ const GameMenu: React.FC = () => {
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
-
+  
+  const handleHover = (index: number) => {
+    setHoverIndex(index);
+  };
+  
+  const clearHover = () => {
+    setHoverIndex(null);
+  };
+  
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
+  
+  const appPages: MenuItemType[] = [
+    { id: 1, name: 'Settings', path: '/settings', icon: Settings, description: 'Configure your experience' },
+    { id: 2, name: 'Profile', path: '/profile', icon: User, description: 'View your profile and stats' },
+    { id: 3, name: 'DISCOVERY PAGE', path: '/discovery', icon: Search, description: 'Discover your new favorite streamer' },
+    { id: 4, name: 'Clipts', path: '/clipts', icon: Camera, description: 'View and share gaming clips' },
+    { id: 5, name: 'Streaming', path: '/streaming', icon: Layers, description: 'Set up OBS with stream key and URL' },
+    { id: 6, name: 'Squads Clipts', path: '/squads-clipts', icon: Users, description: 'View your squad\'s best clips' },
+    { id: 7, name: 'Top Clipts', path: '/top-clipts', icon: Sparkles, description: 'Hall of fame clips' },
+    { id: 8, name: 'Messages', path: '/messages', icon: MessageSquare, description: 'Chat and share clips with other players' }
+  ];
+    
   return (
     <div className="menu-container">
       {/* Animated background */}
@@ -62,8 +78,8 @@ const GameMenu: React.FC = () => {
             key={page.id}
             className={`menu-item ${page.name === 'DISCOVERY PAGE' ? 'discovery-highlight' : ''} ${hoverIndex === index ? 'active' : ''}`}
             onClick={() => handleNavigation(page.path)}
-            onMouseEnter={() => setHoverIndex(index)}
-            onMouseLeave={() => setHoverIndex(null)}
+            onMouseEnter={() => handleHover(index)}
+            onMouseLeave={clearHover}
           >
             <div className="item-content">
               <div className="item-icon">

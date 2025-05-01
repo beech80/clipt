@@ -15,7 +15,11 @@ import {
   ChevronLeft, 
   MoreVertical, 
   Loader,
-  AlertCircle
+  AlertCircle,
+  Video,
+  Film,
+  Camera,
+  Star as StarIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Subscription } from '@supabase/supabase-js';
@@ -31,8 +35,15 @@ interface Message {
   isRead: boolean;
   readAt?: string;
   attachmentUrl?: string;
-  messageType?: 'text' | 'image' | 'video';
+  messageType?: 'text' | 'image' | 'video' | 'clip';
   isMine: boolean;
+  clipData?: {
+    duration?: number;
+    streamer?: string;
+    rating?: number;
+    userRatings?: { [userId: string]: number };
+    totalRatings?: number;
+  };
 }
 
 interface ChatPartner {
@@ -64,8 +75,63 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
   const [partnerData, setPartnerData] = useState<ChatPartner | null>(partnerInfo || null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [lastReadMessageId, setLastReadMessageId] = useState<string | null>(null);
+  const [showClipAttach, setShowClipAttach] = useState(false);
+  const [recentClips, setRecentClips] = useState<any[]>([]);
+  const [selectedClip, setSelectedClip] = useState<any | null>(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [clipToRate, setClipToRate] = useState<Message | null>(null);
+  const [currentRating, setCurrentRating] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch recent clips for sharing
+  useEffect(() => {
+    // This would normally fetch from your backend
+    // For now, we'll use mock data
+    const fetchRecentClips = async () => {
+      try {
+        // In a real implementation, you would fetch from your API
+        // const response = await fetch('/api/clips/recent');
+        // const data = await response.json();
+        
+        // Mock data for now
+        setRecentClips([
+          {
+            id: 'clip1',
+            title: 'Amazing headshot!',
+            thumbnailUrl: '/clips/clip1-thumb.jpg',
+            duration: 45,
+            streamer: 'ProGamer123',
+            createdAt: new Date().toISOString(),
+            rating: 4.8
+          },
+          {
+            id: 'clip2',
+            title: 'Epic comeback win',
+            thumbnailUrl: '/clips/clip2-thumb.jpg',
+            duration: 60,
+            streamer: 'GamingWizard',
+            createdAt: new Date(Date.now() - 3600000).toISOString(),
+            rating: 5.0
+          },
+          {
+            id: 'clip3',
+            title: 'Funniest fail ever',
+            thumbnailUrl: '/clips/clip3-thumb.jpg',
+            duration: 30,
+            streamer: 'StreamMaster',
+            createdAt: new Date(Date.now() - 7200000).toISOString(),
+            rating: 4.2
+          }
+        ]);
+      } catch (error) {
+        console.error('Error fetching recent clips:', error);
+        toast.error('Failed to load your recent clips');
+      }
+    };
+    
+    fetchRecentClips();
+  }, []);
 
   // Fetch partner info if not provided
   useEffect(() => {
@@ -270,6 +336,49 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
     }
   };
 
+  // Function to handle rating clips shared in chat
+  const handleRateClip = async (messageId: string, rating: number) => {
+    if (!user) return;
+    
+    // Find the message
+    const message = messages.find(m => m.id === messageId);
+    if (!message) return;
+    
+    try {
+      // Update local state first (optimistic update)
+      setMessages(prev => prev.map(msg => {
+        if (msg.id === messageId && msg.clipData) {
+          const newUserRatings = { ...msg.clipData.userRatings, [user.id]: rating };
+          const ratingValues = Object.values(newUserRatings);
+          const newAvgRating = ratingValues.reduce((sum, r) => sum + r, 0) / ratingValues.length;
+          
+          return {
+            ...msg,
+            clipData: {
+              ...msg.clipData,
+              rating: parseFloat(newAvgRating.toFixed(1)),
+              userRatings: newUserRatings,
+              totalRatings: ratingValues.length
+            }
+          };
+        }
+        return msg;
+      }));
+      
+      // In a real app, you would call your API to update the rating
+      // await fetch(`/api/messages/${messageId}/rate`, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ rating, userId: user.id })
+      // });
+      
+      toast.success('Rating saved!');
+    } catch (error) {
+      console.error('Error rating clip:', error);
+      toast.error('Failed to save rating');
+    }
+  };
+
   return (
     <div 
       className={`flex flex-col bg-gaming-900 ${
@@ -364,7 +473,60 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
                         : 'bg-gaming-800 text-white rounded-tl-none'
                     }`}
                   >
-                    {message.content}
+                    {message.messageType === 'clip' ? (
+                      <div className="clip-message">
+                        <div className="flex items-center mb-2">
+                          <Camera size={16} className="mr-2 text-orange-400" />
+                          <span className="font-medium">Video Clip</span>
+                        </div>
+                        
+                        <div className="bg-black bg-opacity-40 rounded-lg p-2 mb-2">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm font-medium">{message.content}</span>
+                            <span className="text-xs">{message.clipData?.duration}s</span>
+                          </div>
+                          
+                          <div className="flex items-center text-xs text-gray-300">
+                            <span>By {message.clipData?.streamer}</span>
+                          </div>
+                          
+                          <div className="mt-2 flex justify-between items-center">
+                            <div className="flex items-center">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  onClick={() => message.isMine ? null : handleRateClip(message.id, star)}
+                                  disabled={message.isMine || message.clipData?.userRatings?.[user?.id || '']}
+                                  className={`mr-1 focus:outline-none ${message.isMine ? 'cursor-default' : 'cursor-pointer'}`}
+                                >
+                                  <StarIcon 
+                                    size={14} 
+                                    fill={star <= (message.clipData?.rating || 0) ? "#F59E0B" : "transparent"}
+                                    stroke={star <= (message.clipData?.rating || 0) ? "#F59E0B" : "#9CA3AF"}
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                            <span className="text-xs">
+                              {message.clipData?.rating?.toFixed(1) || '-'} 
+                              {message.clipData?.totalRatings ? 
+                                `(${message.clipData.totalRatings})` : ''}
+                            </span>
+                          </div>
+                          
+                          <div className="mt-2">
+                            <button 
+                              className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs py-1 px-2 rounded"
+                              onClick={() => toast.success('Clip opened in player')}
+                            >
+                              Watch Clip
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      message.content
+                    )}
                     <div 
                       className={`text-xs mt-1 ${
                         message.isMine ? 'text-orange-300' : 'text-gray-400'
@@ -389,14 +551,34 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
         onSubmit={handleSendMessage}
         className="p-3 border-t border-gaming-700 bg-gaming-800"
       >
+        {selectedClip && (
+          <div className="mb-2 p-2 bg-gaming-700 rounded-lg flex items-center justify-between">
+            <div className="flex items-center">
+              <Camera size={16} className="mr-2 text-orange-400" />
+              <span className="text-sm text-white truncate">{selectedClip.title || 'Video clip'}</span>
+              <span className="ml-2 text-xs text-gray-400">{selectedClip.duration}s</span>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-gray-400 hover:text-white"
+              onClick={() => setSelectedClip(null)}
+            >
+              <X size={16} />
+            </Button>
+          </div>
+        )}
+      
         <div className="flex items-center space-x-2">
           <Button
             type="button"
             variant="ghost"
             size="icon"
             className="text-gray-400 hover:text-white hover:bg-gaming-700"
+            onClick={() => setShowClipAttach(!showClipAttach)}
           >
-            <Image size={20} />
+            <Camera size={20} className={showClipAttach ? "text-orange-500" : ""} />
           </Button>
           
           <input
@@ -404,7 +586,7 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
+            placeholder={selectedClip ? "Add a message (optional)..." : "Type a message..."}
             className="flex-1 bg-gaming-700 text-white rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
             disabled={sending || !user}
           />
@@ -414,7 +596,7 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
             variant="ghost"
             size="icon"
             className="text-orange-500 hover:text-orange-400 hover:bg-gaming-700"
-            disabled={sending || !newMessage.trim() || !user}
+            disabled={(sending || (!newMessage.trim() && !selectedClip) || !user)}
           >
             {sending ? (
               <Loader size={20} className="animate-spin" />
@@ -423,6 +605,64 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
             )}
           </Button>
         </div>
+        
+        {/* Clip Selection panel */}
+        {showClipAttach && (
+          <div className="mt-3 bg-gaming-900 rounded-lg p-3 border border-gaming-700">
+            <h4 className="text-sm font-medium text-white mb-2 flex items-center">
+              <Film size={16} className="mr-2 text-orange-400" />
+              Your Recent Clips
+            </h4>
+            
+            <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gaming-700 pr-1">
+              {recentClips.length > 0 ? (
+                recentClips.map(clip => (
+                  <div 
+                    key={clip.id} 
+                    className={`p-2 rounded cursor-pointer flex items-center transition-colors ${selectedClip?.id === clip.id ? 'bg-orange-900/30 border border-orange-600/50' : 'bg-gaming-800 hover:bg-gaming-700 border border-transparent'}`}
+                    onClick={() => setSelectedClip(clip)}
+                  >
+                    <div className="w-12 h-8 bg-black rounded flex-shrink-0 mr-3 flex items-center justify-center">
+                      <Camera size={16} className="text-orange-500" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h5 className="text-sm font-medium text-white truncate">{clip.title}</h5>
+                      <div className="flex items-center text-xs text-gray-400">
+                        <span className="truncate">{clip.streamer}</span>
+                        <span className="mx-1">•</span>
+                        <span>{clip.duration}s</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center ml-2">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <StarIcon 
+                          key={i} 
+                          size={12} 
+                          className="mr-0.5" 
+                          fill={i < Math.floor(clip.rating) ? "#F59E0B" : "transparent"}
+                          stroke={i < Math.floor(clip.rating) ? "#F59E0B" : "#9CA3AF"}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-400 py-4">
+                  <p className="mb-2">No clips available</p>
+                  <Button 
+                    variant="outline" 
+                    className="text-xs"
+                    onClick={() => toast.success('Recording new clip...')}
+                  >
+                    Record New Clip
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </form>
     </div>
   );
