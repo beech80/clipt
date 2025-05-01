@@ -248,4 +248,27 @@ export const ensureTablesExist = async () => {
   }
 };
 
+// Helper function to ensure the messages table exists for the messaging feature
+export const ensureMessagesTableExists = async () => {
+  try {
+    // Check if the direct_messages table exists
+    const exists = await checkTableExists('direct_messages');
+    
+    if (!exists) {
+      console.log('Creating direct_messages table...');
+      return await createMessagesTable();
+    }
+    
+    return { success: true, exists: true };
+  } catch (error) {
+    console.error('Error ensuring messages table exists:', error);
+    return { 
+      success: false, 
+      error,
+      demo: true, 
+      message: 'Using demo messaging system (error checking table)'
+    };
+  }
+};
+
 export { supabase };

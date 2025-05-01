@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, Zap, VideoIcon, User, Heart, Bookmark, UserPlus, ArrowLeft, Gamepad, Award, Star, Shield, Music, Rocket, Crown, ThumbsUp, MessageSquare, Share2, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import '../../styles/profile-retro-arcade.css';
+import '../styles/profile-retro-arcade.css';
 
 interface ProfileProps {
   profile?: any;
@@ -10,6 +10,10 @@ interface ProfileProps {
   achievements?: any[];
   isOwnProfile?: boolean;
   savedItems?: any[];
+  followersCount?: number;
+  followingCount?: number;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 const RetroArcadeProfile: React.FC<ProfileProps> = ({ 
@@ -17,29 +21,27 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
   posts = [], 
   achievements = [],
   isOwnProfile = false,
-  savedItems = [] 
+  savedItems = [],
+  followersCount = 0,
+  followingCount = 0,
+  activeTab = 'trophies',
+  onTabChange = () => {}
 }) => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'trophies' | 'clipts' | 'saved'>('trophies');
-  const [loading, setLoading] = useState(false);
+  const [localActiveTab, setLocalActiveTab] = useState<'trophies' | 'clipts' | 'saved'>(activeTab as any || 'trophies');
 
-  // Sample data for the profile display
-  const sampleAchievements = [
-    { id: 1, name: 'FIRST VICTORY', description: 'Win your first game', icon: Trophy, points: 50, date: '05.12.2023' },
-    { id: 2, name: 'CONTENT CREATOR', description: 'Post your first clip', icon: VideoIcon, points: 25, date: '06.18.2023' },
-    { id: 3, name: 'POPULAR PLAYER', description: 'Reach 10 followers', icon: UserPlus, points: 100, date: '07.03.2023' },
-    { id: 4, name: 'LIKE MACHINE', description: 'Get 50 likes on your content', icon: Heart, points: 75, date: '08.22.2023' },
-    { id: 5, name: 'COLLECTOR', description: 'Save 20 clips from others', icon: Bookmark, points: 40, date: '09.15.2023' },
-  ];
-  
-  // Empty rankings data (all set to zero as requested)
-  const sampleRankings = [
-    { rank: 1, points: 0, game: '' },
-    { rank: 2, points: 0, game: '' },
-    { rank: 3, points: 0, game: '' },
-    { rank: 4, points: 0, game: '' },
-    { rank: 5, points: 0, game: '' },
-  ];
+  useEffect(() => {
+    if (activeTab) {
+      setLocalActiveTab(activeTab as any);
+    }
+  }, [activeTab]);
+
+  const handleTabChange = (tab: 'trophies' | 'clipts' | 'saved') => {
+    setLocalActiveTab(tab);
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
 
   const handleBack = () => {
     navigate(-1);
@@ -107,21 +109,18 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                 <div className="player-info">
                   <h2 className="player-name glow-text">{profile.display_name || 'PLAYER ONE'}</h2>
                   <div className="player-username">@{profile.username || 'player1'}</div>
-                  <div className="player-bio">"{profile.bio || 'Level 99 arcade enthusiast. Collector of rare pixels and hunter of high scores. Currently on a quest to become the ultimate gaming legend.'}"</div>
+                  <div className="player-bio">{profile.bio || 'Gaming enthusiast and clip creator'}</div>
                   
                   <div className="player-stats">
                     <div className="stat-item">
-                      <Trophy className="stat-icon gold" />
-                      <div className="stat-value">{profile.trophy_count || 42}</div>
-                      <div className="stat-label">TROPHIES</div>
-                    </div>
-                    <div className="stat-item">
-                      <User className="stat-icon cyan" />
-                      <div className="stat-value">{profile.follower_count || 128}</div>
+                      <div className="stat-value">{followersCount}</div>
                       <div className="stat-label">FOLLOWERS</div>
                     </div>
                     <div className="stat-item">
-                      <Crown className="stat-icon purple" />
+                      <div className="stat-value">{followingCount}</div>
+                      <div className="stat-label">FOLLOWING</div>
+                    </div>
+                    <div className="stat-item">
                       <div className="stat-value">#{profile.rank || 5}</div>
                       <div className="stat-label">RANK</div>
                     </div>
@@ -138,6 +137,18 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                     <span>FOLLOW</span>
                   </motion.button>
                 )}
+                
+                {!isOwnProfile && (
+                  <motion.button 
+                    className="message-button"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate(`/messages?user=${profile.id}`)}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    <span>MESSAGE</span>
+                  </motion.button>
+                )}
               </div>
             </div>
           </motion.div>
@@ -147,60 +158,45 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
             <div className="control-panel-decoration left"></div>
             <div className="arcade-tabs">
               <motion.button 
-                className={`arcade-tab ${activeTab === 'trophies' ? 'active' : ''}`}
-                onClick={() => setActiveTab('trophies')}
+                className={`arcade-tab ${localActiveTab === 'trophies' ? 'active' : ''}`}
+                onClick={() => handleTabChange('trophies')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Trophy className="tab-icon gold" />
+                <Trophy className="tab-icon yellow" />
                 <span>TROPHIES</span>
-                {activeTab === 'trophies' && <div className="tab-active-indicator"></div>}
+                {localActiveTab === 'trophies' && <div className="tab-active-indicator"></div>}
               </motion.button>
+              
               <motion.button 
-                className={`arcade-tab ${activeTab === 'clipts' ? 'active' : ''}`}
-                onClick={() => setActiveTab('clipts')}
+                className={`arcade-tab ${localActiveTab === 'clipts' ? 'active' : ''}`}
+                onClick={() => handleTabChange('clipts')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <VideoIcon className="tab-icon cyan" />
                 <span>CLIPTS</span>
-                {activeTab === 'clipts' && <div className="tab-active-indicator"></div>}
+                {localActiveTab === 'clipts' && <div className="tab-active-indicator"></div>}
               </motion.button>
+              
               <motion.button 
-                className={`arcade-tab ${activeTab === 'saved' ? 'active' : ''}`}
-                onClick={() => setActiveTab('saved')}
+                className={`arcade-tab ${localActiveTab === 'saved' ? 'active' : ''}`}
+                onClick={() => handleTabChange('saved')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <Bookmark className="tab-icon green" />
                 <span>SAVED</span>
-                {activeTab === 'saved' && <div className="tab-active-indicator"></div>}
+                {localActiveTab === 'saved' && <div className="tab-active-indicator"></div>}
               </motion.button>
             </div>
             <div className="control-panel-decoration right"></div>
-            <div className="control-panel-joystick"></div>
           </div>
           
-          {/* Content area with game screen effect */}
-          <div className="game-screen-container">
+          {/* Content area with dynamic content based on active tab */}
+          <div className="arcade-content">
             <AnimatePresence mode="wait">
-              {loading ? (
-                <motion.div 
-                  key="loading"
-                  className="arcade-loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <div className="loading-scanline"></div>
-                  <div className="loading-glitch"></div>
-                  <div className="loading-text blink">LOADING GAME DATA...</div>
-                  <div className="loading-progress">
-                    <div className="progress-bar"></div>
-                  </div>
-                  <div className="loading-press-start">PRESS START</div>
-                </motion.div>
-              ) : activeTab === 'trophies' ? (
+              {localActiveTab === 'trophies' ? (
                 <motion.div
                   key="trophies"
                   className="content-section"
@@ -211,65 +207,42 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                 >
                   <div className="section-header">
                     <div className="section-title-container">
-                      <Trophy className="section-icon gold" />
-                      <h2 className="section-title glow-text">TROPHY CABINET</h2>
+                      <Trophy className="section-icon yellow" />
+                      <h2 className="section-title glow-text">ACHIEVEMENTS</h2>
                     </div>
-                    <div className="section-subtitle">ACHIEVEMENTS EARNED IN BATTLE</div>
-                  </div>
-                  <div className="trophy-display">
-                    {sampleAchievements.map((achievement, index) => (
-                      <motion.div 
-                        key={achievement.id} 
-                        className="trophy-item"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        whileHover={{ 
-                          y: -5, 
-                          boxShadow: '0 10px 25px rgba(0,0,0,0.6)', 
-                          borderColor: 'var(--neon-blue)' 
-                        }}
-                      >
-                        <achievement.icon 
-                          className={`trophy-icon trophy-rank-${Math.min(index + 1, 4)}`} 
-                          size={60} 
-                        />
-                        <div className="trophy-name">{achievement.name}</div>
-                        <div className="trophy-desc">{achievement.description}</div>
-                        <div className="trophy-date">UNLOCKED ON {achievement.date}</div>
-                        <div className="trophy-points">
-                          <span>{achievement.points}</span>
-                          <Trophy className="points-icon" size={12} />
-                        </div>
-                      </motion.div>
-                    ))}
+                    <div className="section-subtitle">PLAYER TROPHIES AND BADGES</div>
                   </div>
                   
-                  {/* Trophy rankings/leaderboard */}
-                  <h3 className="arcade-title glow-text mt-10 mb-5">WAITING FOR VOTES</h3>
-                  <div className="trophy-ranks">
-                    {sampleRankings.map((item, index) => (
+                  <div className="achievements-grid">
+                    {achievements.map((achievement, index) => (
                       <motion.div 
-                        key={index}
-                        className={`rank-item rank-${Math.min(item.rank, 4)}`}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        whileHover={{ scale: 1.05 }}
+                        key={achievement.id}
+                        className="achievement-card"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 * index }}
+                        whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(255, 215, 0, 0.6)' }}
                       >
-                        <div className="rank-number">{item.rank}</div>
-                        <Trophy className="rank-trophy" />
-                        <div className="rank-info">
-                          <div className="rank-game">Waiting for votes</div>
-                          <div className="rank-points">
-                            {item.points} <Trophy className="mini-trophy" size={12} />
+                        <div className="achievement-icon">
+                          {achievement.icon === 'Trophy' && <Trophy className="icon-trophy" />}
+                          {achievement.icon === 'VideoIcon' && <VideoIcon className="icon-video" />}
+                          {achievement.icon === 'UserPlus' && <UserPlus className="icon-user-plus" />}
+                          {achievement.icon === 'Heart' && <Heart className="icon-heart" />}
+                          {achievement.icon === 'Bookmark' && <Bookmark className="icon-bookmark" />}
+                        </div>
+                        <div className="achievement-details">
+                          <h3 className="achievement-name">{achievement.name}</h3>
+                          <p className="achievement-description">{achievement.description}</p>
+                          <div className="achievement-points">
+                            <Star className="points-icon" />
+                            <span>{achievement.points} PTS</span>
                           </div>
                         </div>
                       </motion.div>
                     ))}
                   </div>
                 </motion.div>
-              ) : activeTab === 'clipts' ? (
+              ) : localActiveTab === 'clipts' ? (
                 <motion.div
                   key="clipts"
                   className="content-section"
@@ -280,38 +253,41 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                 >
                   <div className="section-header">
                     <div className="section-title-container">
-                      <VideoIcon className="section-icon purple" />
-                      <h2 className="section-title glow-text">CLIPTS</h2>
+                      <VideoIcon className="section-icon cyan" />
+                      <h2 className="section-title glow-text">GAME CLIPTS</h2>
                     </div>
-                    <div className="section-subtitle">YOUR GAMING MOMENTS</div>
+                    <div className="section-subtitle">CAPTURED GAMING MOMENTS</div>
                   </div>
                   
                   {posts && posts.length > 0 ? (
-                    <div className="clips-grid">
-                      {posts.slice(0, 6).map((post, index) => (
+                    <div className="clipts-grid">
+                      {posts.map((post, index) => (
                         <motion.div 
-                          key={post.id || index}
-                          className="clip-card"
+                          key={post.id}
+                          className="clipt-card"
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          whileHover={{ scale: 1.05, y: -5 }}
+                          transition={{ delay: 0.1 * index }}
+                          whileHover={{ scale: 1.03, boxShadow: '0 0 15px rgba(0, 195, 255, 0.6)' }}
                         >
-                          <div className="clip-thumbnail">
-                            <img src={post.image_url || 'https://placehold.co/600x400/121212/4169E1?text=Game+Clip'} alt={post.title} />
-                            <div className="clip-play-button">
-                              <div className="play-icon"></div>
-                            </div>
-                            <div className="clip-duration">00:{Math.floor(Math.random() * 60) + 10}</div>
-                          </div>
-                          <div className="clip-info">
-                            <h3 className="clip-title">{post.title}</h3>
-                            <div className="clip-meta">
-                              <div className="clip-views">
-                                <Eye className="view-icon" />
-                                <span>{Math.floor(Math.random() * 1000) + 100}</span>
+                          <div className="clipt-thumbnail">
+                            <img src={post.image_url || 'https://placehold.co/600x400/121212/00C3FF?text=Game+Clipt'} alt="Clipt thumbnail" />
+                            <div className="clipt-overlay">
+                              <div className="clipt-play-icon">
+                                <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="2" fill="none">
+                                  <polygon points="5 3 19 12 5 21 5 3" fill="white" />
+                                </svg>
                               </div>
-                              <div className="clip-likes">
+                            </div>
+                          </div>
+                          <div className="clipt-details">
+                            <h3 className="clipt-title">{post.title}</h3>
+                            <div className="clipt-meta">
+                              <div className="clipt-views">
+                                <Eye className="view-icon" />
+                                <span>{post.views_count || Math.floor(Math.random() * 1000) + 100}</span>
+                              </div>
+                              <div className="clipt-likes">
                                 <ThumbsUp className="like-icon" />
                                 <span>{post.likes_count || 0}</span>
                               </div>
@@ -322,14 +298,14 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                     </div>
                   ) : (
                     <motion.div 
-                      className="retro-empty-state"
+                      className="empty-state"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2 }}
                     >
-                      <VideoIcon className="empty-state-icon" size={48} />
+                      <VideoIcon className="empty-icon" />
                       <h3 className="empty-title">NO GAME CLIPTS FOUND</h3>
-                      <p className="empty-text">Capture and share your best plays!</p>
+                      <p className="empty-text">Capture and share your best gaming moments!</p>
                       {isOwnProfile && (
                         <motion.button 
                           className="create-button"
@@ -343,7 +319,7 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                   )}
                 </motion.div>
               ) : (
-                <motion.div 
+                <motion.div
                   key="saved"
                   className="content-section"
                   initial={{ opacity: 0 }}
@@ -354,9 +330,9 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                   <div className="section-header">
                     <div className="section-title-container">
                       <Bookmark className="section-icon green" />
-                      <h2 className="section-title glow-text">SAVED CLIPTS</h2>
+                      <h2 className="section-title glow-text">COLLECTION</h2>
                     </div>
-                    <div className="section-subtitle">YOUR FAVORITE GAMING MOMENTS</div>
+                    <div className="section-subtitle">YOUR SAVED TREASURES</div>
                   </div>
                   
                   {savedItems && savedItems.length > 0 ? (

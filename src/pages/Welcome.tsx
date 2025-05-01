@@ -23,7 +23,7 @@ const Welcome: React.FC = () => {
           transition={{ duration: 2, repeat: Infinity }}
         >
           <Sparkles className="inline mr-2" />
-          Welcome to CLIPT
+          CLIPT
           <Sparkles className="inline ml-2" />
         </motion.h1>
       </div>

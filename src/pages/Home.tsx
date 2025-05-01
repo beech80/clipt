@@ -352,11 +352,11 @@ const Home = () => {
                   
                   <div className="flex flex-col">
                     <button 
-                      onClick={() => navigate('/streaming')}
-                      className="w-full bg-gradient-to-r from-green-600/80 to-blue-600/80 hover:from-green-500/80 hover:to-blue-500/80 text-white py-3 px-8 rounded-lg font-medium transition-all shadow-lg hover:shadow-blue-500/20 border border-green-500/30 flex items-center justify-center"
+                      onClick={() => navigate('/streams')}
+                      className="w-full bg-gradient-to-r from-orange-600/80 to-red-600/80 hover:from-orange-500/80 hover:to-red-500/80 text-white py-3 px-8 rounded-lg font-medium transition-all shadow-lg hover:shadow-orange-500/20 border border-orange-500/30 flex items-center justify-center"
                     >
                       <Radio className="mr-2 h-5 w-5" />
-                      Start Streaming
+                      Stream Setup
                     </button>
                   </div>
                 </div>

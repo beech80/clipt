@@ -1,14 +1,31 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './cliptfinalprelaucnh.css';
 
 const BackButton: React.FC = () => {
   const navigate = useNavigate();
-
+  const location = useLocation();
+  
+  // List of paths where the back button should be hidden
+  const hiddenPaths = [
+    '/', // Home page
+    '/login', // Login page
+    '/loading', // Loading page
+    '/signup' // Signup page
+  ];
+  
+  // Check if current path is in the hidden paths list
+  const shouldHideButton = hiddenPaths.includes(location.pathname);
+  
   const handleBackClick = () => {
     navigate(-1); // Navigate back in history
   };
 
+  // Don't render anything if we're on a path where the button should be hidden
+  if (shouldHideButton) {
+    return null;
+  }
+  
   return (
     <div className="back-button-container">
       <button 
@@ -22,7 +39,7 @@ const BackButton: React.FC = () => {
           height="24" 
           viewBox="0 0 24 24" 
           fill="none" 
-          stroke="white" 
+          stroke="#FF5500" 
           strokeWidth="2" 
           strokeLinecap="round" 
           strokeLinejoin="round"

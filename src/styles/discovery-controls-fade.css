@@ -1,0 +1,107 @@
+/* Navigation controls styling with fade animation */
+/* Navigation controls container - centered at bottom */
+.single-row-nav {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: rgba(0, 0, 0, 0.75);
+  width: auto;
+  margin: 0;
+  z-index: 30;
+  border-radius: 25px;
+  transition: opacity 0.2s ease-in-out;
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Make nav buttons smaller and with less margin */
+.single-row-nav .nav-button {
+  padding: 3px;
+  margin: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+/* Top navigation buttons */
+.top-nav-buttons {
+  position: fixed;
+  top: 15px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  padding: 8px 15px;
+  width: 100%;
+  margin: 0 auto;
+  z-index: 100;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.top-nav-buttons .nav-button {
+  padding: 5px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.top-nav-buttons.visible, 
+.single-row-nav.visible {
+  opacity: 1;
+}
+
+.top-nav-buttons.hidden,
+.single-row-nav.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nav-button {
+  background-color: transparent !important;
+  border: none !important;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.nav-button:hover {
+  transform: scale(1.1);
+}
+
+.nav-button svg {
+  filter: drop-shadow(0 0 5px rgba(255, 140, 0, 0.8));
+}
+
+.nav-button.active svg {
+  color: #FF6200 !important;
+  filter: drop-shadow(0 0 5px rgba(255, 140, 0, 0.8)) !important;
+}
+
+/* Clean navigation layout with no divider */
+.single-row-nav {
+  position: relative;
+}
+
+/* Prevent scrolling */
+body.discovery-active {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}

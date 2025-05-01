@@ -8,62 +8,23 @@ import '../styles/discovery-updates.css';
 import '../styles/gameboy-controller-new.css';
 import '../styles/discovery-nav-buttons.css';
 import '../styles/gameboy-buttons-override.css';
-import '../styles/discovery-controls-fade.css';
-import '../styles/follow-button-animations.css';
-import '../styles/modal-animations.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faArrowLeft, 
-  faChevronRight, 
-  faComment, 
-  faCopy,
-  faCut, 
-  faDollarSign, 
-  faDownload, 
-  faShare, 
-  faStar, 
-  faThumbsDown, 
-  faThumbsUp, 
-  faUser,
-  faUserCheck, 
-  faUserPlus, 
-  faVideo,
-  faSearch, 
-  faGamepad, 
-  faChevronLeft, 
-  faTimes, 
-  faHome, 
-  faCog, 
-  faHeart, 
-  faStarHalfAlt,
-  faScissors,
-  faShareAlt,
-  faCamera,
-  faClock
-} from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faGamepad, faVideo, faChevronLeft, faChevronRight, faComment, faTimes, faUser, faCut, faHome, faDollarSign, faCog, faArrowLeft, faHeart } from '@fortawesome/free-solid-svg-icons';
 import CliptLogoSVG from '../assets/clipt_logo_text.svg'; 
 import RealtimeChat from '../components/messages/RealtimeChat';
-import DonationModal from '../components/DonationModal';
-import ClippingTool from '../components/ClippingTool';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { toast } from "@/components/ui/use-toast";
 
 const DiscoveryNew: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  // Navigation functions are defined below
-
   // Game search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedGame, setSelectedGame] = useState(null);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
-  const [shareUrl, setShareUrl] = useState('');
-  const [shareTitle, setShareTitle] = useState('');
   const [trendingGames, setTrendingGames] = useState([]);
 
   // Streamers state
@@ -77,18 +38,10 @@ const DiscoveryNew: React.FC = () => {
   // Chat state
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentStreamer, setCurrentStreamer] = useState(null);
-  const [clipRating, setClipRating] = useState(0);
-  const [showRatingModal, setShowRatingModal] = useState(false);
-  const [clipToRate, setClipToRate] = useState(null);
   
   // UI controls state
   const [areControlsVisible, setAreControlsVisible] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Modal states
-  const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
-  const [isClippingModalOpen, setIsClippingModalOpen] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(false);
 
   // Refs
   const containerRef = useRef(null);
@@ -98,9 +51,6 @@ const DiscoveryNew: React.FC = () => {
   const [activeSearchTab, setActiveSearchTab] = useState('games');
   const [streamerResults, setStreamerResults] = useState([]);
   const [clipResults, setClipResults] = useState([]);
-  
-  // Shared clips state
-  const [sharedClips, setSharedClips] = useState<any[]>([]);
   
   // Set up the controls auto-hide functionality
   useEffect(() => {
@@ -309,46 +259,10 @@ const DiscoveryNew: React.FC = () => {
     return (num / 1000000000).toFixed(1) + 'B';
   };
   
-  // Function to toggle chat panel with animation
+  // Toggle chat
   const toggleChat = () => {
-    if (isChatOpen) {
-      // Apply closing animation class
-      const chatPanel = document.querySelector('.chat-panel');
-      if (chatPanel) {
-        chatPanel.classList.add('closing');
-        // Wait for animation to complete before hiding
-        setTimeout(() => {
-          setIsChatOpen(false);
-          chatPanel.classList.remove('closing');
-        }, 300);
-      }
-    } else {
-      setIsChatOpen(true);
-    }
+    setIsChatOpen(!isChatOpen);
   };
-  
-  // Close chat when clicking outside - enhanced for better detection
-  useEffect(() => {
-    if (!isChatOpen) return;
-    
-    const handleClickOutside = (e) => {
-      const chatPanel = document.querySelector('.chat-panel');
-      const chatButton = document.querySelector('.chat-button');
-      
-      // Make sure we're not clicking on the chat panel or the chat button
-      if (chatPanel && !chatPanel.contains(e.target) && 
-          (!chatButton || !chatButton.contains(e.target))) {
-        console.log('Clicking outside chat panel, closing chat');
-        toggleChat();
-      }
-    };
-    
-    // Use capture phase to ensure we catch clicks before they're handled by other elements
-    document.addEventListener('mousedown', handleClickOutside, true);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside, true);
-    };
-  }, [isChatOpen]);
   
   // Navigate to previous streamer with smooth animation
   const goToPreviousStreamer = () => {
@@ -388,7 +302,6 @@ const DiscoveryNew: React.FC = () => {
   
   // Navigate to streaming page
   const goToStreaming = () => {
-    console.log('Navigating to streaming page...');
     navigate('/streaming');
   };
 
@@ -496,6 +409,7 @@ const DiscoveryNew: React.FC = () => {
                     </div>
                   ) : (
                     <div className="trending-games-grid">
+                      <h3 className="trending-title">Trending Games</h3>
                       <div className="game-grid">
                         {trendingGames.map(game => (
                           <div 
@@ -728,587 +642,61 @@ const DiscoveryNew: React.FC = () => {
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <div>
-                {sharedClips.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="text-orange-500 font-medium mb-3 flex items-center">
-                      <FontAwesomeIcon icon={faCut} className="mr-2" />
-                      Shared Clips
-                    </h4>
-                    
-                    {sharedClips.map((clip, index) => (
-                      <div 
-                        key={index} 
-                        className="mb-3 bg-gray-800/50 p-3 rounded-lg border-l-2 border-orange-500"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="text-orange-400 font-medium">{clip.username}</span>
-                            <span className="text-gray-400 text-sm ml-2">
-                              shared a {clip.duration}s clip from {clip.streamer}
-                            </span>
-                          </div>
-                          <div className="flex">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <FontAwesomeIcon 
-                                key={star}
-                                icon={star <= (clip.rating || 0) ? faStar : faStarHalfAlt}
-                                className={star <= (clip.rating || 0) ? 'text-yellow-500' : 'text-gray-600'}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        {clip.comment && (
-                          <p className="mt-2 text-gray-300 italic">"{clip.comment}"</p>
-                        )}
-                        <div className="mt-2 flex gap-2">
-                          <button className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded">
-                            Watch
-                          </button>
-                          <button className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded">
-                            Rate
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div className="relative w-full h-full">
-                  <button 
-                    className="absolute top-3 right-3 z-50 bg-gray-800 hover:bg-gray-700 rounded-full p-2"
-                    onClick={toggleChat}
-                    title="Close chat"
-                  >
-                    <FontAwesomeIcon icon={faTimes} className="text-white" />
-                  </button>
-                  <RealtimeChat
-                    partnerId={currentStreamer?.id}
-                    partnerInfo={{
-                      id: currentStreamer?.id,
-                      username: currentStreamer?.username,
-                      displayName: currentStreamer?.display_name,
-                      avatarUrl: currentStreamer?.avatar_url || ''
-                    }}
-                    onClose={toggleChat}
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        {/* Modals */}
-        <AnimatePresence>
-          {isDonationModalOpen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <DonationModal
-                isOpen={isDonationModalOpen}
-                streamerName={currentStreamer?.username}
-                onClose={() => setIsDonationModalOpen(false)}
+              <RealtimeChat 
+                partnerId={currentStreamer.id}
+                partnerInfo={{
+                  id: currentStreamer.id,
+                  username: currentStreamer.username,
+                  displayName: currentStreamer.username,
+                  avatarUrl: currentStreamer.avatar_url
+                }}
+                onClose={toggleChat}
               />
             </motion.div>
           )}
         </AnimatePresence>
         
-        {/* Clipping Tool Modal */}
-        <AnimatePresence>
-          {isClippingModalOpen && currentStreamer && streamers.length > 0 && (
-            <ClippingTool
-              isOpen={isClippingModalOpen}
-              videoUrl={streamers[currentIndex].stream_url}
-              streamerName={currentStreamer.username}
-              onClose={() => setIsClippingModalOpen(false)}
-              onShareInChat={(clipData) => {
-                setSharedClips(prev => [
-                  {
-                    ...clipData,
-                    username: 'You',
-                    timestamp: new Date().toISOString(),
-                    streamer: currentStreamer.username
-                  },
-                  ...prev
-                ]);
-                setIsChatOpen(true);
-              }}
-            />
-          )}
-          
-          {/* Rating Modal for Clips */}
-          <AnimatePresence>
-            {showRatingModal && clipToRate && (
-              <motion.div 
-                className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-75"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <div className="bg-gray-900 rounded-xl p-6 max-w-md w-full mx-4 border border-orange-500 shadow-lg">
-                  <h3 className="text-xl font-bold text-orange-500 mb-4">Rate Your Clip</h3>
-                  <p className="text-white mb-2">60-second clip from {clipToRate.streamer}'s stream</p>
-                  
-                  <div className="flex justify-center mb-6 mt-4">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button 
-                        key={star} 
-                        onClick={() => setClipRating(star)}
-                        className="mx-1 transform transition-transform hover:scale-110"
-                      >
-                        <FontAwesomeIcon 
-                          icon={star <= clipRating ? faStar : faStarHalfAlt}
-                          className={star <= clipRating ? 'text-yellow-500' : 'text-gray-600'}
-                          size="2x"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                  
-                  <div className="mb-4">
-                    <label className="block text-gray-300 mb-2">Add a comment (optional):</label>
-                    <textarea 
-                      className="w-full bg-gray-800 text-white rounded p-2 border border-gray-700"
-                      rows={3}
-                      placeholder="What did you think of this moment?"
-                    ></textarea>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <button 
-                      className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
-                      onClick={() => {
-                        setShowRatingModal(false);
-                        setClipRating(0);
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    
-                    <div className="flex space-x-2">
-                      <button 
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 flex items-center"
-                        onClick={() => {
-                          // Add to chat with rating
-                          const textarea = document.querySelector('textarea');
-                          const comment = textarea ? textarea.value : '';
-                          
-                          setSharedClips(prev => [
-                            {
-                              ...clipToRate,
-                              username: 'You',
-                              rating: clipRating,
-                              comment: comment
-                            },
-                            ...prev
-                          ]);
-                          
-                          setIsChatOpen(true);
-                          setShowRatingModal(false);
-                          setClipRating(0);
-                          
-                          toast({
-                            title: "Clip Shared",
-                            description: "Your clip has been shared in the chat"
-                          });
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faComment} className="mr-2" />
-                        Share in Chat
-                      </button>
-                      
-                      <button 
-                        className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-500 flex items-center"
-                        onClick={() => {
-                          setShowRatingModal(false);
-                          setClipRating(0);
-                          
-                          toast({
-                            title: "Clip Saved",
-                            description: "Your clip has been saved and submitted for ranking"
-                          });
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faScissors} className="mr-2" />
-                        Save & Rank
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </AnimatePresence>
-        
-        {/* Top corner buttons for search and streaming */}
-        <div style={{
-          position: 'absolute',
-          top: '15px',
-          right: '15px',
-          display: 'flex',
-          gap: '10px',
-          zIndex: 10
-        }}>
-          {/* Search Button */}
-          <button 
-            className="nav-button search-button" 
-            onClick={() => navigate('/search')}
-            style={{ 
-              backgroundColor: 'rgba(255, 140, 0, 0.15)', 
-              border: 'none',
-              boxShadow: '0 0 8px rgba(255, 140, 0, 0.2)',
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-            title="Search games and streamers"
-          >
-            <FontAwesomeIcon 
-              icon={faSearch} 
-              style={{ color: '#FF8C00', filter: 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.8))' }}
-              size="lg"
-            />
-          </button>
-          
-          {/* Stream Hub Button */}
+        {/* Navigation buttons */}
+        <div className={`single-row-nav ${areControlsVisible ? 'visible' : 'hidden'}`}>
+          {/* Stream Button */}
           <button 
             className="nav-button stream-button" 
-            onClick={() => {
-              console.log('Navigating to all streamers hub page');
-              navigate('/all-streamers');
-            }}
-            style={{ 
-              backgroundColor: 'rgba(255, 85, 0, 0.3)', 
-              border: '2px solid rgba(255, 85, 0, 0.4)',
-              boxShadow: '0 0 12px rgba(255, 85, 0, 0.4)',
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-            title="Go to Stream Hub"
+            onClick={goToStreaming}
+            style={{ backgroundColor: 'transparent', border: 'none' }}
           >
             <FontAwesomeIcon 
               icon={faVideo} 
-              style={{ color: '#FF5500', filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.9))' }}
-              size="lg"
-            />
-          </button>
-        </div>
-        
-        {/* Bottom Fixed Navigation Bar */}
-        <div style={{
-          position: 'fixed',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '15px',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          padding: '10px 20px',
-          borderRadius: '30px',
-          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
-          zIndex: 100
-        }}>
-          {/* Follow Button - Icon Only */}
-          <button
-            className="nav-button follow-button"
-            onClick={() => {
-              setIsFollowing(!isFollowing);
-              toast({
-                title: isFollowing ? "Unfollowed" : "Followed",
-                description: isFollowing 
-                  ? `You have unfollowed streamer` 
-                  : `You are now following streamer`,
-              });
-            }}
-            style={{ 
-              backgroundColor: 'rgba(255, 85, 0, 0.3)',
-              border: '1px solid rgba(255, 85, 0, 0.4)',
-              borderRadius: '50%',
-              width: '45px',
-              height: '45px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FF5500',
-              transition: 'transform 0.2s, background-color 0.2s'
-            }}
-            title={isFollowing ? "Unfollow this streamer" : "Follow this streamer"}
-          >
-            <FontAwesomeIcon 
-              icon={faHeart} 
-              style={{ 
-                color: '#FF5500',
-                filter: 'drop-shadow(0 0 3px rgba(255, 85, 0, 0.8))'
-              }}
-              size="lg"
-            />
-          </button>
-
-          {/* Chat Button - Icon Only */}
-          <button
-            className="nav-button chat-button"
-            onClick={() => {
-              setIsChatOpen(true);
-              if (currentStreamer) {
-                // Load chat messages for current streamer if needed
-                console.log(`Opening chat for ${currentStreamer.username}`);
-                // You could also fetch recent messages here
-              }
-            }}
-            style={{ 
-              backgroundColor: 'rgba(255, 85, 0, 0.3)',
-              border: '1px solid rgba(255, 85, 0, 0.4)',
-              borderRadius: '50%',
-              width: '45px',
-              height: '45px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FF5500',
-              transition: 'transform 0.2s, background-color 0.2s'
-            }}
-            title="Open chat"
-          >
-            <FontAwesomeIcon 
-              icon={faComment} 
-              style={{ 
-                color: '#FF5500',
-                filter: 'drop-shadow(0 0 3px rgba(255, 85, 0, 0.8))'
-              }}
-              size="lg"
+              style={{ color: '#FF8C00', filter: 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.7))' }}
+              size="2x"
             />
           </button>
           
-          {/* Dollar Sign Button - Icon Only */}
-          <button
-            className="nav-button donate-button"
-            onClick={() => setIsDonationModalOpen(true)}
-            style={{ 
-              backgroundColor: 'rgba(255, 85, 0, 0.3)',
-              border: '1px solid rgba(255, 85, 0, 0.4)',
-              borderRadius: '50%',
-              width: '45px',
-              height: '45px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FF5500',
-              transition: 'transform 0.2s, background-color 0.2s'
-            }}
-            title="Donate to streamer"
-          >
-            <FontAwesomeIcon 
-              icon={faDollarSign} 
-              style={{ 
-                color: '#FF5500',
-                filter: 'drop-shadow(0 0 3px rgba(255, 85, 0, 0.8))'
-              }}
-              size="lg"
-            />
-          </button>
-          
-          {/* Clipt Button - Icon Only - Record Last 1 Minute */}
-          <button
-            className="nav-button clip-button"
-            onClick={() => {
-              if (currentStreamer && streamers.length > 0) {
-                setIsClippingModalOpen(true);
-                // Show a notification that we're recording the LAST minute
-                toast({
-                  title: "Recording Last Minute",
-                  description: `Capturing the last minute of ${currentStreamer.username}'s stream`,
-                });
-                
-                // Set timeout to simulate the recording of the last minute
-                setTimeout(() => {
-                  // Close clipping modal
-                  setIsClippingModalOpen(false);
-                  
-                  // Show rating modal
-                  setClipToRate({
-                    id: Date.now(),
-                    streamer: currentStreamer.username,
-                    duration: 60,
-                    timestamp: new Date().toISOString()
-                  });
-                  setShowRatingModal(true);
-                }, 1500);
-              } else {
-                toast({
-                  title: "No Stream Selected",
-                  description: "Please select a stream to clip",
-                  variant: "destructive"
-                });
-              }
-            }}
-            style={{ 
-              backgroundColor: 'rgba(255, 85, 0, 0.3)',
-              border: '1px solid rgba(255, 85, 0, 0.4)',
-              borderRadius: '50%',
-              width: '45px',
-              height: '45px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FF5500',
-              transition: 'transform 0.2s, background-color 0.2s'
-            }}
-            title="Record last 1 minute"
-          >
-            <div className="relative">
-              <FontAwesomeIcon 
-                icon={faScissors} 
-                style={{ 
-                  color: '#FF5500',
-                  filter: 'drop-shadow(0 0 3px rgba(255, 85, 0, 0.8))'
-                }}
-                size="lg"
-              />
-              <FontAwesomeIcon 
-                icon={faClock} 
-                style={{ 
-                  color: '#ffffff',
-                  position: 'absolute',
-                  fontSize: '8px',
-                  top: '-3px',
-                  right: '-3px',
-                  filter: 'drop-shadow(0 0 2px rgba(0, 0, 0, 0.8))'
-                }}
-                size="xs"
-              />
-            </div>
-          </button>
-          
-          {/* Share Button - Camera Icon */}
-          <button
-            className="nav-button share-button"
-            onClick={() => {
-              if (currentStreamer) {
-                setIsShareModalOpen(true);
-                // Setup share options with additional social media options
-                const shareOptions = {
-                  title: `Check out ${currentStreamer.username}'s stream on Clipt!`,
-                  text: `I'm watching ${currentStreamer.username} on Clipt. Join me!`,
-                  url: window.location.href
-                };
-                
-                // Open a custom modal with social media options
-                toast({
-                  title: "Share to Social Media",
-                  description: "Select where you want to share this stream"
-                });
-                
-                // This will be handled by the share modal component
-                setIsShareModalOpen(true);
-              } else {
-                toast({
-                  title: "No Stream Selected",
-                  description: "Please select a stream to share",
-                  variant: "destructive"
-                });
-              }
-            }}
-            style={{ 
-              backgroundColor: 'rgba(255, 85, 0, 0.3)',
-              border: '1px solid rgba(255, 85, 0, 0.4)',
-              borderRadius: '50%',
-              width: '45px',
-              height: '45px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FF5500',
-              transition: 'transform 0.2s, background-color 0.2s'
-            }}
-            title="Share this stream to social media or messages"
-          >
-            <FontAwesomeIcon 
-              icon={faCamera} 
-              style={{ 
-                color: '#FF5500',
-                filter: 'drop-shadow(0 0 3px rgba(255, 85, 0, 0.8))'
-              }}
-              size="lg"
-            />
-          </button>
-        </div>
-      
-      {/* Hidden buttons that can be toggled with additional UI */}
-      <div style={{ display: 'none' }}>
-          {/* Scissors/Clip Button */}
+          {/* Left Arrow - Previous Streamer */}
           <button 
-            className="nav-button clip-button" 
-            onClick={() => setIsClippingModalOpen(true)}
+            className="nav-button" 
+            onClick={goToPreviousStreamer}
             style={{ backgroundColor: 'transparent', border: 'none' }}
-            title="Record a 1-minute clip"
           >
             <FontAwesomeIcon 
-              icon={faCut} 
-              style={{ 
-                color: '#FF8C00', 
-                filter: 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.7))' 
-              }}
+              icon={faArrowLeft} 
+              style={{ color: '#FF8C00', filter: 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.7))' }}
               size="2x"
             />
           </button>
           
-          {/* Follow Button */}
+          {/* Right Arrow - Next Streamer */}
           <button 
-            className={`nav-button follow-button ${isFollowing ? 'active' : ''}`}
-            onClick={() => {
-              if (currentStreamer) {
-                setIsFollowing(!isFollowing);
-                toast({
-                  title: isFollowing ? "Unfollowed" : "Followed",
-                  description: isFollowing 
-                    ? `You have unfollowed ${currentStreamer.username}` 
-                    : `You are now following ${currentStreamer.username}`,
-                  duration: 2000,
-                });
-              }
-            }}
-            style={{ 
-              backgroundColor: 'transparent', 
-              border: 'none',
-              position: 'relative',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '3px'
-            }}
-            title={isFollowing ? "Unfollow this streamer" : "Follow this streamer"}
+            className="nav-button" 
+            onClick={goToNextStreamer}
+            style={{ backgroundColor: 'transparent', border: 'none' }}
           >
             <FontAwesomeIcon 
-              icon={isFollowing ? faUserCheck : faUserPlus} 
-              style={{ 
-                color: isFollowing ? '#FF4500' : '#FF8C00', 
-                filter: 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.7))',
-                animation: isFollowing ? 'pulse 1.5s ease-in-out infinite' : 'none'
-              }}
-              size="2x"
+              icon={faChevronRight} 
+              style={{ color: '#FF8C00', filter: 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.7))' }}
+              size="2x" 
             />
-            <span className="follow-text" style={{
-              fontSize: '10px',
-              color: '#FF8C00',
-              fontWeight: 'bold',
-              textShadow: '0 0 3px rgba(0, 0, 0, 0.7)',
-              whiteSpace: 'nowrap',
-              opacity: isFollowing ? 1 : 0.7
-            }}>
-              {isFollowing ? "Following" : "Follow"}
-            </span>
           </button>
-      </div>
+        </div>
       </div>
     </div>
   );

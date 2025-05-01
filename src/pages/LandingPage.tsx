@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useAnimation } from 'framer-motion';
-import { Gamepad2, Sparkles, Zap, Video, Trophy, Share2, Flame, Music, Globe, Tv, Film, Send, Rocket, Camera } from 'lucide-react';
-import confetti from 'canvas-confetti';
-import '@/styles/landing-animations.css';
-import '@/styles/galaxy-animations.css';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Gamepad2, Video, Camera } from 'lucide-react';
 
 // Emoji Animation Component
 const EmojiAnimations: React.FC = () => {
