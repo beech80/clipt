@@ -10,6 +10,7 @@ import { MessageSquare, Search, UserPlus, Send, Plus, Users, ArrowLeft, Zap, Gam
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, createMessagesTable, checkTableExists } from "@/lib/supabase";
+import { useGlobalScrollLock } from "../hooks/useGlobalScrollLock";
 import { toast } from "sonner";
 import { UserLink } from '@/components/user/UserLink';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,12 +34,29 @@ import {
 const RetroMessagesContainer = styled(motion.div)`
   display: flex;
   flex-direction: column;
-  width: 100%;
+  width: 100vw;
   height: 100vh;
-  max-height: 100vh;
+  min-height: 100vh;
   background-color: rgb(5, 7, 20);
   overflow: hidden;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  
+  /* Fix for the bottom of the page */
+  &:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -50px; /* Extra padding to ensure coverage */
+    height: 100px;
+    background-color: rgb(5, 7, 20);
+    z-index: -1;
+  }
   
   /* Ensure all content stays within viewport */
   & > * {
@@ -235,6 +253,22 @@ const RetroButton = styled(motion.button)`
 `;
 
 const Messages = () => {
+  useGlobalScrollLock();
+  
+  // Apply background color to body when component mounts
+  useEffect(() => {
+    // Save original background color
+    const originalBgColor = document.body.style.backgroundColor;
+    
+    // Apply consistent background color
+    document.body.style.backgroundColor = 'rgb(5, 7, 20)';
+    
+    // Cleanup function to restore original background color
+    return () => {
+      document.body.style.backgroundColor = originalBgColor;
+    };
+  }, []);
+  
   const { user } = useAuth();
   const navigate = useNavigate();
   const { userId } = useParams();
@@ -836,8 +870,10 @@ const Messages = () => {
   };
 
   return (
-    <div className="h-screen overflow-hidden fixed inset-0">
-      <CrtScreen className="h-full overflow-hidden">
+    <>
+      {/* Full-screen background that extends all the way to bottom */}
+      <div className="fixed inset-0 w-screen h-screen bg-[rgb(5,7,20)] z-[9000]"></div>
+      <CrtScreen className="h-screen w-screen overflow-hidden fixed inset-0 bg-[rgb(5,7,20)] z-[9001]">
         <RetroNoiseOverlay />
         <RetroMessagesContainer
           variants={containerVariants}
@@ -1564,7 +1600,7 @@ const Messages = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
 
