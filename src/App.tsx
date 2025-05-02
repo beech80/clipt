@@ -182,6 +182,8 @@ const AppContent = () => {
         <Route path="/streams-setup" element={<SuspenseBoundary loadingMessage="Loading stream setup..."><Streaming /></SuspenseBoundary>} />
         <Route path="/streaming" element={<SuspenseBoundary loadingMessage="Loading streamers..."><StreamingPageModern /></SuspenseBoundary>} />
         <Route path="/streaming-setup" element={<SuspenseBoundary loadingMessage="Loading stream setup..."><Streaming /></SuspenseBoundary>} />
+        <Route path="/streaming/dashboard" element={<SuspenseBoundary loadingMessage="Loading stream dashboard..."><Streaming /></SuspenseBoundary>} />
+        <Route path="/streaming/schedule" element={<SuspenseBoundary loadingMessage="Loading stream schedule..."><Streaming /></SuspenseBoundary>} />
         <Route path="/streams" element={<SuspenseBoundary loadingMessage="Loading stream setup..."><Streams /></SuspenseBoundary>} />
         <Route path="/stream/:id" element={<SuspenseBoundary loadingMessage="Loading stream view..."><StreamView /></SuspenseBoundary>} />
         <Route path="/messages" element={<SuspenseBoundary loadingMessage="Loading messages..."><Messages /></SuspenseBoundary>} />

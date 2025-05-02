@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,8 +17,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export default function Streaming() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [showKey, setShowKey] = useState(false);
   const [activeTab, setActiveTab] = useState("live");
+  
+  // Set active tab based on URL path when component mounts
+  useEffect(() => {
+    if (location.pathname.includes('/streaming/dashboard')) {
+      setActiveTab('dashboard');
+    } else if (location.pathname.includes('/streaming/schedule')) {
+      setActiveTab('schedule');
+    } else {
+      setActiveTab('live');
+    }
+  }, [location.pathname]);
   
   // Stream settings
   const RTMP_URL = "rtmp://live.clipt.cc/live";
@@ -165,7 +179,11 @@ export default function Streaming() {
                 ${activeTab === 'schedule' ? 
                   'bg-orange-600 text-white' : 
                   'bg-slate-800/50 text-slate-300 hover:bg-slate-700/70'}`}
-              onClick={() => setActiveTab('schedule')}
+              onClick={() => {
+                setActiveTab('schedule');
+                // Navigate to streaming/schedule page
+                navigate('/streaming/schedule');
+              }}
             >
               Schedule
             </div>
@@ -174,7 +192,11 @@ export default function Streaming() {
                 ${activeTab === 'dashboard' ? 
                   'bg-orange-600 text-white' : 
                   'bg-slate-800/50 text-slate-300 hover:bg-slate-700/70'}`}
-              onClick={() => setActiveTab('dashboard')}
+              onClick={() => {
+                setActiveTab('dashboard'); 
+                // Navigate to streaming/dashboard page
+                navigate('/streaming/dashboard');
+              }}
             >
               Dashboard
             </div>
