@@ -94,8 +94,7 @@ const Profile = () => {
   // Fetch profile data
   const fetchProfileData = async () => {
     if (!profileId) {
-      // Create fallback data instead of showing error
-      setDefaultProfileData();
+      setError('No profile ID available');
       setLoading(false);
       return;
     }
@@ -223,61 +222,16 @@ const Profile = () => {
 
     } catch (error: any) {
       console.error('Error fetching profile data:', error.message);
-      // Use default data instead of showing error
-      setDefaultProfileData();
+      setError('Failed to load profile data');
     } finally {
       setLoading(false);
     }
   };
 
-  // Create default profile data as fallback
-  const setDefaultProfileData = () => {
-    // Set a default profile with gaming theme
-    setProfile({
-      id: 'default-user',
-      username: 'gamer_pro',
-      display_name: 'Pro Gamer',
-      avatar_url: 'https://placehold.co/200x200/252944/FFFFFF?text=Gamer',
-      bio: 'Gaming and streaming enthusiast',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      website: 'https://clipt.com',
-      location: 'Gaming Universe',
-      is_verified: true,
-      followers_count: 125,
-      following_count: 84,
-      achievements_count: 37,
-      enable_notifications: true,
-      enable_sounds: true
-    } as any);
-
-    // Set sample posts
-    setUserPosts(createSamplePosts());
-    
-    // Set sample achievements
-    setAchievements(createSampleAchievements());
-    
-    // Set counts
-    setFollowersCount(125);
-    setFollowingCount(84);
-    
-    // Set sample saved clips
-    setSavedCliptsData(createSamplePosts());
-    
-    // Set boost status
-    setBoostActive(true);
-  };
-
   // Fetch data on initial load
   useEffect(() => {
     setLoading(true);
-    try {
-      fetchProfileData();
-    } catch (err) {
-      console.error('Error loading profile:', err);
-      setDefaultProfileData();
-      setLoading(false);
-    }
+    fetchProfileData();
   }, [profileId]);
 
   // Handle tab switching
@@ -339,7 +293,48 @@ const Profile = () => {
             boostActive={boostActive}
           />
           
-          {/* Bottom content removed as requested */}
+          {/* Navigation Bar */}
+          <div className="gaming-nav-bar flex justify-around items-center">
+            <button 
+              className={`nav-button ${activeTab === 'home' ? 'active' : ''}`}
+              onClick={() => navigate('/')}
+            >
+              <Gamepad className="nav-icon" />
+              <span className="nav-label">Home</span>
+            </button>
+            
+            <button 
+              className={`nav-button ${activeTab === 'discover' ? 'active' : ''}`}
+              onClick={() => navigate('/discovery')}
+            >
+              <Medal className="nav-icon" />
+              <span className="nav-label">Discover</span>
+            </button>
+            
+            <button 
+              className={`nav-button ${isOwnProfile ? 'active' : ''}`}
+              onClick={() => navigate(isOwnProfile ? '/profile' : `/profile/${user?.id}`)}
+            >
+              <User className="nav-icon" />
+              <span className="nav-label">Profile</span>
+            </button>
+            
+            <button 
+              className="nav-button"
+              onClick={() => navigate('/boost')}
+            >
+              <Rocket className="nav-icon" />
+              <span className="nav-label">Boost</span>
+            </button>
+            
+            <button 
+              className="nav-button"
+              onClick={() => navigate('/messages')}
+            >
+              <MessageSquare className="nav-icon" />
+              <span className="nav-label">Chat</span>
+            </button>
+          </div>
         </motion.div>
       </AnimatePresence>
     </>

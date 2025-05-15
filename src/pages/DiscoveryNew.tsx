@@ -102,6 +102,10 @@ const DiscoveryNew: React.FC = () => {
   // Shared clips state
   const [sharedClips, setSharedClips] = useState<any[]>([]);
   
+  // Add loading and error states for fetching streams
+  const [loadingStreams, setLoadingStreams] = useState(true);
+  const [streamError, setStreamError] = useState<string | null>(null);
+
   // Set up the controls auto-hide functionality
   useEffect(() => {
     // Show controls initially
@@ -148,49 +152,62 @@ const DiscoveryNew: React.FC = () => {
       document.body.style.overflow = '';
     };
   }, []);
-  
-  // Get trending games on component mount
-  useEffect(() => {
-    const fetchTrendingGames = async () => {
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/game/trending?limit=3`);
-        setTrendingGames(response.data);
-      } catch (error) {
-        console.error('Error fetching trending games:', error);
-      }
-    };
 
-    fetchTrendingGames();
+  const fetchStreamers = async () => {
+    setLoadingStreams(true);
+    setStreamError(null);
+    try {
+      const response = await fetch('http://localhost:3002/api/live-streams');
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData}`);
+      }
+      const data = await response.json();
+      
+      const CLOUDFLARE_CUSTOMER_ID = 'customer-9cbdk1udzakdxkzu'; // TODO: Move to env var
+
+      const mappedStreamers = data.map((stream: any) => ({
+        id: stream.uid,
+        username: stream.meta?.streamerName || `Streamer ${stream.uid.substring(0,6)}`,
+        game: stream.meta?.gameName || 'Exploring',
+        avatar: stream.thumbnail || 'default_avatar_placeholder.png', // Use stream thumbnail as avatar
+        videoUrl: `https://${CLOUDFLARE_CUSTOMER_ID}.cloudflarestream.com/${stream.uid}/manifest/video.m3u8`,
+        playbackId: stream.uid,
+        meta: stream.meta,
+        thumbnail: stream.thumbnail,
+        status: stream.status,
+        viewers: stream.meta?.viewers || 0, 
+        isLive: stream.status === 'live',
+        bio: stream.meta?.bio || 'No bio available.',
+        category: stream.meta?.genres ? stream.meta.genres.join(', ') : 'General',
+        profilePic: stream.thumbnail, 
+        streamTitle: stream.meta?.name || stream.meta?.streamerName || `Live Stream ${stream.uid.substring(0,6)}`,
+      }));
+      
+      // Filter for live streams, as the API might return other statuses if backend logic changes
+      const liveOnlyStreamers = mappedStreamers.filter(s => s.isLive);
+      setStreamers(liveOnlyStreamers);
+      
+      if (liveOnlyStreamers.length > 0 && currentIndex >= liveOnlyStreamers.length) {
+        setCurrentIndex(0); // Reset index if out of bounds
+      }
+
+    } catch (err) {
+      console.error("Failed to fetch live streams:", err);
+      setStreamError(err.message || 'Failed to load streams');
+      setStreamers([]); // Clear streamers on error
+    } finally {
+      setLoadingStreams(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStreamers();
   }, []);
 
-  // Fetch streamers or game content based on selection
+  // Effect to set currentStreamer based on streamers and currentIndex
   useEffect(() => {
-    const fetchStreamers = async () => {
-      try {
-        let url = `${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/streamers`;
-        
-        if (selectedGame) {
-          url = `${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/streamers/game/${selectedGame.id}`;
-        }
-
-        const response = await axios.get(url);
-        setStreamers(response.data);
-        setCurrentIndex(0);
-        
-        if (response.data.length > 0) {
-          setCurrentStreamer(response.data[0]);
-        }
-      } catch (error) {
-        console.error('Error fetching streamers:', error);
-      }
-    };
-
-    fetchStreamers();
-  }, [selectedGame]);
-
-  // Set current streamer when index changes
-  useEffect(() => {
-    if (streamers.length > 0 && currentIndex < streamers.length) {
+    if (streamers.length > 0) {
       setCurrentStreamer(streamers[currentIndex]);
     }
   }, [currentIndex, streamers]);
@@ -243,9 +260,50 @@ const DiscoveryNew: React.FC = () => {
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-    searchAll(query);
+    if (e.target.value.length > 2) {
+      setIsSearching(true);
+      // Perform search using e.target.value for games, streamers, or clips based on activeSearchTab
+      // Example for games (update for streamers/clips):
+      if (activeSearchTab === 'games') {
+        searchGames(e.target.value);
+      } else if (activeSearchTab === 'streamers') {
+        searchStreamers(e.target.value); // You'll need to implement searchStreamers
+      } else if (activeSearchTab === 'clips') {
+        searchClips(e.target.value); // You'll need to implement searchClips
+      }
+    } else {
+      setIsSearching(false);
+      setSearchResults([]);
+      setStreamerResults([]);
+      setClipResults([]);
+    }
   };
-  
+
+  const searchGames = async (query) => {
+    // This is a placeholder. Replace with your actual game search logic.
+    // Example: const response = await axios.get(`/api/search/games?q=${query}`);
+    // setSearchResults(response.data);
+    console.log(`Searching games for: ${query}`);
+  };
+
+  const searchStreamers = async (query) => {
+    // Placeholder for streamer search logic - for now, it could filter local live streams if desired
+    console.log(`Searching streamers for: ${query}`);
+    if (streamers && streamers.length > 0) {
+      const filtered = streamers.filter(s => s.username.toLowerCase().includes(query.toLowerCase()));
+      setStreamerResults(filtered);
+    } else {
+      setStreamerResults([]);
+    }
+  };
+
+  const searchClips = async (query) => {
+    // Placeholder for clip search logic
+    console.log(`Searching clips for: ${query}`);
+    // Example: const response = await axios.get(`/api/search/clips?q=${query}`);
+    // setClipResults(response.data);
+  };
+
   // Handle search tab change
   const handleSearchTabChange = (tab) => {
     setActiveSearchTab(tab);
@@ -418,7 +476,7 @@ const DiscoveryNew: React.FC = () => {
                   streamers.length > 0 ? (
                     <div className="stream-wrapper">
                       <video 
-                        src={streamers[currentIndex].stream_url} 
+                        src={streamers[currentIndex].videoUrl} 
                         autoPlay 
                         loop 
                         muted 
@@ -429,7 +487,7 @@ const DiscoveryNew: React.FC = () => {
                         <div className="streamer-info">
                           <div className="streamer-details">
                             <div className="avatar">
-                              <img src={currentStreamer.avatar_url} alt={`${currentStreamer.username}'s avatar`} />
+                              <img src={currentStreamer.avatar} alt={`${currentStreamer.username}'s avatar`} />
                             </div>
                             <div className="streamer-text">
                               <div className="streamer-name-bar">
@@ -462,7 +520,7 @@ const DiscoveryNew: React.FC = () => {
                   streamers.length > 0 && currentIndex < streamers.length ? (
                     <div className="stream-wrapper">
                       <video 
-                        src={streamers[currentIndex].stream_url} 
+                        src={streamers[currentIndex].videoUrl} 
                         autoPlay 
                         loop 
                         muted 
@@ -473,7 +531,7 @@ const DiscoveryNew: React.FC = () => {
                         <div className="streamer-info">
                           <div className="streamer-details">
                             <div className="avatar">
-                              <img src={currentStreamer.avatar_url} alt={`${currentStreamer.username}'s avatar`} />
+                              <img src={currentStreamer.avatar} alt={`${currentStreamer.username}'s avatar`} />
                             </div>
                             <div className="streamer-text">
                               <div className="streamer-name-bar">
@@ -819,7 +877,7 @@ const DiscoveryNew: React.FC = () => {
           {isClippingModalOpen && currentStreamer && streamers.length > 0 && (
             <ClippingTool
               isOpen={isClippingModalOpen}
-              videoUrl={streamers[currentIndex].stream_url}
+              videoUrl={streamers[currentIndex].videoUrl}
               streamerName={currentStreamer.username}
               onClose={() => setIsClippingModalOpen(false)}
               onShareInChat={(clipData) => {
