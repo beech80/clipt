@@ -18,8 +18,8 @@ const TabsNavigation: React.FC = () => {
       <div className="max-w-screen-md mx-auto">
         <div className="flex justify-between items-center">
           <button 
-            className={getTabClass('/posts')}
-            onClick={() => navigate('/posts')}
+            className={getTabClass('/post-form')}
+            onClick={() => navigate('/post-form')}
           >
             <Grid className="w-5 h-5 mb-1" />
             <span className="text-xs">Posts</span>

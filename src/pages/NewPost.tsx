@@ -67,19 +67,44 @@ const NewPost = () => {
   const [gameSearchResults, setGameSearchResults] = useState<typeof allGames>([]);
   const [showGameSearch, setShowGameSearch] = useState(false);
   
-  // Check for clip parameters from ClipEditor
+  // Check for cosmic video upload data in localStorage
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const clipIdParam = params.get('clipId');
-    const videoUrlParam = params.get('videoUrl');
+    // First check localStorage for cosmic uploader data
+    const savedUploadData = localStorage.getItem('clipt_upload_data');
     
-    if (clipIdParam && videoUrlParam) {
-      setClipId(clipIdParam);
-      setVideoUrl(videoUrlParam);
-      setPostDestination('clipts');
+    if (savedUploadData) {
+      try {
+        const uploadData = JSON.parse(savedUploadData);
+        setVideoUrl(uploadData.videoUrl);
+        if (uploadData.thumbnailUrl) {
+          // Add the thumbnail to preview URLs if available
+          setMediaPreviewUrls([uploadData.thumbnailUrl]);
+        }
+        if (uploadData.clipId) {
+          setClipId(uploadData.clipId);
+        }
+        setPostDestination('clipts');
+        toast.success('Cosmic video ready for posting! Add a caption and select a game.');
+        
+        // Clear the localStorage after using it
+        localStorage.removeItem('clipt_upload_data');
+      } catch (error) {
+        console.error('Error parsing upload data:', error);
+      }
+    } else {
+      // Fall back to URL parameters
+      const params = new URLSearchParams(location.search);
+      const clipIdParam = params.get('clipId');
+      const videoUrlParam = params.get('videoUrl');
       
-      // No need to add to mediaPreviewUrls - we'll handle it separately
-      toast.success('Video ready for posting! Add a caption and select a game.');
+      if (clipIdParam && videoUrlParam) {
+        setClipId(clipIdParam);
+        setVideoUrl(videoUrlParam);
+        setPostDestination('clipts');
+        
+        // No need to add to mediaPreviewUrls - we'll handle it separately
+        toast.success('Video ready for posting! Add a caption and select a game.');
+      }
     }
   }, [location.search]);
 

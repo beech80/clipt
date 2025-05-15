@@ -82,7 +82,8 @@ const Notifications = React.lazy(() => import('./pages/Notifications'));
 // Using the original Streaming page implementation
 const Streaming = React.lazy(() => import('./pages/Streaming')); // Stream setup page
 const PostSelection = React.lazy(() => import('./pages/PostSelection'));
-const ClipEditor = React.lazy(() => import('./pages/ClipEditor'));
+// Use VideoEditor for all uploads
+const VideoEditor = React.lazy(() => import('./pages/VideoEditor'));
 const StreamingPageModern = React.lazy(() => import('./pages/StreamingPageModern')); // Modern streaming page with all streamers
 const StreamingPage = React.lazy(() => import('./pages/StreamingPage'));
 const Streams = React.lazy(() => import('./pages/Streams'));
@@ -176,14 +177,12 @@ const AppContent = () => {
         <Route path="/menu" element={<SuspenseBoundary loadingMessage="Loading menu..."><Menu /></SuspenseBoundary>} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:id" element={<Profile />} />
-        <Route path="/post-selection" element={<PostSelection />} />
-        <Route path="/clip-editor/:id" element={<SuspenseBoundary><ClipEditor /></SuspenseBoundary>} />
-        <Route path="/clip-editor" element={<SuspenseBoundary><ClipEditor /></SuspenseBoundary>} />
-        <Route path="/video-editor" element={<SuspenseBoundary><ClipEditor /></SuspenseBoundary>} />
-        <Route path="/video-editor/:id" element={<SuspenseBoundary><ClipEditor /></SuspenseBoundary>} />
+        {/* Post selection removed, direct to post form only */}
+        
+        <Route path="/clip-editor" element={<SuspenseBoundary loadingMessage="Loading cosmic video uploader..."><VideoEditor /></SuspenseBoundary>} />
+        <Route path="/video-editor" element={<Navigate to="/post-form" replace />} />
         <Route path="/post-form" element={<SuspenseBoundary><NewPost /></SuspenseBoundary>} />
         <Route path="/post-form/:id" element={<SuspenseBoundary><NewPost /></SuspenseBoundary>} />
-        <Route path="/edit/:id" element={<SuspenseBoundary><ClipEditor /></SuspenseBoundary>} />
         <Route path="/settings/profile" element={<SuspenseBoundary loadingMessage="Loading profile editor..."><EditProfilePage /></SuspenseBoundary>} />
         <Route path="/game-menu" element={<SuspenseBoundary><GameMenu /></SuspenseBoundary>} />
         <Route path="/notifications" element={<SuspenseBoundary loadingMessage="Loading notifications..."><Notifications /></SuspenseBoundary>} />
@@ -199,10 +198,10 @@ const AppContent = () => {
         <Route path="/edit-profile" element={<SuspenseBoundary loadingMessage="Loading profile editor..."><EditProfile /></SuspenseBoundary>} />
         <Route path="/admin" element={<SuspenseBoundary loadingMessage="Loading admin panel..."><Admin /></SuspenseBoundary>} />
         <Route path="/game/:id/streamers" element={<SuspenseBoundary loadingMessage="Loading game streamers..."><GameStreamers /></SuspenseBoundary>} />
-        <Route path="/clip-editor" element={<SuspenseBoundary loadingMessage="Loading clip editor..."><ClipEditor /></SuspenseBoundary>} />
-        <Route path="/post-type" element={<SuspenseBoundary loadingMessage="Loading post type selection..."><PostTypeSelection /></SuspenseBoundary>} />
+        <Route path="/video-upload" element={<SuspenseBoundary loadingMessage="Loading cosmic video uploader..."><VideoEditor /></SuspenseBoundary>} />
+        <Route path="/post-type" element={<Navigate to="/post-form" replace />} />
         <Route path="/search" element={<SuspenseBoundary loadingMessage="Loading search..."><SearchPage /></SuspenseBoundary>} />
-        <Route path="/posts" element={<SuspenseBoundary loadingMessage="Loading posts..."><Posts /></SuspenseBoundary>} />
+        <Route path="/posts" element={<Navigate to="/post-form" replace />} />
         <Route path="*" element={<SuspenseBoundary><NotFound /></SuspenseBoundary>} />
       </Routes>
     </PageTransition>

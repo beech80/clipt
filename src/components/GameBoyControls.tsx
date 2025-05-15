@@ -575,7 +575,7 @@ const GameBoyControls: React.FC = () => {
           {/* Camera post button with rainbow border */}
           <button 
             className="control-button rainbow-border"
-            onClick={() => navigate('/post-selection')}
+            onClick={() => navigate('/post-form')}
             aria-label="Create a new post"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
