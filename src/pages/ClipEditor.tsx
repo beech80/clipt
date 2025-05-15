@@ -7,10 +7,12 @@ import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Toaster, toast } from 'sonner';
 import { FaPlay, FaPause, FaSave, FaUpload, FaUndo, FaRedo, FaCheck, FaTimes } from 'react-icons/fa';
-import { Loader2, Save, Undo, Redo, Download, Scissors, Play, Pause, Check, ChevronLeft, Upload } from "lucide-react";
+import { Loader2, Save, Undo, Redo, Download, Scissors, Play, Pause, Check, ChevronLeft, Upload, VideoIcon, Clock, RotateCw, RotateCcw, Crop, Edit, ChevronsLeft, ChevronsRight, Image, Star } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import FallbackVideoPlayer from "@/components/video/FallbackVideoPlayer";
 import "@/components/video-fixes.css";
 import "@/components/force-video-visibility.css";
@@ -20,6 +22,7 @@ import { Json } from "@/integrations/supabase/types";
 import { formatTime } from "@/lib/utils";
 import { v4 as uuidv4 } from "uuid";
 import { motion, AnimatePresence } from "framer-motion";
+import "@/styles/video-editor.css";
 
 interface ClipEditingSession {
   id?: string;
@@ -43,9 +46,14 @@ const ClipEditor = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState('trim');
+  const [processingTrim, setProcessingTrim] = useState(false);
+  const [frameCapture, setFrameCapture] = useState<string | null>(null);
   
   // Video related states
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -53,15 +61,23 @@ const ClipEditor = () => {
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoObjectUrl, setVideoObjectUrl] = useState<string>("");
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
+  const [videoWidth, setVideoWidth] = useState(0);
+  const [videoHeight, setVideoHeight] = useState(0);
+  const [frameRate, setFrameRate] = useState(30); // Default assumed frame rate
   
   // Trim related states
   const [trimStart, setTrimStart] = useState(0); // In seconds
   const [trimEnd, setTrimEnd] = useState(0); // In seconds
   const [trimPreviewActive, setTrimPreviewActive] = useState(false);
   const [originalVideo, setOriginalVideo] = useState<Blob | null>(null);
+  const [trimHistory, setTrimHistory] = useState<{start: number, end: number}[]>([]);
+  const [keyframes, setKeyframes] = useState<number[]>([]);
+  const [showKeyframes, setShowKeyframes] = useState(true);
   
   // Define the state for edit mode
   const [isNewMode, setIsNewMode] = useState(id === 'new');
+  const [timeSegments, setTimeSegments] = useState<number[]>([]);
+  const [showTrimControls, setShowTrimControls] = useState(true);
 
   // Handle file selection for upload with enhanced reliability
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -321,7 +337,7 @@ const ClipEditor = () => {
       }
     }
   };
-
+  
   // Apply trim to create a new video with draft preview - simplified and more reliable
   const handleTrim = async () => {
     if (!videoBlob || !videoLoaded || trimStart >= trimEnd) {
@@ -644,6 +660,30 @@ const ClipEditor = () => {
                   >
                     <Scissors className="w-4 h-4 mr-2" />
                     Apply Trim (Works Offline)
+                  </Button>
+                  
+                  {/* Publish to Clipts Button */}
+                  <Button 
+                    onClick={() => {
+                      const tempId = clipId || uuidv4();
+                      setClipId(tempId);
+                      navigate('/clipts', { 
+                        state: { 
+                          newClip: true, 
+                          clipId: tempId,
+                          videoBlob: videoBlob,
+                          trimStart: trimStart,
+                          trimEnd: trimEnd,
+                          title: `Cosmic Clip ${new Date().toLocaleDateString()}`
+                        } 
+                      });
+                    }} 
+                    variant="default"
+                    className="w-full mt-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium py-5"
+                    disabled={!videoLoaded}
+                  >
+                    <VideoIcon className="w-5 h-5 mr-2" />
+                    Publish to Clipts Space
                   </Button>
                 </div>
               </div>
