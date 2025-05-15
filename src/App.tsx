@@ -74,7 +74,8 @@ const Explore = React.lazy(() => import('./pages/Explore'));
 const AllStreamers = React.lazy(() => import('./pages/AllStreamers'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Menu = React.lazy(() => import('./pages/Menu'));
-const Profile = React.lazy(() => import('./pages/ProfileBasic'));
+const Profile = React.lazy(() => import('./pages/Profile'));
+const BoostStore = React.lazy(() => import('./pages/BoostStore'));
 const GameMenu = React.lazy(() => import('./pages/GameMenu'));
 const GameMainMenu = React.lazy(() => import('./pages/GameMainMenu'));
 const Notifications = React.lazy(() => import('./pages/Notifications'));
@@ -86,12 +87,7 @@ const Streams = React.lazy(() => import('./pages/Streams'));
 const Messages = React.lazy(() => import('./pages/Messages'));
 const Settings = React.lazy(() => import('./pages/Settings'));
 const EditProfilePage = React.lazy(() => import('./pages/EditProfilePage'));
-const EditProfile = React.lazy(() => 
-  import('./pages/EditProfile').catch(error => {
-    console.error('Error loading EditProfile module:', error);
-    return { default: () => <div>Failed to load profile editor. Please refresh.</div> };
-  })
-);
+const EditProfile = React.lazy(() => import('./pages/EditProfile'));
 const Admin = React.lazy(() => import('./pages/Admin'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Signup = React.lazy(() => import('./pages/Signup'));
@@ -148,6 +144,8 @@ const AppContent = () => {
     <PageTransition>
       <Routes>
         <Route path="/" element={<SuspenseBoundary><SpaceLanding /></SuspenseBoundary>} />
+        <Route path="/boost-store" element={<SuspenseBoundary><BoostStore /></SuspenseBoundary>} />
+        <Route path="/edit-profile" element={<SuspenseBoundary><EditProfile /></SuspenseBoundary>} />
         <Route path="/home" element={
           <SuspenseBoundary>
             <Home />
