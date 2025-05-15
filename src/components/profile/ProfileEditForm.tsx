@@ -150,6 +150,15 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
     try {
       setSubmitting(true);
       
+      // Check if username is being changed and if change is allowed
+      if (profile?.username !== values.username) {
+        if (!canChangeUsername) {
+          toast.error(`Username change restricted. You can change it again in ${daysUntilNextChange} days.`);
+          setSubmitting(false);
+          return;
+        }
+      }
+      
       const updates = {
         id: user.id,
         username: values.username,
@@ -162,6 +171,14 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
       // Add username change date if username was changed
       if (profile?.username !== values.username) {
         updates['last_username_change'] = new Date().toISOString();
+        
+        // Add toast to notify about username change cooldown
+        toast({
+          title: "Username Updated",
+          description: "Note: You can change your username again in 60 days.",
+          icon: "⚠️",
+          duration: 4000,
+        });
       }
       
       const { data, error } = await supabase
@@ -176,14 +193,20 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
         throw error;
       }
       
-      console.log('Profile updated:', data);
-      toast.success('Profile updated successfully');
+      // Update avatar if new one was selected
+      if (avatarPreview && avatarPreview !== profile?.avatar_url) {
+        toast.success('Profile information updated! Uploading avatar...');
+      } else {
+        toast.success('Profile updated successfully!');
+      }
       
       // Invalidate query to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       
-      // Navigate back to profile
-      navigate('/profile');
+      // Navigate back to profile with a slight delay to allow toasts to be seen
+      setTimeout(() => {
+        navigate('/profile');
+      }, 1500);
     } catch (error) {
       console.error('Error in profile update:', error);
       toast.error('Failed to update profile. Please try again.');
@@ -410,20 +433,24 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
             }
           </p>
           {!canChangeUsername && (
-            <div style={{ 
-              marginTop: '8px', 
-              padding: '12px', 
-              backgroundColor: 'rgba(255, 170, 0, 0.1)', 
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '8px'
-            }}>
-              <AlertCircle size={16} color="#FFAA00" />
+            <div className="mt-2 p-3 rounded-md bg-gradient-to-r from-amber-900/20 to-orange-900/20 border border-amber-600/30 flex items-start gap-3">
+              <AlertCircle size={18} className="text-amber-400 mt-0.5 flex-shrink-0" />
               <div>
-                <div style={{ fontWeight: 500, marginBottom: '2px', color: '#FFAA00' }}>Username Change Restricted</div>
-                <div style={{ fontSize: '0.875rem', color: '#e0e0e0' }}>
-                  You can only change your username once every two months. Your last change was on {lastUsernameChange?.toLocaleDateString()}.
+                <div className="font-semibold text-amber-400 mb-1">Username Change Cooldown</div>
+                <div className="text-sm text-amber-200/80">
+                  You can only change your username once every 60 days for security and community purposes.
+                </div>
+                <div className="text-xs text-amber-300/90 mt-2 font-medium">
+                  Last change: {lastUsernameChange?.toLocaleDateString()}
+                </div>
+                <div className="text-xs text-amber-300/90 font-medium">
+                  Next available change in: {daysUntilNextChange} days
+                </div>
+                <div className="h-1.5 w-full bg-amber-900/30 rounded-full mt-2 overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-amber-500 to-amber-400" 
+                    style={{ width: `${Math.min(100, (60-daysUntilNextChange)/60*100)}%` }}
+                  />
                 </div>
               </div>
             </div>
