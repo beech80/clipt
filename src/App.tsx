@@ -81,6 +81,8 @@ const GameMainMenu = React.lazy(() => import('./pages/GameMainMenu'));
 const Notifications = React.lazy(() => import('./pages/Notifications'));
 // Using the original Streaming page implementation
 const Streaming = React.lazy(() => import('./pages/Streaming')); // Stream setup page
+const PostSelection = React.lazy(() => import('./pages/PostSelection'));
+const ClipEditor = React.lazy(() => import('./pages/ClipEditor'));
 const StreamingPageModern = React.lazy(() => import('./pages/StreamingPageModern')); // Modern streaming page with all streamers
 const StreamingPage = React.lazy(() => import('./pages/StreamingPage'));
 const Streams = React.lazy(() => import('./pages/Streams'));
@@ -103,7 +105,6 @@ const StreamSetup = React.lazy(() => import('./pages/StreamSetup'));
 const StreamView = React.lazy(() => import('./pages/StreamView'));
 const StreamViewer = React.lazy(() => import('./pages/StreamViewer'));
 const Saved = React.lazy(() => import('./pages/Saved'));
-const ClipEditor = React.lazy(() => import('./pages/ClipEditor'));
 const PostTypeSelection = React.lazy(() => import('./pages/PostTypeSelection'));
 const AdvancedSearch = React.lazy(() => import('./pages/AdvancedSearch'));
 const SearchPage = React.lazy(() => import('./pages/SearchPage'));
@@ -173,7 +174,16 @@ const AppContent = () => {
         <Route path="/explore" element={<SuspenseBoundary loadingMessage="Loading Explore page..."><Explore /></SuspenseBoundary>} />
         <Route path="/all-streamers" element={<SuspenseBoundary loadingMessage="Loading streamers..."><AllStreamers /></SuspenseBoundary>} />
         <Route path="/menu" element={<SuspenseBoundary loadingMessage="Loading menu..."><Menu /></SuspenseBoundary>} />
-        <Route path="/profile" element={<SuspenseBoundary loadingMessage="Loading profile..."><Profile /></SuspenseBoundary>} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:id" element={<Profile />} />
+        <Route path="/post-selection" element={<PostSelection />} />
+        <Route path="/clip-editor/:id" element={<SuspenseBoundary><ClipEditor /></SuspenseBoundary>} />
+        <Route path="/clip-editor" element={<SuspenseBoundary><ClipEditor /></SuspenseBoundary>} />
+        <Route path="/video-editor" element={<SuspenseBoundary><ClipEditor /></SuspenseBoundary>} />
+        <Route path="/video-editor/:id" element={<SuspenseBoundary><ClipEditor /></SuspenseBoundary>} />
+        <Route path="/post-form" element={<SuspenseBoundary><NewPost /></SuspenseBoundary>} />
+        <Route path="/post-form/:id" element={<SuspenseBoundary><NewPost /></SuspenseBoundary>} />
+        <Route path="/edit/:id" element={<SuspenseBoundary><ClipEditor /></SuspenseBoundary>} />
         <Route path="/settings/profile" element={<SuspenseBoundary loadingMessage="Loading profile editor..."><EditProfilePage /></SuspenseBoundary>} />
         <Route path="/game-menu" element={<SuspenseBoundary><GameMenu /></SuspenseBoundary>} />
         <Route path="/notifications" element={<SuspenseBoundary loadingMessage="Loading notifications..."><Notifications /></SuspenseBoundary>} />
