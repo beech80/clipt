@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast, Toaster } from 'sonner';
-import { supabase } from '../utils/supabaseClient';
-import { useUser } from '../contexts/UserContext';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -31,7 +31,7 @@ const CosmicStar = ({ size, top, left, delay, duration }: { size: number, top: s
 // Main component
 const VideoEditor: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -181,7 +181,6 @@ const VideoEditor: React.FC = () => {
       
       // Use window.location for a direct browser navigation instead of React Router
       window.location.href = '/post-form';
-      });
     } catch (error: any) {
       console.error('Error uploading:', error);
       toast.error(error.message || "Failed to prepare your cosmic video", { id: "video-upload" });
