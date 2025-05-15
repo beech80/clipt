@@ -1,153 +1,88 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
-import { Toaster, toast } from 'sonner';
-import { FaPlay, FaPause, FaSave, FaUpload, FaUndo, FaRedo, FaCheck, FaTimes } from 'react-icons/fa';
-import { Loader2, Save, Undo, Redo, Download, Scissors, Play, Pause, Check, ChevronLeft, Upload, VideoIcon, Clock, RotateCw, RotateCcw, Crop, Edit, ChevronsLeft, ChevronsRight, Image, Star } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import FallbackVideoPlayer from "@/components/video/FallbackVideoPlayer";
-import "@/components/video-fixes.css";
-import "@/components/force-video-visibility.css";
-import BasicVideoPlayer from "@/components/BasicVideoPlayer";
-import EditorVideoPlayer from "@/components/video/EditorVideoPlayer";
-import { Json } from "@/integrations/supabase/types";
-import { formatTime } from "@/lib/utils";
-import { v4 as uuidv4 } from "uuid";
-import { motion, AnimatePresence } from "framer-motion";
-import "@/styles/video-editor.css";
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast, Toaster } from 'sonner';
+import { supabase } from '../utils/supabaseClient';
+import { useUser } from '../contexts/UserContext';
+import { motion } from 'framer-motion';
+import { v4 as uuidv4 } from 'uuid';
 
-interface ClipEditingSession {
-  id?: string;
-  user_id?: string;
-  clip_id?: string;
-  effects: any[];
-  edit_history: any[][];
-  trim_start?: number;
-  trim_end?: number;
-  status?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+// Cosmic star component for background animation
+const CosmicStar = ({ size, top, left, delay, duration }: { size: number, top: string, left: string, delay: number, duration: number }) => (
+  <motion.div
+    className="absolute rounded-full bg-white"
+    style={{
+      width: size,
+      height: size,
+      top,
+      left,
+      boxShadow: `0 0 ${size * 2}px ${size}px rgba(255, 255, 255, 0.7)`,
+    }}
+    initial={{ opacity: 0 }}
+    animate={{ opacity: [0, 1, 0] }}
+    transition={{
+      repeat: Infinity,
+      delay,
+      duration,
+      ease: "easeInOut",
+    }}
+  />
+);
 
-const VideoEditor = () => {
-  // Canvas for thumbnail generation
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  
-  // Function to publish directly to Clipts
-  const publishToClipts = async () => {
-    if (!videoBlob) {
-      toast.error("No video available to publish");
-      return;
-    }
-    
-    // Generate a temporary ID if none exists
-    const tempClipId = clipId || uuidv4();
-    
-    toast.loading("Preparing video for Clipts...", { id: "clipts-publish" });
-    
-    try {
-      // Create thumbnail using canvas
-      let thumbnail = null;
-      
-      if (videoRef.current) {
-        // Create canvas if it doesn't exist
-        if (!canvasRef.current) {
-          const canvas = document.createElement('canvas');
-          canvas.width = videoRef.current.videoWidth || 640;
-          canvas.height = videoRef.current.videoHeight || 360;
-          const ctx = canvas.getContext('2d');
-          
-          if (ctx && videoRef.current) {
-            // Capture frame from the middle of trimmed section
-            const captureTime = trimStart + ((trimEnd - trimStart) / 2);
-            videoRef.current.currentTime = captureTime;
-            
-            // Wait for seeking to complete
-            await new Promise(resolve => {
-              const handleSeeked = () => {
-                videoRef.current?.removeEventListener('seeked', handleSeeked);
-                resolve(null);
-              };
-              videoRef.current.addEventListener('seeked', handleSeeked);
-            });
-            
-            // Draw video frame to canvas
-            ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-            thumbnail = canvas.toDataURL('image/jpeg', 0.85);
-          }
-        }
-      }
-      
-      // Navigate to Clipts with this video data
-      navigate('/clipts', { 
-        state: { 
-          newClip: true, 
-          clipId: tempClipId,
-          videoBlob: videoBlob,
-          thumbnail: thumbnail,
-          trimStart: trimStart,
-          trimEnd: trimEnd,
-          title: `Cosmic Clip ${new Date().toLocaleDateString()}`,
-          cosmic: true
-        } 
-      });
-      
-      toast.success("Video ready for Clipts!", { id: "clipts-publish" });
-    } catch (error) {
-      console.error('Error publishing to Clipts:', error);
-      toast.error("Failed to prepare video for Clipts", { id: "clipts-publish" });
-    }
-  };
-  const { id } = useParams();
+// Main component
+const VideoEditor: React.FC = () => {
   const navigate = useNavigate();
-  const [editHistory, setEditHistory] = useState<any[][]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const [clipId, setClipId] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const { user } = useUser();
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [activeTab, setActiveTab] = useState('trim');
-  const [processingTrim, setProcessingTrim] = useState(false);
-  const [frameCapture, setFrameCapture] = useState<string | null>(null);
-  
-  // Video related states
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const timelineRef = useRef<HTMLDivElement>(null);
-  const [videoUrl, setVideoUrl] = useState<string>("");
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoDuration, setVideoDuration] = useState(0);
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const [videoObjectUrl, setVideoObjectUrl] = useState<string>("");
-  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
-  const [videoWidth, setVideoWidth] = useState(0);
-  const [videoHeight, setVideoHeight] = useState(0);
-  const [frameRate, setFrameRate] = useState(30); // Default assumed frame rate
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string>("");
   
-  // Trim related states
-  const [trimStart, setTrimStart] = useState(0); // In seconds
-  const [trimEnd, setTrimEnd] = useState(0); // In seconds
-  const [trimPreviewActive, setTrimPreviewActive] = useState(false);
-  const [originalVideo, setOriginalVideo] = useState<Blob | null>(null);
-  const [trimHistory, setTrimHistory] = useState<{start: number, end: number}[]>([]);
-  const [keyframes, setKeyframes] = useState<number[]>([]);
-  const [showKeyframes, setShowKeyframes] = useState(true);
-  
-  // Define the state for edit mode
-  const [isNewMode, setIsNewMode] = useState(id === 'new');
-  const [timeSegments, setTimeSegments] = useState<number[]>([]);
-  const [showTrimControls, setShowTrimControls] = useState(true);
+  // Generate random stars for the cosmic background
+  const stars = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    size: Math.random() * 3 + 1,
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    delay: Math.random() * 5,
+    duration: Math.random() * 3 + 2,
+  }));
 
-  // Handle file selection for upload with enhanced reliability
+  // Generate thumbnail from video
+  const generateThumbnail = (video: HTMLVideoElement): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      try {
+        const canvas = canvasRef.current;
+        if (!canvas) {
+          reject('Canvas element not found');
+          return;
+        }
+
+        // Set canvas dimensions to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        // Draw the video frame at the current time
+        const context = canvas.getContext('2d');
+        if (context) {
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          // Convert canvas to data URL
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          resolve(dataUrl);
+        } else {
+          reject('Could not get canvas context');
+        }
+      } catch (error) {
+        console.error('Error generating thumbnail:', error);
+        reject(error);
+      }
+    });
+  };
+
+  // Handle file selection for upload
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -156,447 +91,271 @@ const VideoEditor = () => {
     const acceptedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
     if (!acceptedTypes.includes(file.type)) {
       toast.error('Please select a valid video file (MP4, WebM, MOV, or AVI)');
-      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
     
-    // Validate file size (max 50MB for Supabase free tier)
+    // Validate file size (max 50MB for example)
     const maxSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxSize) {
       toast.error(`File size exceeds 50MB limit (${(file.size / (1024 * 1024)).toFixed(2)}MB)`);
-      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
     
-    console.log('Uploading file:', file.name, file.type, file.size);
-    toast.info(`Starting upload of ${file.name}`);
+    // Create object URL for preview
+    const objectUrl = URL.createObjectURL(file);
+    setVideoPreviewUrl(objectUrl);
+    setVideoFile(file);
     
-    // Simple reset of states first
-    setVideoDuration(0);
-    setTrimStart(0);
-    setTrimEnd(0);
-    
-    // Create a quick preview to check if the file is valid
-    try {
-      const objectUrl = URL.createObjectURL(file);
-      const testVideo = document.createElement('video');
-      testVideo.src = objectUrl;
-      testVideo.muted = true;
-      testVideo.preload = 'metadata'; // Just load metadata first
-      testVideo.onloadedmetadata = () => {
-        console.log('Video metadata loaded, duration:', testVideo.duration);
-        // Success! File is valid
-      };
-      testVideo.onerror = () => {
-        toast.error('This video file appears to be corrupted or unsupported');
-        if (fileInputRef.current) fileInputRef.current.value = '';
-        return;
-      };
-      // Will immediately release the URL when done testing
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-    } catch (e) {
-      console.error('Error previewing file:', e);
-      toast.error('Could not preview this file'); 
-      return;
-    }
-    
-    // Continue with upload
-    uploadVideo(file);
+    // Load video metadata
+    const video = document.createElement('video');
+    video.src = objectUrl;
+    video.onloadedmetadata = () => {
+      setVideoDuration(video.duration);
+    };
   };
 
-  // Upload video to storage and create post record - LOCAL FIRST APPROACH
-  const uploadVideo = async (file: File) => {
-    // This is a unique ID for the primary toast notification
-    const toastId = `upload-${Date.now()}`;
-    toast.loading('Loading video for editing...', { id: toastId });
-    
+  // Upload video and go directly to post form
+  const uploadAndGoToPostForm = async () => {
+    if (!videoFile || !videoRef.current) {
+      toast.error("Please select a cosmic video first");
+      return;
+    }
+
     try {
-      // ================ STEP 1: LOCAL SETUP (HAPPENS IMMEDIATELY) ================
-      // Create immediate local preview - this is the most critical part
-      const immediatePreviewUrl = URL.createObjectURL(file);
-      setVideoObjectUrl(immediatePreviewUrl);
-      setVideoUrl(immediatePreviewUrl); 
-      setVideoLoaded(true);
-      setVideoBlob(file); 
-      setOriginalVideo(file);
-      setIsNewMode(false); // Force UI to show editing mode immediately
+      setIsUploading(true);
+      const toastId = "video-upload";
+      toast.loading("Preparing your cosmic video for upload...", { id: toastId });
       
-      // Setup a video element to get metadata
-      const videoElement = document.createElement('video');
-      videoElement.src = immediatePreviewUrl;
-      videoElement.muted = true;
-      videoElement.onloadedmetadata = () => {
-        setVideoDuration(videoElement.duration);
-        setTrimEnd(videoElement.duration);
-        toast.success('Video ready for editing!', { id: toastId });
-        
-        // Add a tip about trim feature
-        setTimeout(() => {
-          toast.info('Tip: You can trim this video using the controls on the right', { duration: 5000 });
-        }, 2000);
-      };
+      // Generate a thumbnail from the current frame
+      const thumbnailDataUrl = await generateThumbnail(videoRef.current);
       
-      // Show user immediate success - the most important part is done
-      toast.success('Video loaded successfully!', { id: toastId });
+      // Convert data URL to Blob for upload
+      const thumbnailResponse = await fetch(thumbnailDataUrl);
+      const thumbnailBlob = await thumbnailResponse.blob();
       
-      // ================ STEP 2: OPTIONAL CLOUD UPLOAD (CAN FAIL) ================
-      // This part is completely optional - if it fails, user can still edit locally
-      // We'll attempt this in the background using a non-blocking approach
+      // Generate unique IDs for storage paths
+      const uniqueVideoId = uuidv4();
+      const thumbnailId = uuidv4();
       
-      // Add a skip button for cloud upload
-      const skipToastId = 'skip-upload-' + Date.now();
-      toast.loading(
-        <div>
-          Cloud upload starting... 
-          <button 
-            className="ml-2 px-2 py-1 bg-gray-700 rounded text-white text-xs" 
-            onClick={() => {
-              toast.dismiss(skipToastId);
-              toast.success('Cloud upload skipped. You can still edit locally!', { duration: 3000 });
-            }}
-          >
-            Skip cloud upload
-          </button>
-        </div>, 
-        { id: skipToastId, duration: 30000 }
-      );
+      // Upload the video to Supabase Storage
+      setUploadProgress(10);
+      const { data: videoData, error: videoError } = await supabase.storage
+        .from('clips')
+        .upload(`${uniqueVideoId}.mp4`, videoFile, {
+          cacheControl: '3600',
+          upsert: false,
+        });
       
-      // Now do the cloud upload in a non-blocking way
-      setTimeout(async () => {
-        try {
-          // Auth check
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) {
-            toast.error('Not signed in - using local mode only', { id: skipToastId });
-            return;
-          }
-          
-          // Generate filename and path
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${uuidv4()}.${fileExt}`;
-          const filePath = `uploads/${user.id}/${fileName}`;
-          
-          toast.loading('Uploading to cloud...', { id: skipToastId });
-          
-          // Actual upload - but with a shorter timeout and upsert true
-          const uploadController = new AbortController();
-          const timeoutId = setTimeout(() => uploadController.abort(), 15000); // 15 second timeout
-          
-          try {
-            const { error } = await supabase.storage
-              .from('videos')
-              .upload(filePath, file, {
-                cacheControl: '3600',
-                upsert: true,
-                abortSignal: uploadController.signal,
-              });
-              
-            if (error) throw error;
-            
-            // Get URL - this should be quick
-            const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(filePath);
-            if (!publicUrl) throw new Error('Failed to get public URL');
-            
-            // Quick DB insert
-            const { data: dbData, error: dbError } = await supabase
-              .from('posts')
-              .insert([{
-                user_id: user.id,
-                video_url: publicUrl,
-                status: 'draft',
-                title: file.name.split('.')[0]
-              }])
-              .select('id')
-              .single();
-            
-            if (dbError) throw dbError;
-            
-            // Success path
-            setClipId(dbData.id);
-            setVideoUrl(publicUrl); // Store URL but keep using object URL for better performance
-            navigate(`/edit/${dbData.id}`, { replace: true });
-            toast.success('Cloud save complete!', { id: skipToastId });
-          } catch (cloudError: any) {
-            console.error('Cloud process error:', cloudError);
-            toast.error(`Cloud save failed: ${cloudError.message || 'Unknown error'}`, { id: skipToastId, duration: 3000 });
-          } finally {
-            clearTimeout(timeoutId);
-          }
-        } catch (e) {
-          console.error('Background upload error:', e);
-          toast.error('Failed to save to cloud (local only mode)', { id: skipToastId, duration: 3000 });
-        }
-      }, 1000); // 1 second delay before starting cloud upload
-      
-      return true; // Local setup was successful
-    } catch (error: any) {
-      // Something went wrong with the local setup (very unlikely)
-      console.error('Video loading error:', error);
-      toast.error(`Could not load video: ${error.message || 'Unknown error'}`, { id: toastId });
-      return false;
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-  
-  // Handle video metadata loaded
-  const handleVideoLoaded = () => {
-    if (videoRef.current) {
-      const duration = videoRef.current.duration;
-      console.log('Video loaded with duration:', duration);
-      
-      setVideoDuration(duration);
-      setVideoLoaded(true);
-      
-      // Initialize trim end to full duration if not set
-      if (trimEnd === 0) {
-        setTrimEnd(duration);
+      if (videoError) {
+        throw new Error(`Failed to upload video: ${videoError.message}`);
       }
       
-      // Start playing automatically
-      try {
-        const playPromise = videoRef.current.play();
-        
-        // Handle play promise for browsers that return one
-        if (playPromise !== undefined) {
-          playPromise.catch(err => {
-            console.error('Auto-play prevented', err);
-            // Show play button or instructions if autoplay fails
-            toast.info('Click the play button to view the video');
-          });
-        }
-      } catch (err) {
-        console.error('Error in play attempt', err);
+      setUploadProgress(70);
+      
+      // Upload the thumbnail to Supabase Storage
+      const { data: thumbnailData, error: thumbnailError } = await supabase.storage
+        .from('thumbnails')
+        .upload(`${thumbnailId}.jpg`, thumbnailBlob, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: 'image/jpeg',
+        });
+      
+      if (thumbnailError) {
+        throw new Error(`Failed to upload thumbnail: ${thumbnailError.message}`);
       }
       
-      // Make sure video is visible
-      videoRef.current.style.display = 'block';
-      videoRef.current.style.height = '70vh';
-      videoRef.current.style.objectFit = 'cover';
-    }
-  };
-  
-  // Handle play/pause
-  const togglePlayPause = () => {
-    if (!videoRef.current) return;
-    
-    if (isPlaying) {
-      videoRef.current.pause();
-    } else {
-      videoRef.current.play().catch(err => {
-        console.error('Error playing video:', err);
+      setUploadProgress(100);
+      toast.success("Cosmic video ready for posting!", { id: toastId });
+      
+      // Clean up the object URL
+      URL.revokeObjectURL(videoPreviewUrl);
+      
+      // Save details to localStorage to prevent route state issues
+      localStorage.setItem('clipt_upload_data', JSON.stringify({
+        videoUrl: `${supabase.supabaseUrl}/storage/v1/object/public/clips/${uniqueVideoId}.mp4`,
+        thumbnailUrl: `${supabase.supabaseUrl}/storage/v1/object/public/thumbnails/${thumbnailId}.jpg`,
+        clipId: uniqueVideoId,
+        videoDuration: videoDuration
+      }));
+      
+      // Use window.location for a direct browser navigation instead of React Router
+      window.location.href = '/post-form';
       });
+    } catch (error: any) {
+      console.error('Error uploading:', error);
+      toast.error(error.message || "Failed to prepare your cosmic video", { id: "video-upload" });
+      setIsUploading(false);
     }
+  };
+
+  // Triggered when input button is clicked
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
   
-  // Toggle trim preview mode
-  const toggleTrimPreview = () => {
-    setTrimPreviewActive(!trimPreviewActive);
-    
-    // Reset video position when toggling preview
-    if (videoRef.current) {
-      if (!trimPreviewActive) { // About to turn preview ON
-        videoRef.current.currentTime = trimStart;
-      } else { // About to turn preview OFF
-          
-        if (error) throw error;
-        
-        // Get URL - this should be quick
-        const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(filePath);
-        if (!publicUrl) throw new Error('Failed to get public URL');
-        
-        // Quick DB insert
-        const { data: dbData, error: dbError } = await supabase
-          .from('posts')
-          .insert([{
-            user_id: user.id,
-            video_url: publicUrl,
-            status: 'draft',
-            title: file.name.split('.')[0]
-          }])
-          .select('id')
-          .single();
-        
-        if (dbError) throw dbError;
-        
-        // Success path
-        setClipId(dbData.id);
-        setVideoUrl(publicUrl); // Store URL but keep using object URL for better performance
-        navigate(`/edit/${dbData.id}`, { replace: true });
-        toast.success('Cloud save complete!', { id: skipToastId });
-      } catch (cloudError: any) {
-        console.error('Cloud process error:', cloudError);
-        toast.error(`Cloud save failed: ${cloudError.message || 'Unknown error'}`, { id: skipToastId, duration: 3000 });
-      } finally {
-        clearTimeout(timeoutId);
-              trim_start: trimStart,
-              trim_end: trimEnd,
-              status: 'trimmed'
-            })
-            .eq('id', clipId)
-            .then(({ error }) => {
-              if (error) {
-                console.error('Error saving trim settings:', error);
-                toast.error('Cloud save failed, but trim is applied locally', { id: dbToastId });
-                
-                // Still navigate to post form even if cloud save failed
-                setTimeout(() => navigate(`/post-form?clipId=${clipId}`), 1000);
-              } else {
-                toast.success('Trim settings saved to cloud!', { id: dbToastId });
-                
-                // Navigate to post form after successful save with a slight delay to show the success message
-                setTimeout(() => navigate(`/post-form?clipId=${clipId}`), 1000);
-              }
-            })
-            .catch(err => {
-              console.error('Exception saving trim:', err);
-      setTrimPreviewActive(false); // Disable preview mode on error
-    }
-  };
-
-  // Additional useEffect to handle video availability
-  useEffect(() => {
-    if (videoObjectUrl || videoUrl) {
-      // If we have a video, ensure we're in edit mode
-      if (isNewMode) {
-        setIsNewMode(false);
-      }
-    }
-  }, [videoObjectUrl, videoUrl]);
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6">
+    <div className="cosmic-uploader min-h-screen bg-gradient-to-b from-blue-950 via-indigo-900 to-purple-950 p-6">
       <Toaster position="top-center" />
-      <h1 className="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-        Clip Editor Studio
-      </h1>
       
-      {/* Enhanced Video Upload Zone with Animation */}
-      {!videoLoaded && (
-        <motion.div 
-          className="mb-8 p-8 border-2 border-dashed border-violet-500/50 rounded-lg text-center cursor-pointer bg-black/70 backdrop-blur hover:border-violet-400" 
-          onClick={() => fileInputRef.current?.click()}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(139, 92, 246, 0.3)" }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <Upload className="w-12 h-12 mx-auto mb-4 text-violet-500" />
-          <h2 className="text-xl font-bold mb-2 text-white">Upload Your Video</h2>
-          <p className="text-gray-400">Click to browse or drop your video file here</p>
-          <p className="text-xs text-gray-500 mt-2">MP4, WebM, or MOV up to 50MB</p>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileSelect}
-            accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
-            className="hidden"
+      {/* Cosmic background stars */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {stars.map((star) => (
+          <CosmicStar
+            key={star.id}
+            size={star.size}
+            top={star.top}
+            left={star.left}
+            delay={star.delay}
+            duration={star.duration}
           />
-        </motion.div>
-      )}
+        ))}
+      </div>
       
-      {isNewMode && (
-        <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-700 rounded-lg mb-8 hover:border-purple-500 transition-all">
-          <button 
-            onClick={() => fileInputRef.current?.click()}
-            className={`px-8 py-4 rounded-lg flex items-center space-x-3 text-lg font-medium transition-all ${isUploading 
-              ? 'bg-blue-700 text-white cursor-wait' 
-              : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white transform hover:scale-105'}`}
-            disabled={isUploading}
+      {/* Hidden canvas for thumbnail generation */}
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      
+      <div className="max-w-4xl mx-auto relative z-10">
+        <header className="text-center mb-10">
+          <motion.h1 
+            className="text-4xl font-bold text-white mb-2"
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
           >
-            <FaUpload className="mr-2" />
-            <span>
-              {isUploading 
-                ? `Uploading (${Math.round(uploadProgress)}%)` 
-                : 'Upload Video'}
-            </span>
-          </button>
-          <input 
-            type="file" 
-            ref={fileInputRef}
-            onChange={handleFileSelect}
-            accept="video/*"
-            className="hidden"
-          />
-          <p className="mt-4 text-gray-400 text-sm">Max 50MB - MP4, WebM, MOV</p>
-        </div>
-      )}
-      
-      {(videoObjectUrl || videoUrl) && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-          <div className="md:col-span-2">
-            <Card className="p-4 h-full overflow-hidden">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Preview</h3>
-                
-                {/* Video Display */}
-                <div 
-                  className="relative overflow-hidden rounded-lg bg-black trim-preview video-player-container" 
-                  style={{ display: 'block' }}
-                >
-                  {videoUrl || videoObjectUrl ? (
-                    <>
-                      <BasicVideoPlayer
-                        ref={videoRef}
-                        src={videoObjectUrl || videoUrl}
-                        onLoaded={(duration) => {
-                          setVideoDuration(duration);
-                          setVideoLoaded(true);
-                          if (trimEnd === 0) {
-                            setTrimEnd(duration);
-                          }
-                        }}
-                        controls={!trimPreviewActive}
-                        autoPlay={isPlaying}
-                        muted={false}
-                        loop={trimPreviewActive}
-                      <p className="text-muted-foreground">No video selected</p>
-                    </div>
-                  )}
-                </div>
+            Cosmic Video Uploader
+          </motion.h1>
+          <motion.p 
+            className="text-blue-300 text-xl"
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            Upload your video directly to the universe
+          </motion.p>
+        </header>
+        
+        <motion.div
+          className="bg-blue-900/20 backdrop-blur-sm rounded-2xl border border-blue-500/30 overflow-hidden p-8 shadow-2xl"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
+          {!videoPreviewUrl ? (
+            <motion.div 
+              className="flex flex-col items-center justify-center border-2 border-dashed border-blue-500/50 rounded-lg p-10 h-80 cursor-pointer transition-all hover:border-purple-400 hover:bg-blue-900/30"
+              onClick={triggerFileInput}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                className="hidden" 
+                onChange={handleFileSelect}
+                accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
+              />
+              <motion.div 
+                className="w-20 h-20 rounded-full bg-blue-600/40 flex items-center justify-center mb-4"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+              >
+                <svg className="w-10 h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </motion.div>
+              <h3 className="text-xl font-semibold text-white mb-2">Select Your Cosmic Video</h3>
+              <p className="text-blue-300 text-center max-w-md">
+                Click to browse or drag & drop your video file here
+              </p>
+              <p className="text-blue-400 text-sm mt-4">
+                Supported formats: MP4, WebM, MOV, AVI (Max 50MB)
+              </p>
+            </motion.div>
+          ) : (
+            <div className="space-y-6">
+              <div className="aspect-video rounded-lg overflow-hidden bg-black/60">
+                <video 
+                  ref={videoRef}
+                  src={videoPreviewUrl} 
+                  className="w-full h-full object-contain" 
+                  controls
+                  preload="metadata"
+                />
               </div>
-            </Card>
-          </div>
-          
-          <div className="md:col-span-1">
-            <Card className="p-4 h-full">
-              <h3 className="text-lg font-semibold mb-4">Trim Settings</h3>
               
-              <div className="space-y-6">
-                {/* Trim Controls */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Trim Video Clip</h4>
-                  </div>
-                  
-                  {/* Start Time */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold text-white truncate max-w-md">
+                    {videoFile?.name || "Your Cosmic Video"}
+                  </h3>
+                  <motion.button
+                    className="px-4 py-2 rounded-md text-blue-300 hover:text-white hover:bg-blue-700/40 transition-colors"
+                    onClick={triggerFileInput}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Change Video
+                  </motion.button>
+                </div>
+                
+                {isUploading && (
                   <div className="space-y-2">
-                    <Label htmlFor="trimStart">Start Time</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="trimStart"
-                        type="number"
-                        min={0}
-                        max={trimEnd}
-                        step={0.1}
-                        value={trimStart.toFixed(1)}
-                        onChange={(e) => {
-                          const value = parseFloat(e.target.value);
-                          setTrimStart(value > trimEnd ? trimEnd : value);
-                        }}
-                        disabled={!videoLoaded}
+                    <div className="flex justify-between text-sm text-blue-300">
+                      <span>Uploading to the cosmos...</span>
+                      <span>{uploadProgress}%</span>
+                    </div>
+                    <div className="h-2 bg-blue-900/50 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
+                        style={{ width: `${uploadProgress}%` }}
                       />
-                      <span className="text-sm text-muted-foreground w-20">
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex justify-center pt-4">
+                  <motion.button
+                    className={`px-10 py-4 rounded-full text-white text-lg font-medium flex items-center justify-center space-x-2 ${
+                      isUploading 
+                        ? 'bg-blue-800/50 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg'
+                    }`}
+                    onClick={uploadAndGoToPostForm}
+                    disabled={isUploading}
+                    whileHover={isUploading ? {} : { scale: 1.05 }}
+                    whileTap={isUploading ? {} : { scale: 0.95 }}
+                  >
+                    {isUploading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span>Launch to Post Form</span>
+                      </>
+                    )}
+                  </motion.button>
                 </div>
               </div>
-            </Card>
-          </div>
-        </div>
-      )}
+            </div>
+          )}
+        </motion.div>
+        
+        <motion.div 
+          className="mt-6 text-center text-blue-400 text-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <p>Your video will be automatically uploaded and you'll be taken to the post form</p>
+          <p className="mt-1">No trimming needed - just upload and go!</p>
+        </motion.div>
+      </div>
     </div>
   );
 };
