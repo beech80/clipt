@@ -270,6 +270,8 @@ const AppContent = () => {
   return (
     <PageTransition>
       <Routes>
+        <Route path="*" element={<Navigate to="/space" replace />} />
+        <Route path="/space" element={<CleanSpaceLanding />} />
         <Route path="/" element={<CleanSpaceLanding />} />
         <Route path="/boost-store" element={<SuspenseBoundary><BoostStore /></SuspenseBoundary>} />
         <Route path="/edit-profile" element={<SuspenseBoundary><EditProfile /></SuspenseBoundary>} />
