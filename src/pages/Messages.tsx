@@ -978,10 +978,8 @@ const Messages = () => {
                     </RetroChatItem>
                   ))
                 ) : (
-                  <div className="text-center py-12 text-purple-300 cyber-text">
-                    <p>No messages yet</p>
-                    <p className="mt-2 text-sm text-purple-400">Start a conversation by clicking NEW</p>
-
+                  <div className="text-center py-12" style={{visibility: 'hidden', height: '1px', overflow: 'hidden', opacity: 0}}>
+                    {/* Completely hidden elements */}
                   </div>
                 )}
               </motion.div>

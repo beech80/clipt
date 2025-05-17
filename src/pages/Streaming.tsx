@@ -45,10 +45,7 @@ export default function Streaming() {
 
   return (
     <div className="streaming-container" style={{ backgroundColor: '#0D0D0D', minHeight: '100vh', color: 'white', backgroundImage: 'linear-gradient(to bottom, #1A1A1A, #0D0D0D, #0a0a14)', overflow: 'auto', position: 'relative' }}>
-      {/* Background decorative elements (simplified) */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute h-40 w-40 rounded-full bg-orange-500 opacity-5 blur-3xl -top-10 left-1/4"></div>
-      </div>
+      {/* Removed background decorative elements */}
       
       {/* Header (simplified) */}
       <div className="relative" style={{ padding: '30px 20px', zIndex: 20, borderBottom: '2px solid rgba(255, 136, 0, 0.5)' }}>
@@ -62,21 +59,22 @@ export default function Streaming() {
               <Button variant="outline" size="sm" className="text-white bg-black bg-opacity-50 hover:bg-opacity-70" onClick={() => setShowStreamPlayer(!showStreamPlayer)}>
                 <Eye className="h-4 w-4 mr-2" />{showStreamPlayer ? 'Hide Player' : 'View My Stream'}
               </Button>
+              <button
+                onClick={() => { setActiveTab('dashboard'); navigate('/streaming/dashboard'); }}
+                className="bg-indigo-900 p-2 rounded-full shadow-md hover:bg-indigo-800 transition-colors flex items-center justify-center"
+                aria-label="View Dashboard"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-100" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                </svg>
+              </button>
             </div>
           </div>
       </div>
       
-      {/* Tabs */}
+      {/* Simplified Container */}
       <div className="container max-w-6xl py-3 px-3 md:px-6 md:py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="flex border-b border-slate-700">
-            {[ { value: 'live', label: 'Stream Setup' }, { value: 'schedule', label: 'Schedule' }, { value: 'dashboard', label: 'Dashboard' } ].map(tab => (
-              <button key={tab.value} className={`px-4 py-2 -mb-px text-sm font-medium ${activeTab === tab.value ? 'border-b-2 border-orange-500 text-orange-500' : 'text-slate-300 hover:text-orange-400'}`}
-                onClick={() => { setActiveTab(tab.value); navigate(tab.value === 'live' ? '/streaming' : `/streaming/${tab.value}`); }}>
-                {tab.label}
-              </button>
-            ))}
-          </div>
 
           <div className="mt-6">
             <TabsContent value="live" className="mt-0 space-y-4">
@@ -121,7 +119,128 @@ export default function Streaming() {
               )}
             </TabsContent>
             <TabsContent value="schedule"><Card className="bg-slate-900/50 border-slate-700"><CardHeader><CardTitle>Schedule</CardTitle></CardHeader><CardContent><p className="text-slate-400">Schedule content placeholder.</p></CardContent></Card></TabsContent>
-            <TabsContent value="dashboard"><Card className="bg-slate-900/50 border-slate-700"><CardHeader><CardTitle>Dashboard</CardTitle></CardHeader><CardContent><p className="text-slate-400">Dashboard content placeholder.</p></CardContent></Card></TabsContent>
+            <TabsContent value="dashboard">
+              <div className="space-y-6">
+                {/* Performance Overview */}
+                <Card className="bg-slate-900/50 border-slate-700">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg text-orange-400">Stream Performance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="bg-slate-800/60 p-4 rounded-lg border border-indigo-900/40 flex flex-col items-center justify-center">
+                        <span className="text-indigo-300 text-3xl font-bold">24.3K</span>
+                        <span className="text-slate-400 text-sm">Total Views</span>
+                        <span className="text-green-400 text-xs mt-1">+12% this week</span>
+                      </div>
+                      <div className="bg-slate-800/60 p-4 rounded-lg border border-indigo-900/40 flex flex-col items-center justify-center">
+                        <span className="text-indigo-300 text-3xl font-bold">742</span>
+                        <span className="text-slate-400 text-sm">New Followers</span>
+                        <span className="text-green-400 text-xs mt-1">+8% this week</span>
+                      </div>
+                      <div className="bg-slate-800/60 p-4 rounded-lg border border-indigo-900/40 flex flex-col items-center justify-center">
+                        <span className="text-indigo-300 text-3xl font-bold">3.2h</span>
+                        <span className="text-slate-400 text-sm">Avg. Watch Time</span>
+                        <span className="text-orange-400 text-xs mt-1">-2% this week</span>
+                      </div>
+                      <div className="bg-slate-800/60 p-4 rounded-lg border border-indigo-900/40 flex flex-col items-center justify-center">
+                        <span className="text-indigo-300 text-3xl font-bold">$238</span>
+                        <span className="text-slate-400 text-sm">Revenue Generated</span>
+                        <span className="text-green-400 text-xs mt-1">+15% this week</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Recent Stream Records */}
+                <Card className="bg-slate-900/50 border-slate-700">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg text-orange-400">Recent Streams</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="text-left border-b border-slate-700">
+                            <th className="pb-2 text-slate-300 font-medium">Stream Title</th>
+                            <th className="pb-2 text-slate-300 font-medium">Date</th>
+                            <th className="pb-2 text-slate-300 font-medium">Duration</th>
+                            <th className="pb-2 text-slate-300 font-medium">Views</th>
+                            <th className="pb-2 text-slate-300 font-medium">Peak Viewers</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b border-slate-800 text-slate-300">
+                            <td className="py-3">Space Exploration: To The Stars</td>
+                            <td className="py-3 text-slate-400">May 16, 2025</td>
+                            <td className="py-3 text-slate-400">4h 23m</td>
+                            <td className="py-3 text-slate-400">8,293</td>
+                            <td className="py-3 text-slate-400">1,247</td>
+                          </tr>
+                          <tr className="border-b border-slate-800 text-slate-300">
+                            <td className="py-3">Galactic Fleet Commander</td>
+                            <td className="py-3 text-slate-400">May 14, 2025</td>
+                            <td className="py-3 text-slate-400">3h 12m</td>
+                            <td className="py-3 text-slate-400">6,152</td>
+                            <td className="py-3 text-slate-400">983</td>
+                          </tr>
+                          <tr className="border-b border-slate-800 text-slate-300">
+                            <td className="py-3">Cosmic Voyagers: First Contact</td>
+                            <td className="py-3 text-slate-400">May 12, 2025</td>
+                            <td className="py-3 text-slate-400">5h 47m</td>
+                            <td className="py-3 text-slate-400">9,714</td>
+                            <td className="py-3 text-slate-400">1,592</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Growth Metrics */}
+                <Card className="bg-slate-900/50 border-slate-700">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg text-orange-400">Clipt Coin Earnings</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-slate-300 font-medium">Total Balance</p>
+                          <p className="text-2xl text-indigo-300 font-bold">1,240 Clipt Coins</p>
+                        </div>
+                        <div className="bg-slate-800/80 px-3 py-1.5 rounded-md border border-indigo-800/30">
+                          <p className="text-xs text-slate-400">Tracking Active</p>
+                          <p className="text-xs text-green-400">All metrics monitored</p>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-slate-800/60 p-3 rounded-lg space-y-3">
+                        <p className="text-slate-300 font-medium">Recent Earnings</p>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400">Stream Completion Bonus</span>
+                            <span className="text-green-400 font-medium">+60 Coins</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400">First-time Viewer Reward</span>
+                            <span className="text-green-400 font-medium">+25 Coins</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400">Stream Surge Boost Used</span>
+                            <span className="text-red-400 font-medium">-50 Coins</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400">Weekly Pro Bonus</span>
+                            <span className="text-green-400 font-medium">+100 Coins</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
           </div>
         </Tabs>
       </div>
