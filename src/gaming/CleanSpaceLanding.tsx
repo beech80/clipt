@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+// Import our CSS files at a high specificity to ensure styles apply in production
+import '../styles/fix-animations.css';
+import '../styles/cosmic-override.css';
 
 /**
  * A clean space-themed landing page without any overlays or animations
@@ -11,8 +14,26 @@ const CleanSpaceLanding: React.FC = () => {
     // Disable scrolling for immersive experience
     document.body.style.overflow = 'hidden';
     
+    // Force space theme on the entire app in production
+    document.documentElement.style.setProperty('background-color', '#020414', 'important');
+    document.body.style.setProperty('background-color', '#020414', 'important');
+    document.body.style.setProperty('margin', '0', 'important');
+    document.body.style.setProperty('padding', '0', 'important');
+    
+    // Remove any beige backgrounds that might be coming from another component
+    const elements = document.querySelectorAll('div, main, section, body');
+    elements.forEach(el => {
+      if (window.getComputedStyle(el).backgroundColor === 'rgb(215, 190, 157)') { // beige color
+        (el as HTMLElement).style.setProperty('background-color', '#020414', 'important');
+      }
+    });
+    
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.removeProperty('overflow');
+      document.documentElement.style.removeProperty('background-color');
+      document.body.style.removeProperty('background-color');
+      document.body.style.removeProperty('margin');
+      document.body.style.removeProperty('padding');
     };
   }, []);
   
@@ -27,7 +48,9 @@ const CleanSpaceLanding: React.FC = () => {
       overflow: 'hidden',
       position: 'relative',
       // Solid dark background with no gradients that could interact with other elements
-      background: '#020414'
+      background: '#020414 !important',
+      backgroundImage: 'none !important',
+      backgroundColor: '#020414 !important'
     }}>
       {/* Simple stars as individual dots instead of background gradient - optimized with useMemo */}
       {useMemo(() => {
@@ -56,7 +79,7 @@ const CleanSpaceLanding: React.FC = () => {
       }, [])}
       
       {/* Content in a prominent dark container with glowing border */}
-      <div style={{
+      <div className="cosmic-content-container" style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
