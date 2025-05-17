@@ -14,8 +14,8 @@
   box-shadow: none;
   user-select: none;
   touch-action: none;
-  left: 50px;
-  bottom: 30px;
+  left: 20px;
+  bottom: 15px;
   pointer-events: auto; /* Enable interaction */
   overflow: visible;
   z-index: 1; /* Ensure button stays above the ring */
@@ -930,8 +930,8 @@
 
 .action-buttons.diamond-layout {
   position: fixed;
-  bottom: 80px;
-  right: 30px;
+  bottom: 15px;
+  right: 15px;
   background-color: transparent;
   border-radius: 0;
   padding: 0;
