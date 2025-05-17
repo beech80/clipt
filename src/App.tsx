@@ -1,6 +1,8 @@
-import React, { useState, useEffect, lazy } from 'react';
+import React, { useState, useEffect, lazy, createContext, useContext } from 'react';
 import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import Welcome from './pages/Welcome';
+import SimpleSpace from './gaming/SimpleSpace';
+import CleanSpaceLanding from './gaming/CleanSpaceLanding';
 import PageTransition from '@/components/PageTransition';
 import { Toaster } from 'sonner';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -21,6 +23,8 @@ import SuspenseBoundary from '@/components/common/SuspenseBoundary';
 import { LoadingFallback } from '@/components/ui/LoadingStates';
 import { createGlobalStyle } from 'styled-components';
 import '@/index.css';
+/* Import our fix first to override other animation styles */
+import '@/styles/fix-animations.css';
 import '@/styles/animations.css';
 import '@/styles/retro-game.css';
 import '@/styles/clipt-video.css';
@@ -31,21 +35,21 @@ import './styles/global-orange-theme.css'; // More comprehensive orange theme
 // Enhanced global style to prevent scrolling past content
 const GlobalStyle = createGlobalStyle`
   html, body, #root {
-    background-color: #0C0C0C !important;
     margin: 0;
     padding: 0;
     min-height: 100vh;
     height: 100%;
-    overflow: hidden !important;
+    /* overflow: hidden !important; */ /* Removed to allow SimpleSpace to control overflow */
     overscroll-behavior: none;
-    position: fixed;
+    /* position: fixed; */ /* Likely not needed globally if pages manage their own layout */
     width: 100%;
+    /* background-color: #0C0C0C !important; */ /* Removed to allow SimpleSpace to set its own background */
   }
   
   body {
     overscroll-behavior: none;
-    background-color: #0C0C0C !important;
-    touch-action: none;
+    background-color: #0C0C0C; /* Default background for other pages */
+    touch-action: none; /* Keep this for mobile swipe consistency if desired */
   }
   
   /* Prevent any element from causing scrolling issues */
@@ -138,14 +142,135 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Context to manage scroll locking globally
+const ScrollLockContext = createContext<{
+  lockScroll: () => void;
+  unlockScroll: () => void;
+  isLocked: boolean;
+}>({ 
+  lockScroll: () => {}, 
+  unlockScroll: () => {}, 
+  isLocked: false 
+});
+
+// Hook to use scroll locking
+export const useScrollLock = () => useContext(ScrollLockContext);
+
+// Wrapper component that applies cosmic theme and prevents scrolling
+export const CosmicThemeWrapper: React.FC<{children: React.ReactNode}> = ({ children }) => {
+  const { lockScroll } = useScrollLock();
+  
+  // Lock scrolling when cosmic page mounts
+  useEffect(() => {
+    lockScroll();
+    return () => {
+      // No need to unlock here, as we want the parent component to control unlocking
+    };
+  }, [lockScroll]);
+  
+  return <>{children}</>;
+};
+
 const AppContent = () => {
+  // State to track if scrolling is locked
+  const [isScrollLocked, setIsScrollLocked] = useState(false);
+  
+  // Style element ref to keep track of the scroll lock style
+  const styleElementRef = React.useRef<HTMLStyleElement | null>(null);
+  
+  // Function to lock scrolling
+  const lockScroll = React.useCallback(() => {
+    if (isScrollLocked) return; // Already locked
+    
+    // Create style element if it doesn't exist
+    if (!styleElementRef.current) {
+      const styleElement = document.createElement('style');
+      styleElement.id = 'cosmic-no-scroll-style';
+      styleElement.textContent = `
+        html, body, #root, main, div {
+          overflow: hidden !important;
+          max-height: 100vh !important;
+          scrollbar-width: none !important;
+        }
+        
+        ::-webkit-scrollbar {
+          width: 0 !important;
+          height: 0 !important;
+          display: none !important;
+        }
+        
+        body {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          overflow: hidden !important;
+          touch-action: none !important;
+          -ms-touch-action: none !important;
+          -webkit-overflow-scrolling: none !important;
+        }
+      `;
+      document.head.appendChild(styleElement);
+      styleElementRef.current = styleElement;
+      
+      // Add event listeners to prevent scrolling
+      const preventScroll = (e: Event) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      };
+      
+      window.addEventListener('wheel', preventScroll, { passive: false });
+      window.addEventListener('touchmove', preventScroll, { passive: false });
+      window.addEventListener('keydown', (e: KeyboardEvent) => {
+        // Prevent scrolling with arrow keys, spacebar, page up/down
+        if ([32, 33, 34, 35, 36, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+          e.preventDefault();
+          return false;
+        }
+      }, { passive: false });
+    }
+    
+    setIsScrollLocked(true);
+  }, [isScrollLocked]);
+  
+  // Function to unlock scrolling
+  const unlockScroll = React.useCallback(() => {
+    if (!isScrollLocked) return; // Not locked
+    
+    // Remove the style element
+    if (styleElementRef.current) {
+      styleElementRef.current.remove();
+      styleElementRef.current = null;
+      
+      // Remove event listeners
+      window.removeEventListener('wheel', () => {});
+      window.removeEventListener('touchmove', () => {});
+      window.removeEventListener('keydown', () => {});
+    }
+    
+    setIsScrollLocked(false);
+  }, [isScrollLocked]);
+  
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (styleElementRef.current) {
+        styleElementRef.current.remove();
+      }
+    };
+  }, []);
+  
   const location = useLocation();
   const { user } = useAuth();
 
   return (
     <PageTransition>
       <Routes>
-        <Route path="/" element={<SuspenseBoundary><SpaceLanding /></SuspenseBoundary>} />
+        <Route path="/" element={<CleanSpaceLanding />} />
         <Route path="/boost-store" element={<SuspenseBoundary><BoostStore /></SuspenseBoundary>} />
         <Route path="/edit-profile" element={<SuspenseBoundary><EditProfile /></SuspenseBoundary>} />
         <Route path="/home" element={
@@ -198,7 +323,7 @@ const AppContent = () => {
         <Route path="/edit-profile" element={<SuspenseBoundary loadingMessage="Loading profile editor..."><EditProfile /></SuspenseBoundary>} />
         <Route path="/admin" element={<SuspenseBoundary loadingMessage="Loading admin panel..."><Admin /></SuspenseBoundary>} />
         <Route path="/game/:id/streamers" element={<SuspenseBoundary loadingMessage="Loading game streamers..."><GameStreamers /></SuspenseBoundary>} />
-        <Route path="/video-upload" element={<SuspenseBoundary loadingMessage="Loading cosmic video uploader..."><VideoEditor /></SuspenseBoundary>} />
+        <Route path="/video-upload" element={<VideoEditor />} />
         <Route path="/post-type" element={<Navigate to="/post-form" replace />} />
         <Route path="/search" element={<SuspenseBoundary loadingMessage="Loading search..."><SearchPage /></SuspenseBoundary>} />
         <Route path="/posts" element={<Navigate to="/post-form" replace />} />
