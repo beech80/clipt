@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -29,23 +29,31 @@ const CleanSpaceLanding: React.FC = () => {
       // Solid dark background with no gradients that could interact with other elements
       background: '#020414'
     }}>
-      {/* Simple stars as individual dots instead of background gradient */}
-      {Array.from({ length: 100 }).map((_, i) => (
-        <div 
-          key={i}
-          style={{
-            position: 'absolute',
-            width: `${Math.random() * 2 + 1}px`,
-            height: `${Math.random() * 2 + 1}px`,
-            backgroundColor: 'white',
-            borderRadius: '50%',
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            opacity: Math.random() * 0.7 + 0.3,
-            zIndex: 1
-          }}
-        />
-      ))}
+      {/* Simple stars as individual dots instead of background gradient - optimized with useMemo */}
+      {useMemo(() => {
+        // Generate stars only once when component mounts, not on every render
+        const stars = [];
+        for (let i = 0; i < 100; i++) {
+          const width = Math.random() * 2 + 1;
+          stars.push(
+            <div 
+              key={i}
+              style={{
+                position: 'absolute',
+                width: `${width}px`,
+                height: `${width * 1.5}px`,
+                backgroundColor: 'white',
+                borderRadius: '50%',
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                opacity: Math.random() * 0.7 + 0.3,
+                zIndex: 1
+              }}
+            />
+          );
+        }
+        return stars;
+      }, [])}
       
       {/* Content in a prominent dark container with glowing border */}
       <div style={{
