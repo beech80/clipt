@@ -42,16 +42,60 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsInlineLimit: 4096,
+    chunkSizeWarningLimit: 600, // Increase warning limit to reduce noise
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor': [
-            'react', 
-            'react-dom', 
-            'react-router-dom',
-            '@supabase/supabase-js'
-          ]
+        manualChunks: (id) => {
+          // Core libraries
+          if (id.includes('node_modules/react') || 
+              id.includes('node_modules/react-dom') || 
+              id.includes('node_modules/scheduler')) {
+            return 'react-core';
+          }
+          
+          // Routing
+          if (id.includes('node_modules/react-router') || 
+              id.includes('node_modules/history')) {
+            return 'routing';
+          }
+          
+          // Backend services
+          if (id.includes('node_modules/@supabase') || 
+              id.includes('node_modules/@tanstack/react-query')) {
+            return 'backend';
+          }
+
+          // UI libraries
+          if (id.includes('node_modules/framer-motion') || 
+              id.includes('node_modules/@radix-ui') || 
+              id.includes('node_modules/sonner')) {
+            return 'ui-libs';
+          }
+
+          // Animation libraries
+          if (id.includes('node_modules/three') || 
+              id.includes('node_modules/gsap')) {
+            return 'animations';
+          }
+
+          // Gaming components
+          if (id.includes('/src/gaming/')) {
+            return 'gaming';
+          }
+
+          // Use default chunking for other node_modules
+          if (id.includes('node_modules')) {
+            return 'vendors';
+          }
         }
+      }
+    },
+    target: 'esnext', // Modern browsers for better performance
+    minify: 'terser', // Use terser for better compression
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console logs in production
+        drop_debugger: true // Remove debugger statements
       }
     }
   }
