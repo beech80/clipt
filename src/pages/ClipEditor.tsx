@@ -346,47 +346,69 @@ const ClipEditor = () => {
     }
 
     const trimToastId = 'trim-' + Date.now();
-    toast.loading('Creating draft trim...', { id: trimToastId, duration: 2000 });
+    toast.loading('Creating cosmic trim...', { id: trimToastId, duration: 2000 });
     
     try {
       // First show a draft preview by force-enabling trim preview mode
       setTrimPreviewActive(true);
       
-      // Create a drafted thumbnail for the trimmed video (visual feedback)
+      // Capture a thumbnail for the post form
+      let thumbnail = null;
       if (videoRef.current) {
         // Force seek to trim start to show the beginning of trimmed clip
         videoRef.current.currentTime = trimStart;
         
-        // Show "DRAFT" as an overlay element rather than trying to modify the video
-        toast.success('DRAFT TRIM PREVIEW ACTIVE', { 
+        // Wait for seeking to complete
+        await new Promise(resolve => {
+          const handleSeeked = () => {
+            videoRef.current?.removeEventListener('seeked', handleSeeked);
+            resolve(null);
+          };
+          videoRef.current.addEventListener('seeked', handleSeeked);
+        });
+        
+        // Create thumbnail from canvas
+        if (canvasRef.current) {
+          const ctx = canvasRef.current.getContext('2d');
+          if (ctx) {
+            canvasRef.current.width = videoRef.current.videoWidth || 640;
+            canvasRef.current.height = videoRef.current.videoHeight || 360;
+            ctx.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+            thumbnail = canvasRef.current.toDataURL('image/jpeg', 0.85);
+          }
+        }
+        
+        // Show cosmic success message
+        toast.success('Trim preview complete! Preparing for cosmic journey...', { 
           id: 'draft-indicator',
-          duration: 3000,
+          duration: 2000,
           position: 'top-center',
           style: { 
-            background: 'rgba(255,255,255,0.3)', 
+            background: 'linear-gradient(135deg, rgba(168,85,247,0.7), rgba(59,130,246,0.7))', 
             backdropFilter: 'blur(4px)',
-            fontSize: '20px',
-            fontWeight: 'bold'
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            border: '1px solid rgba(255,255,255,0.2)'
           }
         });
       }
       
-      // Local application of trim settings
-      // This works even if we can't connect to the database
+      // Process the trim quickly for better user experience
       setTimeout(() => {
-        toast.success('Trim preview applied!', { id: trimToastId });
+        toast.success('Cosmic trim applied!', { id: trimToastId });
         
         // Try to save to database if we have a clip ID
         if (clipId) {
           const dbToastId = 'db-trim-' + Date.now();
-          toast.loading('Saving trim settings to cloud...', { id: dbToastId });
+          toast.loading('Saving cosmic settings to cloud...', { id: dbToastId });
           
           supabase
             .from('posts')
             .update({
               trim_start: trimStart,
-              trim_end: trimEnd,
-              status: 'trimmed'
+              trim_end: trimEnd
+              // Removed status field as it doesn't exist in the schema
             })
             .eq('id', clipId)
             .then(({ error }) => {
@@ -394,13 +416,31 @@ const ClipEditor = () => {
                 console.error('Error saving trim settings:', error);
                 toast.error('Cloud save failed, but trim is applied locally', { id: dbToastId });
                 
-                // Still navigate to post form even if cloud save failed
-                setTimeout(() => navigate(`/post-form?clipId=${clipId}`), 1000);
+                // Still navigate to post form with all video data even if cloud save failed
+                setTimeout(() => navigate('/post-form', {
+                  state: {
+                    clipId: clipId,
+                    videoBlob: videoBlob,
+                    thumbnail: thumbnail,
+                    trimStart: trimStart,
+                    trimEnd: trimEnd,
+                    cosmic: true
+                  }
+                }), 1000);
               } else {
-                toast.success('Trim settings saved to cloud!', { id: dbToastId });
+                toast.success('Cosmic settings saved to cloud!', { id: dbToastId });
                 
-                // Navigate to post form after successful save with a slight delay to show the success message
-                setTimeout(() => navigate(`/post-form?clipId=${clipId}`), 1000);
+                // Navigate to post form with complete video data
+                setTimeout(() => navigate('/post-form', {
+                  state: {
+                    clipId: clipId,
+                    videoBlob: videoBlob,
+                    thumbnail: thumbnail,
+                    trimStart: trimStart,
+                    trimEnd: trimEnd,
+                    cosmic: true
+                  }
+                }), 1000);
               }
             })
             .catch(err => {
@@ -612,8 +652,37 @@ const ClipEditor = () => {
                     </div>
                   </div>
                   
-                  {/* Trim Slider */}
-                  <div className="pt-4">
+                  {/* Enhanced Trim Controls with Visual Timeline */}
+                  <div className="pt-4 space-y-4">
+                    {/* Visual timeline with keyframe markers */}
+                    <div className="relative h-6 bg-gradient-to-r from-indigo-900/30 to-purple-900/30 rounded-md overflow-hidden">
+                      {/* Timeline track */}
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="h-1 w-full bg-gray-700/50"></div>
+                      </div>
+                      
+                      {/* Trim selection area - cosmic gradient */}
+                      <div 
+                        className="absolute h-full bg-gradient-to-r from-purple-500/30 to-blue-500/30 border-l-2 border-r-2 border-white/40 backdrop-blur-sm"
+                        style={{
+                          left: `${(trimStart / videoDuration) * 100}%`,
+                          width: `${((trimEnd - trimStart) / videoDuration) * 100}%`
+                        }}
+                      ></div>
+                      
+                      {/* Current time indicator */}
+                      {videoRef.current && (
+                        <div 
+                          className="absolute h-full w-0.5 bg-white/80 shadow-[0_0_8px_rgba(255,255,255,0.8)] z-10"
+                          style={{
+                            left: `${(videoRef.current.currentTime / videoDuration) * 100}%`,
+                            transition: isPlaying ? 'left 0.1s linear' : 'none'
+                          }}
+                        ></div>
+                      )}
+                    </div>
+                    
+                    {/* Dual slider with cosmic appearance */}
                     <Slider
                       value={[trimStart, trimEnd]}
                       min={0}
@@ -622,12 +691,21 @@ const ClipEditor = () => {
                       onValueChange={([start, end]) => {
                         setTrimStart(start);
                         setTrimEnd(end);
+                        
+                        // Optionally seek to new position for immediate visual feedback
+                        if (videoRef.current && !isPlaying) {
+                          videoRef.current.currentTime = start;
+                        }
                       }}
                       disabled={!videoLoaded}
+                      className="cosmic-slider"
                     />
-                    <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                      <span>{formatTime(0)}</span>
-                      <span>{formatTime(videoDuration)}</span>
+                    <div className="flex justify-between mt-2 text-xs text-blue-300">
+                      <span className="font-medium">{formatTime(0)}</span>
+                      <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400 font-bold">
+                        Selected: {formatTime(trimEnd - trimStart)}
+                      </span>
+                      <span className="font-medium">{formatTime(videoDuration)}</span>
                     </div>
                   </div>
                   

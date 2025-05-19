@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLIPT</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .title {
+      font-size: 120px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 20px #00e5ff, 0 0 40px #00e5ff, 0 0 60px #00e5ff;
+      margin-bottom: 50px;
+      animation: pulse 2s infinite alternate;
+      letter-spacing: 5px;
+    }
+    
+    .start-button {
+      background-color: rgba(0, 229, 255, 0.1);
+      border: 3px solid #00e5ff;
+      color: #fff;
+      padding: 20px 50px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.7), 0 0 30px rgba(0, 229, 255, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      border-radius: 5px;
+    }
+    
+    .start-button:hover {
+      background-color: #00e5ff;
+      color: #000;
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.9), 0 0 40px rgba(0, 229, 255, 0.6);
+    }
+    
+    @keyframes pulse {
+      0% { text-shadow: 0 0 20px #00e5ff, 0 0 40px #00e5ff; }
+      100% { text-shadow: 0 0 40px #00e5ff, 0 0 60px #00e5ff, 0 0 80px #00e5ff; }
+    }
+  </style>
+</head>
+<body>
+  <div class="title">CLIPT</div>
+  <button class="start-button" onclick="window.location.href='/clipts'">START GAME</button>
+  
+  <!-- Script to ensure the text is visible -->
+  <script>
+    // Make sure the text is rendered
+    document.addEventListener('DOMContentLoaded', function() {
+      const title = document.querySelector('.title');
+      const button = document.querySelector('.start-button');
+      
+      // Force repaint
+      title.style.display = 'none';
+      button.style.display = 'none';
+      
+      setTimeout(() => {
+        title.style.display = 'block';
+        button.style.display = 'inline-block';
+      }, 100);
+    });
+  </script>
+</body>
+</html>

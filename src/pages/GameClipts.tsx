@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { Search, MessageCircle, ChevronLeft, ChevronRight, Zap, X, Send, User, Heart, DollarSign, UserPlus, Scissors, Clock } from 'lucide-react';
+import { Search, MessageCircle, ChevronLeft, ChevronRight, Zap, X, Send, User, Heart, DollarSign, UserPlus, Scissors, Clock, Gamepad2, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NavigationBar from '@/components/NavigationBar';
 import { toast } from 'sonner';
@@ -10,6 +10,7 @@ import '../styles/discovery-donations.css';
 import '../styles/discovery-search.css';
 import '../styles/discovery-fixes.css';
 import '../styles/orange-accent.css';
+import '../components/enhanced-joystick.css';
 
 interface GameCliptsProps {}
 
@@ -423,6 +424,118 @@ const GameClipts: React.FC<GameCliptsProps> = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Cosmic GameBoy Controller UI - with orange themed styling */}
+      <div className="cosmic-gameboy-controller fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+        {/* D-Pad Controller - positioned at bottom left */}
+        <div className="gamepad-dpad fixed bottom-[25px] left-[30px] z-50 pointer-events-auto">
+          <motion.div 
+            className="dpad-container" 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              boxShadow: [
+                '0 0 5px #FF5500, 0 0 10px #FF5500',
+                '0 0 10px #FF5500, 0 0 20px #FF5500',
+                '0 0 5px #FF5500, 0 0 10px #FF5500'
+              ] 
+            }}
+            transition={{ duration: 1.5, repeat: Infinity, repeatType: 'reverse' }}
+          >
+            <div className="dpad">
+              <div 
+                className="dpad-up dpad-button" 
+                onClick={() => {
+                  if (currentIndex > 0) {
+                    setCurrentIndex(currentIndex - 1);
+                  }
+                }}
+              />
+              <div 
+                className="dpad-right dpad-button" 
+                onClick={() => {
+                  navigate(gameId ? `/game/${gameId}/streamers` : '/top-games');
+                }}
+              />
+              <div 
+                className="dpad-down dpad-button" 
+                onClick={() => {
+                  // Navigate to next clip
+                  const nextIndex = (currentIndex + 1) % 5; // Assuming 5 clips total
+                  setCurrentIndex(nextIndex);
+                }}
+              />
+              <div 
+                className="dpad-left dpad-button" 
+                onClick={() => {
+                  navigate(-1); // Go back
+                }}
+              />
+              <div className="dpad-center">
+                <motion.div 
+                  className="dpad-center-dot"
+                  animate={{ 
+                    backgroundColor: ['#FF5500', '#FF7700', '#FF5500']
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Action Buttons - positioned at bottom right */}
+        <div className="gamepad-buttons fixed bottom-[25px] right-[30px] z-50 pointer-events-auto">
+          <motion.div 
+            className="action-buttons-container"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              boxShadow: [
+                '0 0 5px #FF5500, 0 0 10px #FF5500',
+                '0 0 10px #FF5500, 0 0 20px #FF5500',
+                '0 0 5px #FF5500, 0 0 10px #FF5500'
+              ] 
+            }}
+            transition={{ duration: 1.5, repeat: Infinity, repeatType: 'reverse' }}
+          >
+            <div className="action-buttons">
+              <motion.div 
+                className="action-button action-button-a"
+                style={{ backgroundColor: '#FF5500' }}
+                whileTap={{ scale: 0.9, backgroundColor: '#FF7700' }}
+                whileHover={{ scale: 1.1 }}
+                onClick={() => {
+                  // Like the current clip
+                  setIsFollowing(!isFollowing);
+                  toast.success(isFollowing ? "Unfollowed" : "Following streamer!");
+                }}
+              >
+                A
+              </motion.div>
+              <motion.div 
+                className="action-button action-button-b"
+                style={{ backgroundColor: '#FF7700' }}
+                whileTap={{ scale: 0.9, backgroundColor: '#FF5500' }}
+                whileHover={{ scale: 1.1 }}
+                onClick={() => setShowChat(!showChat)}
+              >
+                B
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Controller Legend - small subtle guide at the bottom */}
+      <div className="fixed bottom-3 left-0 right-0 z-40 flex justify-center pointer-events-none">
+        <div className="text-xs text-gray-400 bg-black/30 px-3 py-1 rounded-full backdrop-blur-sm">
+          <span className="mr-3"><span className="text-[#FF5500] font-bold">A</span>: Follow</span>
+          <span><span className="text-[#FF7700] font-bold">B</span>: Chat</span>
+        </div>
+      </div>
       
       {/* Add the consistent navigation bar */}
       <NavigationBar />

@@ -309,8 +309,7 @@ const Clipts = () => {
         color: 'white'
       }}
     >
-      {/* Scanline effect */}
-      <div className="scanline"></div>
+      {/* Scanline effect removed to eliminate animated blue line */}
       
       <div className="flex-1 overflow-hidden flex flex-col relative">
         <div className="pt-0 pb-0 px-0 relative overflow-auto hide-scrollbar h-full">
@@ -589,7 +588,7 @@ const Clipts = () => {
               style={{ marginTop: '24px' }}
             >
               <Button 
-                onClick={() => navigate('/post-selection')}
+                onClick={() => navigate('/post-form')}
                 style={{
                   padding: '12px 24px',
                   fontSize: '16px',

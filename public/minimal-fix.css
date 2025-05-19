@@ -1,0 +1,138 @@
+/**
+ * Enterprise-Grade UI Enhancement
+ * Production-ready solution for space theme interface
+ */
+
+/* Comprehensive approach to hide Messages components */
+div[data-component-file="Messages.tsx"],
+div[data-component-path*="Messages.tsx"],
+div[data-lov-id*="Messages"],
+div[data-component-name="Messages"],
+.text-purple-300,
+.text-purple-400,
+.cyber-text,
+.text-center.py-12,
+div[data-lov-name="RetroChatsList"],
+.sc-jZTQcj,
+.hFlFDr {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* True dropdown streaming menu - collapsed by default */
+div[data-component-file="Streaming.tsx"],
+div[data-component-name="Streaming"],
+div.flex.border-b.border-slate-700 {
+  display: flex !important;
+  flex-direction: column !important;
+  position: fixed !important;
+  top: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 99999 !important;
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  border-radius: 10px !important;
+  padding: 10px !important;
+  width: auto !important;
+  min-width: 180px !important;
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.4) !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
+  text-align: center !important;
+}
+
+/* Style the header/trigger button */
+div.flex.border-b.border-slate-700::before {
+  content: 'STREAMING ▼' !important;
+  display: block !important;
+  width: 100% !important;
+  text-align: center !important;
+  color: #f97316 !important; /* orange-500 */
+  font-weight: bold !important;
+  font-size: 1.1rem !important;
+  letter-spacing: 1px !important;
+  margin-bottom: 10px !important;
+  cursor: pointer !important;
+  padding: 5px 0 !important;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.3) !important;
+  text-shadow: 0 0 10px rgba(249, 115, 22, 0.7), 0 0 20px rgba(139, 92, 246, 0.5) !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Hide buttons by default */
+div.flex.border-b.border-slate-700 > button {
+  display: none !important;
+  margin: 6px 0 !important;
+  width: 100% !important;
+  text-align: center !important;
+  padding: 10px 16px !important;
+  border-radius: 6px !important;
+  transition: all 0.3s ease !important;
+  border: none !important;
+  background-color: transparent !important;
+  color: #e5e7eb !important; /* gray-200 */
+  position: relative !important;
+  overflow: hidden !important;
+  z-index: 1 !important;
+}
+
+/* Show buttons when dropdown is hovered */
+div.flex.border-b.border-slate-700:hover > button {
+  display: block !important;
+}
+
+/* Button hover state */
+div.flex.border-b.border-slate-700 > button:hover {
+  background-color: rgba(139, 92, 246, 0.3) !important;
+  transform: translateY(-1px) !important;
+  color: #f97316 !important; /* orange-500 */
+}
+
+/* Fancy hover effects */
+div.flex.border-b.border-slate-700:hover {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Space glow effect on dropdown hover */
+div.flex.border-b.border-slate-700:hover::before {
+  text-shadow: 0 0 15px rgba(249, 115, 22, 0.9), 0 0 30px rgba(139, 92, 246, 0.7) !important;
+  color: #fb923c !important; /* orange-400 */
+}
+
+/* Button cosmic particle effect */
+div.flex.border-b.border-slate-700 > button::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 200% !important;
+  height: 200% !important;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 60%) !important;
+  transform: translate(-50%, -50%) scale(0) !important;
+  transition: transform 0.6s ease !important;
+  z-index: -1 !important;
+  opacity: 0 !important;
+  border-radius: 50% !important;
+}
+
+/* Activate particle effect on hover */
+div.flex.border-b.border-slate-700 > button:hover::after {
+  transform: translate(-50%, -50%) scale(1) !important;
+  opacity: 1 !important;
+}
+
+/* Black overlay at the top to mask any remaining elements */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background-color: #000000;
+  z-index: 9998;
+  pointer-events: none;
+}

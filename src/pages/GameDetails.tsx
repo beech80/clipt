@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Gamepad2, Users, Search, X } from 'lucide-react';
+import { ArrowLeft, Gamepad2, Users, Search, X, Bell, Eye } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PostsGrid from '@/components/PostsGrid';
 import StreamerCard from '@/components/StreamerCard';
 import { Input } from '@/components/ui/input';
 import GameSearchResult from '@/components/GameSearchResult';
+import NotificationButton from '@/components/layout/NotificationButton';
+import NotificationsPanel from '@/components/notifications/NotificationsPanel';
+import GameBoyControls from "@/components/GameBoyControls";
+import '../styles/rainbow-clipt-buttons.css';
 
 // Add a declaration for the window object to include our searchTimeout
 declare global {
@@ -47,8 +52,15 @@ interface Streamer {
 }
 
 const GameDetailsPage = () => {
+  // GameBoy Controller states for visibility
+  const [dpadVisible] = useState(true);
+  const [actionButtonsVisible] = useState(true);
+  const [notificationsPanelOpen, setNotificationsPanelOpen] = useState(false);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  
+  // Mock user ID for demo purposes - in a real app, this would come from auth context
+  const userId = "user-123";
 
   const [game, setGame] = useState<Game | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -215,6 +227,8 @@ const GameDetailsPage = () => {
           return;
         }
         
+        // Log the game name to verify it's being loaded correctly
+        console.log('Game loaded successfully:', gameData.name);
         setGame(gameData);
         
         // Fetch posts for this game
@@ -293,7 +307,8 @@ const GameDetailsPage = () => {
     
     fetchData();
   }, [id]);
-
+  
+  // Get page title dynamically based on loading/error state
   const getPageTitle = () => {
     if (loading) return 'Loading Game Clipts...';
     if (error || !game) return 'Game Clipts';
@@ -303,10 +318,7 @@ const GameDetailsPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-blue-950 text-white">
-        <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
-            <ArrowLeft className="h-5 w-5 mr-2" />
-          </Button>
+        <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center justify-center bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Loading Game Clipts...</h1>
         </div>
         <div className="pt-16 flex justify-center items-center h-[60vh]">
@@ -319,10 +331,7 @@ const GameDetailsPage = () => {
   if (error || !game) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-blue-950 text-white">
-        <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
-            <ArrowLeft className="h-5 w-5 mr-2" />
-          </Button>
+        <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center justify-center bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Game Clipts</h1>
         </div>
         <div className="pt-16 p-4">
@@ -338,31 +347,118 @@ const GameDetailsPage = () => {
             </Button>
           </div>
         </div>
+        
+        {/* Game controls with rainbow borders and joystick */}
+        <GameBoyControls />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-blue-950 text-white">
-      {/* Header */}
-      <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
-          <ArrowLeft className="h-5 w-5 mr-2" />
-        </Button>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">{getPageTitle()}</h1>
-        
-        {/* Search button */}
-        <div className="ml-auto">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setSearchMode(!searchMode)}
-            className="text-white"
+    <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-blue-950 text-white relative">
+      {/* Cosmic GameBoy Controller UI - enhanced visual design */}
+      <div className="cosmic-gameboy-controller fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+        {/* D-Pad Controller - positioned at bottom left */}
+        <div className="gamepad-dpad fixed bottom-[25px] left-[30px] z-50 pointer-events-auto">
+          <motion.div 
+            className="dpad-container" 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              boxShadow: [
+                '0 0 5px #FF5500, 0 0 10px #FF5500',
+                '0 0 10px #FF5500, 0 0 20px #FF5500',
+                '0 0 5px #FF5500, 0 0 10px #FF5500'
+              ] 
+            }}
+            transition={{ duration: 1.5, repeat: Infinity, repeatType: 'reverse' }}
           >
-            <Search className="h-5 w-5" />
-          </Button>
+            <div className="dpad">
+              <div className="dpad-up dpad-button" onClick={() => console.log('Up pressed')}/>
+              <div className="dpad-right dpad-button" onClick={() => console.log('Right pressed')}/>
+              <div className="dpad-down dpad-button" onClick={() => console.log('Down pressed')}/>
+              <div className="dpad-left dpad-button" onClick={() => console.log('Left pressed')}/>
+              <div className="dpad-center">
+                <motion.div 
+                  className="dpad-center-dot"
+                  animate={{ 
+                    backgroundColor: ['#FF5500', '#FF7700', '#FF5500']
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Action Buttons - positioned at bottom right */}
+        <div className="gamepad-buttons fixed bottom-[25px] right-[30px] z-50 pointer-events-auto">
+          <motion.div 
+            className="action-buttons-container"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              boxShadow: [
+                '0 0 5px #FF5500, 0 0 10px #FF5500',
+                '0 0 10px #FF5500, 0 0 20px #FF5500',
+                '0 0 5px #FF5500, 0 0 10px #FF5500'
+              ] 
+            }}
+            transition={{ duration: 1.5, repeat: Infinity, repeatType: 'reverse' }}
+          >
+            <div className="action-buttons">
+              <motion.div 
+                className="action-button action-button-a"
+                style={{ backgroundColor: '#FF5500' }}
+                whileTap={{ scale: 0.9, backgroundColor: '#FF7700' }}
+                whileHover={{ scale: 1.1 }}
+                onClick={() => console.log('A button pressed')}
+              >
+                A
+              </motion.div>
+              <motion.div 
+                className="action-button action-button-b"
+                style={{ backgroundColor: '#FF7700' }}
+                whileTap={{ scale: 0.9, backgroundColor: '#FF5500' }}
+                whileHover={{ scale: 1.1 }}
+                onClick={() => console.log('B button pressed')}
+              >
+                B
+              </motion.div>
+            </div>
+          </motion.div>
         </div>
       </div>
+      {/* Header */}
+      <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
+        {/* Empty div for left side spacing */}
+        <div className="w-10"></div>
+        
+        {/* Center section with game title */}
+        <div className="text-center flex-1">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+            {game ? `${game.name} Clipts` : 'Game Clipts'}
+          </h1>
+        </div>
+        
+        {/* Notification bell */}
+        <div className="flex items-center">
+          <NotificationButton 
+            userId={userId} 
+            onOpenNotifications={() => setNotificationsPanelOpen(true)} 
+          />
+        </div>
+      </div>
+      
+      {/* Notifications Panel */}
+      {notificationsPanelOpen && (
+        <NotificationsPanel 
+          userId={userId} 
+          onClose={() => setNotificationsPanelOpen(false)} 
+        />
+      )}
 
       <div className="pt-16 pb-20 px-4">
         {/* Search bar */}
@@ -417,10 +513,10 @@ const GameDetailsPage = () => {
           </div>
         )}
 
-        {/* Game Name */}
-        <div className="py-6 text-center">
-          <h1 className="text-3xl font-bold">{game.name}</h1>
-          <p className="text-yellow-400 mt-2">Clips & Streamers</p>
+        {/* Game Name - Perfectly centered with cosmic gradient text */}
+        <div className="py-8 text-center mx-auto max-w-3xl">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-orange-400 bg-clip-text text-transparent animate-gradient-x">{game.name}</h1>
+          <p className="text-yellow-400 mt-2 text-lg">Streams & Clipts</p>
         </div>
 
         {/* Tabs for Clips and Streamers */}
@@ -471,6 +567,69 @@ const GameDetailsPage = () => {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Rainbow Border Clipt Buttons - matching Clipts page exactly */}
+        {/* D-Pad Controller with rainbow borders */}
+        <div className="clipt-dpad-container">
+          <button 
+            className="clipt-button up-button clipt-dpad-up" 
+            onClick={() => {
+              window.scrollBy(0, -300);
+            }}
+          />
+          <button 
+            className="clipt-button right-button clipt-dpad-right" 
+            onClick={() => {
+              setActiveTab('streamers');
+            }}
+          />
+          <button 
+            className="clipt-button down-button clipt-dpad-down" 
+            onClick={() => {
+              window.scrollBy(0, 300);
+            }}
+          />
+          <button 
+            className="clipt-button left-button clipt-dpad-left" 
+            onClick={() => {
+              setActiveTab('clips');
+            }}
+          />
+          <div className="clipt-dpad-center">
+            <div className="clipt-dpad-center-dot" />
+          </div>
+        </div>
+
+        {/* Action Buttons with rainbow borders */}
+        <div className="clipt-action-buttons">
+          <button 
+            className="clipt-button a-button" 
+            onClick={() => {
+              // Like the current game or post
+              if (posts.length > 0) {
+                toast({
+                  title: "Liked!",
+                  description: "You liked this content",
+                  duration: 2000,
+                });
+              }
+            }}
+          >
+            A
+          </button>
+          <button 
+            className="clipt-button b-button" 
+            onClick={() => navigate(-1)}
+          >
+            B
+          </button>
+        </div>
+
+        {/* Controller Legend with rainbow border */}
+        <div className="clipt-controller-legend">
+          <span><span className="key">A:</span> Like</span>
+          <span><span className="key">B:</span> Back</span>
+        </div>
       </div>
     </div>
   );

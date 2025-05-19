@@ -1,0 +1,242 @@
+/* Cosmic-themed chat styling for CLIPT */
+
+.bottom-chat-container {
+  position: fixed;
+  bottom: 90px; /* Positioned above the bottom navigation */
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.chat-panel {
+  width: 100%;
+  max-width: 500px;
+  height: 400px;
+  margin: 0 10px;
+  border-radius: 15px 15px 0 0;
+  overflow: hidden;
+  box-shadow: 0 -2px 25px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  border: 1px solid rgba(255, 85, 0, 0.3);
+  border-bottom: none;
+}
+
+/* Cosmic theme styling */
+.cosmic-theme {
+  background: linear-gradient(to bottom, rgba(15, 15, 30, 0.95), rgba(25, 25, 40, 0.95));
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 -5px 25px rgba(255, 85, 0, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 85, 0, 0.2);
+}
+
+.streamer-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  position: relative;
+}
+
+.streamer-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 85, 0, 0.6);
+}
+
+.online-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  border: 2px solid #13151a;
+  box-shadow: 0 0 5px #22c55e;
+  animation: pulse 2s infinite;
+}
+
+.streamer-details h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.viewers {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  font-size: 12px;
+  color: #aaa;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background-color: #ff5500;
+  border-radius: 50%;
+  margin-right: 5px;
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  color: #aaa;
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.2s;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.close-button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.chat-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-footer {
+  height: 5px;
+  background: linear-gradient(to right, 
+    rgba(255, 85, 0, 0.3), 
+    rgba(255, 140, 0, 0.3), 
+    rgba(255, 85, 0, 0.3)
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+/* Cosmic decorations */
+.cosmic-decoration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation: shooting 8s linear infinite;
+}
+
+.star1 {
+  width: 1px;
+  height: 1px;
+  background: white;
+  box-shadow: 0 0 3px 1px white;
+  top: 0;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.star2 {
+  width: 2px;
+  height: 2px;
+  background: #ff8c00;
+  box-shadow: 0 0 4px 1px #ff8c00;
+  top: 0;
+  left: 50%;
+  animation-delay: 3s;
+}
+
+.star3 {
+  width: 1px;
+  height: 1px;
+  background: #ff5500;
+  box-shadow: 0 0 3px 1px #ff5500;
+  top: 0;
+  left: 80%;
+  animation-delay: 5s;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shooting {
+  0% {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  20% {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Media queries for responsive design */
+@media (max-width: 640px) {
+  .chat-panel {
+    max-width: 100%;
+    height: 380px;
+    margin: 0 5px;
+  }
+}
+
+@media (max-height: 667px) {
+  .chat-panel {
+    height: 300px;
+  }
+}

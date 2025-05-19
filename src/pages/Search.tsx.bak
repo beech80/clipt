@@ -1,0 +1,610 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  ArrowLeft, 
+  Search, 
+  Users, 
+  Heart,
+  MessageCircle,
+  Rocket
+} from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+
+// Define types
+interface User {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string;
+  followers: number;
+  isLive?: boolean;
+  is_live?: boolean;
+  game?: string;
+}
+
+interface Game {
+  id: string;
+  name: string;
+  cover_url: string;
+  viewers: number;
+}
+
+const SearchPage = () => {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchCategory, setSearchCategory] = useState<'all' | 'users' | 'games'>('all');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<{
+    users: User[];
+    games: Game[];
+  }>({ users: [], games: [] });
+
+  // Expanded mock data with more search options
+  const mockUsers: User[] = [
+    {
+      id: 'user-1',
+      username: 'cosmic_gamer',
+      display_name: 'Cosmic Gamer',
+      avatar_url: 'https://randomuser.me/api/portraits/men/1.jpg',
+      followers: 12500,
+      isLive: true,
+    },
+    {
+      id: 'user-2',
+      username: 'space_streamer',
+      display_name: 'Space Streamer',
+      avatar_url: 'https://randomuser.me/api/portraits/women/2.jpg',
+      followers: 8300,
+      isLive: false,
+    },
+    {
+      id: 'user-3',
+      username: 'nebula_ninja',
+      display_name: 'Nebula Ninja',
+      avatar_url: 'https://randomuser.me/api/portraits/men/3.jpg',
+      followers: 24700,
+      isLive: true,
+    },
+    {
+      id: 'user-4',
+      username: 'galaxy_queen',
+      display_name: 'Galaxy Queen',
+      avatar_url: 'https://randomuser.me/api/portraits/women/4.jpg',
+      followers: 15900,
+      isLive: false,
+    },
+    {
+      id: 'user-5',
+      username: 'stardust_gamer',
+      display_name: 'Stardust Gamer',
+      avatar_url: 'https://randomuser.me/api/portraits/men/5.jpg',
+      followers: 9800,
+      isLive: true,
+    },
+    {
+      id: 'user-6',
+      username: 'astro_player',
+      display_name: 'Astro Player',
+      avatar_url: 'https://randomuser.me/api/portraits/men/6.jpg',
+      followers: 32100,
+      isLive: true,
+    },
+    {
+      id: 'user-7',
+      username: 'meteor_streamer',
+      display_name: 'Meteor Streamer',
+      avatar_url: 'https://randomuser.me/api/portraits/women/7.jpg',
+      followers: 18700,
+      isLive: false,
+    },
+    {
+      id: 'user-8',
+      username: 'interstellar_gamer',
+      display_name: 'Interstellar Gamer',
+      avatar_url: 'https://randomuser.me/api/portraits/men/8.jpg',
+      followers: 45600,
+      isLive: true,
+    },
+    {
+      id: 'user-9',
+      username: 'lunar_legend',
+      display_name: 'Lunar Legend',
+      avatar_url: 'https://randomuser.me/api/portraits/women/9.jpg',
+      followers: 29300,
+      isLive: false,
+    },
+    {
+      id: 'user-10',
+      username: 'comet_crusher',
+      display_name: 'Comet Crusher',
+      avatar_url: 'https://randomuser.me/api/portraits/men/10.jpg',
+      followers: 37800,
+      isLive: true,
+    }
+  ];
+
+  const mockGames: Game[] = [
+    {
+      id: 'game-1',
+      name: 'Stellar Odyssey',
+      cover_url: 'https://picsum.photos/300/400?random=1',
+      viewers: 34500,
+    },
+    {
+      id: 'game-2',
+      name: 'Cosmic Conquest',
+      cover_url: 'https://picsum.photos/300/400?random=2',
+      viewers: 28900,
+    },
+    {
+      id: 'game-3',
+      name: 'Nebula Raiders',
+      cover_url: 'https://picsum.photos/300/400?random=3',
+      viewers: 15600,
+    },
+    {
+      id: 'game-4',
+      name: 'Galactic Guardians',
+      cover_url: 'https://picsum.photos/300/400?random=4',
+      viewers: 42300,
+    },
+    {
+      id: 'game-5',
+      name: 'Asteroid Battle Royale',
+      cover_url: 'https://picsum.photos/300/400?random=5',
+      viewers: 53100,
+    },
+    {
+      id: 'game-6',
+      name: 'Space Station Simulator',
+      cover_url: 'https://picsum.photos/300/400?random=6',
+      viewers: 19800,
+    },
+    {
+      id: 'game-7',
+      name: 'Planetary Conquest',
+      cover_url: 'https://picsum.photos/300/400?random=7',
+      viewers: 31500,
+    },
+    {
+      id: 'game-8',
+      name: 'Spacewalk Survival',
+      cover_url: 'https://picsum.photos/300/400?random=8',
+      viewers: 27200,
+    },
+    {
+      id: 'game-9',
+      name: 'Galaxy Drift',
+      cover_url: 'https://picsum.photos/300/400?random=9',
+      viewers: 38900,
+    },
+    {
+      id: 'game-10',
+      name: 'Rocket League Space Edition',
+      cover_url: 'https://picsum.photos/300/400?random=10',
+      viewers: 48700,
+    },
+    {
+      id: 'game-11',
+      name: 'Alien Arena',
+      cover_url: 'https://picsum.photos/300/400?random=11',
+      viewers: 22400,
+    },
+    {
+      id: 'game-12',
+      name: 'Cosmic Kart Racing',
+      cover_url: 'https://picsum.photos/300/400?random=12',
+      viewers: 33600,
+    }
+  ];
+
+  // Enhanced search function with fuzzy matching and better handling
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSearchTerm = e.target.value;
+    setSearchQuery(newSearchTerm);
+    
+    if (newSearchTerm.length > 1) { // Reduced character limit for better responsiveness
+      setIsSearching(true);
+      // Simulate search API call
+      setTimeout(() => {
+        setIsSearching(false);
+        
+        // Advanced filtering with fuzzy matching and rank prioritization
+        const searchTermLower = newSearchTerm.toLowerCase();
+        const searchTerms = searchTermLower.split(' ').filter(term => term.length > 0);
+        
+        // Enhanced user search with multiple fields and fuzzy matching
+        const filteredUsers = mockUsers.filter(user => {
+          const displayNameLower = user.display_name.toLowerCase();
+          const usernameLower = user.username.toLowerCase();
+          
+          // Check if any search term is included in user fields
+          return searchTerms.some(term => 
+            displayNameLower.includes(term) || 
+            usernameLower.includes(term)
+          );
+        });
+        
+        // Sort users by relevance (exact matches first, then partial matches)
+        const rankedUsers = [...filteredUsers].sort((a, b) => {
+          const aDisplayNameMatch = a.display_name.toLowerCase().includes(searchTermLower) ? 2 : 0;
+          const aUsernameMatch = a.username.toLowerCase().includes(searchTermLower) ? 1 : 0;
+          const aScore = aDisplayNameMatch + aUsernameMatch;
+          
+          const bDisplayNameMatch = b.display_name.toLowerCase().includes(searchTermLower) ? 2 : 0;
+          const bUsernameMatch = b.username.toLowerCase().includes(searchTermLower) ? 1 : 0;
+          const bScore = bDisplayNameMatch + bUsernameMatch;
+          
+          return bScore - aScore; // Higher scores first
+        });
+        
+        // Enhanced game search with fuzzy matching
+        const filteredGames = mockGames.filter(game => {
+          const nameLower = game.name.toLowerCase();
+          return searchTerms.some(term => nameLower.includes(term));
+        });
+        
+        // Sort games by relevance
+        const rankedGames = [...filteredGames].sort((a, b) => {
+          const aExactMatch = a.name.toLowerCase() === searchTermLower ? 3 : 0;
+          const aStartsWithMatch = a.name.toLowerCase().startsWith(searchTermLower) ? 2 : 0;
+          const aIncludesMatch = a.name.toLowerCase().includes(searchTermLower) ? 1 : 0;
+          const aScore = aExactMatch + aStartsWithMatch + aIncludesMatch;
+          
+          const bExactMatch = b.name.toLowerCase() === searchTermLower ? 3 : 0;
+          const bStartsWithMatch = b.name.toLowerCase().startsWith(searchTermLower) ? 2 : 0;
+          const bIncludesMatch = b.name.toLowerCase().includes(searchTermLower) ? 1 : 0;
+          const bScore = bExactMatch + bStartsWithMatch + bIncludesMatch;
+          
+          return bScore - aScore; // Higher scores first
+        });
+        
+        setSearchResults({
+          users: rankedUsers,
+          games: rankedGames
+        });
+        
+        console.log(`Search results for "${newSearchTerm}": ${rankedUsers.length} users, ${rankedGames.length} games`);
+      }, 300); // Reduced delay for faster response
+    } else if (newSearchTerm.length === 0) {
+      // Reset results when search is cleared
+      setSearchResults({ users: [], games: [] });
+    }
+  };
+
+  // Add console log to debug rendering
+  console.log('Rendering Search page');
+
+  // Use mock data on initial render to show something immediately
+  useEffect(() => {
+    setSearchResults({
+      users: mockUsers.slice(0, 3),
+      games: mockGames.slice(0, 2)
+    });
+  }, []);
+
+  return (
+    <div className="bg-black w-full min-h-screen p-4">
+      {/* Simple Header */}
+      <div className="flex items-center gap-4 mb-6 border-b border-gray-800 pb-4">
+        <button
+          onClick={() => navigate('/')} 
+          className="text-white p-2 hover:bg-gray-800 rounded-full"
+        >
+          <ArrowLeft />
+        </button>
+        <h1 className="text-2xl font-bold text-white">Search</h1>
+      </div>
+      {/* Simple Search Bar */}
+      <div className="relative mb-6">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Search className="h-5 w-5 text-orange-500" />
+        </div>
+        <input
+          type="text"
+          className="block w-full pl-10 pr-3 py-3 bg-gray-900 border border-gray-700 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          placeholder="Search users, games, or content..."
+          value={searchQuery}
+          onChange={handleSearchInputChange}
+          autoFocus
+        />
+      </div>
+      
+      {/* Enhanced Category Tabs with Counters */}
+      <div className="flex gap-2 mb-6">
+        <button 
+          className={`px-4 py-2 rounded-md ${searchCategory === 'all' ? 'bg-orange-600 text-white' : 'bg-gray-800 text-white'}`}
+          onClick={() => setSearchCategory('all')}
+        >
+          All
+          {searchQuery.length > 1 && searchResults.users.length + searchResults.games.length > 0 && (
+            <span className="ml-2 px-1.5 py-0.5 text-xs bg-black bg-opacity-30 rounded">
+              {searchResults.users.length + searchResults.games.length}
+            </span>
+          )}
+        </button>
+        <button 
+          className={`px-4 py-2 rounded-md ${searchCategory === 'users' ? 'bg-orange-600 text-white' : 'bg-gray-800 text-white'}`}
+          onClick={() => setSearchCategory('users')}
+        >
+          Users
+          {searchQuery.length > 1 && searchResults.users.length > 0 && (
+            <span className="ml-2 px-1.5 py-0.5 text-xs bg-black bg-opacity-30 rounded">
+              {searchResults.users.length}
+            </span>
+          )}
+        </button>
+        <button 
+          className={`px-4 py-2 rounded-md ${searchCategory === 'games' ? 'bg-orange-600 text-white' : 'bg-gray-800 text-white'}`}
+          onClick={() => setSearchCategory('games')}
+        >
+          Games
+          {searchQuery.length > 1 && searchResults.games.length > 0 && (
+            <span className="ml-2 px-1.5 py-0.5 text-xs bg-black bg-opacity-30 rounded">
+              {searchResults.games.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Simplified Search Results */}
+      <div className="space-y-6">
+        {/* Default content - always shown */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center">
+            <Rocket className="mr-2 text-orange-500" /> Popular Searches
+          </h2>
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="bg-gray-800 p-3 rounded-md hover:bg-gray-700 cursor-pointer">
+              <p className="text-white font-medium">Space Adventure</p>
+              <p className="text-gray-400 text-sm">Game • 24.5K viewers</p>
+            </div>
+            <div className="bg-gray-800 p-3 rounded-md hover:bg-gray-700 cursor-pointer">
+              <p className="text-white font-medium">Cosmic Battles</p>
+              <p className="text-gray-400 text-sm">Game • 18.2K viewers</p>
+            </div>
+            <div className="bg-gray-800 p-3 rounded-md hover:bg-gray-700 cursor-pointer">
+              <p className="text-white font-medium">StarGamer</p>
+              <p className="text-gray-400 text-sm">User • 150K followers</p>
+            </div>
+            <div className="bg-gray-800 p-3 rounded-md hover:bg-gray-700 cursor-pointer">
+              <p className="text-white font-medium">CosmicQueen</p>
+              <p className="text-gray-400 text-sm">User • 89.7K followers</p>
+            </div>
+          </div>
+          
+          <h2 className="text-xl font-bold text-white mb-4">Featured Streamers</h2>
+          <div className="space-y-3">
+          {/* Always show some sample streamers */}
+            {mockUsers.map(user => (
+              <div 
+                key={user.id} 
+                className="flex items-center bg-gray-800 p-3 rounded-md hover:bg-gray-700 cursor-pointer"
+                onClick={() => navigate(`/user/${user.username}`)}
+              >
+                <img src={user.avatar_url} alt={user.display_name} className="w-12 h-12 rounded-full mr-3" />
+                <div>
+                  <p className="text-white font-medium">{user.display_name}</p>
+                  <p className="text-gray-400 text-sm">@{user.username} • {user.followers.toLocaleString()} followers</p>
+                </div>
+                <div className="ml-auto flex items-center gap-2">
+                  {user.isLive && (
+                    <span className="bg-red-600 text-white text-xs px-2 py-1 rounded">LIVE</span>
+                  )}
+                  <div className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-700">
+                    <ArrowLeft size={14} className="transform rotate-180 text-gray-300" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Search results - always maintain layout with appropriate content */}
+        <div className="mt-8 space-y-6">
+            {/* Users Section - Always show with appropriate content */}
+            {(searchCategory === 'all' || searchCategory === 'users') && (searchResults.users.length > 0 || searchQuery.length <= 1) && (
+              <div>
+                <h3 className="text-lg font-medium text-white mb-3">
+                  {searchQuery.length > 1 ? `Users matching "${searchQuery}"` : 'Popular Users'}
+                </h3>
+                <div className="space-y-3">
+                  {(searchResults.users.length > 0 ? searchResults.users : 
+                    // Show sample users if no search results
+                    searchQuery.length <= 1 ? mockUsers.slice(0, 5) : []).map(user => (
+                    <div 
+                      key={user.id} 
+                      className="flex items-center bg-gray-800 rounded-lg overflow-hidden hover:bg-gray-700 transition-colors cursor-pointer"
+                      onClick={() => {
+                        navigate(`/user/${user.username}`);
+                        toast({
+                          title: "User Profile",
+                          description: `Viewing ${user.display_name}'s profile`,
+                          duration: 2000,
+                        });
+                      }}
+                    >
+                      <div className="relative">
+                        <img 
+                          src={user.avatar_url} 
+                          alt={user.display_name} 
+                          className="w-16 h-16 object-cover"
+                        />
+                        {user.isLive && (
+                          <div className="absolute top-1 left-1 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded">
+                            LIVE
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 p-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium text-white">{user.display_name}</p>
+                            <p className="text-gray-400 text-sm">@{user.username}</p>
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {user.followers.toLocaleString()} followers
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {searchResults.users.length > 0 && searchQuery.length > 1 ? (
+                    <button 
+                      className="w-full text-center py-2 text-orange-500 hover:text-orange-400 text-sm font-medium"
+                      onClick={() => {
+                        navigate('/users');
+                        toast({
+                          title: "Search Results",
+                          description: `Viewing all users matching "${searchQuery}"`,
+                          duration: 2000,
+                        });
+                      }}
+                    >
+                      See all matches
+                    </button>
+                  ) : (
+                    <button 
+                      className="w-full text-center py-2 text-orange-500 hover:text-orange-400 text-sm font-medium"
+                      onClick={() => {
+                        navigate('/users');
+                        toast({
+                          title: "All Users",
+                          description: "Viewing all users",
+                          duration: 2000,
+                        });
+                      }}
+                    >
+                      Browse all users
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Games Section - Always show with appropriate content */}
+            {(searchCategory === 'all' || searchCategory === 'games') && (searchResults.games.length > 0 || searchQuery.length <= 1) && (
+              <div>
+                <h3 className="text-lg font-medium text-white mb-3">
+                  {searchQuery.length > 1 ? `Games matching "${searchQuery}"` : 'Popular Games'}
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {(searchResults.games.length > 0 ? searchResults.games : 
+                    // Show sample games if no search results
+                    searchQuery.length <= 1 ? mockGames.slice(0, 6) : []).map(game => (
+                    <div 
+                      key={game.id} 
+                      className="bg-gray-800 rounded-lg overflow-hidden hover:bg-gray-700 transition-colors cursor-pointer"
+                      onClick={() => {
+                        navigate(`/game/${game.id}`);
+                        toast({
+                          title: "Game Selected",
+                          description: `Browsing ${game.name}`,
+                          duration: 2000,
+                        });
+                      }}
+                    >
+                      <div className="relative aspect-video">
+                        <img 
+                          src={game.cover_url} 
+                          alt={game.name} 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                          <p className="font-medium text-white text-sm">{game.name}</p>
+                        </div>
+                      </div>
+                      <div className="p-2 flex justify-between items-center">
+                        <div className="flex items-center text-xs text-gray-400">
+                          <Users size={12} className="mr-1" />
+                          {game.viewers.toLocaleString()}
+                        </div>
+                        <button className="text-xs text-orange-500 hover:text-orange-400 font-medium">
+                          Browse
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {searchResults.games.length > 0 && searchQuery.length > 1 ? (
+                  <button 
+                    className="w-full text-center py-2 mt-3 text-orange-500 hover:text-orange-400 text-sm font-medium"
+                    onClick={() => {
+                      navigate('/games');
+                      toast({
+                        title: "Search Results",
+                        description: `Viewing all games matching "${searchQuery}"`,
+                        duration: 2000,
+                      });
+                    }}
+                  >
+                    See all matches
+                  </button>
+                ) : (
+                  <button 
+                    className="w-full text-center py-2 mt-3 text-orange-500 hover:text-orange-400 text-sm font-medium"
+                    onClick={() => {
+                      navigate('/games');
+                      toast({
+                        title: "All Games",
+                        description: "Browsing all games",
+                        duration: 2000,
+                      });
+                    }}
+                  >
+                    Browse all games
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* No search results message when needed */}
+          {searchQuery.length > 1 && searchResults.users.length === 0 && searchResults.games.length === 0 && (
+            <div className="text-center py-8 bg-gray-800 rounded-lg mt-8">
+              <div className="mb-4">
+                <Search className="mx-auto h-12 w-12 text-gray-500" />
+              </div>
+              <p className="text-gray-400 text-lg">No results found for "{searchQuery}"</p>
+              <p className="text-gray-500 mt-2">Try searching for a different term</p>
+            </div>
+          )}
+
+          {/* Related Content Section - Always show recommended content */}
+          <div className="mt-12">
+            <h2 className="text-xl font-bold text-white mb-4">Recommended for You</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-gray-800 p-4 rounded-lg">
+                <div className="flex items-center mb-3">
+                  <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center mr-3">
+                    <Heart size={16} className="text-white" />
+                  </div>
+                  <h3 className="text-white font-medium">Boost Your Content</h3>
+                </div>
+                <p className="text-gray-400 text-sm mb-3">Use your Clipt Coins to promote your stream and stand out!</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-gray-700 p-2 rounded">
+                    <p className="text-white text-xs font-medium">Stream Surge</p>
+                    <p className="text-orange-500 text-xs">50 Tokens</p>
+                  </div>
+                  <div className="bg-gray-700 p-2 rounded">
+                    <p className="text-white text-xs font-medium">I'm the King Now</p>
+                    <p className="text-orange-500 text-xs">80 Tokens</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-800 p-4 rounded-lg">
+                <div className="flex items-center mb-3">
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SearchPage;

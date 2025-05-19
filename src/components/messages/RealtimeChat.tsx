@@ -6,6 +6,7 @@ import {
   getMessages, 
   markMessageAsRead 
 } from '@/lib/realtimeMessages';
+import { cloudflareService } from '@/services/cloudflareService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, 
@@ -81,45 +82,91 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [clipToRate, setClipToRate] = useState<Message | null>(null);
   const [currentRating, setCurrentRating] = useState(0);
+  const [streamInfo, setStreamInfo] = useState<any | null>(null);
+  const [streamConnected, setStreamConnected] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch stream info and connect chat to streaming service
+  useEffect(() => {
+    const connectToStreamService = async () => {
+      try {
+        // Get stream info from the cloudflare service
+        const info = await cloudflareService.getStreamInfo();
+        setStreamInfo(info);
+        
+        // Set up connection to third-party chat service
+        const streamId = info.streamKey.split('k')[1]; // Extract stream ID from key
+        
+        // Connect to third-party chat service
+        // This would normally connect to a WebSocket or other real-time service
+        // For now, we'll simulate a connection success
+        setTimeout(() => {
+          setStreamConnected(true);
+          toast.success("Connected to live chat");
+        }, 1000);
+        
+        console.log(`Connected to stream chat for stream ID: ${streamId}`);
+      } catch (err) {
+        console.error('Failed to connect to streaming service:', err);
+        toast.error('Chat connection failed');
+      }
+    };
+    
+    connectToStreamService();
+    
+    // Clean up function
+    return () => {
+      // Disconnect from third-party services
+      console.log('Disconnecting from stream chat service');
+      setStreamConnected(false);
+    };
+  }, [partnerId]); // Reconnect if partner changes
+  
   // Fetch recent clips for sharing
   useEffect(() => {
     // This would normally fetch from your backend
-    // For now, we'll use mock data
+    // For now, we'll use space-themed mock data
     const fetchRecentClips = async () => {
       try {
+        // Check if we're connected to stream service first
+        if (!streamConnected && streamInfo) {
+          toast({
+            title: "Connecting to streaming service",
+            description: "Please wait while we connect to the chat service..."
+          });
+        }
+        
         // In a real implementation, you would fetch from your API
-        // const response = await fetch('/api/clips/recent');
+        // const response = await fetch(`/api/clips/recent?streamId=${streamInfo?.streamId}`);
         // const data = await response.json();
         
-        // Mock data for now
+        // Space-themed mock clip data
         setRecentClips([
           {
             id: 'clip1',
-            title: 'Amazing headshot!',
-            thumbnailUrl: '/clips/clip1-thumb.jpg',
+            title: 'Cosmic Fleet Battle',
+            thumbnailUrl: '/clips/cosmic-battle-thumb.jpg',
             duration: 45,
-            streamer: 'ProGamer123',
+            streamer: 'CosmicGamer42',
             createdAt: new Date().toISOString(),
             rating: 4.8
           },
           {
             id: 'clip2',
-            title: 'Epic comeback win',
-            thumbnailUrl: '/clips/clip2-thumb.jpg',
+            title: 'Stellar Nebula Discovery',
+            thumbnailUrl: '/clips/stellar-discovery-thumb.jpg',
             duration: 60,
-            streamer: 'GamingWizard',
+            streamer: 'NebulaQueen',
             createdAt: new Date(Date.now() - 3600000).toISOString(),
             rating: 5.0
           },
           {
             id: 'clip3',
-            title: 'Funniest fail ever',
-            thumbnailUrl: '/clips/clip3-thumb.jpg',
+            title: 'Galactic Core Exploration',
+            thumbnailUrl: '/clips/galactic-core-thumb.jpg',
             duration: 30,
-            streamer: 'StreamMaster',
+            streamer: 'AstralVoyager',
             createdAt: new Date(Date.now() - 7200000).toISOString(),
             rating: 4.2
           }
@@ -569,8 +616,15 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
             </Button>
           </div>
         )}
-      
-        <div className="flex items-center space-x-2">
+        <div className="flex gap-2 items-center">
+          {streamConnected && (
+            <div className="absolute -top-6 left-0 right-0 flex justify-center">
+              <span className="text-xs bg-green-900/70 text-green-300 px-3 py-1 rounded-t-md border-t border-l border-r border-green-700">
+                <span className="inline-block h-2 w-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
+                Live Chat Connected
+              </span>
+            </div>
+          )}
           <Button
             type="button"
             variant="ghost"

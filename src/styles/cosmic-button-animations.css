@@ -1,0 +1,118 @@
+/* Cosmic Button Animations for CLIPT Navigation
+   Provides space-themed visual feedback for button interactions */
+
+/* Pulse animation for like button */
+@keyframes cosmic-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 85, 0, 0.7);
+    transform: scale(1);
+  }
+  
+  50% {
+    box-shadow: 0 0 0 10px rgba(255, 85, 0, 0);
+    transform: scale(1.1);
+  }
+  
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 85, 0, 0);
+    transform: scale(1);
+  }
+}
+
+.pulse-animation {
+  animation: cosmic-pulse 0.8s ease-out;
+}
+
+/* Active clip button effect */
+.active-clip {
+  background-color: rgba(255, 85, 0, 0.6) !important;
+  box-shadow: 0 0 15px 5px rgba(255, 85, 0, 0.4) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Cosmic ripple effect for share button */
+.cosmic-pulse {
+  position: relative;
+  overflow: hidden;
+}
+
+.cosmic-pulse:after {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255, 85, 0, 0.4) 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform 0.5s, opacity 0.5s;
+}
+
+.cosmic-pulse:active:after,
+.cosmic-pulse-active:after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
+}
+
+/* Hover effects for all cosmic navigation buttons */
+.nav-button {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.nav-button:hover {
+  transform: translateY(-3px) scale(1.05) !important;
+  box-shadow: 0 5px 15px rgba(255, 85, 0, 0.4) !important;
+}
+
+.nav-button:active {
+  transform: translateY(1px) scale(0.98) !important;
+}
+
+/* Donation button special effects */
+.donate-button:hover {
+  background: linear-gradient(135deg, rgba(255, 85, 0, 0.4), rgba(255, 140, 0, 0.4)) !important;
+}
+
+/* Like button active state */
+.like-button.active {
+  background-color: rgba(255, 85, 0, 0.5) !important;
+}
+
+/* Space theme glow around buttons */
+.nav-button {
+  position: relative;
+}
+
+.nav-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #FF5500, #FF8800);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.nav-button:hover::before {
+  opacity: 0.4;
+  animation: cosmic-rotation 4s linear infinite;
+}
+
+@keyframes cosmic-rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,123 @@
+/* Gameboy Controller Rainbow Border Effects */
+
+/* Rainbow border for dpad container */
+.dpad-container.rainbow-border {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+
+.dpad-container.rainbow-border::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: linear-gradient(45deg, #ff0080, #ff8c00, #ffff00, #00ff80, #00bfff, #8a2be2, #ff0080);
+  background-size: 400% 400%;
+  z-index: -1;
+  filter: blur(6px);
+  border-radius: 50%;
+  animation: gradientBorder 10s ease infinite;
+  opacity: 0.9;
+}
+
+/* Rainbow border for action buttons container */
+.action-buttons-container.rainbow-border {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+
+.action-buttons-container.rainbow-border::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: linear-gradient(45deg, #ff0080, #ff8c00, #ffff00, #00ff80, #00bfff, #8a2be2, #ff0080);
+  background-size: 400% 400%;
+  z-index: -1;
+  filter: blur(6px);
+  border-radius: 50%;
+  animation: gradientBorder 10s ease infinite;
+  opacity: 0.9;
+}
+
+/* Individual action buttons with rainbow effects */
+.action-button.rainbow-glow {
+  position: relative;
+  z-index: 1;
+}
+
+.action-button.rainbow-glow::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(45deg, #ff0080, #ff8c00, #ffff00, #00ff80, #00bfff, #8a2be2, #ff0080);
+  background-size: 400% 400%;
+  z-index: -1;
+  filter: blur(5px);
+  border-radius: 50%;
+  animation: gradientBorder 10s ease infinite;
+  opacity: 0.85;
+}
+
+/* The animation for the gradient movement */
+@keyframes gradientBorder {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Center dot with rainbow pulsing */
+.dpad-center-dot.rainbow-pulse {
+  animation: rainbowPulse 3s infinite;
+}
+
+@keyframes rainbowPulse {
+  0%, 100% {
+    background-color: #ff0080;
+    box-shadow: 0 0 15px #ff0080;
+  }
+  14% {
+    background-color: #ff8c00;
+    box-shadow: 0 0 15px #ff8c00;
+  }
+  28% {
+    background-color: #ffff00;
+    box-shadow: 0 0 15px #ffff00;
+  }
+  42% {
+    background-color: #00ff80;
+    box-shadow: 0 0 15px #00ff80;
+  }
+  56% {
+    background-color: #00bfff;
+    box-shadow: 0 0 15px #00bfff;
+  }
+  70% {
+    background-color: #8a2be2;
+    box-shadow: 0 0 15px #8a2be2;
+  }
+  84% {
+    background-color: #ff0080;
+    box-shadow: 0 0 15px #ff0080;
+  }
+}
+
+/* Enhanced visual effects for the entire controller */
+.cosmic-gameboy-controller {
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.5));
+}

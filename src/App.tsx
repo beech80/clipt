@@ -105,6 +105,7 @@ const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
 const AllCommentsPage = React.lazy(() => import('./pages/AllCommentsPage'));
 const GroupChat = React.lazy(() => import('./pages/GroupChat'));
 const CommentsFullPage = React.lazy(() => import('./pages/CommentsFullPage'));
+const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'));
 const VideoDebug = React.lazy(() => import('./pages/VideoDebug'));
 const StreamSetup = React.lazy(() => import('./pages/StreamSetup'));
 const StreamView = React.lazy(() => import('./pages/StreamView'));
@@ -113,6 +114,7 @@ const Saved = React.lazy(() => import('./pages/Saved'));
 const PostTypeSelection = React.lazy(() => import('./pages/PostTypeSelection'));
 const AdvancedSearch = React.lazy(() => import('./pages/AdvancedSearch'));
 const SearchPage = React.lazy(() => import('./pages/SearchPage'));
+const Search = React.lazy(() => import('./pages/Search'));
 const Posts = React.lazy(() => import('./pages/Posts'));
 
 // Protected route component to prevent redirecting authenticated users to login/signup
@@ -270,8 +272,6 @@ const AppContent = () => {
   return (
     <PageTransition>
       <Routes>
-        <Route path="*" element={<Navigate to="/space" replace />} />
-        <Route path="/space" element={<CleanSpaceLanding />} />
         <Route path="/" element={<CleanSpaceLanding />} />
         <Route path="/boost-store" element={<SuspenseBoundary><BoostStore /></SuspenseBoundary>} />
         <Route path="/edit-profile" element={<SuspenseBoundary><EditProfile /></SuspenseBoundary>} />
@@ -312,7 +312,7 @@ const AppContent = () => {
         <Route path="/post-form/:id" element={<SuspenseBoundary><NewPost /></SuspenseBoundary>} />
         <Route path="/settings/profile" element={<SuspenseBoundary loadingMessage="Loading profile editor..."><EditProfilePage /></SuspenseBoundary>} />
         <Route path="/game-menu" element={<SuspenseBoundary><GameMenu /></SuspenseBoundary>} />
-        <Route path="/notifications" element={<SuspenseBoundary loadingMessage="Loading notifications..."><Notifications /></SuspenseBoundary>} />
+        <Route path="/notifications" element={<SuspenseBoundary loadingMessage="Loading notifications..."><NotificationsPage /></SuspenseBoundary>} />
         <Route path="/streams-setup" element={<SuspenseBoundary loadingMessage="Loading stream setup..."><Streaming /></SuspenseBoundary>} />
         <Route path="/streaming" element={<SuspenseBoundary loadingMessage="Loading streamers..."><StreamingPageModern /></SuspenseBoundary>} />
         <Route path="/streaming-setup" element={<SuspenseBoundary loadingMessage="Loading stream setup..."><Streaming /></SuspenseBoundary>} />
@@ -327,7 +327,7 @@ const AppContent = () => {
         <Route path="/game/:id/streamers" element={<SuspenseBoundary loadingMessage="Loading game streamers..."><GameStreamers /></SuspenseBoundary>} />
         <Route path="/video-upload" element={<VideoEditor />} />
         <Route path="/post-type" element={<Navigate to="/post-form" replace />} />
-        <Route path="/search" element={<SuspenseBoundary loadingMessage="Loading search..."><SearchPage /></SuspenseBoundary>} />
+        <Route path="/search" element={<SuspenseBoundary loadingMessage="Loading search..."><Search /></SuspenseBoundary>} />
         <Route path="/posts" element={<Navigate to="/post-form" replace />} />
         <Route path="*" element={<SuspenseBoundary><NotFound /></SuspenseBoundary>} />
       </Routes>

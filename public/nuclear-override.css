@@ -1,0 +1,164 @@
+/**
+ * NUCLEAR OVERRIDE CSS
+ * This file contains extremely aggressive CSS overrides to completely eliminate
+ * all animations, scanlines, and purple circles from the application.
+ */
+
+/* ----- UNIVERSAL ANIMATION KILLERS ----- */
+* {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+/* ----- KILL ALL POSSIBLE SCANLINES ----- */
+/* Target every possible implementation of scanlines */
+.scanline,
+[class*="scanline"],
+div[class*="scanline"],
+span[class*="scanline"],
+.scan-line,
+[class*="scan-line"],
+[class*="line-scan"],
+[class*="line_scan"],
+[class*="horizontal-line"],
+[class*="horizontal_line"],
+[class*="horizontal-scan"],
+body > div:nth-child(4),
+.gaming-scanline {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  background: none !important;
+  background-image: none !important;
+  background-color: transparent !important;
+  animation: none !important;
+  position: absolute !important;
+  z-index: -9999 !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: none !important;
+  content: none !important;
+  border: none !important;
+  outline: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+}
+
+/* ----- KILL ALL POSSIBLE PURPLE CIRCLES ----- */
+/* Target every possible implementation of purple circles */
+.aurora,
+[class*="aurora"],
+div[class*="aurora"],
+.animated-bg::before,
+.animated-bg::after,
+[class*="animated-bg"]::before,
+[class*="animated-bg"]::after,
+[style*="radial-gradient"],
+[style*="linear-gradient"],
+[style*="#9333ea"],
+[style*="rgba(147, 51, 234"],
+[style*="rgba(111, 66, 193"],
+[style*="rgba(126, 34, 206"],
+[style*="rgba(139, 92, 246"],
+[style*="purple"],
+.cosmic-overlay,
+[class*="cosmic-overlay"],
+.cosmic-glow,
+[class*="cosmic-glow"],
+.empty-state::before,
+[class*="empty-state"]::before,
+[class*="empty-state"]::after,
+[class*="circle"],
+[class*="planet"],
+[class*="gradient-overlay"],
+[class*="gradient_overlay"],
+[class*="purple-circle"],
+[class*="purple_circle"],
+[class*="circle-effect"],
+[class*="circle_effect"],
+body > div:nth-child(2),
+body > div:nth-child(3) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  background: none !important;
+  background-image: none !important;
+  background-color: transparent !important;
+  content: none !important;
+  animation: none !important;
+  z-index: -9999 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: none !important;
+  border: none !important;
+  outline: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+}
+
+/* ----- KILL ALL ANIMATION KEYFRAMES ----- */
+/* Destroy all animation keyframes that could cause the blue line or purple circles */
+@keyframes scan { 0% { opacity: 0 !important; } 100% { opacity: 0 !important; } }
+@keyframes stars-animation { 0% { transform: none !important; } 100% { transform: none !important; } }
+@keyframes bg-pulse { 0% { transform: none !important; } 100% { transform: none !important; } }
+@keyframes bg-pulse-alt { 0% { transform: none !important; } 100% { transform: none !important; } }
+@keyframes aurora-pulse { 0% { transform: none !important; } 100% { transform: none !important; } }
+@keyframes float-planet { 0% { transform: none !important; } 100% { transform: none !important; } }
+@keyframes meteor { 0% { opacity: 0 !important; } 100% { opacity: 0 !important; } }
+@keyframes glow { 0% { opacity: 0 !important; } 100% { opacity: 0 !important; } }
+@keyframes pulse { 0% { transform: none !important; } 100% { transform: none !important; } }
+
+/* ----- SPECIFIC ELEMENT OVERRIDES ----- */
+/* Stop animations in their tracks */
+body::before,
+body::after,
+#root::before,
+#root::after,
+.app-content-wrapper::before,
+.app-content-wrapper::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+}
+
+/* Remove all background gradients */
+[style*="background"],
+[style*="background-image"],
+[style*="background:"],
+[style*="background-image:"] {
+  background: #000 !important;
+  background-image: none !important;
+}
+
+/* Force the space theme to be clean */
+.space-theme,
+[class*="space-theme"],
+.cosmic-theme,
+[class*="cosmic-theme"] {
+  background-color: #000 !important;
+  background-image: none !important;
+  position: relative !important;
+  overflow: hidden !important;
+}

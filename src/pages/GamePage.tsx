@@ -1,14 +1,22 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BackButton } from "@/components/ui/back-button";
-import { Gamepad2, FilmIcon, Trophy } from "lucide-react";
+import { Gamepad2, FilmIcon, Trophy, Heart, Eye } from "lucide-react";
 import AchievementList from "@/components/achievements/AchievementList";
+import { motion } from 'framer-motion';
+import { toast } from '@/components/ui/use-toast';
+import { useState } from 'react';
+import GameBoyControls from "@/components/GameBoyControls";
+
 
 export default function GamePage() {
   const { slug } = useParams();
+  const navigate = useNavigate();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
 
   const { data: game, isLoading: isLoadingGame } = useQuery({
     queryKey: ['game', slug],
@@ -119,6 +127,9 @@ export default function GamePage() {
           <AchievementList userId={user?.id || ""} gameId={parseInt(game.id)} forceShowDemo={true} />
         </div>
       </div>
+
+      {/* Game controls with rainbow borders and joystick */}
+      <GameBoyControls />
     </div>
   );
 }

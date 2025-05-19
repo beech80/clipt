@@ -1,0 +1,181 @@
+/* Gameboy Controller with Rainbow Borders - Production Ready Version */
+
+/* All dpad containers will get rainbow borders */
+.gamepad-dpad .dpad-container {
+  position: relative;
+  z-index: 1;
+  /* Keep existing shadow effects but add rainbow effect */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.gamepad-dpad .dpad-container::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  background: linear-gradient(45deg, #ff0080, #ff8c00, #ffff00, #00ff80, #00bfff, #8a2be2, #ff0080);
+  background-size: 400% 400%;
+  z-index: -1;
+  filter: blur(6px);
+  border-radius: 50%;
+  animation: gradientBorder 10s ease infinite;
+  opacity: 0.85;
+}
+
+/* All action button containers will get rainbow borders */
+.gamepad-buttons .action-buttons-container {
+  position: relative;
+  z-index: 1;
+  /* Keep existing shadow effects but add rainbow effect */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.gamepad-buttons .action-buttons-container::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  background: linear-gradient(45deg, #ff0080, #ff8c00, #ffff00, #00ff80, #00bfff, #8a2be2, #ff0080);
+  background-size: 400% 400%;
+  z-index: -1;
+  filter: blur(6px);
+  border-radius: 50%;
+  animation: gradientBorder 10s ease infinite;
+  opacity: 0.85;
+}
+
+/* Individual action buttons with rainbow effects */
+.action-button {
+  position: relative;
+  z-index: 1;
+  /* Add additional glow effect to buttons */
+  box-shadow: 0 0 15px rgba(255, 85, 0, 0.5);
+}
+
+.action-button::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: linear-gradient(45deg, #ff0080, #ff8c00, #ffff00, #00ff80, #00bfff, #8a2be2, #ff0080);
+  background-size: 400% 400%;
+  z-index: -1;
+  filter: blur(5px);
+  border-radius: 50%;
+  animation: gradientBorder 10s ease infinite;
+  opacity: 0.75;
+}
+
+/* The animation for the gradient movement */
+@keyframes gradientBorder {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Center dot with rainbow pulsing */
+.dpad-center-dot {
+  animation: rainbowPulse 8s infinite !important;
+}
+
+@keyframes rainbowPulse {
+  0%, 100% {
+    background-color: #ff0080 !important;
+    box-shadow: 0 0 15px #ff0080;
+  }
+  14% {
+    background-color: #ff8c00 !important;
+    box-shadow: 0 0 15px #ff8c00;
+  }
+  28% {
+    background-color: #ffff00 !important;
+    box-shadow: 0 0 15px #ffff00;
+  }
+  42% {
+    background-color: #00ff80 !important;
+    box-shadow: 0 0 15px #00ff80;
+  }
+  56% {
+    background-color: #00bfff !important;
+    box-shadow: 0 0 15px #00bfff;
+  }
+  70% {
+    background-color: #8a2be2 !important;
+    box-shadow: 0 0 15px #8a2be2;
+  }
+  84% {
+    background-color: #ff0080 !important;
+    box-shadow: 0 0 15px #ff0080;
+  }
+}
+
+/* Enhanced visual effects for the entire controller */
+.cosmic-gameboy-controller {
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.5));
+}
+
+/* Make D-pad buttons more illuminated */
+.dpad-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.dpad-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.dpad-button:hover::after {
+  opacity: 1;
+}
+
+.dpad-button:active::after {
+  opacity: 0.5;
+  background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+}
+
+/* Controller legend enhancement */
+.cosmic-gameboy-controller + div .rounded-full {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.cosmic-gameboy-controller + div .rounded-full::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #ff0080, #ff8c00, #ffff00, #00ff80, #00bfff, #8a2be2, #ff0080);
+  background-size: 400% 400%;
+  z-index: -1;
+  filter: blur(4px);
+  border-radius: inherit;
+  animation: gradientBorder 10s ease infinite;
+  opacity: 0.5;
+}

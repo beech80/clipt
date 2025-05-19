@@ -1,0 +1,293 @@
+/**
+ * ABSOLUTE OVERRIDE CSS
+ * This is the ultimate file to eliminate ALL animations and elements
+ * and apply specific layout changes as requested
+ */
+
+/* First, reset all animations globally */
+* {
+  animation: none !important;
+  transition: none !important;
+  animation-delay: 0s !important;
+  animation-duration: 0s !important;
+  animation-iteration-count: 0 !important;
+}
+
+/* ----------------------------------------------
+   DIRECT MESSAGES BOX MASK
+---------------------------------------------- */
+/* This creates a black screen over the messages area */
+
+/* Create a black mask over the messages area */
+body::before {
+  content: '' !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 150px !important; /* Cover the top area with messages */
+  background-color: #000 !important;
+  z-index: 999999 !important;
+  pointer-events: none !important;
+}
+
+/* ----------------------------------------------
+   NUCLEAR REMOVAL OF MESSAGES BOX AND TEXT
+---------------------------------------------- */
+/* Target absolutely everything related to Messages */
+div.text-center.py-12.text-purple-300.cyber-text,
+div[class*="text-purple-300"],
+div[class*="text-purple-400"],
+div[data-component-file="Messages.tsx"],
+div[data-component-name="Messages"],
+div[data-lov-name="div"][data-component-path*="Messages.tsx"],
+div[data-component-path*="Messages.tsx"],
+p[data-component-path*="Messages.tsx"],
+[data-component-file="Messages.tsx"] *,
+p.text-sm.text-purple-400,
+[class*="cyber-text"],
+[class*="text-purple"],
+.text-center.py-12,
+/* Super specific element targeting */
+p[data-lov-id="src\pages\Messages.tsx:982:20"],
+p[data-lov-id="src\pages\Messages.tsx:983:20"],
+div[data-lov-id="src\pages\Messages.tsx:981:18"],
+/* Commented out potentially unsupported selectors */
+/* p:contains("No messages yet"),
+p:contains("Start a conversation by clicking NEW"), */
+p.mt-2.text-sm.text-purple-400 {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: absolute !important;
+  z-index: -9999 !important;
+  pointer-events: none !important;
+  color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+/* Create a masking overlay */
+.text-purple-300::before,
+.text-purple-400::before,
+.cyber-text::before,
+div[data-lov-id="src\pages\Messages.tsx:981:18"]::before,
+p[data-lov-id="src\pages\Messages.tsx:982:20"]::before,
+p[data-lov-id="src\pages\Messages.tsx:983:20"]::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: #000000 !important;
+  z-index: 10000 !important;
+}
+
+/* JavaScript-based element removal */
+body::after {
+  content: '' !important;
+  display: block !important;
+  position: fixed !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: none !important;
+  z-index: -9999 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Replace the messages text */
+.text-center.py-12.text-purple-300.cyber-text {
+  font-size: 0 !important;
+}
+
+/* Target the absolute parent container */
+div.app-content-wrapper {
+  position: relative !important;
+}
+
+/* EXTREME MODE: Direct full DOM path targeting */
+body div.app-content-wrapper div.text-center.py-12.text-purple-300.cyber-text,
+body div.app-content-wrapper div.text-center.py-12.text-purple-300.cyber-text p,
+div.text-center.py-12.text-purple-300.cyber-text p.mt-2.text-sm.text-purple-400,
+/* Chrome-specific selectors */
+div[style*="background"] div.text-center.py-12.text-purple-300.cyber-text,
+div[style*="background"] p:contains("No messages yet"),
+div[style*="background"] p:contains("Start a conversation"),
+div[style*="background"] p:contains("clicking NEW"),
+/* Firefox-specific selectors */
+body > * > * > div.text-center.py-12.text-purple-300.cyber-text,
+body > * > * > div.text-center.py-12.text-purple-300.cyber-text p {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+  clip: rect(0, 0, 0, 0) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+}
+
+/* ----------------------------------------------
+   STREAMING BUTTONS - TOP CENTER POSITIONING
+---------------------------------------------- */
+/* Position container at the top center */
+div[data-component-file="Streaming.tsx"] .flex.border-b.border-slate-700,
+div.flex.border-b.border-slate-700 {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 200px !important;
+  position: fixed !important;
+  top: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 10000 !important;
+  margin: 0 !important;
+  padding: 10px !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Style the first button to look like a dropdown toggle */
+div[data-component-file="Streaming.tsx"] button:first-child,
+div.flex.border-b.border-slate-700 button:first-child {
+  display: flex !important;
+  width: 100% !important;
+  justify-content: center !important;
+  position: relative !important;
+  border: 1px solid #FF6600 !important;
+  border-radius: 4px !important;
+  margin-bottom: 10px !important;
+  background-color: #111 !important;
+  color: #FF6600 !important;
+  padding: 10px 15px !important;
+  font-weight: bold !important;
+}
+
+/* Add dropdown arrow to first button */
+div[data-component-file="Streaming.tsx"] button:first-child::after,
+div.flex.border-b.border-slate-700 button:first-child::after {
+  content: '▼' !important;
+  display: inline-block !important;
+  margin-left: 5px !important;
+  font-size: 10px !important;
+  color: #FF6600 !important;
+}
+
+/* Hide other buttons by default */
+div[data-component-file="Streaming.tsx"] button:not(:first-child),
+div.flex.border-b.border-slate-700 button:not(:first-child) {
+  display: none !important;
+  width: 100% !important;
+  justify-content: center !important;
+  background-color: #111 !important;
+  border: 1px solid #333 !important;
+  margin-bottom: 5px !important;
+  border-radius: 4px !important;
+  padding: 10px 15px !important;
+}
+
+/* Show other buttons when container is hovered */
+div[data-component-file="Streaming.tsx"] .flex.border-b.border-slate-700:hover button:not(:first-child),
+div.flex.border-b.border-slate-700:hover button:not(:first-child) {
+  display: flex !important;
+}
+
+/* Change first button arrow direction on hover */
+div[data-component-file="Streaming.tsx"] .flex.border-b.border-slate-700:hover button:first-child::after,
+div.flex.border-b.border-slate-700:hover button:first-child::after {
+  content: '▲' !important;
+}
+
+/* Blue Line Killer - Super specific selectors */
+.scanline,
+div.scanline,
+[class*="scanline"],
+.scan-line,
+.gaming-scanline,
+[id*="scanline"],
+body > div:nth-child(4),
+[class*="horizontal-line"],
+[class*="line-scan"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  z-index: -9999 !important;
+  pointer-events: none !important;
+  background: none !important;
+  background-image: none !important;
+  animation: none !important;
+}
+
+/* Purple Circle Killer - Target every possible implementation */
+.aurora,
+.animated-bg::before,
+.animated-bg::after,
+[class*="animated-bg"]::before,
+[class*="animated-bg"]::after,
+[class*="aurora"],
+[class*="overlay"],
+[class*="circle"],
+[style*="radial-gradient"],
+[style*="#9333ea"],
+[style*="rgba(147,"],
+body > div:nth-child(2),
+body > div:nth-child(3),
+[class*="cosmic-overlay"],
+[class*="cosmic-glow"],
+.empty-state::before,
+.empty-state::after {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  background: none !important;
+  background-image: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  content: none !important;
+  border: none !important;
+}
+
+/* Completely disable all animation keyframes */
+@keyframes scan { 0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes stars-animation { 0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes bg-pulse { 0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes bg-pulse-alt { 0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes float-planet { 0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes meteor { 0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes glow-pulse { 0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes static-noise { 0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes crt-flicker { 0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes text-flicker { 0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes grid-animation { 0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes button-shine { 0% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes glitch-hover-shine { 0% { opacity: 0; } 100% { opacity: 0; } }
+
+/* Clear any background images and gradients */
+[style*="background-image"],
+[style*="linear-gradient"],
+[style*="radial-gradient"] {
+  background-image: none !important;
+  background: #000 !important;
+}

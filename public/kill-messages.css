@@ -1,0 +1,69 @@
+/**
+ * Ultimate Messages Killer
+ * This CSS targets and removes ALL Messages components with maximum specificity
+ */
+
+/* Target ALL Messages elements with maximum specificity */
+div[data-component-file="Messages.tsx"],
+div[data-component-name="Messages"],
+div[data-component-path*="Messages.tsx"],
+div[data-lov-id*="Messages.tsx"],
+.text-center.py-12.text-purple-300.cyber-text,
+.text-purple-300,
+.text-purple-400,
+.cyber-text,
+div[class*="cyber-text"],
+p[data-lov-id*="Messages.tsx"],
+p[data-component-file="Messages.tsx"],
+p[data-component-path*="Messages.tsx"],
+div[data-lov-name="RetroChatsList"],
+.sc-jZTQcj,
+.hFlFDr,
+div[class*="sc-jZTQcj"],
+div[class*="hFlFDr"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  z-index: -9999 !important;
+  clip: rect(0, 0, 0, 0) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+/* Create a black mask over the areas where Messages might appear */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  background-color: #000000;
+  z-index: 998;
+  pointer-events: none;
+}
+
+/* Add global selectors to capture any possible Messages */
+[data-testid*="Messages"],
+[data-component*="Messages"],
+[id*="messages"],
+[class*="messages"],
+[class*="cyber-text"],
+[class*="text-purple"],
+div[aria-label*="message"],
+div[title*="message"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide parent elements that might contain Messages */
+.app-content-wrapper > div:nth-child(1):has([data-component-file="Messages.tsx"]),
+.app-content-wrapper > div:nth-child(1):has(.text-center.py-12) {
+  display: none !important;
+}
