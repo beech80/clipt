@@ -1,25 +1,163 @@
-/* Xbox-Style Enhanced Joystick Animations and Effects */
+/* Cosmic GameBoy Controller UI - Enhanced with space theme effects */
 
-/* Glowing joystick based on Image 1 */
-.joystick.xbox-style {
-  position: absolute;
-  width: 75px;
-  height: 75px;
-  background: transparent;
+/* Main container */
+.cosmic-gameboy-controller {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 20px;
+}
+
+/* D-PAD STYLING */
+.dpad-container {
+  width: 100px;
+  height: 100px;
+  background: rgba(25, 25, 55, 0.7);
+  backdrop-filter: blur(8px);
+  border-radius: 50%;
+  padding: 8px;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+}
+
+.dpad {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+}
+
+.dpad-button {
+  background-color: #1e1b4b;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  transition: all 0.15s ease;
+}
+
+.dpad-button:active {
+  background-color: #6366f1;
+  transform: scale(0.95);
+  box-shadow: 0 0 8px #6366f1;
+}
+
+.dpad-up {
+  grid-column: 2;
+  grid-row: 1;
+  border-radius: 8px 8px 0 0;
+}
+
+.dpad-right {
+  grid-column: 3;
+  grid-row: 2;
+  border-radius: 0 8px 8px 0;
+}
+
+.dpad-down {
+  grid-column: 2;
+  grid-row: 3;
+  border-radius: 0 0 8px 8px;
+}
+
+.dpad-left {
+  grid-column: 1;
+  grid-row: 2;
+  border-radius: 8px 0 0 8px;
+}
+
+.dpad-center {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dpad-center-dot {
+  width: 12px;
+  height: 12px;
+  background-color: #8b5cf6;
+  border-radius: 50%;
+}
+
+/* ACTION BUTTONS STYLING */
+.action-buttons-container {
+  width: 110px;
+  height: 110px;
+  background: rgba(25, 25, 55, 0.7);
+  backdrop-filter: blur(8px);
+  border-radius: 50%;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  box-shadow: 0 0 15px rgba(236, 72, 153, 0.5);
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 12px;
+  width: 90px;
+  height: 90px;
+  transform: rotate(-15deg);
+}
+
+.action-button {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  box-shadow: none;
-  user-select: none;
-  touch-action: none;
-  left: 20px;
-  bottom: 15px;
-  pointer-events: auto; /* Enable interaction */
-  overflow: visible;
-  z-index: 1; /* Ensure button stays above the ring */
-  position: relative;
+  font-weight: bold;
+  font-family: 'Arial', sans-serif;
+  font-size: 16px;
+  letter-spacing: -0.5px;
+  color: white;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.action-button-a {
+  background-color: #ec4899;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.action-button-b {
+  background-color: #f43f5e;
+  grid-column: 1;
+  grid-row: 2;
+}
+
+/* RESPONSIVE ADJUSTMENTS */
+@media (max-width: 768px) {
+  .dpad-container {
+    width: 90px;
+    height: 90px;
+  }
+  
+  .action-buttons-container {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .action-buttons {
+    width: 80px;
+    height: 80px;
+    gap: 10px;
+  }
+  
+  .action-button {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
 }
 
 .joystick::before {

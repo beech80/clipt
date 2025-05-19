@@ -1,0 +1,82 @@
+/* Emoji Animation Styles */
+.emoji-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 30;
+  overflow: hidden;
+}
+
+.floating-emoji {
+  position: absolute;
+  font-size: calc(20px * var(--emoji-scale));
+  animation: float-up var(--float-duration) var(--float-delay) linear forwards;
+  z-index: 10;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+@keyframes float-up {
+  0% {
+    transform: translate(var(--start-x), var(--start-y)) rotate(var(--start-rotate));
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(var(--end-x), var(--end-y)) rotate(var(--end-rotate));
+    opacity: 0;
+  }
+}
+
+.emoji-pop {
+  position: absolute;
+  font-size: 24px;
+  animation: pop-in var(--pop-duration) cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards;
+  z-index: 20;
+  pointer-events: none;
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0) rotate(-20deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) rotate(30deg);
+    opacity: 0;
+  }
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: float-particle 2s ease-out forwards;
+  pointer-events: none;
+  z-index: 5;
+}
+
+@keyframes float-particle {
+  0% {
+    transform: translate(0, 0) scale(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+      calc(var(--direction-x, 1) * 100px),
+      calc(var(--direction-y, -1) * 100px)
+    ) scale(1.5);
+    opacity: 0;
+  }
+}

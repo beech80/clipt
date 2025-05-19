@@ -742,7 +742,7 @@ const SquadsClipts = () => {
         `}} />
       </div>
       
-      {/* NavigationBar removed to avoid conflict with GameBoyControls */}
+      {/* NavigationBar would go here */}
     </div>
   );
 };

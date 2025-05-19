@@ -4,6 +4,7 @@ import { Heart, MessageSquare, Award, Bookmark } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import './enhanced-joystick.css';
+import './rainbow-buttons.css';
 
 const GameBoyControls: React.FC = () => {
   // Create refs for joystick elements
@@ -17,7 +18,7 @@ const GameBoyControls: React.FC = () => {
   // Action button states
   const [likeActive, setLikeActive] = useState(false);
   const [commentActive, setCommentActive] = useState(false);
-  const [saveActive, setSaveActive] = useState(false);
+  const [followActive, setFollowActive] = useState(false);
   const [rankActive, setRankActive] = useState(false);
   const [currentRank, setCurrentRank] = useState(0);
   
@@ -56,7 +57,7 @@ const GameBoyControls: React.FC = () => {
     } else {
       setCurrentPostId(null);
       setLikeActive(false);
-      setSaveActive(false);
+      setFollowActive(false);
       setRankActive(false);
       setCurrentRank(0);
     }
@@ -98,15 +99,15 @@ const GameBoyControls: React.FC = () => {
             
           setLikeActive(!!likeData);
           
-          // Check if user has saved this post
-          const { data: saveData } = await supabase
-            .from('post_saves')
+          // Check if user is following this post's creator
+          const { data: followData } = await supabase
+            .from('user_follows')
             .select('*')
-            .eq('post_id', currentPostId)
-            .eq('user_id', user.id)
+            .eq('following_id', post.user_id)
+            .eq('follower_id', user.id)
             .single();
             
-          setSaveActive(!!saveData);
+          setFollowActive(!!followData);
           
           // Check if user has ranked this post and get current rank
           const { data: rankData } = await supabase
@@ -461,18 +462,55 @@ const GameBoyControls: React.FC = () => {
         navigate(`/comments/${currentPostId}`);
         break;
         
-      case 'save':
-        // Show share menu options
-        toast.success('Share menu opened', {
-          description: 'Share options would appear here',
-          action: {
-            label: 'Copy Link',
-            onClick: () => {
-              // Would normally copy link to clipboard
-              toast.success('Link copied to clipboard');
-            }
-          },
-        });
+      case 'follow':
+        try {
+          if (!currentPostId || !currentUserId) {
+            toast.error('You must be logged in to follow users');
+            return;
+          }
+
+          // Get post creator ID
+          const { data: post, error: postError } = await supabase
+            .from('posts')
+            .select('user_id')
+            .eq('id', currentPostId)
+            .single();
+
+          if (postError) throw postError;
+          
+          const creatorId = post.user_id;
+          
+          if (followActive) {
+            // Unfollow user
+            const { error } = await supabase
+              .from('user_follows')
+              .delete()
+              .eq('following_id', creatorId)
+              .eq('follower_id', currentUserId);
+              
+            if (error) throw error;
+            
+            setFollowActive(false);
+            toast.success('User unfollowed');
+          } else {
+            // Follow user
+            const { error } = await supabase
+              .from('user_follows')
+              .insert({
+                following_id: creatorId,
+                follower_id: currentUserId,
+                created_at: new Date().toISOString()
+              });
+              
+            if (error) throw error;
+            
+            setFollowActive(true);
+            toast.success('Now following user');
+          }
+        } catch (error) {
+          console.error('Error toggling follow:', error);
+          toast.error('Failed to update follow status');
+        }
         break;
         
       case 'rank':
@@ -578,15 +616,16 @@ const GameBoyControls: React.FC = () => {
             onClick={() => navigate('/post-form')}
             aria-label="Create a new post"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
               <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19 6h-4l-2-3H11L9 6H5"></path>
             </svg>
           </button>
         </div>
       </div>
       
-      {/* Removed the navigation arrow buttons */}
+
 
       {/* Note: Game Menu moved to a separate route page */}
 
@@ -598,36 +637,36 @@ const GameBoyControls: React.FC = () => {
           onClick={() => handleActionButtonClick('comment')}
           aria-label="Comment"
         >
-          <MessageSquare size={20} strokeWidth={1.5} className="gameboy-action-icon" />
+          <MessageSquare size={20} strokeWidth={2.5} className="gameboy-action-icon" style={{ color: '#4287ff', fill: '#4287ff', stroke: '#4287ff', filter: 'drop-shadow(0 0 10px rgba(66, 135, 255, 1))' }} />
         </button>
         
-        {/* Like button (left - white) */}
+        {/* Like button (left - red) */}
         <button 
           className={`action-button like-button left rainbow-border ${likeActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('like')}
           aria-label="Like post"
         >
-          <Heart size={20} strokeWidth={1.5} className="gameboy-action-icon" />
+          <Heart size={20} strokeWidth={2.5} className="gameboy-action-icon" style={{ color: '#ff4d4d', fill: '#ff4d4d', stroke: '#ff4d4d', filter: 'drop-shadow(0 0 10px rgba(255, 77, 77, 1))' }} />
         </button>
         
-        {/* Save button (right - white) */}
+        {/* Follow button (right - yellow) */}
         <button 
-          className={`action-button save-button right rainbow-border ${saveActive ? 'active' : ''}`}
-          onClick={() => handleActionButtonClick('save')}
-          aria-label="Save video to bookmarks"
+          className={`action-button follow-button right rainbow-border ${followActive ? 'active' : ''}`}
+          onClick={() => handleActionButtonClick('follow')}
+          aria-label="Follow user"
         >
-          <Bookmark size={20} strokeWidth={1.5} className="gameboy-action-icon" />
+          <Bookmark size={20} strokeWidth={2.5} className="gameboy-action-icon" style={{ color: '#ffcc33', fill: '#ffcc33', stroke: '#ffcc33', filter: 'drop-shadow(0 0 10px rgba(255, 204, 51, 1))' }} />
         </button>
         
-        {/* Trophy button (bottom - white) */}
+        {/* Trophy button (bottom - yellow) */}
         <button 
           className={`action-button trophy-button bottom rainbow-border ${rankActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('rank')}
           aria-label="Rank post"
         >
-          <Award size={20} strokeWidth={1.5} className="gameboy-action-icon" />
+          <Award size={20} strokeWidth={2.5} className="gameboy-action-icon" style={{ color: '#4dff88', fill: '#4dff88', stroke: '#4dff88', filter: 'drop-shadow(0 0 10px rgba(77, 255, 136, 1))' }} />
           {rankActive && currentRank > 0 && (
-            <span className="rank-indicator">{currentRank}</span>
+            <span className="rank-indicator" style={{ backgroundColor: '#FFCC00', color: '#000' }}>{currentRank}</span>
           )}
         </button>
       </div>

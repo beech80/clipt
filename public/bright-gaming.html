@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BRIGHT Gaming Interface</title>
+  <style>
+    /* Core styles with high visibility */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Helvetica', Arial, sans-serif;
+      background-color: #FF6600; /* Super bright orange that can't be missed */
+      color: #FFFFFF;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      position: fixed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* High-contrast container */
+    .main-container {
+      background-color: #000000;
+      border: 8px solid #FFFFFF;
+      width: 90%;
+      max-width: 800px;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 0 50px rgba(255, 255, 255, 0.7);
+    }
+    
+    /* Super large title */
+    .game-title {
+      font-size: 5rem;
+      font-weight: 900;
+      margin-bottom: 30px;
+      color: #FF6600;
+      text-shadow: 0 0 20px rgba(255, 102, 0, 0.8);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    
+    /* Subtitle */
+    .subtitle {
+      font-size: 2rem;
+      margin-bottom: 40px;
+      color: #FFFFFF;
+    }
+    
+    /* Gaming menu */
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    
+    /* Large buttons */
+    .game-button {
+      background-color: #FF6600;
+      border: none;
+      color: #FFFFFF;
+      padding: 20px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+      letter-spacing: 0.05em;
+      box-shadow: 0 0 20px rgba(255, 102, 0, 0.5);
+    }
+    
+    .game-button:hover {
+      background-color: #FF8C00;
+      transform: scale(1.05);
+    }
+
+    /* Controller buttons */
+    .controller {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+    
+    .btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: white;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    }
+    
+    .btn-a { background-color: #FF6600; }
+    .btn-b { background-color: #3B82F6; }
+    .btn-x { background-color: #22C55E; }
+    .btn-y { background-color: #EF4444; }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <h1 class="game-title">GTA GAMING</h1>
+    <p class="subtitle">Streaming & Upload Interface</p>
+    
+    <div class="menu">
+      <button class="game-button" onclick="window.location.href='/video-upload'">
+        Stream Upload
+      </button>
+      
+      <button class="game-button" onclick="window.location.href='/post-form'">
+        Gaming Post
+      </button>
+    </div>
+    
+    <div class="controller">
+      <div class="btn btn-a">A</div>
+      <div class="btn btn-b">B</div>
+      <div class="btn btn-x">X</div>
+      <div class="btn btn-y">Y</div>
+    </div>
+  </div>
+</body>
+</html>

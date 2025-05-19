@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- PRELOAD CRITICAL RESOURCES -->
+  <link rel="preload" href="kill-messages.css" as="style">
+  <link rel="preload" href="full-screen-mask.css" as="style">
+  <link rel="preload" href="targeted-element-remover.js" as="script">
+  <link rel="preload" href="direct-fix.js" as="script">
+  
+  <!-- TIER-1 MESSAGE KILLERS: Immediate CSS blocking -->
+  <style>
+    /* Ultra-high specificity emergency blocker */
+    div[data-component-file="Messages.tsx"],
+    div[data-component-name="Messages"],
+    div[data-component-path*="Messages.tsx"],
+    div[data-lov-id*="Messages.tsx"],
+    .text-center.py-12.text-purple-300.cyber-text,
+    p[data-lov-id*="Messages.tsx"],
+    .cyber-text { display: none !important; visibility: hidden !important; }
+    
+    /* Emergency body masking */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100vh;
+      background-color: #000;
+      z-index: 999999;
+      pointer-events: none;
+    }
+  </style>
+  
+  <!-- TIER-2 MESSAGE KILLERS: CSS files -->
+  <link rel="stylesheet" href="kill-messages.css">
+  <link rel="stylesheet" href="full-screen-mask.css">
+  
+  <!-- TIER-3 MESSAGE KILLERS: JavaScript -->
+  <script src="targeted-element-remover.js"></script>
+  <script src="direct-fix.js"></script>
+  <!-- DIRECT INLINE CSS AND JAVASCRIPT - GUARANTEED TO WORK -->
+  <style>
+    /* SPACE THEME STREAMING DROPDOWN - DIRECT INLINE VERSION */
+    #cosmic-streaming-dropdown {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 27, 75, 0.95));
+      border: 2px solid #8b5cf6;
+      border-radius: 12px;
+      padding: 15px;
+      z-index: 999999;
+      width: 220px;
+      box-shadow: 0 0 30px #8b5cf6, 0 0 50px #f97316;
+      text-align: center;
+      backdrop-filter: blur(5px);
+      /* True dropdown behavior */
+      max-height: 60px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    #cosmic-streaming-dropdown:hover {
+      max-height: 300px;
+      padding-bottom: 20px;
+    }
+
+    #cosmic-streaming-header {
+      color: #f97316;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 0px;
+      padding-bottom: 10px;
+      width: 100%;
+      cursor: pointer;
+      text-shadow: 0 0 15px #f97316;
+    }
+
+    #cosmic-streaming-dropdown:hover #cosmic-streaming-header {
+      margin-bottom: 15px;
+      border-bottom: 2px solid #8b5cf6;
+    }
+
+    #cosmic-streaming-header::after {
+      content: ' ▼';
+      font-size: 12px;
+      margin-left: 5px;
+      transition: transform 0.3s ease;
+    }
+
+    #cosmic-streaming-dropdown:hover #cosmic-streaming-header::after {
+      transform: rotate(180deg);
+    }
+
+    .cosmic-streaming-button {
+      display: block;
+      width: 90%;
+      margin: 8px auto;
+      padding: 10px 15px;
+      background: rgba(30, 27, 75, 0.8);
+      color: white;
+      border: 1px solid #8b5cf6;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .cosmic-streaming-button:hover {
+      background: rgba(139, 92, 246, 0.3);
+      color: #f97316;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(139, 92, 246, 0.5);
+    }
+
+    /* Hide messages elements */
+    div[data-component-file="Messages.tsx"],
+    div[data-component-path*="Messages.tsx"],
+    .text-purple-300,
+    .cyber-text,
+    div[data-lov-name="RetroChatsList"],
+    .sc-jZTQcj,
+    .hFlFDr {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+  </style>
+  
+  <script>
+    // DIRECT INLINE JAVASCRIPT - GUARANTEED TO EXECUTE
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Creating cosmic streaming dropdown...');
+      
+      // Hide original streaming component
+      const originalStreamingSelectors = [
+        'div[data-component-file="Streaming.tsx"]',
+        'div[data-component-name="Streaming"]',
+        'div.flex.border-b.border-slate-700'
+      ];
+      
+      originalStreamingSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(el => {
+          el.style.display = 'none';
+          el.style.visibility = 'hidden';
+          el.style.opacity = '0';
+        });
+      });
+      
+      // Create our custom dropdown
+      const dropdown = document.createElement('div');
+      dropdown.id = 'cosmic-streaming-dropdown';
+      
+      // Create header
+      const header = document.createElement('div');
+      header.id = 'cosmic-streaming-header';
+      header.innerHTML = '⚡ STREAMING';
+      dropdown.appendChild(header);
+      
+      // Create buttons
+      const buttons = [
+        { text: 'Stream Setup', icon: '🔧' },
+        { text: 'Schedule', icon: '📅' },
+        { text: 'Dashboard', icon: '📊' }
+      ];
+      
+      buttons.forEach(btn => {
+        const button = document.createElement('button');
+        button.className = 'cosmic-streaming-button';
+        button.innerHTML = btn.icon + ' ' + btn.text;
+        
+        button.addEventListener('click', function() {
+          console.log('Clicked:', btn.text);
+          document.querySelectorAll('.cosmic-streaming-button').forEach(b => {
+            b.style.background = 'rgba(30, 27, 75, 0.8)';
+            b.style.color = 'white';
+          });
+          
+          this.style.background = 'rgba(139, 92, 246, 0.3)';
+          this.style.color = '#f97316';
+        });
+        
+        dropdown.appendChild(button);
+      });
+      
+      // Add to body
+      document.body.appendChild(dropdown);
+      console.log('Cosmic streaming dropdown created!');
+      
+      // Force run multiple times
+      setTimeout(() => {
+        document.body.appendChild(dropdown);
+      }, 1000);
+      
+      setTimeout(() => {
+        document.body.appendChild(dropdown);
+      }, 2000);
+    });
+  </script>
+  <!-- ULTRA-TARGETED ELEMENT DESTROYER: Kill specific elements with precision -->
+  <script src="kill-specific-elements.js"></script>
+  <!-- NUCLEAR JAVASCRIPT SOLUTION: Execute before anything else -->
+  <script src="kill-animations.js"></script>
+  <!-- NUCLEAR OVERRIDE: Highest priority CSS to eliminate animations -->
+  <link rel="stylesheet" href="nuclear-override.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gaming & Streaming Interface</title>
+  <style>
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --gaming-primary: #ff6600;
+      --gaming-secondary: #9333ea;
+      --gaming-accent: #ef4444;
+      --gaming-dark: #0a0a0a;
+      --gaming-darker: #050505;
+      --gaming-light: #ffffff;
+      --gaming-text: #ffffff;
+    }
+    
+    body {
+      font-family: 'Helvetica', Arial, sans-serif;
+      background-color: var(--gaming-dark);
+      color: var(--gaming-light);
+      min-height: 100vh;
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Gaming grid background */
+    .gaming-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 102, 0, 0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 102, 0, 0.3) 1px, transparent 1px);
+      background-size: 20px 20px;
+      transform: perspective(500px) rotateX(60deg);
+      opacity: 0.3;
+      z-index: 1;
+      pointer-events: none;
+    }
+    
+    /* Overlay with radial gradient */
+    .gaming-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, transparent 0%, var(--gaming-darker) 90%);
+      z-index: 2;
+      pointer-events: none;
+    }
+    
+    /* Cityscape silhouette */
+    .gaming-cityscape {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 30%;
+      background: linear-gradient(to top, var(--gaming-darker) 0%, transparent 100%);
+      z-index: 3;
+      pointer-events: none;
+    }
+    
+    /* Scan line effect */
+    @keyframes scan {
+      0% { top: -5px; }
+      100% { top: 100vh; }
+    }
+    
+    .gaming-scanline {
+      position: absolute;
+      height: 2px;
+      width: 100%;
+      background: linear-gradient(to right, transparent, var(--gaming-primary), transparent);
+      z-index: 4;
+      animation: scan 3s linear infinite;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    
+    /* Content container */
+    .gaming-container {
+      position: relative;
+      max-width: 1200px;
+      width: 90%;
+      margin: 0 auto;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    
+    /* Typography */
+    .gaming-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--gaming-primary);
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+      text-align: center;
+      text-shadow: 0 0 15px rgba(255, 102, 0, 0.6);
+      animation: flicker 4s infinite;
+    }
+    
+    @keyframes flicker {
+      0% { opacity: 1; }
+      3% { opacity: 0.8; }
+      6% { opacity: 1; }
+      7% { opacity: 0.6; }
+      8% { opacity: 1; }
+      60% { opacity: 1; }
+      62% { opacity: 0.7; }
+      64% { opacity: 1; }
+    }
+    
+    .gaming-subtitle {
+      font-size: 1.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--gaming-primary);
+      letter-spacing: 0.08em;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    
+    /* Divider */
+    .gaming-divider {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .gaming-divider-line {
+      height: 4px;
+      background-color: var(--gaming-primary);
+    }
+    
+    .line-1 { width: 60px; }
+    .line-2 { width: 30px; }
+    .line-3 { width: 15px; }
+    
+    /* Card styles */
+    .gaming-card {
+      background-color: rgba(10, 10, 10, 0.8);
+      border: 2px solid var(--gaming-primary);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 0 20px rgba(255, 102, 0, 0.5);
+      width: 100%;
+      max-width: 600px;
+    }
+    
+    /* Gaming menu */
+    .gaming-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    
+    .gaming-menu-item {
+      border: 2px solid var(--gaming-primary);
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .gaming-menu-item:hover {
+      background-color: rgba(255, 102, 0, 0.1);
+      transform: translateX(5px);
+      box-shadow: 0 0 20px rgba(255, 102, 0, 0.5);
+    }
+    
+    .gaming-menu-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--gaming-primary);
+      text-transform: uppercase;
+      margin: 0;
+      margin-bottom: 0.25rem;
+    }
+    
+    .gaming-menu-desc {
+      color: #b0b0b0;
+      font-size: 0.875rem;
+      margin: 0;
+    }
+    
+    /* Gaming tip */
+    .gaming-tip {
+      background-color: rgba(0, 0, 0, 0.6);
+      border-left: 4px solid var(--gaming-primary);
+      padding: 1rem;
+      font-family: monospace;
+      color: var(--gaming-primary);
+      font-size: 0.9rem;
+      margin-top: 1.5rem;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 0.8; }
+      50% { opacity: 1; }
+      100% { opacity: 0.8; }
+    }
+    
+    /* Progress bar */
+    .gaming-progress-container {
+      height: 6px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 102, 0, 0.3);
+      margin-top: 2rem;
+      overflow: hidden;
+      width: 100%;
+      max-width: 600px;
+    }
+    
+    .gaming-progress-bar {
+      height: 100%;
+      background: linear-gradient(to right, var(--gaming-primary), var(--gaming-accent));
+      animation: progress 3s linear infinite;
+      box-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
+    }
+    
+    @keyframes progress {
+      0% { width: 0; }
+      100% { width: 100%; }
+    }
+    
+    /* Status indicators */
+    .gaming-status {
+      position: absolute;
+      display: inline-block;
+      border: 2px solid var(--gaming-primary);
+      padding: 0.25rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: var(--gaming-primary);
+      z-index: 100;
+    }
+    
+    .status-top-right {
+      top: 1rem;
+      right: 1rem;
+    }
+    
+    .status-bottom-left {
+      bottom: 1rem;
+      left: 1rem;
+    }
+    
+    /* Controller buttons */
+    .gaming-controls {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 100;
+    }
+    
+    .gaming-control-btn {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 0.875rem;
+    }
+    
+    .btn-a { background-color: var(--gaming-primary); }
+    .btn-b { background-color: var(--gaming-secondary); }
+    .btn-x { background-color: #22c55e; }
+    .btn-y { background-color: var(--gaming-accent); }
+    
+    /* Gaming notifications */
+    .gaming-notification {
+      position: absolute;
+      right: 1rem;
+      background-color: rgba(255, 102, 0, 0.9);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: bold;
+      animation: notify 8s ease-in-out infinite;
+      z-index: 100;
+    }
+    
+    @keyframes notify {
+      0% { right: -300px; opacity: 0; }
+      10% { right: 1rem; opacity: 1; }
+      90% { right: 1rem; opacity: 1; }
+      100% { right: -300px; opacity: 0; }
+    }
+    
+    .notification-1 { top: 10%; animation-delay: 0s; }
+    .notification-2 { top: 18%; animation-delay: 3s; }
+    .notification-3 { top: 26%; animation-delay: 6s; }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .gaming-title {
+        font-size: 2.5rem;
+      }
+      
+      .gaming-subtitle {
+        font-size: 1.5rem;
+      }
+      
+      .gaming-card {
+        padding: 1.5rem;
+      }
+    }
+    
+    /* Removing default styling for links */
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+  </style>
+  <!-- NUCLEAR OVERRIDE: Completely eliminate all animations, scanlines, and circles -->
+  <style>
+    /* Kill all animation, everywhere, no exceptions */
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+    }
+
+    /* Destroy all animation keyframes */
+    @keyframes scan { 0% { top: 0; } 100% { top: 0; } }
+    @keyframes flicker { 0% { opacity: 1; } 100% { opacity: 1; } }
+    @keyframes pulsate { 0% { opacity: 1; } 100% { opacity: 1; } }
+    @keyframes glow { 0% { opacity: 1; } 100% { opacity: 1; } }
+    @keyframes notify { 0% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes progress { 0% { width: 0; } 100% { width: 0; } }
+    @keyframes stars-animation { 0% { transform: none; } 100% { transform: none; } }
+    @keyframes aurora { 0% { transform: none; } 100% { transform: none; } }
+
+    /* Hide specific problematic elements */
+    .scanline, .gaming-scanline, [class*="scanline"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+      position: absolute !important;
+      z-index: -9999 !important;
+      pointer-events: none !important;
+      background: none !important;
+    }
+
+    /* Remove all purple circles and gradients */
+    [class*="animated-bg"]::before,
+    [class*="animated-bg"]::after,
+    [class*="overlay"],
+    [class*="circle"],
+    [style*="radial-gradient"],
+    [style*="linear-gradient"],
+    [style*="rgba(147, 51, 234"],
+    [style*="#9333ea"],
+    [style*="rgba(111, 66, 193"] {
+      display: none !important;
+      opacity: 0 !important;
+      background: none !important;
+      box-shadow: none !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background elements -->
+  <div class="gaming-grid"></div>
+  <div class="gaming-overlay"></div>
+  <div class="gaming-cityscape"></div>
+  <div class="gaming-scanline"></div>
+  
+  <!-- Status indicators -->
+  <div class="gaming-status status-top-right">LIVE</div>
+  <div class="gaming-status status-bottom-left">GAMING MODE</div>
+  
+  <!-- Controller buttons -->
+  <div class="gaming-controls">
+    <div class="gaming-control-btn btn-a">A</div>
+    <div class="gaming-control-btn btn-b">B</div>
+    <div class="gaming-control-btn btn-x">X</div>
+    <div class="gaming-control-btn btn-y">Y</div>
+  </div>
+  
+  <!-- Gaming notifications -->
+  <div class="gaming-notification notification-1">NEW SUBSCRIBER</div>
+  <div class="gaming-notification notification-2">FOLLOW</div>
+  <div class="gaming-notification notification-3">DONATION</div>
+  
+  <!-- Main content -->
+  <div class="gaming-container">
+    <h1 class="gaming-title">GAMING & STREAMING</h1>
+    
+    <div class="gaming-divider">
+      <div class="gaming-divider-line line-1"></div>
+      <div class="gaming-divider-line line-2"></div>
+      <div class="gaming-divider-line line-3"></div>
+    </div>
+    
+    <div class="gaming-card">
+      <h2 class="gaming-subtitle">SELECT MODE</h2>
+      
+      <div class="gaming-menu">
+        <a href="/video-upload">
+          <div class="gaming-menu-item">
+            <h3 class="gaming-menu-title">STREAM UPLOAD</h3>
+            <p class="gaming-menu-desc">Upload your gameplay footage</p>
+          </div>
+        </a>
+        
+        <a href="/post-form">
+          <div class="gaming-menu-item">
+            <h3 class="gaming-menu-title">GAMING POST</h3>
+            <p class="gaming-menu-desc">Share your gaming highlights</p>
+          </div>
+        </a>
+      </div>
+      
+      <div class="gaming-tip" id="gaming-tip">
+        PRO TIP: Stream regularly to build your gaming audience
+      </div>
+    </div>
+    
+    <div class="gaming-progress-container">
+      <div class="gaming-progress-bar"></div>
+    </div>
+  </div>
+  
+  <script>
+    // Rotate gaming tips
+    const gamingTips = [
+      "Stream regularly to build your gaming audience",
+      "Interact with viewers to increase engagement",
+      "Use hashtags to reach more gaming viewers",
+      "Collaborate with other streamers to grow faster",
+      "Set a consistent streaming schedule",
+      "Upgrade your gaming gear for better quality",
+      "Share clips from your best gaming moments",
+      "Don't forget to promote your streams on social media"
+    ];
+    
+    let currentTipIndex = 0;
+    const tipElement = document.getElementById('gaming-tip');
+    
+    setInterval(() => {
+      currentTipIndex = (currentTipIndex + 1) % gamingTips.length;
+      tipElement.textContent = `PRO TIP: ${gamingTips[currentTipIndex]}`;
+    }, 4000);
+  </script>
+</body>
+</html>

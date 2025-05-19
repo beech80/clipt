@@ -32,15 +32,24 @@ const BackButton: React.FC = () => {
         className="back-button" 
         onClick={handleBackClick}
         aria-label="Go back"
+        style={{
+          background: 'none',
+          border: 'none',
+          padding: 0,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
       >
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
-          width="24" 
-          height="24" 
+          width="28" 
+          height="28" 
           viewBox="0 0 24 24" 
           fill="none" 
           stroke="#FF5500" 
-          strokeWidth="2" 
+          strokeWidth="2.5" 
           strokeLinecap="round" 
           strokeLinejoin="round"
         >

@@ -33,13 +33,228 @@ const Profile = () => {
   const profileId = id || user?.id;
   const isOwnProfile = user?.id === profileId;
   
-  // Create sample achievements for testing
+  // Create comprehensive achievements list with token rewards
   const createSampleAchievements = () => [
-    { id: 1, name: 'First Victory', description: 'Win your first game', icon: 'Trophy', points: 50 },
-    { id: 2, name: 'Content Creator', description: 'Post your first clip', icon: 'VideoIcon', points: 25 },
-    { id: 3, name: 'Popular Player', description: 'Reach 10 followers', icon: 'UserPlus', points: 100 },
-    { id: 4, name: 'Like Machine', description: 'Get 50 likes on your content', icon: 'Heart', points: 75 },
-    { id: 5, name: 'Collector', description: 'Save 20 clips from others', icon: 'Bookmark', points: 40 }
+    // 🏆 Trophy & Weekly Top 10
+    {
+      id: 'first-taste-gold',
+      name: 'First Taste of Gold',
+      description: 'Earn 10 trophies on a post.',
+      points: 50,
+      tokens: 25,
+      type: 'trophy',
+      progress: 70,
+      reward: '25 Tokens + Gold Trophy Badge'
+    },
+    {
+      id: 'viral-sensation',
+      name: 'Viral Sensation',
+      description: 'Get 100 trophies on a single post.',
+      points: 200,
+      tokens: 100,
+      type: 'trophy',
+      progress: 32,
+      reward: '100 Tokens + Viral Badge'
+    },
+    {
+      id: 'breaking-in',
+      name: 'Breaking In',
+      description: 'Rank in the Top 10 of the weekly leaderboard once.',
+      points: 150,
+      tokens: 75,
+      type: 'trophy',
+      progress: 100,
+      date: '2025-04-28',
+      reward: '75 Tokens + Top 10 Badge',
+      isNew: true
+    },
+    {
+      id: 'hot-streak',
+      name: 'Hot Streak',
+      description: 'Stay in the Top 10 for 5 weeks in a row.',
+      points: 500,
+      tokens: 250,
+      type: 'trophy',
+      progress: 40,
+      reward: '250 Tokens + Streak Badge'
+    },
+    
+    // 📈 Follower Growth
+    {
+      id: 'rising-star',
+      name: 'Rising Star',
+      description: 'Reach 1,000 followers.',
+      points: 100,
+      tokens: 50,
+      type: 'follower',
+      progress: 65,
+      reward: '50 Tokens + Rising Star Badge'
+    },
+    {
+      id: 'influencer-status',
+      name: 'Influencer Status',
+      description: 'Gain 10,000 followers.',
+      points: 500,
+      tokens: 250,
+      type: 'follower',
+      progress: 20,
+      reward: '250 Tokens + Influencer Badge'
+    },
+    
+    // 🎥 Streaming Subscriber Milestones
+    {
+      id: 'first-supporter',
+      name: 'First Supporter',
+      description: 'Get your first streaming sub.',
+      points: 50,
+      tokens: 25,
+      type: 'streaming',
+      progress: 100,
+      date: '2025-03-15',
+      reward: '25 Tokens + Supporter Badge'
+    },
+    {
+      id: 'streaming-star',
+      name: 'Streaming Star',
+      description: 'Reach 100 streaming subscribers.',
+      points: 300,
+      tokens: 150,
+      type: 'streaming',
+      progress: 35,
+      reward: '150 Tokens + Streaming Star Banner'
+    },
+    
+    // 🤝 Engagement Boosters
+    {
+      id: 'hype-squad',
+      name: 'Hype Squad',
+      description: 'Leave 50 comments on others\'s posts.',
+      points: 75,
+      tokens: 40,
+      type: 'engagement',
+      progress: 100,
+      date: '2025-04-02',
+      reward: '40 Tokens + Hype Badge'
+    },
+    {
+      id: 'super-supporter',
+      name: 'Super Supporter',
+      description: 'Give out 100 trophies.',
+      points: 125,
+      tokens: 60,
+      type: 'engagement',
+      progress: 45,
+      reward: '60 Tokens + Super Support Badge'
+    },
+    {
+      id: 'conversation-starter',
+      name: 'Conversation Starter',
+      description: 'Receive 100 replies to your comments.',
+      points: 100,
+      tokens: 50,
+      type: 'engagement',
+      progress: 68,
+      reward: '50 Tokens + Conversation Badge'
+    },
+    {
+      id: 'community-builder',
+      name: 'Community Builder',
+      description: 'Start a post that gets 500+ comments.',
+      points: 250,
+      tokens: 125,
+      type: 'engagement',
+      progress: 12,
+      reward: '125 Tokens + Community Builder Title'
+    },
+    
+    // 📢 Sharing & Promotion
+    {
+      id: 'signal-booster',
+      name: 'Signal Booster',
+      description: 'Share 10 other creators\' posts.',
+      points: 50,
+      tokens: 25,
+      type: 'sharing',
+      progress: 100,
+      date: '2025-04-12',
+      reward: '25 Tokens + Signal Badge'
+    },
+    {
+      id: 'clipt-evangelist',
+      name: 'Clipt Evangelist',
+      description: 'Invite 5 friends to join Clipt.',
+      points: 150,
+      tokens: 75,
+      type: 'sharing',
+      progress: 80,
+      reward: '75 Tokens + Evangelist Title'
+    },
+    
+    // 🎮 Collab & Creator Support
+    {
+      id: 'duo-dynamic',
+      name: 'Duo Dynamic',
+      description: 'Collab on a post that earns 50 trophies.',
+      points: 150,
+      tokens: 75,
+      type: 'collab',
+      progress: 0,
+      reward: '75 Tokens + Duo Badge'
+    },
+    {
+      id: 'mentor-mode',
+      name: 'Mentor Mode',
+      description: 'Help a small creator reach 1,000 followers.',
+      points: 250,
+      tokens: 125,
+      type: 'collab',
+      progress: 0,
+      reward: '125 Tokens + Mentor Crown'
+    },
+    
+    // 🎉 Special & Hidden
+    {
+      id: 'og-clipt-creator',
+      name: 'OG Clipt Creator',
+      description: 'Joined within 3 months of launch.',
+      points: 100,
+      tokens: 50,
+      type: 'special',
+      progress: 100,
+      date: '2025-01-10',
+      reward: '50 Tokens + OG Badge'
+    },
+    {
+      id: 'day-one-grinder',
+      name: 'Day One Grinder',
+      description: 'Posted on Clipt\'s launch day.',
+      points: 200,
+      tokens: 100,
+      type: 'special',
+      progress: 100,
+      date: '2025-01-01',
+      reward: '100 Tokens + Day One Title'
+    },
+    {
+      id: 'mystery-viral',
+      name: 'Mystery Viral',
+      description: 'An old post goes viral after 30 days.',
+      points: 150,
+      tokens: 75,
+      type: 'special',
+      progress: 0,
+      reward: '75 Tokens + Mystery Badge'
+    },
+    {
+      id: 'shadow-supporter',
+      name: 'Shadow Supporter',
+      description: 'Consistently like/comment on someone\'s posts for a month.',
+      points: 100,
+      tokens: 50,
+      type: 'special',
+      progress: 75,
+      reward: '50 Tokens + Shadow Badge'
+    }
   ];
 
   // Create sample posts for testing

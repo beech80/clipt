@@ -2,9 +2,11 @@ import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, Search, Camera, User, MessageSquare, 
-  Users, Sparkles, ChevronRight, Layers
+  Users, Sparkles, ChevronRight, Layers, Bell
 } from 'lucide-react';
 import '../styles/game-dashboard.css';
+import NotificationButton from '@/components/layout/NotificationButton';
+import NotificationsPanel from '@/components/notifications/NotificationsPanel';
 
 interface MenuItemType {
   id: number;
@@ -17,6 +19,14 @@ interface MenuItemType {
 const GameMenu: React.FC = () => {
   const navigate = useNavigate();
   const [hoverIndex, setHoverIndex] = React.useState<number | null>(null);
+  
+  // Mock user ID for demo purposes - in a real app, this would come from auth context
+  const userId = "user-123";
+  
+  // Function to navigate to notifications page
+  const goToNotifications = () => {
+    navigate('/notifications');
+  };
   
   // Add background animation effect
   React.useEffect(() => {
@@ -65,9 +75,24 @@ const GameMenu: React.FC = () => {
       
       {/* App Logo */}
       <div className="menu-header">
-        <div className="app-logo">
+        {/* Left spacer - empty div for balance */}
+        <div className="notification-container">
+          <div className="cosmic-placeholder" style={{ width: '45px', height: '45px', opacity: 0 }}></div>
+        </div>
+        
+        {/* Centered Logo */}
+        <div className="app-logo-centered">
           <Sparkles size={32} className="logo-icon" />
           <h1 className="logo-text">CLIPT</h1>
+        </div>
+        
+        {/* Right side notification button */}
+        <div className="notification-container">
+          <NotificationButton 
+            userId={userId} 
+            onOpenNotifications={goToNotifications} 
+            className="cosmic-notification-button"
+          />
         </div>
       </div>
       

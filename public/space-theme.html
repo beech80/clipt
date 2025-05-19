@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Space Gaming Interface</title>
+  <style>
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --space-primary: #00e5ff;
+      --space-secondary: #9333ea;
+      --space-accent: #ef4444;
+      --space-dark: #050a2f;
+      --space-darker: #010718;
+      --space-light: #ffffff;
+      --space-text: #e0f7fa;
+    }
+    
+    body {
+      font-family: 'Helvetica', Arial, sans-serif;
+      background-color: var(--space-dark);
+      color: var(--space-light);
+      min-height: 100vh;
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Space background with stars */
+    @keyframes twinkle {
+      0% { opacity: 0.3; }
+      50% { opacity: 1; }
+      100% { opacity: 0.3; }
+    }
+    
+    .star {
+      position: absolute;
+      background-color: white;
+      border-radius: 50%;
+      animation: twinkle var(--duration, 4s) infinite ease-in-out;
+      animation-delay: var(--delay, 0s);
+    }
+    
+    /* Nebula background */
+    .space-nebula {
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(0, 229, 255, 0.2) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(147, 51, 234, 0.2) 0%, transparent 40%);
+      z-index: 1;
+      pointer-events: none;
+    }
+    
+    /* Space grid */
+    .space-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(0, 229, 255, 0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 229, 255, 0.2) 1px, transparent 1px);
+      background-size: 40px 40px;
+      transform: perspective(500px) rotateX(70deg);
+      opacity: 0.2;
+      z-index: 2;
+      pointer-events: none;
+    }
+    
+    /* Space overlay */
+    .space-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, transparent 0%, var(--space-darker) 90%);
+      z-index: 3;
+      pointer-events: none;
+    }
+    
+    /* Planet silhouette */
+    .space-planet {
+      position: absolute;
+      bottom: -100px;
+      right: -100px;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #1e40af 0%, #3b82f6 100%);
+      opacity: 0.4;
+      box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+      z-index: 4;
+    }
+    
+    /* Scan line effect */
+    @keyframes scan {
+      0% { top: -5px; }
+      100% { top: 100vh; }
+    }
+    
+    .space-scanline {
+      position: absolute;
+      height: 2px;
+      width: 100%;
+      background: linear-gradient(to right, transparent, var(--space-primary), transparent);
+      z-index: 5;
+      animation: scan 3s linear infinite;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    
+    /* Orbital rings */
+    .space-orbit {
+      position: absolute;
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      border-radius: 50%;
+      z-index: 3;
+      pointer-events: none;
+    }
+    
+    /* Content container */
+    .space-container {
+      position: relative;
+      max-width: 1200px;
+      width: 90%;
+      margin: 0 auto;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    
+    /* Typography */
+    .space-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--space-primary);
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+      text-align: center;
+      text-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
+      animation: flicker 4s infinite;
+    }
+    
+    @keyframes flicker {
+      0% { opacity: 1; }
+      3% { opacity: 0.8; }
+      6% { opacity: 1; }
+      7% { opacity: 0.6; }
+      8% { opacity: 1; }
+      60% { opacity: 1; }
+      62% { opacity: 0.7; }
+      64% { opacity: 1; }
+    }
+    
+    .space-subtitle {
+      font-size: 1.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--space-primary);
+      letter-spacing: 0.08em;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    
+    /* Divider */
+    .space-divider {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .space-divider-line {
+      height: 4px;
+      background-color: var(--space-primary);
+    }
+    
+    .line-1 { width: 60px; }
+    .line-2 { width: 30px; }
+    .line-3 { width: 15px; }
+    
+    /* Card styles */
+    .space-card {
+      background-color: rgba(1, 7, 24, 0.8);
+      border: 2px solid var(--space-primary);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+      width: 100%;
+      max-width: 600px;
+      backdrop-filter: blur(5px);
+    }
+    
+    /* Space menu */
+    .space-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    
+    .space-menu-item {
+      border: 2px solid var(--space-primary);
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .space-menu-item:hover {
+      background-color: rgba(0, 229, 255, 0.1);
+      transform: translateX(5px);
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+    }
+    
+    .space-menu-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--space-primary);
+      text-transform: uppercase;
+      margin: 0;
+      margin-bottom: 0.25rem;
+    }
+    
+    .space-menu-desc {
+      color: #b0b0b0;
+      font-size: 0.875rem;
+      margin: 0;
+    }
+    
+    /* Space tip */
+    .space-tip {
+      background-color: rgba(1, 7, 24, 0.8);
+      border-left: 4px solid var(--space-primary);
+      padding: 1rem;
+      font-family: monospace;
+      color: var(--space-primary);
+      font-size: 0.9rem;
+      margin-top: 1.5rem;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 0.8; }
+      50% { opacity: 1; }
+      100% { opacity: 0.8; }
+    }
+    
+    /* Progress bar */
+    .space-progress-container {
+      height: 6px;
+      background-color: rgba(1, 7, 24, 0.8);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      margin-top: 2rem;
+      overflow: hidden;
+      width: 100%;
+      max-width: 600px;
+    }
+    
+    .space-progress-bar {
+      height: 100%;
+      background: linear-gradient(to right, var(--space-primary), var(--space-secondary));
+      animation: progress 3s linear infinite;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+    }
+    
+    @keyframes progress {
+      0% { width: 0; }
+      100% { width: 100%; }
+    }
+    
+    /* Status indicators */
+    .space-status {
+      position: absolute;
+      display: inline-block;
+      border: 2px solid var(--space-primary);
+      padding: 0.25rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: var(--space-primary);
+      z-index: 100;
+    }
+    
+    .status-top-right {
+      top: 1rem;
+      right: 1rem;
+    }
+    
+    .status-bottom-left {
+      bottom: 1rem;
+      left: 1rem;
+    }
+    
+    /* Controller buttons */
+    .space-controls {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 100;
+    }
+    
+    .space-control-btn {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 0.875rem;
+    }
+    
+    .btn-a { background-color: var(--space-primary); }
+    .btn-b { background-color: var(--space-secondary); }
+    .btn-x { background-color: #22c55e; }
+    .btn-y { background-color: var(--space-accent); }
+    
+    /* Space notifications */
+    .space-notification {
+      position: absolute;
+      right: 1rem;
+      background-color: rgba(0, 229, 255, 0.9);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: bold;
+      animation: notify 8s ease-in-out infinite;
+      z-index: 100;
+    }
+    
+    @keyframes notify {
+      0% { right: -300px; opacity: 0; }
+      10% { right: 1rem; opacity: 1; }
+      90% { right: 1rem; opacity: 1; }
+      100% { right: -300px; opacity: 0; }
+    }
+    
+    .notification-1 { top: 10%; animation-delay: 0s; }
+    .notification-2 { top: 18%; animation-delay: 3s; }
+    .notification-3 { top: 26%; animation-delay: 6s; }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .space-title {
+        font-size: 2.5rem;
+      }
+      
+      .space-subtitle {
+        font-size: 1.5rem;
+      }
+      
+      .space-card {
+        padding: 1.5rem;
+      }
+    }
+    
+    /* Removing default styling for links */
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background elements -->
+  <div id="stars"></div>
+  <div class="space-nebula"></div>
+  <div class="space-grid"></div>
+  <div class="space-overlay"></div>
+  <div class="space-planet"></div>
+  <div class="space-scanline"></div>
+  
+  <!-- Orbital rings -->
+  <div class="space-orbit" style="width: 500px; height: 500px; left: 50%; top: 50%; transform: translate(-50%, -50%);"></div>
+  <div class="space-orbit" style="width: 800px; height: 800px; left: 50%; top: 50%; transform: translate(-50%, -50%);"></div>
+  
+  <!-- Status indicators -->
+  <div class="space-status status-top-right">LIVE</div>
+  <div class="space-status status-bottom-left">SPACE MODE</div>
+  
+  <!-- Controller buttons -->
+  <div class="space-controls">
+    <div class="space-control-btn btn-a">A</div>
+    <div class="space-control-btn btn-b">B</div>
+    <div class="space-control-btn btn-x">X</div>
+    <div class="space-control-btn btn-y">Y</div>
+  </div>
+  
+  <!-- Space notifications -->
+  <div class="space-notification notification-1">NEW SUBSCRIBER</div>
+  <div class="space-notification notification-2">COSMIC DONATION</div>
+  <div class="space-notification notification-3">GALACTIC FOLLOW</div>
+  
+  <!-- Main content -->
+  <div class="space-container">
+    <h1 class="space-title">SPACE GAMING</h1>
+    
+    <div class="space-divider">
+      <div class="space-divider-line line-1"></div>
+      <div class="space-divider-line line-2"></div>
+      <div class="space-divider-line line-3"></div>
+    </div>
+    
+    <div class="space-card">
+      <h2 class="space-subtitle">SELECT MODE</h2>
+      
+      <div class="space-menu">
+        <a href="/video-upload">
+          <div class="space-menu-item">
+            <h3 class="space-menu-title">COSMIC UPLOAD</h3>
+            <p class="space-menu-desc">Upload your interstellar gameplay footage</p>
+          </div>
+        </a>
+        
+        <a href="/post-form">
+          <div class="space-menu-item">
+            <h3 class="space-menu-title">GALACTIC POST</h3>
+            <p class="space-menu-desc">Share your space gaming highlights</p>
+          </div>
+        </a>
+      </div>
+      
+      <div class="space-tip" id="space-tip">
+        COSMIC TIP: Stream regularly to build your intergalactic audience
+      </div>
+    </div>
+    
+    <div class="space-progress-container">
+      <div class="space-progress-bar"></div>
+    </div>
+  </div>
+  
+  <script>
+    // Create stars
+    const starsContainer = document.getElementById('stars');
+    for (let i = 0; i < 200; i++) {
+      const star = document.createElement('div');
+      star.classList.add('star');
+      
+      // Random size between 1-3px
+      const size = Math.random() * 2 + 1;
+      star.style.width = `${size}px`;
+      star.style.height = `${size}px`;
+      
+      // Random position
+      star.style.left = `${Math.random() * 100}%`;
+      star.style.top = `${Math.random() * 100}%`;
+      
+      // Random animation duration and delay
+      star.style.setProperty('--duration', `${Math.random() * 3 + 2}s`);
+      star.style.setProperty('--delay', `${Math.random() * 3}s`);
+      
+      starsContainer.appendChild(star);
+    }
+    
+    // Rotate space tips
+    const spaceTips = [
+      "Stream regularly to build your intergalactic audience",
+      "Interact with cosmic viewers to increase engagement",
+      "Use spatial hashtags to reach more galactic viewers",
+      "Collaborate with other space streamers to grow faster",
+      "Set a consistent streaming schedule across the galaxy",
+      "Upgrade your space gear for better stellar quality",
+      "Share clips from your best interstellar moments",
+      "Don't forget to promote your streams across the universe"
+    ];
+    
+    let currentTipIndex = 0;
+    const tipElement = document.getElementById('space-tip');
+    
+    setInterval(() => {
+      currentTipIndex = (currentTipIndex + 1) % spaceTips.length;
+      tipElement.textContent = `COSMIC TIP: ${spaceTips[currentTipIndex]}`;
+    }, 4000);
+  </script>
+</body>
+</html>

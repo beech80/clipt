@@ -1,0 +1,44 @@
+/**
+ * Simple Message Killer
+ * A lightweight solution to hide unwanted messages
+ */
+
+/* Target the Messages component */
+div[data-component-file="Messages.tsx"],
+div[data-component-path*="Messages.tsx"],
+.text-center.py-12.text-purple-300.cyber-text {
+  display: none !important;
+}
+
+/* Target the O2 component */
+div[data-lov-name="RetroChatsList"],
+.sc-jZTQcj,
+.hFlFDr {
+  display: none !important;
+}
+
+/* Create a black overlay at the top of the page */
+.top-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background-color: #000000;
+  z-index: 9999;
+}
+
+/* Position streaming buttons as dropdown at top center */
+div.flex.border-b.border-slate-700 {
+  display: flex !important;
+  flex-direction: column !important;
+  position: fixed !important;
+  top: 10px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 10000 !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  border-radius: 8px !important;
+  padding: 8px !important;
+  width: auto !important;
+}

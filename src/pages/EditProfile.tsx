@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { Profile } from "@/types/profile";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, User, Settings, Globe, Rocket, Star, Command, Save } from "lucide-react";
-import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
+import { ArrowLeft, User, Settings, Globe, Rocket, Star, Command, Save, Sparkles } from "lucide-react";
+import { CosmicProfileForm } from "@/components/profile/CosmicProfileForm";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -281,15 +281,16 @@ const EditProfile = () => {
                   
                   {/* Form Content */}
                   <div className="px-6 py-5 relative z-10">
-                    {userId && <ProfileEditForm userId={userId} />}
+                    {userId && <CosmicProfileForm userId={userId} />}
                     {!userId && (
                       <div className="p-4 text-center">
+                        <Sparkles className="h-12 w-12 text-indigo-400 mx-auto mb-4 opacity-50" />
                         <div className="text-indigo-300">User profile could not be loaded</div>
                         <Button 
                           onClick={() => queryClient.invalidateQueries({ queryKey: ['profile'] })}
-                          className="mt-2 bg-indigo-600 hover:bg-indigo-700"
+                          className="mt-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500"
                         >
-                          Retry
+                          <Sparkles className="h-4 w-4 mr-2" /> Retry Loading Profile
                         </Button>
                       </div>
                     )}

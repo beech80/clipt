@@ -77,18 +77,24 @@
 
 /* Menu Header with Logo */
 .menu-header {
-  padding: 30px 0;
+  padding: 30px 15px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   z-index: 1;
   position: relative;
 }
 
-.app-logo {
+.app-logo, .app-logo-centered {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.app-logo-centered {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .logo-icon {
@@ -110,6 +116,67 @@
   letter-spacing: 3px;
   text-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
   margin: 0;
+}
+
+/* Notification Styles */
+.notification-container {
+  position: relative;
+}
+
+.cosmic-notification-button {
+  position: relative;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(76, 0, 255, 0.6), rgba(166, 0, 255, 0.4));
+  border: 2px solid rgba(255, 140, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 15px rgba(166, 0, 255, 0.5);
+  transition: all 0.3s ease;
+  color: white;
+}
+
+.cosmic-notification-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(166, 0, 255, 0.7);
+  background: linear-gradient(135deg, rgba(96, 20, 255, 0.8), rgba(186, 20, 255, 0.6));
+  border-color: rgba(255, 140, 255, 0.6);
+}
+
+.cosmic-notification-button svg {
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
+}
+
+.notifications-panel-container {
+  position: absolute;
+  top: 85px;
+  right: 15px;
+  width: 380px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 100;
+  border-radius: 12px;
+  background: rgba(15, 10, 36, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(166, 0, 255, 0.3);
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.4), 0 0 15px rgba(166, 0, 255, 0.4);
+  animation: panelFadeIn 0.3s ease forwards;
+  padding: 15px;
+}
+
+@keyframes panelFadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modified badge for notification count to match cosmic theme */
+.cosmic-notification-button .badge {
+  background: linear-gradient(135deg, #ff3366, #ff0066);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 8px rgba(255, 51, 102, 0.7);
 }
 
 /* Main Navigation Menu */

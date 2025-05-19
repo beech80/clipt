@@ -32,7 +32,7 @@ const GlobalStyle = createGlobalStyle`
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'games' | 'streamers'>('all');
+  // Removed tab state as tabs have been removed
   const [isLoading, setIsLoading] = useState(false);
   
   // Mock data (would be replaced with real API calls)
@@ -123,29 +123,7 @@ const SearchPage: React.FC = () => {
           </div>
         </div>
         
-        {/* Search Tabs */}
-        <div className="search-tabs">
-          <button 
-            className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
-            onClick={() => setActiveTab('all')}
-          >
-            All
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'games' ? 'active' : ''}`}
-            onClick={() => setActiveTab('games')}
-          >
-            <FontAwesomeIcon icon={faGamepad} className="tab-icon" />
-            Games
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'streamers' ? 'active' : ''}`}
-            onClick={() => setActiveTab('streamers')}
-          >
-            <FontAwesomeIcon icon={faUser} className="tab-icon" />
-            Streamers
-          </button>
-        </div>
+        {/* Search tabs have been removed */}
         
         {/* Search Results */}
         <div className="search-results">
@@ -162,9 +140,9 @@ const SearchPage: React.FC = () => {
               </motion.div>
             ) : searchTerm ? (
               <>
-                {(activeTab === 'all' || activeTab === 'games') && filteredGames.length > 0 && (
+                {filteredGames.length > 0 && (
                   <div className="result-section">
-                    {activeTab === 'all' && <h2 className="section-title">Games</h2>}
+                    <h2 className="section-title">Games</h2>
                     <div className="result-grid">
                       {filteredGames.map(game => (
                         <motion.div 
@@ -196,9 +174,9 @@ const SearchPage: React.FC = () => {
                   </div>
                 )}
                 
-                {(activeTab === 'all' || activeTab === 'streamers') && filteredStreamers.length > 0 && (
+                {filteredStreamers.length > 0 && (
                   <div className="result-section">
-                    {activeTab === 'all' && <h2 className="section-title">Streamers</h2>}
+                    <h2 className="section-title">Streamers</h2>
                     <div className="result-grid">
                       {filteredStreamers.map(streamer => (
                         <motion.div 
@@ -231,9 +209,7 @@ const SearchPage: React.FC = () => {
                   </div>
                 )}
                 
-                {((activeTab === 'games' && filteredGames.length === 0) || 
-                  (activeTab === 'streamers' && filteredStreamers.length === 0) ||
-                  (activeTab === 'all' && filteredGames.length === 0 && filteredStreamers.length === 0)) && (
+                {(filteredGames.length === 0 && filteredStreamers.length === 0) && (
                   <div className="no-results">
                     <FontAwesomeIcon icon={faSearch} className="no-results-icon" />
                     <p>No results found for "{searchTerm}"</p>

@@ -26,6 +26,70 @@
   opacity: 0.7;
 }
 
+/* Custom scrollbar for achievements section */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(26, 26, 58, 0.3);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.4);
+  border-radius: 10px;
+  border: 1px solid rgba(139, 92, 246, 0.1);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.6);
+}
+
+/* Add transition effects for achievement cards */
+.achievement-card {
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.achievement-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.achievement-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 24, 0.5);
+}
+
+.achievement-card:hover::after {
+  opacity: 1;
+}
+
+/* Achievement progress bar animation */
+.achievement-progress .h-full {
+  transition: width 1s ease-out;
+}
+
+/* Custom animation for new achievements */
+@keyframes achievementUnlock {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+
+.achievement-new {
+  animation: achievementUnlock 2s infinite;
+}
+
 /* Gaming profile frame with neon effect */
 .gaming-profile-frame {
   border: 2px solid rgba(99, 102, 241, 0.3);
@@ -267,46 +331,138 @@
 /* Game clips grid */
 .game-clips-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 0.75rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
 }
 
 .clip-item {
   position: relative;
-  aspect-ratio: 16/9;
   border-radius: 8px;
   overflow: hidden;
+  height: 150px;
+  background: rgba(20, 23, 42, 0.6);
   border: 1px solid rgba(99, 102, 241, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.clip-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.clip-item:active {
+  transform: translateY(-2px);
 }
 
 .clip-thumbnail {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: all 0.3s ease;
+}
+
+.clip-item:hover .clip-thumbnail {
+  transform: scale(1.05);
 }
 
 .clip-overlay {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(0deg, rgba(15, 23, 42, 0.8) 0%, rgba(15, 23, 42, 0) 50%);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 0.5rem;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 10px;
+  background: linear-gradient(0deg, rgba(13, 15, 30, 0.9) 0%, rgba(13, 15, 30, 0) 100%);
+  color: white;
 }
 
 .clip-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: white;
+  font-weight: bold;
+  margin-bottom: 4px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .clip-stats {
+  font-size: 0.75rem;
+  color: #ccc;
   display: flex;
+  justify-content: space-between;
+}
+
+/* Video indicator for video posts */
+.video-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Swipe gesture support for fullscreen posts */
+@keyframes swipeHint {
+  0% { transform: translateX(0); opacity: 1; }
+  50% { transform: translateX(10px); opacity: 0.8; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.swipe-hint {
+  animation: swipeHint 2s ease-in-out infinite;
+}
+
+/* Fullscreen post modal enhancements */
+.post-modal-content {
+  max-width: 90vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.post-modal-nav-button {
+  background-color: rgba(0, 0, 0, 0.3);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.post-modal-nav-button:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+  transform: scale(1.1);
+}
+
+.post-modal-nav-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Touch swipe support */
+.swipe-area {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  z-index: 1;
   gap: 0.5rem;
   font-size: 0.625rem;
   color: #94A3B8;

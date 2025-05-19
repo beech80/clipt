@@ -67,6 +67,63 @@ const NewPost = () => {
   const [gameSearchResults, setGameSearchResults] = useState<typeof allGames>([]);
   const [showGameSearch, setShowGameSearch] = useState(false);
   
+  // Prevent scrolling in a more targeted way
+  useEffect(() => {
+    // Simple scroll prevention for just this component
+    const handleScroll = (e) => {
+      if (e.target === document || e.target === document.body || e.target === document.documentElement) {
+        window.scrollTo(0, 0);
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Only prevent wheel/touch events at the document level
+    window.addEventListener('wheel', handleScroll, { passive: false });
+    window.addEventListener('touchmove', handleScroll, { passive: false });
+    
+    // Add overflow hidden directly to body
+    document.body.style.overflow = 'hidden';
+    
+    // Create a targeted style for just our component wrapper
+    const styleElement = document.createElement('style');
+    styleElement.id = 'cosmic-post-style';
+    styleElement.textContent = `
+      .min-h-screen.bg-gradient-to-b {
+        position: fixed !important;
+        inset: 0 !important;
+        overflow: hidden !important;
+        height: 100vh !important;
+        width: 100vw !important;
+        max-height: 100vh !important;
+        z-index: 9999 !important;
+      }
+      
+      /* Hide scrollbar */
+      ::-webkit-scrollbar {
+        width: 0px;
+        display: none;
+      }
+      
+      * {
+        scrollbar-width: none;
+      }
+    `;
+    document.head.appendChild(styleElement);
+    
+    return () => {
+      // Clean up event listeners
+      window.removeEventListener('wheel', handleScroll);
+      window.removeEventListener('touchmove', handleScroll);
+      
+      // Restore body overflow
+      document.body.style.overflow = 'auto';
+      
+      // Remove style element
+      document.getElementById('cosmic-post-style')?.remove();
+    };
+  }, []);
+  
   // Check for cosmic video upload data in localStorage
   useEffect(() => {
     // First check localStorage for cosmic uploader data
