@@ -73,7 +73,7 @@ const SquadsClipts = React.lazy(() => import('./pages/SquadsClipts'));
 const UserProfile = React.lazy(() => import('./pages/UserProfile'));
 // Using the fixed clean discovery page implementation
 const DiscoveryFixedClean = React.lazy(() => import('./pages/DiscoveryFixedClean'));
-const DiscoveryNew = React.lazy(() => import('./pages/DiscoveryNew'));
+// DiscoveryNew removed due to syntax errors
 const Explore = React.lazy(() => import('./pages/Explore'));
 const AllStreamers = React.lazy(() => import('./pages/AllStreamers'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
