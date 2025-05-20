@@ -71,18 +71,16 @@ const Clipts = React.lazy(() => import('./pages/Clipts'));
 const TopClipts = React.lazy(() => import('./pages/TopClipts'));
 const SquadsClipts = React.lazy(() => import('./pages/SquadsClipts'));
 const UserProfile = React.lazy(() => import('./pages/UserProfile'));
-// Using the fixed clean discovery page implementation
-const DiscoveryFixedClean = React.lazy(() => import('./pages/DiscoveryFixedClean'));
-// Enhanced discovery page with subscription options
-const DiscoveryNew = React.lazy(() => import('./pages/DiscoveryNew'));
+// Using main Discovery component for all discovery routes
+const Discovery = React.lazy(() => import('./pages/Discovery'));
 // Streamers discovery page with bottom navigation
 // DiscoveryStreamers removed as requested by user
-// Dark-themed discovery page with bottom navigation (chat, donate, clipt buttons)
-const DarkDiscovery = React.lazy(() => import('./pages/DarkDiscovery'));
-// Space-themed discovery page with orange-themed bottom navigation
-const SpaceDiscovery = React.lazy(() => import('./pages/SpaceDiscovery'));
-// DiscoveryNew removed due to syntax errors
-const Discovery = React.lazy(() => import('./pages/Discovery'));
+// Using main Discovery component for dark-themed pages
+const DarkDiscovery = React.lazy(() => import('./pages/Discovery'));
+// Using main Discovery component for space-themed pages
+const SpaceDiscovery = React.lazy(() => import('./pages/Discovery'));
+// Enhanced discovery page with subscription options
+const DiscoveryNew = React.lazy(() => import('./pages/DiscoveryNew'));
 const DiscoverySimple = React.lazy(() => import('./pages/DiscoverySimple'));
 const Explore = React.lazy(() => import('./pages/Explore'));
 const AllStreamers = React.lazy(() => import('./pages/AllStreamers'));
@@ -108,7 +106,8 @@ const EditProfile = React.lazy(() => import('./pages/EditProfile'));
 const Admin = React.lazy(() => import('./pages/Admin'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Signup = React.lazy(() => import('./pages/Signup'));
-const GameStreamers = React.lazy(() => import('./pages/GameStreamers'));
+// Using AllStreamers instead of GameStreamers
+const GameStreamers = React.lazy(() => import('./pages/AllStreamers'));
 const GameClipts = React.lazy(() => import('./pages/GameClipts'));
 const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
 const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
