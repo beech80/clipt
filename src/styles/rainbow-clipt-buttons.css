@@ -1,7 +1,7 @@
 /* Rainbow Clipt Buttons CSS - Production Ready */
 
-/* Main button styling with rainbow glow */
-.clipt-button {
+/* Main button styling with rainbow glow - ONLY APPLIES INSIDE button-row */
+.button-row .clipt-button {
   position: relative;
   background: rgba(20, 20, 40, 0.8);
   border: none;
@@ -123,14 +123,9 @@
   grid-row: 2;
 }
 
-/* Action buttons container */
+/* Action buttons container - DISABLED to prevent floating buttons */
 .clipt-action-buttons {
-  position: fixed;
-  bottom: 25px;
-  right: 30px;
-  display: flex;
-  gap: 15px;
-  z-index: 100;
+  display: none !important;
 }
 
 /* Animations */

@@ -613,11 +613,11 @@
 /* Main controller container */
 .gameboy-controls {
   position: fixed;
-  bottom: 30px;
-  left: 0;
-  right: 0;
+  bottom: 15px;  /* Moved further down */
+  left: 20%;    /* Shifted left edge to create more space on the left */
+  right: 10px;  /* Moved closer to the right edge */
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end; /* Align content toward the right */
   align-items: center;
   padding: 0;
   background: transparent;
@@ -1068,20 +1068,22 @@
 
 .action-buttons.diamond-layout {
   position: fixed;
-  bottom: 15px;
-  right: 15px;
+  bottom: 2px; /* Positioned much lower in the corner */
+  right: 2px; /* Positioned much further to the right */
   background-color: transparent;
   border-radius: 0;
   padding: 0;
-  width: 160px;
-  height: 160px;
+  width: 140px; /* Reduced size to be more compact */
+  height: 140px; /* Reduced size to be more compact */
   display: grid;
   grid-template-areas:
     ". top ."
     "left . right"
     ". bottom .";
-  gap: 15px;
+  gap: 12px; /* Slightly reduced gap to keep buttons closer */
   z-index: 1000;
+  pointer-events: auto; /* Ensure buttons remain clickable */
+  transform: scale(0.88); /* Slight scale down to fit more nicely in the corner */
 }
 
 .action-button::before {
