@@ -5,11 +5,15 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
+// Detect if running on Vercel
+const isVercel = process.env.VERCEL === '1';
+
 export default defineConfig({
   base: '/',
   plugins: [
     react(),
-    componentTagger(),
+    // Only use componentTagger when not on Vercel to avoid build errors
+    ...(!isVercel ? [componentTagger()] : []),
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
