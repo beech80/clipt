@@ -72,7 +72,7 @@ const TopClipts = React.lazy(() => import('./pages/TopClipts'));
 const SquadsClipts = React.lazy(() => import('./pages/SquadsClipts'));
 const UserProfile = React.lazy(() => import('./pages/UserProfile'));
 // Using the fixed clean discovery page implementation
-const DiscoveryFixedClean = React.lazy(() => import('./pages/DiscoveryFixedClean'));
+// const DiscoveryFixedClean = React.lazy(() => import('./pages/DiscoveryFixedClean'));
 // Enhanced discovery page with subscription options
 const DiscoveryNew = React.lazy(() => import('./pages/DiscoveryNew'));
 // Streamers discovery page with bottom navigation
