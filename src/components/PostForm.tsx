@@ -207,8 +207,8 @@ const PostForm = ({ onPostCreated, onClose }: PostFormProps) => {
   };
 
   return (
-    <div className="bg-card rounded-lg p-4 shadow-sm animate-fade-in overflow-hidden" style={{ aspectRatio: '1/1', maxWidth: '100%', minHeight: '360px' }}>
-      <form onSubmit={handleSubmit} className="h-full flex flex-col space-y-3">
+    <div className="bg-card rounded-lg p-4 shadow-sm animate-fade-in">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <Alert variant="destructive">
             <AlertDescription>{error}</AlertDescription>
@@ -255,7 +255,7 @@ const PostForm = ({ onPostCreated, onClose }: PostFormProps) => {
           </>
         )}
 
-        <div className={`flex ${isMobile ? 'flex-col' : 'flex-wrap'} gap-2 mt-auto`}>
+        <div className={`flex ${isMobile ? 'flex-col' : 'flex-wrap'} gap-2`}>
           {!selectedVideo && (
             <ImageUpload
               selectedImage={selectedImage}

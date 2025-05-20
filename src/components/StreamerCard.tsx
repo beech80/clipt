@@ -43,22 +43,28 @@ const StreamerCard = ({
       <div className="flex-1 overflow-hidden">
         <div className="flex items-center gap-2">
           <h3 className="font-bold text-white truncate">{name}</h3>
-          {/* LIVE badge removed as requested */}
+          {isLive && (
+            <Badge variant="destructive" className="px-2 py-0 text-xs h-5 bg-red-600 hover:bg-red-700">
+              LIVE
+            </Badge>
+          )}
         </div>
         
-        <div className="text-indigo-300 text-sm truncate">
-          @{username}
-        </div>
+        <p className="text-sm text-indigo-300 truncate">@{username}</p>
         
         {game && (
-          <div className="mt-1 text-xs text-gray-400 truncate">
-            <span className="inline-flex items-center gap-1">
-              <Radio size={12} /> {game}
-            </span>
+          <div className="flex items-center gap-1 mt-2">
+            <Radio className="w-3 h-3 text-indigo-400" />
+            <span className="text-xs text-indigo-400">Playing {game}</span>
           </div>
         )}
         
-        {/* Follower count removed as requested */}
+        {streamingUrl && (
+          <div className="flex items-center gap-1 mt-1">
+            <Tv className="w-3 h-3 text-indigo-400" />
+            <span className="text-xs text-indigo-400 truncate">{streamingUrl.replace(/https?:\/\//i, '')}</span>
+          </div>
+        )}
       </div>
     </Card>
   );

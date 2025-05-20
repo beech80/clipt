@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+
+import React from 'react';
 import { Card } from "@/components/ui/card";
 import { StreamHealthIndicator } from "./health/StreamHealthIndicator";
 import { StreamChat } from "./chat/StreamChat";
-import { generatePlaybackUrl } from "@/config/streamingConfig";
 
 interface StreamPlayerProps {
   streamId: string;
@@ -19,35 +19,10 @@ export const StreamPlayer = ({
   viewerCount = 0,
   playbackUrl
 }: StreamPlayerProps) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  
-  // If no playbackUrl is provided, generate one from the streamId
-  const effectivePlaybackUrl = playbackUrl || (streamId ? generatePlaybackUrl(streamId) : undefined);
-  
-  useEffect(() => {
-    // If the stream is live and we have a video element, attempt to play it
-    if (isLive && videoRef.current && effectivePlaybackUrl) {
-      const playPromise = videoRef.current.play();
-      
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error('Error auto-playing video:', error);
-          // Most browsers require user interaction to play video with sound
-          // You can handle this by muting the video or showing a play button
-        });
-      }
-    }
-  }, [isLive, effectivePlaybackUrl]);
-
-  if (!effectivePlaybackUrl) {
+  if (!playbackUrl) {
     return (
       <Card className="aspect-video w-full bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p className="mt-4 text-gray-400">Waiting for stream...</p>
-        </div>
+        <p className="text-gray-400">Stream is offline</p>
       </Card>
     );
   }
@@ -58,13 +33,11 @@ export const StreamPlayer = ({
         <Card className="p-4">
           <div className="aspect-video relative bg-gray-900">
             <video
-              ref={videoRef}
               className="w-full h-full"
-              src={effectivePlaybackUrl}
+              src={playbackUrl}
               autoPlay
               playsInline
               muted
-              controls
             />
           </div>
           <div className="mt-4 flex items-center justify-between">

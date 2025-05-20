@@ -107,7 +107,7 @@ export const TopGames = ({ filter }: TopGamesProps) => {
         >
           {isLoading && (
             <div className="flex flex-col items-center gap-2">
-              <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+              <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
               <p className="text-sm text-muted-foreground">Loading more games...</p>
             </div>
           )}

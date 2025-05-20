@@ -76,75 +76,57 @@ class ErrorBoundary extends Component<Props, State> {
   render(): ReactNode {
     if (this.state.isOffline) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0f112a] p-4">
-          <div className="max-w-md w-full space-y-4 retro-border p-8">
-            <div className="text-center">
-              <h2 className="pixel-font text-2xl mb-4 text-[#ff4d4a] retro-text-shadow game-over-text">CONNECTION LOST</h2>
-              <div className="mb-6 bg-[#1a1d45] p-4 border border-[#4a4dff]">
-                <div className="pixel-font text-[#5ce1ff] mb-2">ERROR CODE: #404</div>
-                <p className="text-gray-300 mb-2">Network cable unplugged</p>
-                <p className="text-sm text-gray-400">Please check your internet connection and try again.</p>
-              </div>
-              <Button 
-                onClick={() => window.location.reload()} 
-                className="retro-button w-full"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                RETRY CONNECTION
-              </Button>
-            </div>
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <div className="max-w-md w-full space-y-4">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>You're Offline</AlertTitle>
+              <AlertDescription>
+                Please check your internet connection and try again.
+              </AlertDescription>
+            </Alert>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="w-full"
+            >
+              Retry Connection
+            </Button>
           </div>
         </div>
       );
     }
 
     if (this.state.hasError) {
-      const errorMessage = this.state.error?.message || 'Critical system error';
+      const errorMessage = this.state.error?.message || 'Something went wrong';
       
+      // Custom fallback UI
       return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#0f112a] text-white p-6">
-          <div className="w-full max-w-md flex flex-col items-center space-y-6 retro-border p-8">
-            <div className="bug-glitch" data-text="BUG DETECTED">
-              <h1 className="text-3xl font-bold text-[#ff4d4a] pixel-font retro-text-shadow mb-2">BUG DETECTED</h1>
-            </div>
-            
-            <div className="w-16 h-16 bg-[#141644] border-2 border-[#4a4dff] flex items-center justify-center mb-4">
-              <AlertCircle className="w-10 h-10 text-[#ff4d4a]" />
-            </div>
-            
-            <div className="text-center w-full">
-              <div className="bg-[#1a1d45] p-4 border-2 border-[#4a4dff] mb-4">
-                <p className="pixel-font text-[#5ce1ff] mb-2">SYSTEM MALFUNCTION</p>
-                <p className="mb-2 overflow-hidden text-ellipsis">"{errorMessage}"</p>
-                <p className="text-sm text-[#ff4d4a]">PRESS RESTART TO CONTINUE</p>
-              </div>
-              
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gaming-950 text-white p-6">
+          <div className="w-full max-w-md flex flex-col items-center space-y-6 bg-gaming-900 border border-gaming-700 rounded-xl p-8 shadow-lg">
+            <AlertCircle className="w-16 h-16 text-red-500" />
+            <h1 className="text-2xl font-bold text-red-400">Something went wrong</h1>
+            <div className="text-gray-300 text-center">
+              <p className="text-sm mb-4">{errorMessage}</p>
               {this.state.error?.stack && (
                 <details className="mt-4 text-left">
-                  <summary className="cursor-pointer text-[#5ce1ff] hover:text-[#00c3ff] text-sm mb-2 pixel-font">
-                    DEBUG INFORMATION
+                  <summary className="cursor-pointer text-gaming-300 hover:text-gaming-200 text-sm mb-2">
+                    Error Details
                   </summary>
-                  <pre className="text-xs bg-[#141644] p-4 border border-[#4a4dff] overflow-auto max-h-40 font-mono">
+                  <pre className="text-xs bg-gaming-950 p-4 rounded overflow-auto max-h-40">
                     {this.state.error?.stack}
                   </pre>
                 </details>
               )}
             </div>
-            
-            <div className="mt-6 w-full">
+            <div className="flex space-x-4">
               <Button 
                 onClick={this.handleRetry}
-                className="retro-button w-full"
+                className="bg-gaming-600 hover:bg-gaming-500 text-white flex items-center space-x-2"
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                <span className="pixel-font">{window.location.pathname.includes('/profile/') ? 'RETURN TO HOME' : 'RESTART GAME'}</span>
+                <RefreshCw className="w-4 h-4" />
+                <span>{window.location.pathname.includes('/profile/') ? 'Go Home' : 'Try Again'}</span>
               </Button>
             </div>
-          </div>
-          
-          <div className="mt-6 text-xs text-[#5ce1ff] pixel-font text-center">
-            <p>ERROR CODE: CL-01</p>
-            <p className="mt-1"> CLIPT 2025 GAME SYSTEM</p>
           </div>
         </div>
       );

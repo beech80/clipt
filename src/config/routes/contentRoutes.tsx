@@ -1,4 +1,4 @@
-import { RouteObject, Navigate } from "react-router-dom";
+import { RouteObject } from "react-router-dom";
 import Clipts from "@/pages/Clipts";
 import Collections from "@/pages/Collections";
 import Post from "@/pages/Post";
@@ -35,6 +35,6 @@ export const contentRoutes: RouteObject[] = [
   },
   {
     path: "/",
-    element: <Navigate to="/clipts" replace />,
+    element: <Home />,
   }
 ];

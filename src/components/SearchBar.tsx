@@ -40,7 +40,7 @@ export function SearchBar() {
   });
 
   const { data: searchResults, isLoading } = useQuery({
-    queryKey: ['search', searchTerm || '', filters],
+    queryKey: ['search', searchTerm, filters],
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 2) return null;
 

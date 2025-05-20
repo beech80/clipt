@@ -46,9 +46,9 @@ export const DonationAlert = ({ username, amount, message, onFinish }: DonationA
         </div>
         
         <div className="text-center mb-2">
-          <span className="font-semibold text-xl bg-[#444] px-4 py-2 rounded-lg text-white inline-block shadow-md border border-white/20">{username}</span>
-          <span className="mx-2 bg-[#555] px-4 py-2 rounded text-white inline-block shadow-md border border-white/20">donated</span>
-          <span className="font-bold text-2xl text-yellow-300 bg-[#222] px-4 py-2 rounded-lg inline-block shadow-md border border-yellow-300/50">${amount.toFixed(2)}</span>
+          <span className="font-semibold text-xl">{username}</span>
+          <span className="mx-2">donated</span>
+          <span className="font-bold text-2xl text-yellow-300">${amount.toFixed(2)}</span>
         </div>
         
         {message && (

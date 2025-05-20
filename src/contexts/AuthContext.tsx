@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, metadata?: { [key: string]: any }) => Promise<any>;
+  signUp: (email: string, password: string, metadata?: { [key: string]: any }) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<void>;
@@ -86,54 +86,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, metadata?: { [key: string]: any }) => {
     try {
-      // Ensure email is properly formatted
-      const formattedEmail = email.trim().toLowerCase();
-      
-      // Extract username from metadata or email
-      const username = metadata || formattedEmail.split('@')[0];
-      
       const { data, error } = await supabase.auth.signUp({
-        email: formattedEmail,
+        email: email.trim().toLowerCase(),
         password,
         options: {
-          // This ensures the verification email has the correct redirect URL
           emailRedirectTo: `${window.location.origin}/login`,
-          data: {
-            username: username,
-            display_name: username,
-          }
+          data: metadata
         },
       });
 
       if (error) throw error;
-      
       if (data.user?.identities?.length === 0) {
-        throw new Error('Account already exists. Please log in instead.');
+        throw new Error('Account already exists');
       }
-      
-      // Check if email confirmation is required (it usually is with Supabase)
-      if (!data.session) {
-        toast.success('Account created successfully! Please check your email to verify your account before logging in.');
-      } else {
-        // In case auto-confirmation is enabled
-        toast.success('Account created successfully! You can now log in.');
-      }
-      
-      // Set a flag in localStorage to show a message on the login page
-      localStorage.setItem('justSignedUp', 'true');
-      
-      // Return the data so the component can navigate to login
-      return data;
+
+      toast.success('Account created successfully! Please check your email to verify your account.');
     } catch (error: any) {
       console.error('Sign up error:', error);
-      
-      // More user-friendly error messages
-      if (error.message.includes("already registered")) {
-        toast.error('This email is already registered. Please try logging in instead.');
-      } else {
-        toast.error(error.message || 'Failed to create account. Please try again.');
-      }
-      
+      toast.error(error.message);
       throw error;
     }
   };

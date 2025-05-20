@@ -14,7 +14,6 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
 
 interface Notification {
   id: string;
@@ -209,11 +208,6 @@ const NotificationsPopover = () => {
               </div>
             </ScrollArea>
           )}
-          <div className="p-2 border-t text-center">
-            <Button asChild variant="ghost" size="sm" className="w-full">
-              <Link to="/notifications">View all notifications</Link>
-            </Button>
-          </div>
         </div>
       </PopoverContent>
     </Popover>

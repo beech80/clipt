@@ -5,13 +5,9 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Gift, MessageSquare, Video, Volume2, VolumeX, Users, Trophy, Zap, Heart, Share2 } from 'lucide-react';
+import { Gift, MessageSquare, Video } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import Hls from 'hls.js';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
 
 interface StreamMessage {
   id: string;
@@ -217,327 +213,97 @@ export const EnhancedStreamPlayer = ({ streamId, onClipCreate }: EnhancedStreamP
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div className="md:col-span-3 space-y-4">
         {/* Video Player */}
-        <div className="relative w-full aspect-video bg-gradient-to-b from-purple-900/40 to-black rounded-lg overflow-hidden shadow-[0_0_15px_rgba(120,0,255,0.5)] border border-purple-500/50">
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-blue-600/10 z-0"
-            animate={{ opacity: [0.5, 0.7, 0.5] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
+        <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
           <video
             ref={videoRef}
-            className="w-full h-full z-10 relative"
+            className="w-full h-full"
+            controls
             playsInline
           />
-          <motion.div 
-            className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-full text-white font-bold text-sm border border-purple-500/50 shadow-[0_0_8px_rgba(120,0,255,0.5)]"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-orange-400" />
-              <span className="text-orange-300">{viewerCount}</span>
-            </div>
-          </motion.div>
-
-          {/* Custom Stream Controls */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 z-20">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="text-white hover:bg-white/20 rounded-full h-10 w-10"
-                  onClick={() => {
-                    if (videoRef.current) {
-                      videoRef.current.paused ? videoRef.current.play() : videoRef.current.pause();
-                    }
-                  }}
-                >
-                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                    {videoRef.current?.paused ? 
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> : 
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                    }
-                  </motion.div>
-                </Button>
-
-                <div className="flex items-center gap-2 relative group w-32">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20 rounded-full h-8 w-8"
-                    onClick={() => {
-                      if (videoRef.current) {
-                        videoRef.current.muted = !videoRef.current.muted;
-                      }
-                    }}
-                  >
-                    {videoRef.current?.muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  </Button>
-                  <div className="w-24 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Slider
-                      className="h-2"
-                      defaultValue={[100]}
-                      max={100}
-                      step={1}
-                      onChange={(value) => {
-                        if (videoRef.current) {
-                          videoRef.current.volume = value[0] / 100;
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    variant="ghost"
-                    onClick={handleClipClick}
-                    className="gap-2 bg-purple-600/80 hover:bg-purple-700/80 text-white border border-purple-400/30 shadow-[0_0_10px_rgba(120,0,255,0.3)]"
-                  >
-                    <Video className="w-4 h-4" />
-                    {isClipping ? 'Finish Clip' : 'Create Clip'}
-                  </Button>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    variant="ghost"
-                    className="gap-2 bg-red-600/80 hover:bg-red-700/80 text-white border border-red-400/30 shadow-[0_0_10px_rgba(255,0,0,0.3)]"
-                    onClick={() => {
-                      navigator.clipboard.writeText(window.location.href);
-                      toast.success('Stream link copied!');
-                    }}
-                  >
-                    <Share2 className="w-4 h-4" />
-                    Share
-                  </Button>
-                </motion.div>
-              </div>
-            </div>
+          <div className="absolute top-4 right-4 bg-black/80 px-3 py-1 rounded-full text-white text-sm">
+            {viewerCount} viewers
           </div>
         </div>
 
-        {/* Stream Info Cards */}
-        <div className="grid grid-cols-3 gap-2">
-          <motion.div 
-            className="bg-gradient-to-br from-purple-900/40 to-black p-3 rounded-lg border border-purple-500/30 shadow-[0_0_10px_rgba(120,0,255,0.2)]"
-            whileHover={{ scale: 1.02 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+        {/* Stream Controls */}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleClipClick}
+            className="gap-2"
           >
-            <div className="flex items-center justify-between">
-              <div className="text-xs text-gray-400">VIEWERS</div>
-              <Users className="w-4 h-4 text-orange-400" />
-            </div>
-            <div className="text-2xl font-bold text-white mt-1">{viewerCount}</div>
-          </motion.div>
-
-          <motion.div 
-            className="bg-gradient-to-br from-blue-900/40 to-black p-3 rounded-lg border border-blue-500/30 shadow-[0_0_10px_rgba(0,120,255,0.2)]"
-            whileHover={{ scale: 1.02 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-xs text-gray-400">GIFTS</div>
-              <Gift className="w-4 h-4 text-blue-400" />
-            </div>
-            <div className="text-2xl font-bold text-white mt-1">
-              ${gifts?.reduce((sum, gift) => sum + gift.amount, 0) || 0}
-            </div>
-          </motion.div>
-
-          <motion.div 
-            className="bg-gradient-to-br from-red-900/40 to-black p-3 rounded-lg border border-red-500/30 shadow-[0_0_10px_rgba(255,0,120,0.2)]"
-            whileHover={{ scale: 1.02 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-xs text-gray-400">STREAM TIME</div>
-              <Zap className="w-4 h-4 text-red-400" />
-            </div>
-            <div className="text-2xl font-bold text-white mt-1">
-              {stream?.started_at ? 
-                Math.floor((Date.now() - new Date(stream.started_at).getTime()) / 60000) + ' min' : '0 min'}
-            </div>
-          </motion.div>
+            <Video className="w-4 h-4" />
+            {isClipping ? 'Finish Clip' : 'Create Clip'}
+          </Button>
         </div>
       </div>
 
       {/* Chat and Gifts Section */}
       <div className="space-y-4">
         {/* Chat */}
-        <motion.div 
-          className="bg-gradient-to-br from-purple-900/30 to-black border border-purple-500/30 rounded-lg shadow-[0_0_15px_rgba(120,0,255,0.3)] p-4 h-[400px] flex flex-col"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="flex items-center gap-2 mb-3 border-b border-purple-500/30 pb-2">
-            <MessageSquare className="w-4 h-4 text-orange-400" />
-            <h3 className="font-bold text-white text-lg">LIVE CHAT</h3>
-            <div className="ml-auto flex items-center gap-1 text-xs text-green-400 bg-green-900/30 px-2 py-0.5 rounded-full">
-              <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-              LIVE
-            </div>
+        <Card className="p-4 h-[400px] flex flex-col">
+          <div className="flex items-center gap-2 mb-2">
+            <MessageSquare className="w-4 h-4" />
+            <h3 className="font-semibold">Live Chat</h3>
           </div>
           
-          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-700 scrollbar-track-transparent pr-1 space-y-3 mb-3">
-            <AnimatePresence initial={false}>
-              {messages?.map((msg) => (
-                <motion.div 
-                  key={msg.id} 
-                  className="relative hover:bg-white/5 p-2 rounded group"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="flex items-start gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={msg.profiles.avatar_url || ''} />
-                      <AvatarFallback className="bg-purple-800 text-white text-xs">
-                        {msg.profiles.username?.charAt(0).toUpperCase() || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center gap-1">
-                        <span className="font-bold text-white">{msg.profiles.username}</span>
-                        <span className="text-xs text-gray-400">{new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                      </div>
-                      <div className="text-gray-200 mt-1">{msg.message}</div>
-                    </div>
-                  </div>
-                  <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white">
-                      <Heart className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+          <div className="flex-1 overflow-y-auto space-y-2 mb-4">
+            {messages?.map((msg) => (
+              <div key={msg.id} className="text-sm">
+                <span className="font-semibold">{msg.profiles.username}: </span>
+                <span>{msg.message}</span>
+              </div>
+            ))}
           </div>
 
-          <div className="flex gap-2 relative">
+          <div className="flex gap-2">
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Send a message..."
               onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-              className="bg-black/50 border-purple-500/30 focus:border-purple-500 text-white"
             />
-            <Button 
-              onClick={sendMessage}
-              className="bg-purple-600 hover:bg-purple-700 text-white shadow-[0_0_8px_rgba(120,0,255,0.3)]"
-            >
-              Send
-            </Button>
+            <Button onClick={sendMessage}>Send</Button>
           </div>
-        </motion.div>
+        </Card>
 
         {/* Gifts */}
-        <motion.div 
-          className="bg-gradient-to-br from-blue-900/30 to-black border border-blue-500/30 rounded-lg shadow-[0_0_15px_rgba(0,120,255,0.3)] p-4"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="flex items-center gap-2 mb-4 border-b border-blue-500/30 pb-2">
-            <Gift className="w-4 h-4 text-blue-400" />
-            <h3 className="font-bold text-white text-lg">SUPPORT STREAMER</h3>
+        <Card className="p-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Gift className="w-4 h-4" />
+            <h3 className="font-semibold">Send a Gift</h3>
           </div>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-4 gap-2">
-              {[5, 10, 20, 50].map((amount) => (
-                <motion.button
-                  key={amount}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`py-2 rounded-lg font-bold ${giftAmount === amount ? 'bg-blue-600 text-white' : 'bg-black/50 text-blue-400 border border-blue-500/30'}`}
-                  onClick={() => setGiftAmount(amount)}
-                >
-                  ${amount}
-                </motion.button>
-              ))}
-            </div>
-            
             <Input
               type="number"
               min="1"
               value={giftAmount}
               onChange={(e) => setGiftAmount(Number(e.target.value))}
-              placeholder="Custom amount"
-              className="bg-black/50 border-blue-500/30 focus:border-blue-500 text-white"
+              placeholder="Amount"
             />
             <Input
               value={giftMessage}
               onChange={(e) => setGiftMessage(e.target.value)}
               placeholder="Add a message (optional)"
-              className="bg-black/50 border-blue-500/30 focus:border-blue-500 text-white"
             />
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Button 
-                onClick={sendGift} 
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold shadow-[0_0_15px_rgba(0,120,255,0.4)]"
-              >
-                <Gift className="w-4 h-4 mr-2" />
-                Send ${giftAmount} Gift
-              </Button>
-            </motion.div>
+            <Button onClick={sendGift} className="w-full">
+              Send ${giftAmount} Gift
+            </Button>
           </div>
 
-          <div className="mt-6">
-            <div className="text-white font-bold mb-2 text-sm flex items-center gap-2">
-              <Zap className="w-4 h-4 text-yellow-400" />
-              RECENT SUPPORTERS
-            </div>
-            <div className="space-y-3 mt-2 max-h-[200px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-blue-700 scrollbar-track-transparent">
-              {gifts?.slice(0, 5).map((gift) => (
-                <motion.div 
-                  key={gift.id} 
-                  className="bg-blue-900/20 border border-blue-500/20 rounded-lg p-3 hover:border-blue-500/50 transition-colors"
-                  whileHover={{ x: 2 }}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={gift.avatar_url || ''} />
-                      <AvatarFallback className="bg-blue-800 text-white text-xs">
-                        {gift.username?.charAt(0).toUpperCase() || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="font-bold text-white text-sm">{gift.username}</div>
-                      <div className="text-blue-300 font-bold">${gift.amount}</div>
-                    </div>
-                    <Badge className="bg-blue-600/50 text-white border-none">
-                      <Trophy className="w-3 h-3 mr-1" />
-                      MVP
-                    </Badge>
-                  </div>
-                  {gift.message && (
-                    <div className="mt-2 text-sm text-gray-300 italic ml-10">"{gift.message}"</div>
-                  )}
-                </motion.div>
-              ))}
-              {(!gifts || gifts.length === 0) && (
-                <div className="text-center text-gray-400 text-sm py-4">Be the first supporter!</div>
-              )}
-            </div>
+          <div className="mt-4 space-y-2">
+            {gifts?.slice(0, 5).map((gift) => (
+              <div key={gift.id} className="text-sm">
+                <span className="font-semibold">{gift.profiles.username}</span>
+                <span className="text-purple-400"> sent ${gift.amount}</span>
+                {gift.message && (
+                  <p className="text-muted-foreground">{gift.message}</p>
+                )}
+              </div>
+            ))}
           </div>
-        </motion.div>
+        </Card>
       </div>
     </div>
   );

@@ -113,80 +113,45 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   };
 
   return (
-    <Card className="flex flex-col h-[400px] max-h-[400px] overflow-hidden">
+    <Card className="flex flex-col h-full">
       <Tabs defaultValue="chat" className="flex-1">
         <TabsList className="w-full">
           <TabsTrigger value="chat" className="flex-1">Chat</TabsTrigger>
-          <TabsTrigger value="activity" className="flex-1">Activity</TabsTrigger>
-          <TabsTrigger value="settings" className="flex-1">Settings</TabsTrigger>
+          <TabsTrigger value="highlights" className="flex-1">Highlights</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="chat" className="flex-1 relative h-[300px]">
-          <ScrollArea className="flex-1 p-4 h-full">
+        <TabsContent value="chat" className="flex-1 relative">
+          <ScrollArea className="flex-1 p-4">
             <div className="space-y-4">
-              {messages.length > 0 ? (
-                messages.map((msg) => (
-                  <div key={msg.id} className="flex flex-col">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">
-                        {msg.profiles?.username || 'Anonymous'}
-                      </span>
-                      {isModerator && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => highlightMessage(msg.id)}
-                        >
-                          <Star className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                    <p className="text-sm">{msg.message}</p>
+              {messages.map((msg) => (
+                <div key={msg.id} className="flex flex-col">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">
+                      {msg.profiles?.username || 'Anonymous'}
+                    </span>
+                    {isModerator && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => highlightMessage(msg.id)}
+                      >
+                        <Star className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-6 text-muted-foreground">
-                  <p>No messages yet</p>
+                  <p className="text-sm">{msg.message}</p>
                 </div>
-              )}
+              ))}
             </div>
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="activity" className="h-[300px]">
-          <ScrollArea className="h-full p-4">
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground text-center">Recent activity will appear here</p>
-            </div>
-          </ScrollArea>
-        </TabsContent>
-
-        <TabsContent value="settings" className="h-[300px]">
-          <ScrollArea className="h-full p-4">
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium">Chat Settings</h4>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Font Size</span>
-                  <select className="bg-background border border-border rounded px-2 py-1 text-sm">
-                    <option>Small</option>
-                    <option selected>Medium</option>
-                    <option>Large</option>
-                  </select>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Timestamps</span>
-                  <div className="flex items-center h-4">
-                    <input type="checkbox" className="h-4 w-4" id="timestamps" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </ScrollArea>
+        <TabsContent value="highlights">
+          <ChatHighlights streamId={streamId} isModerator={isModerator} />
         </TabsContent>
       </Tabs>
       
-      <div className="p-2 pt-0 border-t">
+      <div className="p-4 border-t">
         <div className="flex gap-2">
           <Input
             value={newMessage}
@@ -194,13 +159,11 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
             placeholder="Type a message..."
             disabled={!isLive}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            className="text-sm"
           />
           <Button 
             onClick={sendMessage}
             disabled={!isLive}
             size="icon"
-            className="shrink-0"
           >
             <Send className="h-4 w-4" />
           </Button>

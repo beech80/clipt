@@ -1,4 +1,5 @@
-import { Gamepad2, Users, Share2, Clock, Copy, Activity } from "lucide-react";
+import { Gamepad2, Users, Share2, Clock, Copy } from "lucide-react";
+import ActivityIcon from '@/components/ui/activity-icon';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { formatDuration } from "@/utils/dateUtils";
@@ -39,7 +40,7 @@ export const StreamInfoCards = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div className="glass-card p-4">
-        <Activity className="h-6 w-6 mb-2 text-gaming-400" />
+        <ActivityIcon className="h-6 w-6 mb-2 text-gaming-400" />
         <StreamHealthIndicator
           status={healthStatus}
           bitrate={bitrate}
@@ -54,7 +55,10 @@ export const StreamInfoCards = ({
         <div className="flex items-center space-x-2">
           <p className="text-sm text-muted-foreground">{viewerCount}</p>
           {isLive && (
-            <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+            <div className="flex items-center space-x-2">
+              <ActivityIcon className="h-4 w-4 text-green-500" />
+              <span>Live</span>
+            </div>
           )}
         </div>
       </div>

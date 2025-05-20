@@ -1,13 +1,21 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import PostContent from "./post/PostContent";
+import { supabase } from "@/lib/supabase";
+import { Post } from "@/types/post";
+// Import from our centralized icons component
+import { 
+  HeartIcon, 
+  MessageIcon, 
+  TrophyIcon, 
+  TrashIcon, 
+  MoreIcon, 
+  UserCheckIcon, 
+  UserPlusIcon 
+} from "@/components/ui/icons";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import PostContent from "./post/PostContent";
-import { supabase } from "@/lib/supabase";
-import { Post } from "@/types/post";
-import { Heart, MessageSquare, Trophy, Trash2, MoreVertical, UserCheck, UserPlus, Save, Bookmark } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,33 +23,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CommentList } from "./post/CommentList"; 
-import InlineComments from "./post/InlineComments";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Textarea } from './ui/textarea';
-import ShareButton from "./ShareButton";
 
 interface PostItemProps {
   post: Post;
   onCommentClick?: () => void;
   highlight?: boolean;
   'data-post-id'?: string;
-  isCliptsPage?: boolean;
-  isProfilePage?: boolean;
 }
 
-const PostItem: React.FC<PostItemProps> = ({ 
-  post, 
-  onCommentClick, 
-  highlight = false, 
-  'data-post-id': postIdAttr,
-  isCliptsPage = false,
-  isProfilePage = false
-}) => {
-  // Use location to detect if we're on the Clipts page
-  const location = useLocation();
-  const onCliptsPage = isCliptsPage || location.pathname === '/clipts';
-
+const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = false, 'data-post-id': postIdAttr }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
@@ -50,13 +43,11 @@ const PostItem: React.FC<PostItemProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [commentsCount, setCommentsCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [trophyCount, setTrophyCount] = useState(0);
   const [hasTrophy, setHasTrophy] = useState(false);
   const [trophyLoading, setTrophyLoading] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [saveLoading, setSaveLoading] = useState(false);
-  const isMounted = useRef(true);
   const { user } = useAuth();
   const isOwner = user?.id === post.user_id;
   const queryClient = useQueryClient();
@@ -87,7 +78,7 @@ const PostItem: React.FC<PostItemProps> = ({
         return;
       }
       
-      // Removed local state update
+      setCommentsCount(count || 0);
     } catch (error) {
       console.error('Error in fetchCommentsCount:', error);
     }
@@ -98,7 +89,7 @@ const PostItem: React.FC<PostItemProps> = ({
   }, [postId]);
 
   // Fetch comment count
-  const { data: commentsCountData = 0, isLoading: commentsCountLoading } = useQuery({
+  const { data: commentsCountQuery = 0 } = useQuery({
     queryKey: ['comments-count', postId],
     queryFn: async () => {
       if (!postId) return 0;
@@ -118,8 +109,6 @@ const PostItem: React.FC<PostItemProps> = ({
     enabled: !!postId
   });
 
-  const commentsCount = commentsCountData;
-
   const handleDeletePost = async () => {
     try {
       const { error } = await supabase
@@ -138,51 +127,50 @@ const PostItem: React.FC<PostItemProps> = ({
     }
   };
 
-  const handleLikeToggle = async (e?: React.MouseEvent) => {
-    // Don't stop propagation completely to allow button clicks
-    if (e) {
-      e.stopPropagation();
-    }
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     
     if (!user) {
-      toast.error("Please login to like posts");
+      toast.error("Please log in to like posts");
       return;
     }
     
-    if (likeLoading) return;
-    
-    // Optimistically update UI state
-    setLiked(!liked);
-    setLikesCount(prev => liked ? Math.max(0, prev - 1) : prev + 1);
-    setLikeLoading(true);
-    
+    if (!postId) {
+      console.error("Cannot like post with invalid ID");
+      toast.error("Unable to like this post");
+      return;
+    }
+
     try {
-      console.log(`Liking post ${postId}`);
+      setLikeLoading(true);
       
-      // Check if user already liked the post
-      const { data: existingLike, error: checkError } = await supabase
+      // Log the action for debugging
+      console.log(`Liking post ID: ${postId}`);
+      
+      // Check if already liked
+      const { data: existingLike } = await supabase
         .from('likes')
         .select('*')
         .eq('post_id', postId)
         .eq('user_id', user.id)
         .maybeSingle();
       
-      if (checkError) throw checkError;
-      
-      let count;
-      
       if (existingLike) {
-        // Remove like
-        const { error: removeError } = await supabase
+        // Unlike the post
+        const { error } = await supabase
           .from('likes')
           .delete()
           .eq('post_id', postId)
           .eq('user_id', user.id);
           
-        if (removeError) throw removeError;
+        if (error) throw error;
+        
+        setLiked(false);
+        setLikesCount(prev => Math.max(0, prev - 1));
+        toast.success("Unliked post");
       } else {
-        // Add like
-        const { error: addError } = await supabase
+        // Like the post
+        const { error } = await supabase
           .from('likes')
           .insert({
             post_id: postId,
@@ -190,18 +178,20 @@ const PostItem: React.FC<PostItemProps> = ({
             created_at: new Date().toISOString()
           });
           
-        if (addError) throw addError;
+        if (error) throw error;
+        
+        setLiked(true);
+        setLikesCount(prev => prev + 1);
+        toast.success("Liked post");
       }
       
-      // Get updated count (only if needed for analytics, not for UI update)
-      // This query is optional and could be removed to speed up the response
-      const { count: updatedCount, error: countError } = await supabase
+      // Get accurate count from database
+      const { count } = await supabase
         .from('likes')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true})
         .eq('post_id', postId);
-        
-      if (countError) throw countError;
-      count = updatedCount;
+      
+      setLikesCount(count || 0);
       
       // Dispatch event to notify other components
       const likeUpdateEvent = new CustomEvent('like-update', {
@@ -213,35 +203,20 @@ const PostItem: React.FC<PostItemProps> = ({
       });
       window.dispatchEvent(likeUpdateEvent);
       
-      // Only invalidate the specific post query, not all queries
+      // Invalidate cache for this post
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
       
     } catch (error) {
       console.error("Error liking post:", error);
       toast.error("Failed to update like status");
-      // Revert optimistic update on error
-      setLiked(liked);
-      setLikesCount(prev => liked ? prev + 1 : Math.max(0, prev - 1));
     } finally {
       setLikeLoading(false);
     }
   };
 
-  const handleComment = useCallback((e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation();
-    }
-    
-    // If we're in the post detail view, don't show the dialog
-    if (window.location.pathname.includes('/post/')) {
-      if (onCommentClick) {
-        onCommentClick();
-      }
-      return;
-    }
-    
+  const handleComment = () => {
     setIsDialogOpen(true);
-  }, [onCommentClick]);
+  };
 
   const submitComment = async () => {
     if (!user) {
@@ -270,6 +245,7 @@ const PostItem: React.FC<PostItemProps> = ({
       if (error) throw error;
       
       // Update local state
+      setCommentsCount(commentsCount + 1);
       setCommentText('');
       setIsDialogOpen(false);
       toast.success('Comment added');
@@ -282,11 +258,8 @@ const PostItem: React.FC<PostItemProps> = ({
     }
   };
 
-  const handleCommentClick = (e?: React.MouseEvent) => {
-    // Only stop propagation but don't prevent default to allow button clicks
-    if (e) {
-      e.stopPropagation();
-    }
+  const handleCommentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     
     if (!postId) {
       console.error("Cannot add comment to invalid post ID");
@@ -329,76 +302,131 @@ const PostItem: React.FC<PostItemProps> = ({
     }
   };
 
-  // Trophy handler - emergency fix with explicit checks
   const handleTrophyVote = async (e: React.MouseEvent) => {
-    // Only stop propagation but don't prevent default to allow button clicks
+    // Prevent event propagation to avoid triggering parent elements
     e.stopPropagation();
+    e.preventDefault();
     
-    // Make sure user is logged in
     if (!user) {
-      toast.error("Login to rank this clip");
+      toast.error('Please sign in to vote');
       return;
     }
-    
-    // Verify post ID is available
+
     if (!postId) {
-      toast.error("Post data unavailable");
+      console.error('Cannot vote on post with no ID');
+      toast.error('Cannot vote on this post');
       return;
     }
-    
-    // Prevent multiple clicks
-    if (trophyLoading) return;
-    
-    // Immediate UI feedback
-    setTrophyLoading(true);
-    
+
+    // If we're already processing, don't allow another click
+    if (trophyLoading) {
+      return;
+    }
+
     try {
-      // Verify post exists first with a direct query
-      const { data: postCheck } = await supabase
-        .from('posts')
+      setTrophyLoading(true);
+      console.log('Trophy vote attempt for post:', postId);
+
+      // Check if the user has already voted (simplified query)
+      const { data: existingVotes, error: checkError } = await supabase
+        .from('clip_votes')
         .select('id')
-        .eq('id', postId)
-        .single();
+        .eq('post_id', postId)
+        .eq('user_id', user.id);
         
-      if (!postCheck) {
-        toast.error("Couldn't find post data");
-        setTrophyLoading(false);
+      if (checkError) {
+        console.error('Error checking for existing trophy:', checkError);
+        toast.error('Could not check trophy status');
         return;
       }
       
-      // Continue with trophy action
-      if (!hasTrophy) {
-        // Add trophy
-        await supabase.from('clip_votes').insert({
+      const hasVote = existingVotes && existingVotes.length > 0;
+      console.log('Current trophy status:', hasVote ? 'Has trophy' : 'No trophy');
+      
+      if (hasVote) {
+        // Remove the trophy
+        console.log('Removing trophy from post', postId);
+        const { error: removeError } = await supabase
+          .from('clip_votes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+          
+        if (removeError) {
+          console.error('Error removing trophy:', removeError);
+          toast.error('Failed to remove trophy');
+          return;
+        }
+        
+        console.log('Trophy successfully removed');
+        toast.success('Trophy removed');
+        setHasTrophy(false);
+        setTrophyCount(prev => Math.max(0, prev - 1));
+      } else {
+        // Add a trophy
+        console.log('Adding trophy to post', postId, 'by user', user.id);
+        
+        // Create a properly formatted trophy vote object
+        const voteObject = {
           post_id: postId,
           user_id: user.id,
           created_at: new Date().toISOString()
-        });
+        };
+        
+        console.log('Trophy vote object:', voteObject);
+        
+        const { data: insertData, error: addError } = await supabase
+          .from('clip_votes')
+          .insert(voteObject)
+          .select();
+          
+        if (addError) {
+          console.error('Error adding trophy:', addError.message, addError.details, addError.hint);
+          toast.error('Failed to add trophy: ' + addError.message);
+          return;
+        }
+        
+        console.log('Trophy added successfully, response:', insertData);
+        toast.success('Trophy awarded!');
         setHasTrophy(true);
         setTrophyCount(prev => prev + 1);
-        toast.success("Clip ranked up!");
-      } else {
-        // Remove trophy
-        const { data } = await supabase
-          .from('clip_votes')
-          .select('id')
-          .eq('post_id', postId)
-          .eq('user_id', user.id)
-          .maybeSingle();
-          
-        if (data?.id) {
-          await supabase
-            .from('clip_votes')
-            .delete()
-            .eq('id', data.id);
-        }
-        setHasTrophy(false);
-        setTrophyCount(prev => Math.max(0, prev - 1));
-        toast.success("Rank removed");
       }
+      
+      // Get fresh count after operation to ensure accuracy
+      const { count, error: countError } = await supabase
+        .from('clip_votes')
+        .select('*', { count: 'exact', head: true })
+        .eq('post_id', postId);
+        
+      if (!countError) {
+        console.log('Updated trophy count for post', postId, ':', count);
+        setTrophyCount(count || 0);
+        
+        // Dispatch trophy update event
+        const detail = {
+          postId,
+          count: count || 0,
+          active: !hasVote
+        };
+        console.log('Dispatching trophy update event:', detail);
+        
+        window.dispatchEvent(new CustomEvent('trophy-update', { detail }));
+        
+        // Additional event for global count updates with short delay
+        setTimeout(() => {
+          console.log('Dispatching global trophy count update');
+          window.dispatchEvent(new Event('trophy-count-update'));
+        }, 200);
+      } else {
+        console.error('Error getting updated count:', countError);
+      }
+      
     } catch (error) {
-      console.error("Trophy operation failed:", error);
-      toast.error("Could not update rank");
+      console.error('Error handling trophy vote:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message, error.stack);
+      }
+      toast.error('An error occurred with trophy voting');
     } finally {
       setTrophyLoading(false);
     }
@@ -477,105 +505,6 @@ const PostItem: React.FC<PostItemProps> = ({
     checkFollowStatus();
   }, [user, post.user_id]);
 
-  // Debounce function to prevent excessive rerenders
-  const debounce = (func: Function, wait: number) => {
-    let timeout: NodeJS.Timeout | null = null;
-    return (...args: any[]) => {
-      if (timeout) clearTimeout(timeout);
-      timeout = setTimeout(() => func(...args), wait);
-    };
-  };
-
-  // Memoize often used functions
-  const updateTrophyCount = useCallback(async () => {
-    if (!postId) return;
-    
-    try {
-      console.log(`Updating trophy count for post ${postId}`);
-      const { count, error } = await supabase
-        .from('clip_votes')
-        .select('*', { count: 'exact', head: true})
-        .eq('post_id', postId);
-      
-      if (error) {
-        console.error('Error updating trophy count:', error);
-        return;
-      }
-      
-      console.log(`Trophy count for post ${postId}: ${count}`);
-      if (isMounted.current) {
-        setTrophyCount(count || 0);
-      }
-      
-      // Also update trophy status if user is logged in
-      if (user) {
-        const { data, error } = await supabase
-          .from('clip_votes')
-          .select('id')
-          .eq('post_id', postId)
-          .eq('user_id', user.id)
-          .maybeSingle();
-          
-        if (error) {
-          console.error('Error checking trophy status:', error);
-          if (!error.message.includes('does not exist')) {
-            return;
-          }
-        }
-        
-        console.log(`User has trophy for post ${postId}: ${!!data}`);
-        if (isMounted.current) {
-          setHasTrophy(!!data);
-        }
-      }
-    } catch (error) {
-      console.error('Error in updateTrophyCount:', error);
-    }
-  }, [postId, user, supabase]);
-
-  // Combined trophy update listener
-  useEffect(() => {
-    const handleTrophyUpdate = debounce((e: CustomEvent) => {
-      const detail = (e as any).detail;
-      if (detail?.postId === postId) {
-        console.log('Trophy update event received', detail);
-        
-        // Use event detail for immediate UI feedback
-        if (detail.active !== undefined) {
-          if (isMounted.current) {
-            setHasTrophy(detail.active);
-          }
-        }
-        
-        if (detail.count !== undefined) {
-          if (isMounted.current) {
-            setTrophyCount(detail.count);
-          }
-        }
-        
-        if (detail.rank !== undefined && post) {
-          post.rank = detail.rank;
-        }
-        
-        // Also refresh data from the server for consistency
-        updateTrophyCount();
-        
-        // Refresh the post data in the cache
-        queryClient.invalidateQueries({ queryKey: ['post', postId] });
-      }
-    }, 300);
-    
-    console.log(`Setting up trophy event listeners for post ${postId}`);
-    window.addEventListener('trophy-update', handleTrophyUpdate as EventListener);
-    window.addEventListener('trophy-count-update', updateTrophyCount);
-    
-    return () => {
-      console.log(`Removing trophy event listeners for post ${postId}`);
-      window.removeEventListener('trophy-update', handleTrophyUpdate as EventListener);
-      window.removeEventListener('trophy-count-update', updateTrophyCount);
-    };
-  }, [postId, queryClient, updateTrophyCount, post]);
-
   // Fetch and track likes/trophies whenever post ID changes
   useEffect(() => {
     const fetchLikeStatus = async () => {
@@ -590,9 +519,7 @@ const PostItem: React.FC<PostItemProps> = ({
           .eq('user_id', user.id)
           .maybeSingle();
         
-        if (isMounted.current) {
-          setLiked(!!data);
-        }
+        setLiked(!!data);
       } catch (error) {
         console.error("Error fetching like status:", error);
       }
@@ -609,9 +536,7 @@ const PostItem: React.FC<PostItemProps> = ({
           .eq('post_id', postId);
         
         if (error) throw error;
-        if (isMounted.current) {
-          setLikesCount(count || 0);
-        }
+        setLikesCount(count || 0);
       } catch (error) {
         console.error("Error fetching likes count:", error);
       }
@@ -622,24 +547,14 @@ const PostItem: React.FC<PostItemProps> = ({
       
       try {
         console.log(`Checking trophy status for post ${postId}`);
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('clip_votes')
           .select('*')
           .eq('post_id', postId)
           .eq('user_id', user.id)
           .maybeSingle();
-          
-        if (error) {
-          console.error("Error fetching trophy status:", error);
-          if (!error.message.includes('does not exist')) {
-            return;
-          }
-        }
         
-        console.log(`User has trophy for post ${postId}: ${!!data}`);
-        if (isMounted.current) {
-          setHasTrophy(!!data);
-        }
+        setHasTrophy(!!data);
       } catch (error) {
         console.error("Error fetching trophy status:", error);
       }
@@ -655,78 +570,44 @@ const PostItem: React.FC<PostItemProps> = ({
           .select('*', { count: 'exact', head: true})
           .eq('post_id', postId);
         
-        if (error) {
-          console.error("Error fetching trophy count:", error);
-          return;
-        }
-        
-        if (isMounted.current) {
-          setTrophyCount(count || 0);
-        }
-        
-        // Also fetch the post's rank to keep it in sync
-        if (post) {
-          const { data: postData, error: postError } = await supabase
-            .from('posts')
-            .select('rank')
-            .eq('id', postId)
-            .single();
-            
-          if (postError) {
-            console.error("Error fetching post rank:", postError);
-          } else if (postData) {
-            console.log(`Post ${postId} rank from DB: ${postData.rank}`);
-            post.rank = postData.rank;
-          }
-        }
+        if (error) throw error;
+        setTrophyCount(count || 0);
       } catch (error) {
         console.error("Error fetching trophy count:", error);
       }
     };
     
-    // Run all fetch operations in parallel
-    Promise.all([
-      fetchLikeStatus(),
-      fetchLikesCount(),
-      fetchTrophyStatus(),
-      fetchTrophyCount()
-    ]).catch(error => {
-      console.error("Error in parallel fetches:", error);
-    });
+    // Run all fetch operations
+    fetchLikeStatus();
+    fetchLikesCount();
+    fetchTrophyStatus();
+    fetchTrophyCount();
     
-    // Set up debounced event listeners for real-time updates
-    const handleLikeUpdate = debounce((e: CustomEvent) => {
+    // Set up event listeners for real-time updates
+    const handleLikeUpdate = (e: CustomEvent) => {
       const detail = (e as any).detail;
       if (detail?.postId === postId) {
         console.log('Like update event received', detail);
-        if (isMounted.current) {
-          setLiked(detail.active);
-          setLikesCount(detail.count);
-        }
+        setLiked(detail.active);
+        setLikesCount(detail.count);
       }
-    }, 500);
+    };
     
-    const handleTrophyUpdate = debounce((e: CustomEvent) => {
+    const handleTrophyUpdate = (e: CustomEvent) => {
       const detail = (e as any).detail;
       if (detail?.postId === postId) {
         console.log('Trophy update event received', detail);
-        if (isMounted.current) {
-          setHasTrophy(detail.active);
-          setTrophyCount(detail.count);
-        }
+        setHasTrophy(detail.active);
+        setTrophyCount(detail.count);
       }
-    }, 500);
+    };
     
     // Global refresh event
-    const handleGlobalUpdate = debounce(() => {
+    const handleGlobalUpdate = () => {
       console.log('Global update triggered, refreshing counts');
-      Promise.all([
-        fetchLikesCount(),
-        fetchTrophyCount()
-      ]).catch(error => {
-        console.error("Error in refresh:", error);
-      });
-    }, 500);
+      fetchLikesCount();
+      fetchTrophyCount();
+    };
     
     window.addEventListener('like-update', handleLikeUpdate as EventListener);
     window.addEventListener('trophy-update', handleTrophyUpdate as EventListener);
@@ -758,9 +639,7 @@ const PostItem: React.FC<PostItemProps> = ({
         
         const totalCount = clipCount || 0;
         console.log(`Trophy count for post ${postId}:`, totalCount);
-        if (isMounted.current) {
-          setTrophyCount(totalCount);
-        }
+        setTrophyCount(totalCount);
         
         // Check if the user has voted for this post
         if (user) {
@@ -775,9 +654,7 @@ const PostItem: React.FC<PostItemProps> = ({
             return;
           }
           
-          if (isMounted.current) {
-            setHasTrophy(userVote && userVote.length > 0);
-          }
+          setHasTrophy(userVote && userVote.length > 0);
         }
       } catch (error) {
         console.error('Error in showTrophyCount:', error);
@@ -787,163 +664,98 @@ const PostItem: React.FC<PostItemProps> = ({
     showTrophyCount();
   }, [postId, user]);
 
-  // Check if post is saved by current user
   useEffect(() => {
-    if (!user || !postId) return;
-    
-    const checkSaveStatus = async () => {
-      try {
-        const { data } = await supabase
-          .from('saved_videos')
-          .select('id')
-          .eq('post_id', postId)
-          .eq('user_id', user.id)
-          .maybeSingle();
+    const handleTrophyUpdate = (e: CustomEvent) => {
+      if (e.detail.postId === postId) {
+        console.log('Trophy update event received for this post:', e.detail);
         
-        setIsSaved(!!data);
-      } catch (error) {
-        console.error("Error checking save status:", error);
+        // Trigger a full refresh of the post data
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
+        
+        // Get trophy count directly from the database for accuracy
+        const updateTrophyCount = async () => {
+          try {
+            const { count, error: countError } = await supabase
+              .from('clip_votes')
+              .select('*', { count: 'exact', head: true})
+              .eq('post_id', postId);
+            
+            if (countError) {
+              console.error('Error updating trophy count:', countError);
+              return;
+            }
+            
+            setTrophyCount(count || 0);
+            
+            // Update the trophy status
+            setHasTrophy(e.detail.active);
+          } catch (error) {
+            console.error('Error updating trophy count:', error);
+          }
+        };
+        
+        updateTrophyCount();
       }
     };
-    
-    checkSaveStatus();
-  }, [postId, user]);
 
-  // Save handler - emergency fix with explicit checks
-  const handleSaveVideo = async (e: React.MouseEvent) => {
-    // Only stop propagation but don't prevent default to allow button clicks
-    e.stopPropagation();
+    window.addEventListener('trophy-update', handleTrophyUpdate as EventListener);
     
-    // Make sure user is logged in
-    if (!user) {
-      toast.error("Please log in to save videos");
-      return;
-    }
-    
-    // Verify post ID is available
-    if (!postId) {
-      toast.error("Post data unavailable");
-      return;
-    }
-    
-    // Prevent multiple clicks
-    if (saveLoading) return;
-    
-    // Immediate UI feedback
-    setSaveLoading(true);
-    
-    try {
-      // Verify post exists first with a direct query
-      const { data: postCheck } = await supabase
-        .from('posts')
-        .select('id')
-        .eq('id', postId)
-        .single();
+    return () => {
+      window.removeEventListener('trophy-update', handleTrophyUpdate as EventListener);
+    };
+  }, [postId, queryClient, supabase]);
+
+  useEffect(() => {
+    const handleTrophyUpdate = (e: CustomEvent) => {
+      if (e.detail.postId === postId) {
+        console.log('Trophy refresh triggered for post:', postId);
         
-      if (!postCheck) {
-        toast.error("Couldn't find post data");
-        setSaveLoading(false);
-        return;
-      }
-      
-      // Continue with save action
-      if (!isSaved) {
-        // Save video
-        await supabase.from('saved_videos').insert({
-          user_id: user.id,
-          post_id: postId,
-          video_url: post.video_url || '',
-          title: post.title || 'Saved Video',
-          saved_at: new Date().toISOString()
-        });
-        setIsSaved(true);
-        toast.success("Video saved to your profile");
-      } else {
-        // Unsave video
-        const { data } = await supabase
-          .from('saved_videos')
-          .select('id')
-          .eq('post_id', postId)
-          .eq('user_id', user.id)
-          .maybeSingle();
-          
-        if (data?.id) {
-          await supabase
-            .from('saved_videos')
-            .delete()
-            .eq('id', data.id);
+        // Reload trophy status
+        if (user) {
+          // Check if user has voted
+          Promise.all([
+            // Check clip_votes
+            supabase
+              .from('clip_votes')
+              .select('id')
+              .eq('post_id', postId)
+              .eq('user_id', user.id)
+              .maybeSingle(),
+            
+            // Get counts from both tables
+            supabase
+              .from('clip_votes')
+              .select('*', { count: 'exact', head: true })
+              .eq('post_id', postId),
+          ]).then(([clipVote, clipCount]) => {
+            // Update has trophy state
+            setHasTrophy(!!(clipVote.data));
+            
+            // Update trophy count
+            setTrophyCount(clipCount.count || 0);
+          }).catch(error => {
+            console.error('Error refreshing trophy state:', error);
+          });
         }
-        setIsSaved(false);
-        toast.success("Video removed from saved clips");
       }
-    } catch (error) {
-      console.error("Save operation failed:", error);
-      toast.error("Could not update saved status");
-    } finally {
-      setSaveLoading(false);
+    };
+    
+    // Listen for global trophy updates
+    const handleRefreshEvent = (e: Event) => {
+      handleTrophyUpdate(e as CustomEvent);
+    };
+    
+    const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+    if (postElement) {
+      postElement.addEventListener('refresh-post-data', handleRefreshEvent);
     }
-  };
-
-  useEffect(() => {
-    isMounted.current = true;
+    
     return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!postId) return;
-    
-    // Handle trophy button event from GameBoyControls
-    const handleTrophyButtonEvent = (e: Event) => {
-      const detail = (e as any).detail;
-      if (detail && detail.postId === postId) {
-        console.log('Trophy button event received for post:', postId);
-        handleTrophyVote(new MouseEvent('click') as any);
+      if (postElement) {
+        postElement.removeEventListener('refresh-post-data', handleRefreshEvent);
       }
     };
-    
-    // Handle save button event from GameBoyControls
-    const handleSaveButtonEvent = (e: Event) => {
-      const detail = (e as any).detail;
-      if (detail && detail.postId === postId) {
-        console.log('Save button event received for post:', postId);
-        handleSaveVideo(new MouseEvent('click') as any);
-      }
-    };
-    
-    // Handle like button event from GameBoyControls
-    const handleLikeButtonEvent = (e: Event) => {
-      const detail = (e as any).detail;
-      if (detail && detail.postId === postId) {
-        console.log('Like button event received for post:', postId);
-        handleLikeToggle(new MouseEvent('click') as any);
-      }
-    };
-    
-    // Handle comment button event from GameBoyControls
-    const handleCommentButtonEvent = (e: Event) => {
-      const detail = (e as any).detail;
-      if (detail && detail.postId === postId) {
-        console.log('Comment button event received for post:', postId);
-        if (onCommentClick) onCommentClick();
-      }
-    };
-    
-    // Add event listeners
-    document.addEventListener('trophy-button-click', handleTrophyButtonEvent);
-    document.addEventListener('save-button-click', handleSaveButtonEvent);
-    document.addEventListener('like-button-click', handleLikeButtonEvent);
-    document.addEventListener('comment-button-click', handleCommentButtonEvent);
-    
-    // Clean up
-    return () => {
-      document.removeEventListener('trophy-button-click', handleTrophyButtonEvent);
-      document.removeEventListener('save-button-click', handleSaveButtonEvent);
-      document.removeEventListener('like-button-click', handleLikeButtonEvent);
-      document.removeEventListener('comment-button-click', handleCommentButtonEvent);
-    };
-  }, [postId, handleTrophyVote, handleSaveVideo, handleLikeToggle, onCommentClick]);
+  }, [postId, user]);
 
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
@@ -962,32 +774,16 @@ const PostItem: React.FC<PostItemProps> = ({
 
   return (
     <article 
-      className={`relative transition-opacity duration-300 ${
+      className={`relative w-full gaming-card transition-opacity duration-300 ${
         isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
-      } ${highlight ? 'ring-2 ring-blue-500' : ''} ${
-        isCliptsPage ? 'w-screen flex-shrink-0 h-full overflow-hidden flex flex-col border-0 rounded-none bg-transparent' : 'w-full gaming-card'
-      }`}
+      } ${highlight ? 'ring-2 ring-blue-500' : ''}`}
       data-post-id={postId}
     >
-      {/* Enhanced User Header */}
-      <div className={`flex items-center justify-between ${isCliptsPage ? 'p-4 pt-12 pb-8 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 via-black/50 to-transparent backdrop-blur-sm' : 'p-4 border-b border-gaming-400/20'}`}>
-        {/* Enhanced Share button for Clipts Page */}
-        {isCliptsPage && (
-        <div className="absolute top-6 right-6 z-20">
-          <ShareButton 
-            postId={post.id} 
-            className="share-button p-2.5 rounded-full bg-transparent transition-all duration-300 hover:scale-110 active:scale-95" 
-            iconOnly={true} 
-            iconClassName="h-6 w-6 text-[rgba(216,180,254,0.9)]" 
-            style={{
-              filter: "drop-shadow(0 0 15px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
-            }}
-          />
-        </div>
-      )}
-        <div className="flex items-center space-x-2">
+      {/* User Header */}
+      <div className="flex items-center justify-between p-4 border-b border-gaming-400/20">
+        <div className="flex items-center space-x-3">
           <Avatar 
-            className={`${onCliptsPage ? 'h-8 w-8' : 'h-10 w-10'} cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200`}
+            className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200"
             onClick={() => handleProfileClick(post.user_id)}
           >
             <AvatarImage src={avatarUrl || ''} alt={username} />
@@ -996,25 +792,18 @@ const PostItem: React.FC<PostItemProps> = ({
           <div className="flex flex-col">
             <span 
               onClick={() => handleProfileClick(post.user_id)}
-              className={`${onCliptsPage ? 'text-sm' : 'text-base'} font-semibold text-gaming-100 hover:text-gaming-200 cursor-pointer truncate max-w-[180px]`}
+              className="text-base font-semibold text-gaming-100 hover:text-gaming-200 transition-all duration-200 cursor-pointer"
             >
               {username}
             </span>
             {gameName && gameId && (
-              <div className={onCliptsPage ? 'mb-0' : 'mb-1'}>
+              <div className="mb-1">
                 <span 
-                  className="text-gaming-300 hover:text-gaming-100 cursor-pointer text-xs truncate max-w-[180px] block"
+                  className="text-gaming-300 hover:text-gaming-100 cursor-pointer text-sm"
                   onClick={(e) => handleGameClick(e, gameId, gameName)} 
                 >
-                  {onCliptsPage ? gameName : `Playing ${gameName}`}
+                  Playing {gameName}
                 </span>
-              </div>
-            )}
-
-            {/* Caption for Clipts page - horizontally scrolling */}
-            {isCliptsPage && post.content && (
-              <div className="mt-1 max-w-[80vw] overflow-x-auto whitespace-nowrap hide-scrollbar">
-                <p className="text-sm text-gaming-300 pr-8">{post.content}</p>
               </div>
             )}
           </div>
@@ -1022,14 +811,14 @@ const PostItem: React.FC<PostItemProps> = ({
         {isOwner && (
           <DropdownMenu>
             <DropdownMenuTrigger className="p-2 hover:bg-gaming-800 rounded-full transition-colors">
-              <MoreVertical className="h-5 w-5 text-gaming-300" />
+              <MoreIcon className="h-5 w-5 text-gaming-300" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem
                 className="text-red-500 focus:text-red-400 cursor-pointer"
                 onClick={handleDeletePost}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <TrashIcon className="mr-2 h-4 w-4" />
                 Delete Post
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -1037,120 +826,127 @@ const PostItem: React.FC<PostItemProps> = ({
         )}
       </div>
 
-      {/* Post Content with overlaid caption for Clipts Page */}
-      <div className={`${isCliptsPage ? 'flex-1 min-h-0 overflow-hidden relative' : 'w-full'}`}>
+      {/* Post Content */}
+      <div className="w-full">
         <PostContent
           imageUrl={post.image_url}
           videoUrl={post.video_url}
           postId={postId}
-          compact={onCliptsPage}
-          isCliptsPage={isCliptsPage}
         />
-        
-        {/* Removed overlay caption for a cleaner, more immersive UI */}
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex justify-between px-4 py-3 border-t border-gaming-400/20" style={{ position: 'relative', zIndex: 40 }}>
-        {/* Like Button */}
+      {/* Interaction Counts */}
+      <div className="flex justify-around py-3 border-t border-gaming-400/20">
         <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            handleLikeToggle(e);
-          }}
-          className={`p-2 rounded-full transition-all duration-200 flex flex-col items-center ${liked ? 'text-red-500' : 'text-gaming-300 hover:text-red-400'}`}
-          disabled={likeLoading}
-          style={{ position: 'relative', zIndex: 50 }}
+          className="like-button flex items-center text-sm font-medium transition-all duration-200 group"
+          onClick={handleLike}
         >
-          <Heart className={`h-6 w-6 ${liked ? 'fill-current animate-bounce-once' : ''}`} />
-          <span className="text-xs mt-0.5">{likesCount || 0}</span>
+          <HeartIcon 
+            className={`h-6 w-6 ${liked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
+            fill={liked ? "currentColor" : "none"}
+          />
+          <span className={`text-base font-medium ${liked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'}`}>
+            {likesCount}
+          </span>
         </button>
-        
-        {/* Comment Button */}
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCommentClick(e);
-          }}
-          className="p-2 rounded-full transition-all duration-200 flex flex-col items-center text-gaming-300 hover:text-blue-400"
-          style={{ position: 'relative', zIndex: 50 }}
-        >
-          <MessageSquare className="h-6 w-6" />
-          <span className="text-xs mt-0.5">{commentsCount || 0}</span>
-        </button>
-        
-        {/* Trophy Button */}
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            handleTrophyVote(e);
-          }}
-          className={`p-2 rounded-full transition-all duration-200 flex flex-col items-center ${hasTrophy ? 'text-yellow-500' : 'text-gaming-300 hover:text-yellow-400'}`}
-          disabled={trophyLoading}
-          style={{ position: 'relative', zIndex: 50 }}
-        >
-          <Trophy className={`h-6 w-6 ${hasTrophy ? 'fill-current animate-bounce-once' : ''}`} />
-          <span className="text-xs mt-0.5">{trophyCount || 0}</span>
-        </button>
-        
-        {/* Save Button */}
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            handleSaveVideo(e);
-          }}
-          className={`p-2 rounded-full transition-all duration-200 flex flex-col items-center ${isSaved ? 'text-orange-500' : 'text-gaming-300 hover:text-orange-400'}`}
-          disabled={saveLoading}
-          style={{ position: 'relative', zIndex: 50 }}
-        >
-          <Bookmark className={`h-6 w-6 ${isSaved ? 'fill-current animate-bounce-once' : ''}`} />
-          <span className="text-xs mt-0.5">Save</span>
-        </button>
-      </div>
-
-      {/* Share Button and Caption for regular pages */}
-      {!isCliptsPage && (
-        <>
-          {/* Share Button */}
-          <div className="flex justify-center py-3 border-t border-gaming-400/20 flex-shrink-0">
-            <ShareButton postId={post.id} className="share-button" />
-          </div>
-
-          {/* Caption */}
-          {post.content && (
-            <div className="px-4 py-3 border-t border-gaming-400/20">
-              <p className="text-base text-gaming-100">
-                <span className="font-semibold hover:text-gaming-200 cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
-                  {username}
-                </span>
-                {' '}
-                <span className="text-gaming-200 line-clamp-2 overflow-hidden">{post.content}</span>
-              </p>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <button 
+              className="comment-button flex items-center text-sm font-medium text-gray-400 hover:text-blue-500 transition-all duration-200 group"
+              onClick={handleComment}
+            >
+              <MessageIcon 
+                className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
+              />
+              <span className="text-base font-medium text-gray-400 group-hover:text-blue-300">
+                {commentsCount}
+              </span>
+            </button>
+          </DialogTrigger>
+          <DialogContent className="bg-[#1D1E2A] border-[#2C2D41] text-white p-4 max-w-md mx-auto">
+            <h3 className="text-lg font-bold mb-3">Add Comment</h3>
+            <p className="text-sm text-gray-400 mb-4">Commenting on post from {post.profiles?.username || 'user'}</p>
+            
+            <Textarea
+              placeholder="Write your comment..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              className="bg-[#252636] border-[#333442] text-white min-h-[100px] mb-4"
+            />
+            
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDialogOpen(false)}
+                className="border-[#3F4252] text-gray-300 hover:bg-[#2C2D41]"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={submitComment}
+                disabled={isSubmitting || !commentText.trim()}
+                className="bg-[#6366F1] hover:bg-[#4F46E5] text-white"
+              >
+                {isSubmitting ? 'Posting...' : 'Post Comment'}
+              </Button>
             </div>
-          )}
-        </>
+          </DialogContent>
+        </Dialog>
+        <button 
+          className="trophy-button flex items-center text-sm font-medium text-gray-400 hover:text-yellow-500 transition-all duration-200 group"
+          onClick={handleTrophyVote}
+          disabled={trophyLoading}
+        >
+          <TrophyIcon 
+            className={`h-6 w-6 ${hasTrophy ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-500'} transition-all ${trophyLoading ? 'opacity-50' : ''}`}
+          />
+          <span className={`text-base font-medium ml-1 ${hasTrophy ? 'text-yellow-500' : 'text-gray-400 group-hover:text-yellow-500'}`}>
+            {trophyCount || 0}
+          </span>
+        </button>
+        
+        {/* Adding the follow button with proper controller detection class */}
+        {user && user.id !== post.user_id && (
+          <button 
+            className="follow-button flex items-center text-sm font-medium text-gray-400 hover:text-green-500 transition-all duration-200 group"
+            onClick={handleFollow}
+          >
+            {isFollowing ? (
+              <UserCheckIcon 
+                className="h-6 w-6 text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
+              />
+            ) : (
+              <UserPlusIcon 
+                className="h-6 w-6 text-gray-400 group-hover:text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
+              />
+            )}
+            <span className={`text-base font-medium ${isFollowing ? 'text-green-500' : 'text-gray-400 group-hover:text-green-500'}`}>
+              {isFollowing ? 'Following' : 'Follow'}
+            </span>
+          </button>
+        )}
+      </div>
+
+      {/* Caption */}
+      {post.content && (
+        <div className="px-4 py-3 border-t border-gaming-400/20">
+          <p className="text-base text-gaming-100">
+            <span className="font-semibold hover:text-gaming-200 cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
+              {username}
+            </span>
+            {' '}
+            <span className="text-gaming-200">{post.content}</span>
+          </p>
+        </div>
       )}
 
-      {/* Inline Comments Section - Showing limited comments by default */}
-      {!showComments && !window.location.pathname.includes('/post/') && !onCliptsPage && (
-        <InlineComments 
-          postId={postId}
-          maxComments={3}
-          onViewAllClick={handleCommentClick}
-        />
-      )}
-
-      {/* Full Comments Section - shown when expanded */}
-      {showComments && !window.location.pathname.includes('/post/') && !onCliptsPage && (
+      {/* Comments Section - Make sure postId is valid and passed correctly */}
+      {showComments && (
         <div className="border-t border-gaming-400/20">
           {postId ? (
             <CommentList 
               postId={postId}
-              onCommentAdded={() => {
-                // Refresh comment count
-                queryClient.invalidateQueries({ queryKey: ['comments-count', postId] });
-              }}
-              className="comments-section"
+              onBack={() => setShowComments(false)} 
               key={`comments-${postId}`} // Force re-render with key
             />
           ) : (

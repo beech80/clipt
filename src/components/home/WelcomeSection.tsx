@@ -20,7 +20,7 @@ export const WelcomeSection = () => {
         <Button 
           variant="outline" 
           className="gaming-button flex items-center gap-2"
-          onClick={() => navigate('/post-form')}
+          onClick={() => navigate('/posts/new')}
         >
           <MessageSquare className="w-4 h-4" />
           Post

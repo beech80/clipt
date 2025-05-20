@@ -18,48 +18,35 @@ export interface IGDBGame {
 interface SearchOptions {
   sort?: string;
   limit?: number;
-  includeFullData?: boolean; 
 }
 
 class IGDBService {
-  async searchGames(query: string | undefined | null, options: SearchOptions = {}): Promise<IGDBGame[]> {
+  async searchGames(query: string, options: SearchOptions = {}): Promise<IGDBGame[]> {
     try {
-      // Ensure query is never undefined or null
-      const safeQuery = query || '';
-      console.log('IGDB searchGames called with query:', safeQuery);
+      console.log('IGDB searchGames called with query:', query);
       
       // Handle search query - properly escape it to prevent injection and query errors
-      const cleanQuery = safeQuery?.trim().replace(/"/g, '\"') || '';
+      const cleanQuery = query?.trim().replace(/"/g, '\\"') || '';
       
       // For empty queries, return popular games
       if (!cleanQuery) {
         console.log('Empty query, returning popular games');
-        return this.getPopularGames(options.limit || 100); 
+        return this.getPopularGames();
       }
       
-      // Build search query with improved pattern matching
-      // Use multiple query conditions to ensure we get more comprehensive results
-      // First try exact match, then alternative search patterns
-      const searchTerm = cleanQuery && cleanQuery.length > 2 
-        ? `where (name ~ "${cleanQuery}"* | name ~ "*${cleanQuery}*" | alternative_names.name ~ "*${cleanQuery}*" | keywords.name ~ "*${cleanQuery}*") & cover != null;`
-        : `where name ~ "*${cleanQuery || ''}*" & cover != null;`;
+      // Build search query - use a more lenient search to ensure results
+      // Use the cleanQuery in a more fuzzy search to get better results
+      const searchTerm = `where name ~ "${cleanQuery}"* & cover != null;`;
       
-      // Set up sorting with proper defaults - prioritize relevance when searching
-      const sortOption = cleanQuery
-        ? 'sort popularity desc;' 
-        : (options.sort ? `sort ${options.sort};` : 'sort popularity desc;');
+      // Set up sorting with proper defaults
+      const sortOption = options.sort ? `sort ${options.sort};` : 'sort popularity desc;';
       
-      // Set reasonable limit but increase for searches to ensure we find matches
-      const limitOption = `limit ${options.limit || (cleanQuery ? 150 : 100)};`; 
-      
-      // Expand fields to get more comprehensive game data
-      const fields = options.includeFullData 
-        ? 'fields name,rating,cover.url,genres.name,platforms.name,first_release_date,summary,popularity,alternative_names.name,storyline,total_rating,total_rating_count,aggregated_rating,aggregated_rating_count,game_modes.name,keywords.name,themes.name,similar_games.name,similar_games.cover.url,player_perspectives.name,involved_companies.company.name,videos.video_id,websites.url,websites.category;'
-        : 'fields name,rating,cover.url,genres.name,platforms.name,first_release_date,summary,popularity,alternative_names.name;';
+      // Set reasonable limit
+      const limitOption = `limit ${options.limit || 20};`;
       
       // Create a well-formed IGDB query with proper formatting
       const igdbQuery = `
-        ${fields}
+        fields name,rating,cover.url,genres.name,platforms.name,first_release_date,summary,popularity;
         ${searchTerm}
         ${sortOption}
         ${limitOption}
@@ -67,47 +54,40 @@ class IGDBService {
       
       console.log('IGDB query:', igdbQuery);
       
-      try {
-        const { data, error } = await supabase.functions.invoke('igdb', {
-          body: {
-            endpoint: 'games',
-            query: igdbQuery
-          }
-        });
+      const { data, error } = await supabase.functions.invoke('igdb', {
+        body: {
+          endpoint: 'games',
+          query: igdbQuery
+        }
+      });
 
-        if (error) {
-          console.error('IGDB API error:', error);
-          throw error;
-        }
-        
-        if (!data || !Array.isArray(data)) {
-          console.warn('Invalid data returned from IGDB API:', data);
-          throw new Error('Invalid data format from IGDB API');
-        }
-        
-        console.log(`IGDB returned ${data.length} results for "${cleanQuery}"`);
-        
-        // Process image URLs to use HTTPS and proper sizes
-        return data.map(game => ({
-          ...game,
-          cover: game.cover ? {
-            ...game.cover,
-            url: this.formatImageUrl(game.cover.url)
-          } : undefined
-        }));
-      } catch (apiError) {
-        console.error('Failed to get games from IGDB API, using fallback:', apiError);
-        // Fallback to mock data for immediate testing
-        return this.getMockGamesBySearch(cleanQuery, options.limit || 20); 
+      if (error) {
+        console.error('IGDB API error:', error);
+        throw error;
       }
+      
+      if (!data || !Array.isArray(data)) {
+        console.warn('Invalid data returned from IGDB API:', data);
+        return [];
+      }
+      
+      console.log(`IGDB returned ${data.length} results for "${cleanQuery}"`);
+      
+      // Process image URLs to use HTTPS and proper sizes
+      return data.map(game => ({
+        ...game,
+        cover: game.cover ? {
+          ...game.cover,
+          url: this.formatImageUrl(game.cover.url)
+        } : undefined
+      }));
     } catch (error) {
-      console.error('Error in searchGames method:', error);
-      // Return mock games as fallback
-      return this.getMockGamesBySearch(query, options.limit || 20); 
+      console.error('Error fetching games from IGDB:', error);
+      return [];
     }
   }
 
-  async getPopularGames(limit = 100): Promise<IGDBGame[]> { 
+  async getPopularGames(limit: number = 10): Promise<IGDBGame[]> {
     try {
       console.log('Getting popular games from IGDB');
       
@@ -334,87 +314,6 @@ class IGDBService {
       console.error('Error formatting image URL:', error);
       return '/img/games/default.jpg';
     }
-  }
-
-  // Helper method to get mock games by search query for fallback
-  getMockGamesBySearch(query: string | undefined | null, limit: number = 10): IGDBGame[] {
-    // Ensure query is never undefined or null
-    const safeQuery = query || '';
-    console.log('Using mock games for search:', safeQuery);
-    
-    const mockGames: IGDBGame[] = [
-      {
-        id: 1,
-        name: 'Call of Duty: Modern Warfare',
-        rating: 85,
-        cover: {
-          id: 101,
-          url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1rst.jpg'
-        },
-        summary: 'The stakes have never been higher as players take on the role of lethal Tier One operators in a heart-racing saga that will affect the global balance of power.',
-        genres: [{ id: 5, name: 'Shooter' }],
-        platforms: [{ id: 6, name: 'PC' }, { id: 48, name: 'PlayStation 4' }, { id: 49, name: 'Xbox One' }]
-      },
-      {
-        id: 2,
-        name: 'The Legend of Zelda: Breath of the Wild',
-        rating: 97,
-        cover: {
-          id: 102,
-          url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3p2d.jpg'
-        },
-        summary: 'Step into a world of discovery, exploration, and adventure in The Legend of Zelda: Breath of the Wild.',
-        genres: [{ id: 12, name: 'Adventure' }, { id: 31, name: 'RPG' }],
-        platforms: [{ id: 130, name: 'Nintendo Switch' }]
-      },
-      {
-        id: 3,
-        name: 'Fortnite',
-        rating: 80,
-        cover: {
-          id: 103,
-          url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2ekt.jpg'
-        },
-        summary: 'Fortnite is the free, always evolving, multiplayer game where you and your friends battle to be the last one standing or collaborate to create your dream Fortnite world.',
-        genres: [{ id: 5, name: 'Shooter' }, { id: 8, name: 'Battle Royale' }],
-        platforms: [{ id: 6, name: 'PC' }, { id: 48, name: 'PlayStation 4' }, { id: 49, name: 'Xbox One' }, { id: 130, name: 'Nintendo Switch' }]
-      },
-      {
-        id: 4,
-        name: 'Grand Theft Auto V',
-        rating: 95,
-        cover: {
-          id: 104,
-          url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1tgt.jpg'
-        },
-        summary: 'Los Santos: a sprawling sun-soaked metropolis full of self-help gurus, starlets and fading celebrities, once the envy of the Western world, now struggling to stay afloat in an era of economic uncertainty and cheap reality TV.',
-        genres: [{ id: 5, name: 'Action' }, { id: 12, name: 'Adventure' }],
-        platforms: [{ id: 6, name: 'PC' }, { id: 48, name: 'PlayStation 4' }, { id: 49, name: 'Xbox One' }]
-      },
-      {
-        id: 5,
-        name: 'Halo Infinite',
-        rating: 87,
-        cover: {
-          id: 105,
-          url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1rft.jpg'
-        },
-        summary: 'When all hope is lost and humanity\'s fate hangs in the balance, the Master Chief is ready to confront the most ruthless foe he\'s ever faced.',
-        genres: [{ id: 5, name: 'Shooter' }],
-        platforms: [{ id: 6, name: 'PC' }, { id: 169, name: 'Xbox Series X|S' }]
-      }
-    ];
-    
-    // Filter the mock games by the search query
-    const lowercaseQuery = safeQuery.toLowerCase();
-    const filteredGames = mockGames.filter(game => 
-      game.name.toLowerCase().includes(lowercaseQuery) ||
-      (game.summary && game.summary.toLowerCase().includes(lowercaseQuery)) ||
-      (game.genres && game.genres.some(genre => genre.name.toLowerCase().includes(lowercaseQuery)))
-    );
-    
-    // If no matches, return all mock games (for better UX)
-    return (filteredGames.length > 0 ? filteredGames : mockGames).slice(0, limit);
   }
 }
 

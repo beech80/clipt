@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Scissors, Play, Pause, Save } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { handleVideoControl } from '@/components/gameboy/VideoControls';
 
 interface ClipEditorProps {
   videoUrl: string;
@@ -48,7 +49,7 @@ export const ClipEditor = ({ videoUrl, onSave }: ClipEditorProps) => {
     toast.success("Clip saved successfully!");
   };
 
-  // Handle keyboard controls for timeline scrubbing
+  // Handle gameboy controls for timeline scrubbing
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!videoRef.current) return;

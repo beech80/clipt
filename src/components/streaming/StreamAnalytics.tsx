@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Calendar, BarChart3, Users, Clock, TrendingUp, Activity, Maximize2 } from 'lucide-react';
+import { Calendar, BarChart3, Users, Clock, TrendingUp, Maximize2 } from 'lucide-react';
+import ActivityIcon from '@/components/ui/activity-icon';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -321,7 +322,7 @@ export function StreamAnalytics({ userId, streamId }: StreamAnalyticsProps) {
                 </div>
               ) : viewerData.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                  <Activity className="h-12 w-12 mb-2" />
+                  <ActivityIcon className="h-12 w-12 mb-2" />
                   <p>No viewer data available for this period.</p>
                 </div>
               ) : (
@@ -445,7 +446,7 @@ export function StreamAnalytics({ userId, streamId }: StreamAnalyticsProps) {
             <CardContent className="h-[300px]">
               {/* Placeholder for viewer growth chart */}
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                <Activity className="h-12 w-12 mb-2" />
+                <ActivityIcon className="h-12 w-12 mb-2" />
                 <p>Detailed viewer analytics coming soon!</p>
               </div>
             </CardContent>

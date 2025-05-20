@@ -7,7 +7,7 @@ export const createBucketIfNotExists = async () => {
   if (!buckets?.find(b => b.name === 'posts')) {
     const { error } = await supabase.storage.createBucket('posts', {
       public: true,
-      fileSizeLimit: 52428800, // 50MB (increased from 5MB)
+      fileSizeLimit: 5242880, // 5MB
     });
     
     if (error) {

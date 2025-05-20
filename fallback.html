@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clipt Fallback</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #0f0f1a;
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* GameBoy Controls */
+        .gameboy-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background-color: #111827;
+            border-top: 1px solid #2d3748;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+        
+        /* Joystick */
+        .joystick {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            background-color: #374151;
+            border-radius: 50%;
+            border: 2px solid #4b5563;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        
+        .d-pad-center {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background-color: #1f2937;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .d-pad-up, .d-pad-right, .d-pad-down, .d-pad-left {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background-color: #2d3748;
+        }
+        
+        .d-pad-up {
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        
+        .d-pad-right {
+            top: 50%;
+            right: 5px;
+            transform: translateY(-50%);
+            clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
+        }
+        
+        .d-pad-down {
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+        }
+        
+        .d-pad-left {
+            top: 50%;
+            left: 5px;
+            transform: translateY(-50%);
+            clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+        }
+        
+        /* CLIPT Button */
+        .center-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .clipt-button {
+            padding: 10px 20px;
+            margin-bottom: 10px;
+            border-radius: 9999px;
+            background-color: transparent;
+            font-weight: bold;
+            color: white;
+            border: none;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .clipt-button:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 9999px;
+            border: 2px solid transparent;
+            background: linear-gradient(45deg, #7c3aed, #3b82f6) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: destination-out;
+            mask-composite: exclude;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(124, 58, 237, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+            }
+        }
+        
+        .bottom-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .small-button {
+            padding: 5px 10px;
+            background-color: #1f2937;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        
+        .action-button {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #1f2937;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .top-button {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+        
+        .right-button {
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .bottom-button {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 1px solid #8b5cf6;
+            color: #8b5cf6;
+        }
+        
+        .left-button {
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            border: 1px solid #10b981;
+            color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Clipt</h1>
+        <p>Your gaming moments, captured.</p>
+    </div>
+    
+    <!-- GameBoy Controls -->
+    <div class="gameboy-controls">
+        <!-- Joystick -->
+        <div class="joystick">
+            <div class="d-pad-up"></div>
+            <div class="d-pad-right"></div>
+            <div class="d-pad-down"></div>
+            <div class="d-pad-left"></div>
+            <div class="d-pad-center"></div>
+        </div>
+        
+        <!-- Center Buttons -->
+        <div class="center-controls">
+            <button class="clipt-button">CLIPT</button>
+            <div class="bottom-buttons">
+                <button class="small-button">+ POST</button>
+                <button class="small-button">☰</button>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="action-button top-button">❤️</button>
+            <button class="action-button right-button">↗️</button>
+            <button class="action-button bottom-button">👤</button>
+            <button class="action-button left-button">💬</button>
+        </div>
+    </div>
+    
+    <script>
+        // Simple button press effect
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', () => {
+                button.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    button.style.transform = '';
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>

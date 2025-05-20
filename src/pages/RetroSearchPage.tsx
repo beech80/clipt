@@ -42,19 +42,16 @@ const RetroSearchPage = () => {
   }, []);
 
   // Query for IGDB games with fixed implementation
-  // Make sure searchTerm is always defined for React Query
-  const effectiveSearchTerm = searchTerm || '';
-
   const { data: igdbGames, isLoading: igdbGamesLoading, error: igdbGamesError, refetch: refetchIgdbGames } = useQuery({
-    queryKey: ['igdb', 'games', 'search', effectiveSearchTerm],
+    queryKey: ['igdb', 'games', 'search', searchTerm || ''],
     queryFn: async () => {
-      console.log('IGDB Query executing for search term:', effectiveSearchTerm);
+      console.log('IGDB Query executing for search term:', searchTerm);
       
       try {
         // Call the improved IGDB service directly
-        const games = await igdbService.searchGames(effectiveSearchTerm, {
+        const games = await igdbService.searchGames(searchTerm, {
           sort: 'popularity desc',
-          limit: 12 // Increased from 10 to 12 for more results
+          limit: 10
         });
         
         console.log('IGDB API returned games:', games?.length || 0);
@@ -66,8 +63,6 @@ const RetroSearchPage = () => {
     },
     enabled: true, // Always enabled to show trending games
     staleTime: 10 * 1000, // 10 seconds
-    retry: 2, // Retry failed requests twice
-    retryDelay: 1000, // Wait 1 second between retries
   });
 
   // Query for top games from our database (as fallback and for "top searched")
@@ -99,13 +94,13 @@ const RetroSearchPage = () => {
 
   // Query for streamers with search term
   const { data: streamersSearchData, isLoading: streamersSearchLoading, error: streamersSearchError, refetch: refetchStreamers } = useQuery<any[]>({
-    queryKey: ['streamers', 'search', effectiveSearchTerm],
+    queryKey: ['streamers', 'search', searchTerm || ''],
     queryFn: async () => {
-      if (!effectiveSearchTerm || effectiveSearchTerm.length < 2) {
+      if (!searchTerm || searchTerm.length < 2) {
         return [];
       }
 
-      const formattedSearchTerm = effectiveSearchTerm.trim();
+      const formattedSearchTerm = searchTerm.trim();
       
       console.log('Searching streamers for term:', formattedSearchTerm);
       
@@ -136,8 +131,8 @@ const RetroSearchPage = () => {
       
       return data || [];
     },
-    staleTime: effectiveSearchTerm ? 10000 : 60000, // Cache results for 10s when searching, 60s otherwise
-    enabled: effectiveSearchTerm.length > 0, // Only enable if there's a search term
+    staleTime: searchTerm ? 10000 : 60000, // Cache results for 10s when searching, 60s otherwise
+    enabled: Boolean(searchTerm), // Fixed boolean conversion
   });
   
   // Separate query for top streamers (not search-dependent)
@@ -164,42 +159,29 @@ const RetroSearchPage = () => {
       return data || [];
     },
     staleTime: 60000, // Cache results for 60s
-    enabled: effectiveSearchTerm.length === 0, // Only enable for empty search
+    enabled: !searchTerm, // Keep as is as this should evaluate to boolean
   });
 
   // Better filtering for games that prioritizes search results
   const getFilteredGames = () => {
-    // Explicitly check igdbGames to see if it exists and has elements
-    console.log('getFilteredGames called, igdbGames:', igdbGames);
-    
     // If search term is entered, prioritize IGDB search results
-    if (effectiveSearchTerm && effectiveSearchTerm.trim().length > 0) {
-      if (igdbGames && igdbGames.length > 0) {
-        // Return more results for a better browsing experience
-        console.log('Returning IGDB search results:', igdbGames.slice(0, 10));
-        return igdbGames.slice(0, 10);
-      } else if (igdbGamesLoading) {
-        // Show nothing while loading
-        return [];
+    if (searchTerm && searchTerm.trim().length > 0) {
+      if (igdbGames?.length) {
+        console.log('Returning IGDB search results:', igdbGames.slice(0, 3));
+        return igdbGames.slice(0, 3);
       } else {
-        // If IGDB failed, fall back to mock data
-        console.log('No IGDB results found, returning mock data');
-        return igdbService.getMockGamesBySearch(effectiveSearchTerm, 10);
+        // If no IGDB results but we have a search term, return empty
+        console.log('No IGDB results found for search term');
+        return [];
       }
     } 
     // If no search term, show top games
-    else if (topGames && topGames.length > 0) {
-      console.log('Returning top games from database:', topGames);
-      // Show more top games for better browsing experience
-      return topGames.slice(0, 8); // Show more top games (increased from 6)
-    }
-    // Final fallback - mock data in case we have no results at all
-    else if (!igdbGamesLoading && !topGamesLoading) {
-      console.log('No games available, using fallback');
-      return igdbService.getMockGamesBySearch('', 8);
+    else if (topGames?.length) {
+      console.log('Returning top games from database:', topGames.slice(0, 3));
+      return topGames.slice(0, 3);
     }
     
-    // Return empty array if loading or no games available
+    // Return empty array if no games available
     return [];
   };
 
@@ -207,18 +189,18 @@ const RetroSearchPage = () => {
   const displayGames = getFilteredGames();
   
   // Get the appropriate streamers data based on search state
-  const displayStreamers = effectiveSearchTerm 
-    ? (streamersSearchData || []).slice(0, 5)  // Show more streamers in search results
-    : (topStreamersData || []).slice(0, 5);
+  const displayStreamers = searchTerm 
+    ? (streamersSearchData || []).slice(0, 3) 
+    : (topStreamersData || []).slice(0, 3);
   
   // Combine loading states for better UI feedback
-  const isGamesLoading = gamesLoading || (effectiveSearchTerm ? (igdbGamesLoading) : topGamesLoading);
-  const isStreamersLoading = streamersLoading || (effectiveSearchTerm ? (streamersSearchLoading) : topStreamersLoading);
+  const isGamesLoading = gamesLoading || (searchTerm ? (igdbGamesLoading) : topGamesLoading);
+  const isStreamersLoading = streamersLoading || (searchTerm ? (streamersSearchLoading) : topStreamersLoading);
 
   // Debug logging for search functionality
   useEffect(() => {
     console.log('Search state:', { 
-      term: effectiveSearchTerm, 
+      term: searchTerm, 
       igdbGamesCount: igdbGames?.length || 0,
       topGamesCount: topGames?.length || 0,
       displayGamesCount: displayGames?.length || 0,
@@ -282,8 +264,8 @@ const RetroSearchPage = () => {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (effectiveSearchTerm && effectiveSearchTerm.trim().length > 0) {
-      console.log('Search submitted:', effectiveSearchTerm);
+    if (searchTerm.trim().length > 0) {
+      console.log('Search submitted:', searchTerm);
       // Invalidate queries to force a refresh
       queryClient.invalidateQueries({ 
         queryKey: ['igdb', 'games', 'search'], 
@@ -301,8 +283,8 @@ const RetroSearchPage = () => {
 
   const clearSearch = () => {
     setSearchTerm('');
-    queryClient.invalidateQueries({ queryKey: ['games', 'top-searched'] });
-    queryClient.invalidateQueries({ queryKey: ['streamers', 'top'] });
+    queryClient.invalidateQueries(['topGames']);
+    queryClient.invalidateQueries(['topStreamers']);
     
     // Focus the search input after clearing
     if (searchInputRef.current) {
@@ -498,18 +480,17 @@ const RetroSearchPage = () => {
               {!gamesLoading && !igdbGamesLoading && !topGamesLoading && getFilteredGames().length > 0 && (
                 <div className="bg-blue-950/60 rounded-lg overflow-hidden border-2 border-blue-800">
                   {/* Leaderboard header */}
-                  <div className="grid grid-cols-8 bg-blue-900/80 p-2 border-b-2 border-blue-700">
+                  <div className="grid grid-cols-6 bg-blue-900/80 p-2 border-b-2 border-blue-700">
                     <div className="col-span-1 text-blue-300 text-xs font-bold text-center">#</div>
-                    <div className="col-span-2 text-blue-300 text-xs font-bold text-center">Cover</div>
                     <div className="col-span-5 text-blue-300 text-xs font-bold">Name</div>
                   </div>
                   
-                  {/* Games rows - improved with rank, cover image and name */}
+                  {/* Games rows - simplified with only rank and name */}
                   {getFilteredGames().map((game, index) => (
                     <div 
                       key={game.id}
                       onClick={() => handleGameClick(game)}
-                      className={`grid grid-cols-8 items-center p-3 cursor-pointer hover:bg-blue-900/40 transition-all ${
+                      className={`grid grid-cols-6 items-center p-3 cursor-pointer hover:bg-blue-900/40 transition-all ${
                         index < getFilteredGames().length - 1 ? 'border-b border-blue-800/50' : ''
                       }`}
                     >
@@ -525,30 +506,9 @@ const RetroSearchPage = () => {
                         </div>
                       </div>
                       
-                      {/* Game cover */}
-                      <div className="col-span-2 flex justify-center">
-                        <div className="w-12 h-16 bg-blue-900/50 rounded overflow-hidden border border-blue-700 shadow-inner">
-                          <img 
-                            src={formatCoverUrl(game)} 
-                            alt={`${game.name} cover`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.onerror = null; // Prevent infinite callback loop
-                              target.src = '/img/games/default.jpg';
-                            }}
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* Game name and details */}
-                      <div className="col-span-5 overflow-hidden pl-2">
+                      {/* Game name */}
+                      <div className="col-span-5 overflow-hidden">
                         <h3 className="text-sm text-yellow-300 truncate font-semibold">{game.name}</h3>
-                        {game.genres && game.genres.length > 0 && (
-                          <p className="text-xs text-blue-300 truncate">
-                            {game.genres.slice(0, 2).map(g => g.name).join(', ')}
-                          </p>
-                        )}
                       </div>
                     </div>
                   ))}

@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import setupStreamingTables from './streamingSetup';
 
 // Create stored procedure for initializing messaging tables
 export const setupMessagingTables = async () => {
@@ -108,67 +107,14 @@ export const checkTableExists = async (tableName: string): Promise<boolean> => {
   }
 };
 
-// Create messages table - create a real table for messages
+// Create messages table - simplified for demo purposes
 export const createMessagesTable = async () => {
-  try {
-    // Create direct_messages table if it doesn't exist
-    const { error } = await supabase.rpc('execute_sql', {
-      sql_query: `
-        CREATE TABLE IF NOT EXISTS public.direct_messages (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          sender_id UUID REFERENCES auth.users(id) NOT NULL,
-          recipient_id UUID REFERENCES auth.users(id) NOT NULL,
-          message TEXT NOT NULL,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          read BOOLEAN DEFAULT FALSE
-        );
-        
-        -- Add indexes for better performance
-        CREATE INDEX IF NOT EXISTS idx_direct_messages_sender_id ON public.direct_messages(sender_id);
-        CREATE INDEX IF NOT EXISTS idx_direct_messages_recipient_id ON public.direct_messages(recipient_id);
-        CREATE INDEX IF NOT EXISTS idx_direct_messages_created_at ON public.direct_messages(created_at);
-      `
-    });
-    
-    if (error) {
-      console.error("Could not create direct_messages table through RPC:", error);
-      // Try a different approach
-      const { data, error: tableError } = await supabase
-        .from('direct_messages')
-        .insert({
-          sender_id: '00000000-0000-0000-0000-000000000000',
-          recipient_id: '00000000-0000-0000-0000-000000000000',
-          message: 'Test message to create table',
-          read: false
-        })
-        .select();
-      
-      if (tableError && !tableError.message.includes('already exists')) {
-        console.error("Could not create direct_messages table through insert:", tableError);
-        return { 
-          success: false, 
-          error: tableError,
-          demo: true,
-          message: "Using demo messaging system (could not create table)"
-        };
-      }
-      
-      console.log("Created direct_messages table through test insert");
-      return { success: true, exists: true };
-    }
-    
-    console.log("Created direct_messages table through RPC");
-    return { success: true, exists: true };
-  } catch (e) {
-    console.error("Error creating messages table:", e);
-    // Return success anyway to continue with fallback mode
-    return { 
-      success: true, 
-      exists: false,
-      demo: true,
-      message: "Using demo messaging system (error creating table)"
-    };
-  }
+  return { 
+    success: true, 
+    exists: false,
+    demo: true,
+    message: "Using demo messaging system (no database writes)"
+  };
 };
 
 // Last resort fallback method
@@ -217,57 +163,6 @@ const createFallbackMessagesTable = async () => {
   } catch (error) {
     console.error("Final fallback attempt failed:", error);
     return { success: false, error };
-  }
-};
-
-export const ensureTablesExist = async () => {
-  try {
-    const tables = ['profiles', 'posts', 'comments', 'likes', 'follows', 'direct_messages'];
-    
-    // Check for posts table as an indicator
-    const { data, error } = await supabase
-      .from('posts')
-      .select('id')
-      .limit(1);
-      
-    if (error) {
-      console.log('Tables missing, attempting to create tables...');
-      await createTables();
-    } else {
-      console.log('Tables exist, skipping creation');
-    }
-    
-    // Always check messaging table
-    await createMessagesTable();
-    
-    // Also ensure streaming tables exist
-    await setupStreamingTables();
-    
-  } catch (error) {
-    console.error('Error checking/creating tables:', error);
-  }
-};
-
-// Helper function to ensure the messages table exists for the messaging feature
-export const ensureMessagesTableExists = async () => {
-  try {
-    // Check if the direct_messages table exists
-    const exists = await checkTableExists('direct_messages');
-    
-    if (!exists) {
-      console.log('Creating direct_messages table...');
-      return await createMessagesTable();
-    }
-    
-    return { success: true, exists: true };
-  } catch (error) {
-    console.error('Error ensuring messages table exists:', error);
-    return { 
-      success: false, 
-      error,
-      demo: true, 
-      message: 'Using demo messaging system (error checking table)'
-    };
   }
 };
 

@@ -6,8 +6,8 @@ interface PostFormActionsProps {
 
 const PostFormActions = ({ isSubmitting }: PostFormActionsProps) => {
   return (
-    <div className="flex justify-end mt-auto pb-2">
-      <Button type="submit" disabled={isSubmitting} className="px-8">
+    <div className="flex justify-end">
+      <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Posting..." : "Post"}
       </Button>
     </div>

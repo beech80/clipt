@@ -43,6 +43,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 const scheduleFormSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100),
   description: z.string().max(500, 'Description cannot exceed 500 characters'),
+  game_id: z.string().optional(),
   scheduled_for: z.date(),
   duration_minutes: z.coerce.number().min(15, 'Minimum duration is 15 minutes').max(720, 'Maximum duration is 12 hours'),
   tags: z.string().max(100),
@@ -50,6 +51,11 @@ const scheduleFormSchema = z.object({
 });
 
 type ScheduleFormValues = z.infer<typeof scheduleFormSchema>;
+
+interface Game {
+  id: string;
+  name: string;
+}
 
 interface ScheduleStreamProps {
   onSuccess?: () => void;
@@ -68,6 +74,8 @@ export function ScheduleStream({
 }: ScheduleStreamProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [games, setGames] = useState<Game[]>([]);
+  const [isLoadingGames, setIsLoadingGames] = useState(false);
   const queryClient = useQueryClient();
   
   // Initialize form
@@ -76,12 +84,35 @@ export function ScheduleStream({
     defaultValues: {
       title: '',
       description: '',
+      game_id: undefined,
       scheduled_for: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
       duration_minutes: 60,
       tags: '',
       is_public: true,
     },
   });
+
+  // Fetch games when dialog opens
+  const fetchGames = async () => {
+    if (games.length > 0) return;
+    
+    setIsLoadingGames(true);
+    try {
+      const { data, error } = await supabase
+        .from('games')
+        .select('id, name')
+        .order('name', { ascending: true })
+        .limit(100);
+        
+      if (error) throw error;
+      setGames(data || []);
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      toast.error('Failed to load games');
+    } finally {
+      setIsLoadingGames(false);
+    }
+  };
 
   // Mutation for scheduling a stream
   const scheduleMutation = useMutation({
@@ -94,6 +125,7 @@ export function ScheduleStream({
           user_id: user.id,
           title: values.title,
           description: values.description,
+          game_id: values.game_id || null,
           scheduled_for: values.scheduled_for.toISOString(),
           duration_minutes: values.duration_minutes,
           tags: values.tags ? values.tags.split(',').map(tag => tag.trim()) : [],
@@ -129,6 +161,7 @@ export function ScheduleStream({
           variant={buttonVariant} 
           size={buttonSize}
           className={className}
+          onClick={() => fetchGames()}
         >
           <Calendar className="h-4 w-4 mr-2" />
           {buttonText}
@@ -174,6 +207,39 @@ export function ScheduleStream({
             />
             
             <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="game_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Game</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a game" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">-- Not Game Specific --</SelectItem>
+                        {isLoadingGames ? (
+                          <SelectItem value="" disabled>Loading games...</SelectItem>
+                        ) : (
+                          games.map(game => (
+                            <SelectItem key={game.id} value={game.id}>
+                              {game.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
               <FormField
                 control={form.control}
                 name="duration_minutes"

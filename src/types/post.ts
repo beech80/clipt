@@ -15,10 +15,6 @@ export interface Post {
     name: string | null;
   } | null;
   game_id?: string | number;
-  game_name?: string;
-  media_urls?: string[];
-  hashtags?: string[];
-  mentions?: string[];
   likes_count?: number;
   clip_votes?: Array<{ count: number }>;
   comments_count?: number;
@@ -27,7 +23,6 @@ export interface Post {
   required_tier_id?: string | null;
   scheduled_publish_time?: string | null;
   type?: 'video' | 'image' | 'text';
-  post_type?: 'clip' | 'home';
 }
 
 export interface PostHeaderProps {
@@ -47,37 +42,6 @@ export interface PostActionsProps {
   post: Post;
   commentsCount: number;
   onCommentClick: () => void;
-}
-
-export interface Profile {
-  id: string;
-  username: string | null;
-  avatar_url: string | null;
-  display_name?: string | null;
-  bio?: string | null;
-  website?: string | null;
-  social_links?: Record<string, string> | null;
-}
-
-export interface Comment {
-  id: string;
-  content: string;
-  post_id: string;
-  user_id: string;
-  parent_id: string | null;
-  created_at: string;
-  updated_at: string | null;
-}
-
-export interface PostWithProfile extends Post {
-  profiles: Profile;
-  comments?: CommentWithProfile[];
-}
-
-export interface CommentWithProfile extends Comment {
-  profiles: Profile;
-  children?: CommentWithProfile[];
-  likes_count?: number;
 }
 
 export interface SearchFilters {

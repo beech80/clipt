@@ -1,1 +1,0 @@
-Remove the line with "PRESS X TO CLOSE" from c:\Users\Matthew\clipt final\clipt\src\components\GameBoyControls.tsx and keep the footer div empty.

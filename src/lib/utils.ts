@@ -45,17 +45,3 @@ export function formatImageUrl(url: string): string {
   
   return url;
 }
-
-/**
- * Format seconds into a MM:SS display format for video players
- * @param seconds Number of seconds to format
- * @returns Formatted time string in MM:SS format
- */
-export function formatTime(seconds: number): string {
-  if (isNaN(seconds) || seconds < 0) return '00:00';
-  
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}

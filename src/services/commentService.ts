@@ -58,7 +58,7 @@ export const createComment = async (commentData: CommentData): Promise<CommentRe
   }
 };
 
-export const getComments = async (postId: string, page = 0, limit = 50): Promise<CommentResponse> => {
+export const getComments = async (postId: string, page = 0, limit = 100): Promise<CommentResponse> => {
   try {
     console.log(`Fetching comments for post: ${postId}, page: ${page}, limit: ${limit}`);
     
@@ -71,10 +71,16 @@ export const getComments = async (postId: string, page = 0, limit = 50): Promise
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
     
+    console.log(`Current user ID: ${userId || 'Not logged in'}`);
+    
     // Calculate offset
     const offset = page * limit;
     
-    // Fetch top-level comments
+    // Debug authentication
+    const { data: authDebug } = await supabase.auth.getSession();
+    console.log("Auth session:", authDebug?.session ? "Active" : "None");
+    
+    // Fetch ALL comments for this post, with a higher limit to ensure we get all
     const { data, error } = await supabase
       .from('comments')
       .select(`
@@ -91,9 +97,9 @@ export const getComments = async (postId: string, page = 0, limit = 50): Promise
         )
       `)
       .eq('post_id', postId)
-      .is('parent_id', null) // Get top-level comments only
+      // No user filtering! We want ALL comments regardless of who posted them
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .limit(limit);
 
     if (error) {
       console.error("Error fetching comments:", error);
@@ -101,6 +107,20 @@ export const getComments = async (postId: string, page = 0, limit = 50): Promise
     }
 
     console.log(`Raw comments data for post ${postId}:`, data);
+    
+    if (data && data.length > 0) {
+      console.log("Sample comment:", {
+        id: data[0].id,
+        content: data[0].content,
+        user_id: data[0].user_id,
+        username: data[0].profiles?.username,
+        parent_id: data[0].parent_id
+      });
+      
+      // Count distinct users who commented
+      const uniqueUsers = new Set(data.map((comment: any) => comment.user_id));
+      console.log(`Comments from ${uniqueUsers.size} unique users`);
+    }
 
     // If we have a logged-in user, determine which comments they've liked
     let commentLikes: any[] = [];
@@ -413,94 +433,5 @@ export const getCommentCount = async (postId: string): Promise<number> => {
   } catch (error) {
     console.error("Error getting comment count:", error);
     return 0;
-  }
-};
-
-// New function to get all comments across posts with pagination
-export const getAllComments = async (page = 0, limit = 20): Promise<CommentResponse> => {
-  try {
-    console.log(`Fetching all comments, page: ${page}, limit: ${limit}`);
-    
-    // Get the current user
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id;
-    
-    // Calculate offset
-    const offset = page * limit;
-    
-    // Fetch comments across all posts
-    const { data, error } = await supabase
-      .from('comments')
-      .select(`
-        id,
-        content,
-        created_at,
-        updated_at,
-        parent_id,
-        likes_count,
-        user_id,
-        post_id,
-        profiles:user_id (
-          username,
-          avatar_url
-        ),
-        posts:post_id (
-          id,
-          title,
-          thumbnail_url
-        )
-      `)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    if (error) {
-      console.error("Error fetching all comments:", error);
-      throw error;
-    }
-
-    // If we have a logged-in user, determine which comments they've liked
-    let commentLikes: any[] = [];
-    if (userId && data && data.length > 0) {
-      const { data: likes, error: likesError } = await supabase
-        .from('comment_likes')
-        .select('comment_id')
-        .eq('user_id', userId)
-        .in('comment_id', data.map((comment: any) => comment.id));
-
-      if (likesError) {
-        console.error("Error fetching comment likes:", likesError);
-      } else {
-        commentLikes = likes || [];
-      }
-    }
-
-    // Add liked_by_me property to each comment
-    const commentsWithLikeStatus = data ? data.map((comment: any) => ({
-      ...comment,
-      liked_by_me: commentLikes.some((like: any) => like.comment_id === comment.id)
-    })) : [];
-
-    // Get total count
-    const { count, error: countError } = await supabase
-      .from('comments')
-      .select('*', { count: 'exact', head: true });
-    
-    if (countError) {
-      console.error("Error counting total comments:", countError);
-    }
-
-    console.log(`Retrieved ${commentsWithLikeStatus?.length || 0} comments out of ${count || 'unknown'} total`);
-    return { 
-      data: { 
-        comments: commentsWithLikeStatus,
-        total: count || 0,
-        page,
-        limit
-      }, 
-      error: null 
-    };
-  } catch (error) {
-    console.error("Error in getAllComments:", error);
-    return { data: null, error: error as Error };
   }
 };

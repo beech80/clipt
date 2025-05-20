@@ -4,48 +4,46 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './index.css';
-import './styles/performance-settings.css';
+import { AuthProvider } from './contexts/AuthContext';
+import { MessagesProvider } from './contexts/MessagesContext';
+import { CommentsProvider } from './contexts/CommentContext';
 import { Toaster } from 'sonner';
 
 // Create a client with proper configuration
-// Create a custom QueryClient with enhanced error handling for undefined variables
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
       refetchOnWindowFocus: false,
-      // Add global error handling to prevent 'is not defined' errors
-      onError: (error) => {
-        console.error('Query error:', error);
-        // Don't propagate up certain errors so they don't cause app crashes
-        if (error instanceof Error && 
-            (error.message.includes('is not defined') || 
-             error.message.includes('Cannot read property'))) {
-          console.warn('Suppressing React Query error:', error.message);
-        }
-      },
-    },
-    mutations: {
-      // Add similar error handling for mutations
-      onError: (error) => {
-        console.error('Mutation error:', error);
-        if (error instanceof Error && 
-            (error.message.includes('is not defined') || 
-             error.message.includes('Cannot read property'))) {
-          console.warn('Suppressing React Query mutation error:', error.message);
-        }
-      },
     },
   },
 });
+
+// Make sure we're rendering to the root element
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  console.error('Root element not found - creating fallback container');
+  const fallbackRoot = document.createElement('div');
+  fallbackRoot.id = 'root';
+  document.body.appendChild(fallbackRoot);
+}
+
+// Add debugging to see if React is mounting
+console.log('Mounting React app to #root element');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <App />
-        <Toaster position="top-center" richColors />
+        <AuthProvider>
+          <MessagesProvider>
+            <CommentsProvider>
+              <App />
+              <Toaster position="top-center" richColors />
+            </CommentsProvider>
+          </MessagesProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
   </React.StrictMode>

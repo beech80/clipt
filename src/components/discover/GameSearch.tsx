@@ -20,7 +20,7 @@ import {
 import { SlidersHorizontal } from "lucide-react";
 
 interface GameSearchProps {
-  searchTerm: string | undefined;
+  searchTerm: string;
   onSearchChange: (value: string) => void;
   sortBy: string;
   onSortChange: (value: string) => void;
@@ -35,7 +35,7 @@ interface GameSearchProps {
 }
 
 export function GameSearch({ 
-  searchTerm = '', 
+  searchTerm, 
   onSearchChange, 
   sortBy, 
   onSortChange,
@@ -43,8 +43,6 @@ export function GameSearch({
   onFiltersChange = () => {},
   isLoading = false
 }: GameSearchProps) {
-  // Ensure searchTerm is always a string
-  const effectiveSearchTerm = searchTerm || '';
   return (
     <div className="flex flex-col gap-4 mb-6">
       <div className="flex gap-4">
@@ -54,7 +52,7 @@ export function GameSearch({
             type="search"
             placeholder="Search games..."
             className="pl-9"
-            value={effectiveSearchTerm}
+            value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             disabled={isLoading}
           />

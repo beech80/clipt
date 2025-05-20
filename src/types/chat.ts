@@ -1,9 +1,9 @@
+
 export interface StreamChatMessage {
   id: string;
   stream_id: string;
   user_id: string;
   message: string;
-  message_type?: 'chat' | 'system' | 'mod';
   created_at: string;
   is_deleted?: boolean;
   deleted_by?: string;
@@ -18,10 +18,7 @@ export interface StreamChatMessage {
 }
 
 export interface ChatEmote {
-SUCCESS: The process "node.exe" with PID 55892 has been terminated.
-SUCCESS: The process "node.exe" with PID 64276 has been terminated.
-SUCCESS: The process "node.exe" with PID 55892 has been terminated.
-SUCCESS: The process "node.exe" with PID 64276 has been terminated.
+  id: string;
   name: string;
   url: string;
   created_at: string;
@@ -30,7 +27,7 @@ SUCCESS: The process "node.exe" with PID 64276 has been terminated.
   permissions?: {
     subscriber_only: boolean;
     moderator_only: boolean;
-  }; 
+  };
   animated?: boolean;
 }
 

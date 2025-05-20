@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { LogIn, UserPlus, Gamepad2, ChevronLeft } from "lucide-react";
+import { LogIn, UserPlus, Gamepad2 } from "lucide-react";
 import { toast } from "sonner";
 
 const Login = () => {
@@ -12,45 +12,8 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [justSignedUp, setJustSignedUp] = useState(false);
-  const [currentSelection, setCurrentSelection] = useState<'email' | 'password' | 'signin' | 'signup'>('email');
   const { signIn } = useAuth();
   const navigate = useNavigate();
-
-  // Check if user just signed up
-  useEffect(() => {
-    const signedUpFlag = localStorage.getItem('justSignedUp');
-    if (signedUpFlag === 'true') {
-      setJustSignedUp(true);
-      // Remove the flag after showing the message
-      localStorage.removeItem('justSignedUp');
-    }
-  }, []);
-
-  // Handle keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'ArrowUp':
-          if (currentSelection === 'password') setCurrentSelection('email');
-          else if (currentSelection === 'signin') setCurrentSelection('password');
-          else if (currentSelection === 'signup') setCurrentSelection('signin');
-          break;
-        case 'ArrowDown':
-          if (currentSelection === 'email') setCurrentSelection('password');
-          else if (currentSelection === 'password') setCurrentSelection('signin');
-          else if (currentSelection === 'signin') setCurrentSelection('signup');
-          break;
-        case 'Enter':
-          if (currentSelection === 'signin') handleLogin(new Event('submit') as any);
-          else if (currentSelection === 'signup') navigate('/signup');
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentSelection]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,155 +42,115 @@ const Login = () => {
       setLoading(false);
     }
   };
+  
+  // Demo account login for easy testing
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await signIn("demo@clipt.com", "demo123");
+      toast.success("Signed in with demo account!");
+      navigate("/");
+    } catch (error) {
+      setError("Could not sign in with demo account. Try using the regular login instead.");
+      console.error('Demo login error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1A0A00] to-[#0C0C0C] text-white overflow-hidden">
-      {/* Simplified header - just the CLIPT title, removed back button */}
-      <div className="flex justify-center items-center p-4 bg-black/30 border-b border-orange-900/30">
-        <div className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-400 to-amber-400">
-          CLIPT
-        </div>
-      </div>
-
-      <div className="container mx-auto flex flex-col items-center justify-center p-4 pt-12 pb-32">
-        <div className="max-w-md w-full">
-          {/* Enhanced login card with more futuristic gaming aesthetics - Orange theme */}
-          <div className="bg-orange-900/20 backdrop-blur-sm border border-orange-800/50 rounded-xl shadow-2xl overflow-hidden">
-            {/* Animated Header with particle effects */}
-            <div className="bg-gradient-to-r from-orange-900/80 via-amber-900/80 to-red-900/80 p-8 text-center relative overflow-hidden">
-              <div className="absolute inset-0">
-                <div className="absolute top-0 left-1/4 w-24 h-24 rounded-full bg-orange-500/10 animate-pulse filter blur-xl"></div>
-                <div className="absolute bottom-0 right-1/4 w-32 h-32 rounded-full bg-amber-500/10 animate-pulse filter blur-xl"></div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full bg-red-500/10 animate-pulse filter blur-2xl"></div>
-              </div>
-              
-              <div className="relative z-10 mb-3">
-                <div className="flex justify-center mb-4">
-                  <div className="w-24 h-24 relative">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-600 to-red-600 opacity-30 blur-md animate-pulse"></div>
-                    <div className="absolute inset-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center">
-                      <Gamepad2 className="h-10 w-10 text-white" />
-                    </div>
-                  </div>
-                </div>
-                <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-400 via-amber-300 to-red-400">
-                  SIGN IN
-                </h1>
-              </div>
+    <div className="min-h-screen bg-gradient-to-b from-[#1a1f3c] to-[#0d0f1e] flex flex-col items-center justify-center pb-20">
+      <div className="mx-auto max-w-md space-y-6 p-8 bg-[#0D1117] border border-indigo-500/20 rounded-xl shadow-xl">
+        <div className="text-center space-y-2">
+          <div className="flex justify-center mb-4">
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center shadow-lg">
+              <Gamepad2 className="h-14 w-14 text-white" />
             </div>
+          </div>
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">
+            Welcome Back
+          </h1>
+          <p className="text-indigo-200/70">Sign in to your Clipt account</p>
+        </div>
 
-            {/* Form with enhanced styling */}
-            <div className="p-8 relative space-y-6">
-              {/* Background effects - updated to orange theme */}
-              <div className="absolute -right-8 top-1/4 w-16 h-16 rounded-full bg-gradient-to-r from-orange-500 to-red-500 opacity-5 blur-xl"></div>
-              <div className="absolute left-1/4 -top-8 w-16 h-16 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 opacity-5 blur-xl"></div>
-              
-              {justSignedUp && (
-                <Alert className="bg-orange-950/30 border-orange-800 text-orange-400 mb-4">
-                  <AlertDescription>
-                    We've sent a verification email to your address. Please verify your email before logging in.
-                    <div className="mt-2">
-                      <Button 
-                        variant="link" 
-                        className="text-orange-400 p-0 h-auto"
-                        onClick={() => setJustSignedUp(false)}
-                      >
-                        Dismiss
-                      </Button>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              {error && (
-                <Alert variant="destructive" className="mb-6 bg-red-900/40 border border-red-700/50 text-orange-200">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+        {error && (
+          <Alert variant="destructive" className="bg-red-950/40 border border-red-500/50 text-red-200">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-              <form onSubmit={handleLogin} className="space-y-6">
-                <div 
-                  className={`${currentSelection === 'email' ? 'transform scale-102' : ''} transition-all duration-200`}
-                  onClick={() => setCurrentSelection('email')}
-                >
-                  <div className="flex items-center mb-2">
-                    <div className={`w-3 h-3 rounded-full ${currentSelection === 'email' ? 'bg-orange-400' : 'bg-orange-900'} mr-2`}></div>
-                    <label className="text-sm font-medium text-orange-300">Email Address</label>
-                  </div>
-                  <Input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={loading}
-                    className={`bg-orange-950/40 border-orange-700/30 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 text-white h-12 ${
-                      currentSelection === 'email' ? 'border-orange-500 ring-2 ring-orange-500/30' : ''
-                    }`}
-                  />
-                </div>
-                
-                <div 
-                  className={`${currentSelection === 'password' ? 'transform scale-102' : ''} transition-all duration-200`}
-                  onClick={() => setCurrentSelection('password')}
-                >
-                  <div className="flex items-center mb-2">
-                    <div className={`w-3 h-3 rounded-full ${currentSelection === 'password' ? 'bg-orange-400' : 'bg-orange-900'} mr-2`}></div>
-                    <label className="text-sm font-medium text-orange-300">Password</label>
-                  </div>
-                  <Input
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                    className={`bg-orange-950/40 border-orange-700/30 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 text-white h-12 ${
-                      currentSelection === 'password' ? 'border-orange-500 ring-2 ring-orange-500/30' : ''
-                    }`}
-                  />
-                </div>
-                
-                <div className="pt-4">
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className={`w-full h-14 font-medium transition-all duration-200 ${
-                      currentSelection === 'signin'
-                        ? 'bg-gradient-to-r from-orange-600 to-red-600 border-2 border-orange-400 transform scale-102 shadow-lg shadow-orange-900/30'
-                        : 'bg-orange-800/70 hover:bg-orange-700/70 border border-orange-700/50'
-                    }`}
-                    onClick={() => setCurrentSelection('signin')}
-                  >
-                    <LogIn className={`h-5 w-5 mr-2 ${loading ? 'animate-pulse' : ''}`} />
-                    {loading ? "Signing In..." : "Sign In"}
-                  </Button>
-                </div>
-                
-                <div 
-                  className="flex justify-center pt-2"
-                  onClick={() => setCurrentSelection('signup')}
-                >
-                  <Button
-                    type="button"
-                    variant="link"
-                    className={`text-orange-400 hover:text-orange-300 ${
-                      currentSelection === 'signup' ? 'underline text-orange-300' : ''
-                    }`}
-                    onClick={() => navigate('/signup')}
-                  >
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Create a new account
-                  </Button>
-                </div>
-              </form>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <Input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+              className="bg-[#161B22] border-indigo-500/30 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-white h-12"
+            />
+          </div>
+          <div>
+            <Input
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              className="bg-[#161B22] border-indigo-500/30 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-white h-12"
+            />
+          </div>
+          <Button
+            type="submit"
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white h-12 font-medium"
+            disabled={loading}
+          >
+            <LogIn className="mr-2 h-5 w-5" />
+            {loading ? "Signing in..." : "Sign in"}
+          </Button>
+          
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-indigo-500/20"></span>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-[#0D1117] px-2 text-indigo-300/50">or</span>
             </div>
           </div>
           
-          <div className="text-center mt-8 text-xs text-orange-500/60">
-            CLIPT 2025 - Next-Gen Gaming Social Platform
+          <Button
+            type="button"
+            className="w-full bg-[#161B22] border border-indigo-500/30 hover:bg-indigo-900/30 text-white h-12 font-medium"
+            onClick={handleDemoLogin}
+            disabled={loading}
+          >
+            <Gamepad2 className="mr-2 h-5 w-5 text-indigo-400" />
+            Try demo account
+          </Button>
+          
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full border border-indigo-500/30 hover:bg-indigo-900/30 text-white h-12 font-medium mt-2"
+            onClick={() => navigate("/signup")}
+            disabled={loading}
+          >
+            <UserPlus className="mr-2 h-5 w-5" />
+            Create a new account
+          </Button>
+
+          <div className="mt-6 text-center space-y-2">
+            <Link to="/reset-password" className="text-sm text-indigo-400 hover:text-indigo-300 block">
+              Forgot your password?
+            </Link>
+            <Link to="/resend-verification" className="text-sm text-indigo-400 hover:text-indigo-300 block">
+              Resend verification email
+            </Link>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

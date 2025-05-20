@@ -4,41 +4,28 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Force Lucide icons to orange globally */
-svg.lucide, .lucide-icon, .lucide, .lucide svg {
-  color: #ff6600 !important;
-  fill: #ff6600 !important;
-}
-
-/* Extra: any svg inside the app-content-wrapper or main app */
-.app-content-wrapper svg {
-  color: #fff !important;
-  fill: #fff !important;
-}
-
 @layer base {
   :root {
-    /* Three-color scheme: darker tan background, black text, darker orange UI */
-    --background: 34 25% 65%; /* #BBA78F in HSL (darker tan) */
-    --foreground: 0 0% 0%; /* #000000 pure black */
-    --card: 34 25% 70%;
-    --card-foreground: 0 0% 0%; /* black */
-    --popover: 34 25% 70%;
-    --popover-foreground: 0 0% 0%; /* black */
-    --primary: 21 78% 52%; /* #E67E22 Darker orange for buttons and primary elements */
-    --primary-foreground: 0 0% 0%; /* black */
-    --secondary: 28 90% 52%; /* #F39C12 Medium orange */
-    --secondary-foreground: 0 0% 0%; /* black */
-    --muted: 34 25% 60%;
-    --muted-foreground: 0 0% 0%; /* black */
-    --accent: 16 77% 42%; /* #D35400 Very dark orange for accents */
-    --accent-foreground: 0 0% 0%; /* black */
+    --background: 240 27% 8%;
+    --foreground: 255 39% 63%;
+    --card: 240 27% 12%;
+    --card-foreground: 255 39% 63%;
+    --popover: 240 27% 12%;
+    --popover-foreground: 255 39% 63%;
+    --primary: 255 39% 37%;
+    --primary-foreground: 255 39% 63%;
+    --secondary: 240 27% 16%;
+    --secondary-foreground: 255 39% 63%;
+    --muted: 240 27% 16%;
+    --muted-foreground: 255 39% 45%;
+    --accent: 240 27% 16%;
+    --accent-foreground: 255 39% 63%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%; /* white for destructive action text */
-    --border: 21 78% 52%; /* #E67E22 Darker orange for borders */
-    --input: 34 25% 65%;
-    --ring: 21 78% 52%; /* #E67E22 Darker orange for focus rings */
-    --radius: 0.375rem;
+    --destructive-foreground: 255 39% 63%;
+    --border: 240 27% 16%;
+    --input: 240 27% 16%;
+    --ring: 255 39% 37%;
+    --radius: 0rem;
   }
 }
 
@@ -54,19 +41,17 @@ svg.lucide, .lucide-icon, .lucide, .lucide svg {
   body {
     @apply bg-background text-foreground;
     min-height: 100vh;
-    height: 100%;
+    height: auto;
     position: relative;
-    overflow-y: auto;
+    overflow-y: auto !important;
     overflow-x: hidden;
     margin: 0;
     padding: 0;
     padding-bottom: 250px; /* Add extra padding to ensure content isn't hidden behind gameboy UI */
-    background-color: var(--background-override, #BBA78F);
+    background-color: var(--background-override, #1A1F2C);
     background-image: 
-      radial-gradient(at 100% 0%, rgba(230, 126, 34, 0.15) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(211, 84, 0, 0.12) 0px, transparent 50%);
-    /* Ensure the background doesn't extend beyond the content */
-    background-attachment: fixed;
+      radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(107, 81, 201, 0.12) 0px, transparent 50%);
   }
   #root {
     height: auto;
@@ -88,63 +73,188 @@ svg.lucide, .lucide-icon, .lucide, .lucide svg {
   height: auto;
   min-height: 100vh;
   width: 100%;
-  overflow: hidden;
+  overflow: visible !important;
   position: relative;
-  max-height: 100vh;
 }
 
-/* Ensure proper containment on mobile */
+/* Remove any overflow restrictions on mobile */
 @media (max-width: 768px) {
-  html, body {
-    overflow-x: hidden;
-    overflow-y: auto;
-    height: 100% !important;
+  html, body, #root, main, .main-content, .main-container, .page-container {
+    overflow: visible !important;
+    height: auto !important;
     min-height: 100vh;
-    max-height: 100vh;
-    position: fixed;
-    width: 100%;
   }
-  
-  #root, main, .main-content, .main-container, .page-container {
-    overflow-x: hidden;
-    overflow-y: auto;
-    height: 100% !important;
-    min-height: 100vh;
-    max-height: 100vh;
-    width: 100%;
+}
+
+/* GameBoy styling */
+.gameboy-header {
+  @apply fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-center;
+  background: #9b87f5;
+  border-bottom: 4px solid #7E69AB;
+  box-shadow: 
+    0 2px 0 #6E59A5,
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+.gameboy-title {
+  @apply text-lg font-bold tracking-widest;
+  color: #1A1F2C;
+  text-shadow: 
+    2px 2px 0 rgba(255, 255, 255, 0.2),
+    -1px -1px 0 rgba(110, 89, 165, 0.3);
+  font-family: monospace;
+  letter-spacing: 0.2em;
+}
+
+.gaming-cartridge {
+  @apply relative border-4 border-gaming-400 rounded-lg overflow-hidden bg-[#222222];
+  box-shadow: 
+    inset 0 2px 4px rgba(255,255,255,0.1),
+    0 4px 8px rgba(0,0,0,0.3);
+}
+
+.clip-button {
+  @apply relative flex items-center justify-center gap-1;
+  width: 80px;
+  height: 60px;
+  border-radius: 30px;
+  background: linear-gradient(145deg, #1c1f2e, #1a1d2c);
+  position: relative;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.clip-button::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(45deg, #00C2FF, #8B5CF6, #FF1CF7);
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rotate 4s linear infinite;
+}
+
+.clip-button::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #1c1f2e, #1a1d2c);
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.clip-button-icon {
+  position: relative;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  color: #fff;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+  opacity: 0.9;
+}
+
+.clip-button-text {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+  opacity: 0.9;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float-out {
+  0% {
+    transform: scale(0.2);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2) translate(30px, 30px);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0% {
+    filter: drop-shadow(0 0 5px rgba(128, 90, 213, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px rgba(128, 90, 213, 0.8));
+  }
+  100% {
+    filter: drop-shadow(0 0 5px rgba(128, 90, 213, 0.5));
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
   }
 }
 
 .gaming-card {
   @apply relative overflow-hidden rounded-none border-2 border-gaming-400 bg-[#1A1F2C] p-4 transition-all hover:border-gaming-500;
-  box-shadow: 0 0 15px rgba(230, 126, 34, 0.3);
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }
 
 .gaming-gradient {
-  @apply bg-gradient-to-r from-[#E67E22] to-[#D35400] bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-gaming-400 to-gaming-500 bg-clip-text text-transparent;
 }
 
 .gaming-button {
   @apply inline-flex items-center justify-center rounded-none border-2 px-4 py-2 text-sm font-medium 
     transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 
     disabled:pointer-events-none disabled:opacity-50 touch-manipulation;
-  border-color: var(--button-override, #E67E22);
+  border-color: var(--button-override, #9b87f5);
   background-color: var(--background-override, #1A1F2C);
   color: var(--text-override, #FFFFFF);
-  box-shadow: 0 0 15px rgba(230, 126, 34, 0.3);
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }
 
 .gaming-button:hover {
-  border-color: var(--button-override, #D35400);
+  border-color: var(--button-override, #8B5CF6);
 }
 
 .glass-card {
-  @apply bg-[#1A1F2C] border-2 border-[#E67E22] rounded-none;
-  box-shadow: 0 0 15px rgba(230, 126, 34, 0.3);
+  @apply bg-[#1A1F2C] border-2 border-[#9b87f5] rounded-none;
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }
 
 .hover-glow {
-  @apply transition-all hover:shadow-lg hover:shadow-[#E67E22]/20;
+  @apply transition-all hover:shadow-lg hover:shadow-[#9b87f5]/20;
 }
 
 .retro-screen {
@@ -152,175 +262,365 @@ svg.lucide, .lucide-icon, .lucide, .lucide svg {
   background-color: #1A1F2C;
 }
 
-/* Gaming theme colors for the GameChat component */
-.bg-gaming-900 {
-  background-color: #0f111a;
+.gameboy-container {
+  @apply fixed bottom-0 left-0 right-0 bg-[#1A1F2C]/95 backdrop-blur-sm z-40;
+  height: 180px; /* Reduced height for mobile */
 }
 
-.bg-gaming-850 {
-  background-color: #131624;
+@media (min-width: 640px) {
+  .gameboy-container {
+    height: 200px; /* Reduced height for desktop */
+  }
 }
 
-.bg-gaming-800 {
-  background-color: #171a29;
+.action-buttons-container {
+  @apply fixed flex flex-col items-center justify-center;
 }
 
-.bg-gaming-800\/50 {
-  background-color: rgba(23, 26, 41, 0.5);
+.action-button {
+  @apply w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center
+    backdrop-blur-sm touch-manipulation active:scale-95 border-2;
+  background: linear-gradient(to bottom, rgba(26,31,44,0.8), rgba(26,31,44,1));
+  box-shadow: 
+    inset 0 2px 4px rgba(255,255,255,0.1),
+    0 2px 4px rgba(0,0,0,0.2);
 }
 
-.bg-gaming-700 {
-  background-color: #222536;
+.bg-radial-gradient {
+  background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.6) 100%);
 }
 
-.border-gaming-700 {
-  border-color: #2a2e42;
-}
-
-.border-gaming-600 {
-  border-color: #383d56;
-}
-
-.text-gaming-100 {
-  color: #eaebef;
-}
-
-.text-gaming-200 {
-  color: #d5d7e0;
-}
-
-.text-gaming-400 {
-  color: #9397a8;
-}
-
-.text-gaming-400\/70 {
-  color: rgba(147, 151, 168, 0.7);
-}
-
-.text-gaming-500 {
-  color: #777c8e;
-}
-
-.hover\:bg-gaming-700:hover {
-  background-color: #222536;
-}
-
-.scrollbar-thin {
-  scrollbar-width: thin;
-}
-
-.scrollbar-thumb-gaming-700 {
-  scrollbar-color: #2a2e42 transparent;
-}
-
-/* Hide scrollbar for Chrome, Safari and Opera */
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* Hide scrollbar for IE, Edge and Firefox */
-.hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
-/* GTA-style gaming theme effects - COMPLETELY REDEFINED */
-.gta-uploader {
-  background-color: #141414 !important;
-  color: #ffffff !important;
-  font-family: 'Roboto', 'Helvetica', sans-serif !important;
-  letter-spacing: 0.05em !important;
-  text-transform: uppercase !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 9999 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  align-items: center !important;
-  overflow: hidden !important;
-}
-
-.gta-title {
-  font-family: 'Helvetica', 'Arial', sans-serif;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.gta-grid {
-  background-image: 
-    linear-gradient(rgba(255, 102, 0, 0.3) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 102, 0, 0.3) 1px, transparent 1px);
-  background-size: 20px 20px;
-  background-position: center center;
-  transform: perspective(500px) rotateX(60deg);
-  height: 100vh;
-  width: 100vw;
+.clip-button-corners {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: -15px;
   z-index: 1;
 }
 
-/* Loading bar animation */
-@keyframes gta-loading-bar {
-  0% { width: 0%; }
-  100% { width: 100%; }
-}
-
-.gta-loading-bar {
-  height: 4px;
-  background: linear-gradient(to right, #ff6600, #ff3300);
-  animation: gta-loading-bar 3s ease-in-out infinite;
-}
-
-/* Scanning line effect */
-@keyframes scanning {
-  from { transform: translateY(-100%); }
-  to { transform: translateY(100%); }
-}
-
-.scanning-line {
+.clip-button-corner {
   position: absolute;
-  height: 2px;
-  background: linear-gradient(to right, transparent, #ff6600, transparent);
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: linear-gradient(45deg, #00C2FF, #8B5CF6);
+  filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.5));
+}
+
+.clip-button-corner:nth-child(1) {
+  top: 0;
+  right: 0;
+  transform: rotate(45deg);
+}
+
+.clip-button-corner:nth-child(2) {
+  bottom: 0;
+  left: 0;
+  transform: rotate(45deg);
+}
+
+.xbox-joystick {
+  @apply relative w-full h-full rounded-full backdrop-blur-sm transition-all duration-300 touch-manipulation;
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  box-shadow: 
+    inset 0 2px 15px rgba(255,255,255,0.1),
+    0 5px 15px rgba(0,0,0,0.4),
+    0 15px 30px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.xbox-joystick::before {
+  content: '';
+  @apply absolute inset-0 rounded-full;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.xbox-joystick-thumb {
+  @apply absolute inset-0 m-auto w-16 sm:w-20 h-16 sm:h-20 rounded-full transition-all duration-300 ease-out;
+  background: linear-gradient(145deg, #333333, #222222);
+  box-shadow: 
+    inset 0 2px 15px rgba(255,255,255,0.1),
+    0 5px 15px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.xbox-joystick-thumb::before {
+  content: '';
+  @apply absolute inset-0 rounded-full;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.xbox-joystick-direction {
+  @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
+}
+
+/* GameBoy Controller Styles */
+.clipt-button {
+  position: relative;
+  background: #1e1e28;
+  color: white;
+  font-weight: bold;
+  padding: 8px 20px;
+  border-radius: 9999px;
+  border: none;
+  box-shadow: 0 0 15px 5px rgba(124, 58, 237, 0.6);
+  transition: all 0.3s ease;
+}
+
+.clipt-button:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  padding: 2px;
+  background: linear-gradient(45deg, #7c3aed, #3b82f6);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.clipt-button:hover {
+  box-shadow: 0 0 20px 8px rgba(124, 58, 237, 0.8);
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 15px 2px rgba(124, 58, 237, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 25px 5px rgba(124, 58, 237, 0.9);
+  }
+  100% {
+    box-shadow: 0 0 15px 2px rgba(124, 58, 237, 0.6);
+  }
+}
+
+.gameboy-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background-color: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(4px);
+  border-top: 1px solid #4338ca;
   width: 100%;
-  animation: scanning 3s linear infinite;
-  opacity: 0.5;
-  z-index: 5;
 }
 
-/* Flicker effect for text */
-@keyframes text-flicker {
-  0% { opacity: 1; }
-  2% { opacity: 0.8; }
-  4% { opacity: 1; }
-  19% { opacity: 1; }
-  21% { opacity: 0.6; }
-  23% { opacity: 1; }
-  80% { opacity: 1; }
-  83% { opacity: 0.7; }
-  87% { opacity: 1; }
+.joystick-container {
+  position: relative;
+  width: 70px;
+  height: 70px;
 }
 
-.gta-text-flicker {
-  animation: text-flicker 4s infinite;
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* Hide scrollbar in GTA theme */
-.gta-uploader::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
+.action-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid;
+  background-color: transparent;
+  transition: all 0.2s ease;
 }
 
-.gta-uploader {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+.action-button-heart {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.action-button-comment {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.action-button-follow {
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.action-button-trophy {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.gameboy-selected-post {
+  position: relative;
+}
+
+.gameboy-selected-post::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(124, 58, 237, 0.5);
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gameboy-controls {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background-color: #111827;
+  border-top: 1px solid #2d3748;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 50;
+}
+
+/* Joystick */
+.joystick {
+  width: 80px;
+  height: 80px;
+  position: relative;
+  background-color: #374151;
+  border-radius: 50%;
+  border: 2px solid #4b5563;
+}
+
+.d-pad-center {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background-color: #1f2937;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.d-pad-up, .d-pad-right, .d-pad-down, .d-pad-left {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background-color: #2d3748;
+}
+
+.d-pad-up {
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.d-pad-right {
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
+}
+
+.d-pad-down {
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+}
+
+.d-pad-left {
+  top: 50%;
+  left: 5px;
+  transform: translateY(-50%);
+  clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+}
+
+/* CLIPT button */
+.clipt-button-container {
+  background-color: transparent;
+  border: none;
+  position: relative;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.clipt-button {
+  padding: 10px 20px;
+  border-radius: 9999px;
+  background-color: transparent;
+  color: white;
+  font-weight: bold;
+  border: 2px solid;
+  border-image: linear-gradient(45deg, #7c3aed, #3b82f6) 1;
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
+}
+
+.pulse-glow {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(124, 58, 237, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+  }
+}
+
+/* Action buttons */
+.action-buttons {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.action-button {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+.action-button-top {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.action-button-right {
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+}
+
+.action-button-bottom {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.action-button-left {
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.post-button, .menu-button {
+  background-color: #1f2937;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  padding: 5px 10px;
 }

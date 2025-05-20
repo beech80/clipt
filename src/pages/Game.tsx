@@ -1,17 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
-import { Gamepad2, Users, Trophy, Clock, Heart } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { toast } from '@/components/ui/use-toast';
-import GameBoyControls from "@/components/GameBoyControls";
+import { Gamepad2, Users, Trophy, Clock } from 'lucide-react';
 
 const Game = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [isLiked, setIsLiked] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c]">
@@ -106,9 +101,6 @@ const Game = () => {
           </div>
         </div>
       </div>
-
-      {/* Game controls with rainbow borders and joystick */}
-      <GameBoyControls />
     </div>
   );
 };

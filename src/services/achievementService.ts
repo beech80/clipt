@@ -1,18 +1,8 @@
 import { supabase } from '@/lib/supabase';
+import type { Achievement, AchievementProgress } from '@/types/profile';
 
 // Default achievement data to create for new users
 const defaultAchievements = [
-  {
-    id: 'welcome',
-    name: 'Welcome to Clipt',
-    description: 'Sign up and create your account',
-    category: 'general',
-    image: '/achievements/welcome.png',
-    target_value: 1,
-    points: 10,
-    progress_type: 'boolean',
-    reward_type: 'points',
-  },
   // Daily Quests
   {
     name: 'Complete 4 Daily Quests',
@@ -33,98 +23,84 @@ const defaultAchievements = [
     reward_type: 'points',
   },
   
-  // Trophy & Weekly Top 10 Achievements
+  // Platform-specific Achievements
   {
-    name: 'First Taste of Gold',
-    description: 'Earn 10 trophies on a single post',
-    target_value: 10,
-    points: 25,
-    category: 'trophy',
-    progress_type: 'count',
-    reward_type: 'points',
-  },
-  {
-    name: 'Crowd Favorite',
-    description: 'Get 50 trophies on a post',
-    target_value: 50,
-    points: 50,
-    category: 'trophy',
-    progress_type: 'count',
-    reward_type: 'points',
-  },
-  {
-    name: 'Viral Sensation',
-    description: 'Reach 100 trophies on a single post',
-    target_value: 100,
-    points: 100,
-    category: 'trophy',
-    progress_type: 'count',
-    reward_type: 'badge',
-  },
-  {
-    name: 'Content King',
-    description: 'Earn 500 trophies on a post',
-    target_value: 500,
-    points: 200,
-    category: 'trophy',
-    progress_type: 'count',
-    reward_type: 'points',
-  },
-  {
-    name: 'Clipt Icon',
-    description: 'Reach 1,000 trophies on a post—true viral status',
-    target_value: 1000,
-    points: 300,
-    category: 'trophy',
-    progress_type: 'count',
-    reward_type: 'title',
-  },
-  {
-    name: 'Breaking In',
-    description: 'Rank in the Top 10 of the weekly leaderboard for the first time',
+    name: 'Trophy Collector',
+    description: 'Earn your first trophy by getting into the weekly top 10',
     target_value: 1,
+    points: 25,
+    category: 'streaming',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'Growing Community',
+    description: 'Reach 10 followers on your profile',
+    target_value: 10,
     points: 50,
-    category: 'streaming',
+    category: 'social',
     progress_type: 'count',
     reward_type: 'points',
   },
   {
-    name: 'Back-to-Back',
-    description: 'Stay in the Top 10 for 2 consecutive weeks',
-    target_value: 2,
-    points: 75,
-    category: 'streaming',
-    progress_type: 'count',
-    reward_type: 'points',
-  },
-  {
-    name: 'Hot Streak',
-    description: 'Maintain a Top 10 spot for 5 weeks straight',
+    name: 'Content Creator',
+    description: 'Upload 5 clips to your profile',
     target_value: 5,
-    points: 150,
+    points: 10,
     category: 'streaming',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+
+  // Trophy Achievements
+  {
+    name: 'Trophy Hunter',
+    description: 'Earn 5 trophies across all categories',
+    target_value: 5,
+    points: 50,
+    category: 'general',
     progress_type: 'count',
     reward_type: 'badge',
   },
   {
-    name: 'Unstoppable',
-    description: 'Stay in the Top 10 for 10 consecutive weeks',
-    target_value: 10,
-    points: 250,
-    category: 'streaming',
-    progress_type: 'count',
-    reward_type: 'points',
-  },
-  {
-    name: 'Clipt Hall of Fame',
-    description: 'Rank in the Top 10 for 25 weeks total',
+    name: 'Trophy Master',
+    description: 'Earn 25 trophies across all categories',
     target_value: 25,
-    points: 500,
-    category: 'streaming',
+    points: 100,
+    category: 'general',
     progress_type: 'count',
     reward_type: 'title',
   },
   
+  // Comment Achievements
+  {
+    name: 'First Comment',
+    description: 'Leave your first comment on a clip',
+    target_value: 1,
+    points: 15,
+    category: 'social',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'Active Commenter',
+    description: 'Leave 10 comments on clips',
+    target_value: 10,
+    points: 30,
+    category: 'social',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'Community Influencer',
+    description: 'Get 25 likes on your comments',
+    target_value: 25,
+    points: 50,
+    category: 'social',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+
   // Follower Achievements
   {
     name: 'First Follower',
@@ -137,54 +113,56 @@ const defaultAchievements = [
   },
   {
     name: 'Rising Star',
-    description: 'Hit 1,000 followers on Clipt',
-    target_value: 1000,
-    points: 100, 
+    description: 'Reach 50 followers',
+    target_value: 50,
+    points: 30, 
     category: 'social',
     progress_type: 'count',
     reward_type: 'points',
   },
   {
-    name: 'Trending Now',
-    description: 'Reach 5,000 followers—people love your content',
-    target_value: 5000,
-    points: 200,
+    name: 'Influencer',
+    description: 'Reach 100 followers',
+    target_value: 100,
+    points: 75,
     category: 'social',
     progress_type: 'count',
     reward_type: 'badge',
-  },
-  {
-    name: 'Influencer Status',
-    description: 'Gain 10,000 followers and grow your community',
-    target_value: 10000,
-    points: 300,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'title',
-  },
-  {
-    name: 'Clipt Famous',
-    description: 'Surpass 50,000 followers—your name is known',
-    target_value: 50000,
-    points: 500,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'badge',
-  },
-  {
-    name: 'Elite Creator',
-    description: 'Reach 100,000 followers and be among the platform\'s best',
-    target_value: 100000,
-    points: 1000,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'title',
   },
   
-  // Streaming Subscriber Achievements
+  // Weekly Top 10 Achievements
   {
-    name: 'First Supporter',
-    description: 'Gain your first subscriber on your streaming channel',
+    name: 'Weekly Top 10',
+    description: 'Get into the weekly top 10 for the first time',
+    target_value: 1,
+    points: 50,
+    category: 'streaming',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'Consistent Performer',
+    description: 'Get into the weekly top 10 three times',
+    target_value: 3,
+    points: 100,
+    category: 'streaming',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'Weekly Champion',
+    description: 'Reach the #1 spot in the weekly top 10',
+    target_value: 1,
+    points: 150,
+    category: 'streaming',
+    progress_type: 'count',
+    reward_type: 'title',
+  },
+
+  // Streaming Achievements
+  {
+    name: 'First Blood',
+    description: 'Upload your first clip',
     target_value: 1,
     points: 20,
     category: 'streaming',
@@ -192,281 +170,27 @@ const defaultAchievements = [
     reward_type: 'points',
   },
   {
-    name: 'Small but Mighty',
-    description: 'Hit 10 subscribers—your community is growing',
-    target_value: 10,
+    name: 'Clip Master',
+    description: 'Upload 20 clips',
+    target_value: 20,
     points: 40,
     category: 'streaming',
     progress_type: 'count',
     reward_type: 'points',
   },
   {
-    name: 'Streaming Star',
-    description: 'Reach 100 subscribers—your audience is loyal',
-    target_value: 100,
-    points: 100,
-    category: 'streaming',
-    progress_type: 'count',
-    reward_type: 'badge',
-  },
-  {
-    name: 'Big League Streamer',
-    description: 'Gain 1,000 subscribers and solidify your name',
+    name: 'Viral Hit',
+    description: 'Get 1000 views on a single clip',
     target_value: 1000,
-    points: 250,
+    points: 60,
     category: 'streaming',
-    progress_type: 'count',
-    reward_type: 'title',
-  },
-  {
-    name: 'Streaming Legend',
-    description: 'Surpass 10,000 subscribers—you\'re a household name',
-    target_value: 10000,
-    points: 500,
-    category: 'streaming',
-    progress_type: 'count',
-    reward_type: 'title',
-  },
-  
-  // Engagement Achievements
-  {
-    name: 'Hype Squad',
-    description: 'Leave 50 comments on other creators\' posts',
-    target_value: 50,
-    points: 30,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'points',
-  },
-  {
-    name: 'Super Supporter',
-    description: 'Give out 100 trophies to different posts',
-    target_value: 100,
-    points: 75,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'badge',
-  },
-  {
-    name: 'Engagement Master',
-    description: 'Your comments have 1,000 total likes',
-    target_value: 1000,
-    points: 150,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'title',
-  },
-  {
-    name: 'Conversation Starter',
-    description: 'Get 100 replies to your comments',
-    target_value: 100,
-    points: 75,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'points',
-  },
-  {
-    name: 'Community Builder',
-    description: 'Start a trending discussion (a post with 500+ comments)',
-    target_value: 1,
-    points: 200,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'badge',
-  },
-  
-  // Sharing & Promotion Achievements
-  {
-    name: 'Signal Booster',
-    description: 'Share 10 posts from other creators',
-    target_value: 10,
-    points: 30,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'points',
-  },
-  {
-    name: 'Clipt Evangelist',
-    description: 'Invite 5 friends who create an account',
-    target_value: 5,
-    points: 100,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'badge',
-  },
-  {
-    name: 'The Connector',
-    description: 'Tag 100 different users in posts or comments',
-    target_value: 100,
-    points: 75,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'points',
-  },
-  {
-    name: 'Trendsetter',
-    description: 'A post you shared helps another user reach Top 10 for the week',
-    target_value: 1,
-    points: 150,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'badge',
-  },
-  {
-    name: 'Algorithm Whisperer',
-    description: 'Share a post that reaches 10,000+ views within 24 hours',
-    target_value: 1,
-    points: 200,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'title',
-  },
-  
-  // Collab & Creator Support Achievements
-  {
-    name: 'Duo Dynamic',
-    description: 'Collaborate on a post with another creator that gets 50+ trophies',
-    target_value: 1,
-    points: 75,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'points',
-  },
-  {
-    name: 'Mentor Mode',
-    description: 'Shout out a smaller creator (under 500 followers) and help them grow to 1,000+',
-    target_value: 1,
-    points: 200,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'badge',
-  },
-  {
-    name: 'The Networker',
-    description: 'Get tagged in 100 different posts by other creators',
-    target_value: 100,
-    points: 100,
-    category: 'social',
-    progress_type: 'count',
-    reward_type: 'points',
-  },
-
-  // Hidden & Special Achievements
-  {
-    name: 'OG Clipt Creator',
-    description: 'Join Clipt within the first 3 months of launch',
-    target_value: 1,
-    points: 100,
-    category: 'special',
-    progress_type: 'boolean',
-    reward_type: 'badge',
-  },
-  {
-    name: 'Day One Grinder',
-    description: 'Upload a post on launch day',
-    target_value: 1,
-    points: 100,
-    category: 'special',
-    progress_type: 'boolean',
-    reward_type: 'title',
-  },
-  {
-    name: 'Mystery Viral',
-    description: 'A random old post of yours goes viral again after 30+ days',
-    target_value: 1,
-    points: 150,
-    category: 'special',
-    progress_type: 'boolean',
-    reward_type: 'badge',
-  },
-  {
-    id: 'social_butterfly',
-    name: 'Social Butterfly',
-    description: 'Follow 10 people',
-    category: 'social',
-    image: '/achievements/social.png',
-    target_value: 10,
-    points: 50,
     progress_type: 'count',
     reward_type: 'badge',
   }
 ];
 
-// Sample user progress data for demo purposes
-const sampleUserProgress = [
-  // Trophy & Weekly Achievements
-  {
-    achievementName: 'First Taste of Gold',
-    currentValue: 4,
-    completed: false
-  },
-  {
-    achievementName: 'Crowd Favorite',
-    currentValue: 0,
-    completed: false
-  },
-  {
-    achievementName: 'Viral Sensation',
-    currentValue: 0,
-    completed: false
-  },
-  {
-    achievementName: 'Breaking In',
-    currentValue: 1,
-    completed: true
-  },
-  {
-    achievementName: 'Back-to-Back',
-    currentValue: 0,
-    completed: false
-  },
-  
-  // Follower Achievements
-  {
-    achievementName: 'First Follower',
-    currentValue: 1,
-    completed: true
-  },
-  {
-    achievementName: 'Rising Star',
-    currentValue: 245,
-    completed: false
-  },
-  {
-    achievementName: 'Trending Now',
-    currentValue: 0,
-    completed: false
-  },
-  
-  // Streaming Achievements
-  {
-    achievementName: 'First Supporter',
-    currentValue: 0,
-    completed: false
-  },
-  {
-    achievementName: 'Small but Mighty',
-    currentValue: 0,
-    completed: false
-  },
-  
-
-  // Engagement Achievements
-  {
-    achievementName: 'Hype Squad',
-    currentValue: 12,
-    completed: false
-  },
-  {
-    achievementName: 'Signal Booster',
-    currentValue: 3,
-    completed: false
-  },
-];
-
 // Default gaming achievements for popular games
 const defaultGameAchievements = {
-  // Rest of the game achievements code remains unchanged
   // Halo
   'halo-series': [
     {
@@ -520,147 +244,220 @@ const defaultGameAchievements = {
       total_players: 85,
       completed_players: 10
     }
-  ],
-  // Template for dynamically generated games (as seen in the image)
-  // These are the Xbox-style achievements we want to show for any game
-  'game-template': [
-    {
-      name: 'Souls Saved',
-      description: 'Complete the game on Normal',
-      target_value: 1,
-      points: 25,
-      rarity: 'common',
-      total_players: 1000,
-      completed_players: 217
-    },
-    {
-      name: 'Seeing You Sooner',
-      description: 'Defeat the boss',
-      target_value: 1,
-      points: 50,
-      rarity: 'uncommon',
-      total_players: 1000,
-      completed_players: 75
-    },
-    {
-      name: 'King',
-      description: 'Finish on a Bank or higher on all levels in forward run',
-      target_value: 1,
-      points: 100,
-      rarity: 'rare',
-      total_players: 1000,
-      completed_players: 37
-    },
-    {
-      name: 'Butter and Egg Man',
-      description: 'Hidden achievement',
-      target_value: 1,
-      points: 75,
-      rarity: 'rare',
-      total_players: 1000,
-      completed_players: 21
-    }
   ]
 };
 
-export interface Achievement {
-  id?: string;
-  name: string;
-  description: string;
-  category: "streaming" | "social" | "general" | "gaming" | "trophy" | "special" | "daily";
-  image?: string;
-  requiredAmount?: number;
-  target_value?: number;
-  points?: number;
-  progress_type?: "count" | "value" | "boolean";
-  reward_type?: "points" | "badge" | "title";
-  visible?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
+// Sample user progress data for demo purposes
+const sampleUserProgress = [
+  // Daily Quests
+  {
+    achievementName: 'Complete 4 Daily Quests',
+    currentValue: 2,
+    completed: false
+  },
+  {
+    achievementName: 'Earn Your Way',
+    currentValue: 1,
+    completed: false
+  },
+  
+  // Platform-specific Achievements
+  {
+    achievementName: 'Trophy Collector',
+    currentValue: 0,
+    completed: false
+  },
+  {
+    achievementName: 'Growing Community',
+    currentValue: 4,
+    completed: false
+  },
+  {
+    achievementName: 'Content Creator',
+    currentValue: 3,
+    completed: false
+  },
 
-export interface AchievementProgress {
-  id: string;
-  userId: string;
-  achievementId: string;
-  currentValue: number;
-  completed: boolean;
-  achievement?: Achievement; 
-  createdAt: string;
-  updatedAt: string;
-}
+  // Trophy Achievements
+  {
+    achievementName: 'Trophy Hunter',
+    currentValue: 3,
+    completed: false
+  },
+  {
+    achievementName: 'Trophy Master',
+    currentValue: 7,
+    completed: false
+  },
+  
+  // Comment Achievements
+  {
+    achievementName: 'First Comment',
+    currentValue: 1,
+    completed: true
+  },
+  {
+    achievementName: 'Active Commenter',
+    currentValue: 6,
+    completed: false
+  },
+  {
+    achievementName: 'Community Influencer',
+    currentValue: 12,
+    completed: false
+  },
+  
+  // Follower Achievements
+  {
+    achievementName: 'First Follower',
+    currentValue: 1,
+    completed: true
+  },
+  {
+    achievementName: 'Rising Star',
+    currentValue: 26,
+    completed: false
+  },
+  {
+    achievementName: 'Influencer',
+    currentValue: 35,
+    completed: false
+  },
+  
+  // Weekly Top 10 Achievements
+  {
+    achievementName: 'Weekly Top 10',
+    currentValue: 1,
+    completed: true
+  },
+  {
+    achievementName: 'Consistent Performer',
+    currentValue: 1,
+    completed: false
+  },
+  {
+    achievementName: 'Weekly Champion',
+    currentValue: 0,
+    completed: false
+  },
+  
+  // Streaming Achievements
+  {
+    achievementName: 'First Blood',
+    currentValue: 1,
+    completed: true
+  },
+  {
+    achievementName: 'Clip Master',
+    currentValue: 8,
+    completed: false
+  },
+  {
+    achievementName: 'Viral Hit',
+    currentValue: 437,
+    completed: false
+  }
+];
 
 export const achievementService = {
   async getUserAchievements(userId: string): Promise<(AchievementProgress & { achievement: Achievement })[]> {
     // For demo purposes, we'll return mock data with progress
-    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
-      return mockUserAchievements;
-    }
-
+    // In a real app, we would fetch from the database
     try {
-      const { data, error } = await supabase
-        .from('user_achievements')
+      // First check if we should create default achievements
+      const { data: existingProgress, error } = await supabase
+        .from('achievement_progress')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1);
+      
+      if (error) {
+        console.error('Error checking achievements:', error);
+        // Fall back to mock data
+        return this.getMockAchievements();
+      }
+      
+      // If no achievements, create defaults
+      if (!existingProgress || existingProgress.length === 0) {
+        try {
+          await this.createDefaultAchievementsForUser(userId);
+        } catch (e) {
+          console.error('Error creating default achievements:', e);
+          // Fall back to mock data
+          return this.getMockAchievements();
+        }
+      }
+      
+      // Fetch real achievements from database
+      const { data, error: fetchError } = await supabase
+        .from('achievement_progress')
         .select(`
           *,
-          achievement (*)
+          achievement:achievements(*)
         `)
         .eq('user_id', userId);
 
-      if (error) {
-        console.error('Error fetching user achievements:', error);
-        return [];
+      if (fetchError) {
+        console.error('Error fetching user achievements:', fetchError);
+        // Fall back to mock data
+        return this.getMockAchievements();
       }
 
       if (!data || data.length === 0) {
-        console.log('No achievements found for user:', userId);
-        return [];
+        // Fall back to mock data
+        return this.getMockAchievements();
       }
 
       // Transform and sort the data
-      return transformAchievementProgressFromDb(data).sort((a, b) => {
+      return (data as any[]).map(progress => ({
+        ...progress,
+        completed: progress.current_value >= progress.achievement.target_value,
+        achievement: {
+          ...progress.achievement,
+          reward_value: {
+            points: progress.achievement.points
+          },
+          progress_type: progress.achievement.progress_type as "count" | "value" | "boolean",
+          reward_type: progress.achievement.reward_type as "points" | "badge" | "title",
+          category: progress.achievement.category as "streaming" | "social" | "general" | "gaming"
+        }
+      })).sort((a, b) => {
         if (a.completed === b.completed) {
           if (a.achievement.category === b.achievement.category) {
             return b.achievement.points - a.achievement.points;
           }
           return a.achievement.category.localeCompare(b.achievement.category);
         }
-        return a.completed ? -1 : 1;
+        return a.completed ? 1 : -1;
       });
     } catch (error) {
-      console.error('Unexpected error in getUserAchievements:', error);
-      return [];
+      console.error('Error in getUserAchievements:', error);
+      // Fall back to mock data
+      return this.getMockAchievements();
     }
   },
   
   // Helper method to generate mock achievements with progress
   getMockAchievements(): (AchievementProgress & { achievement: Achievement })[] {
-    const mockAchievements = defaultAchievements.map((achievement, index) => {
-      // Find the progress info for this achievement from our sample data
+    return defaultAchievements.map((achievement, index) => {
       const progressInfo = sampleUserProgress.find(p => p.achievementName === achievement.name) || {
         currentValue: 0,
         completed: false
       };
       
-      // For trophy achievements, ensure there's always some progress to make them look active
-      let currentValue = progressInfo.currentValue;
-      if (achievement.category === 'trophy' && currentValue === 0) {
-        // Add some default progress for trophy achievements to make them more engaging
-        currentValue = Math.floor(achievement.target_value * 0.3);
-      }
-      
       return {
         id: `mock-${index}`,
         user_id: 'mock-user',
         achievement_id: `achievement-${index}`,
-        current_value: currentValue,
-        completed: progressInfo.completed || currentValue >= achievement.target_value,
+        current_value: progressInfo.currentValue,
+        completed: progressInfo.completed,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         achievement: {
           id: `achievement-${index}`,
           name: achievement.name,
           description: achievement.description,
-          category: achievement.category as "streaming" | "social" | "general" | "gaming" | "trophy" | "special" | "daily",
+          category: achievement.category as "streaming" | "social" | "general" | "gaming",
           target_value: achievement.target_value,
           points: achievement.points,
           progress_type: achievement.progress_type as "count" | "value" | "boolean",
@@ -673,78 +470,21 @@ export const achievementService = {
         }
       };
     });
-
-    // Sort achievements to prioritize trophy achievements first, then by category
-    return mockAchievements.sort((a, b) => {
-      // First prioritize trophy category
-      if (a.achievement.category === 'trophy' && b.achievement.category !== 'trophy') {
-        return -1;
-      }
-      if (a.achievement.category !== 'trophy' && b.achievement.category === 'trophy') {
-        return 1;
-      }
-      
-      // Then sort by in-progress vs completed
-      if (a.completed !== b.completed) {
-        return a.completed ? 1 : -1;
-      }
-      
-      // Then sort by category
-      if (a.achievement.category !== b.achievement.category) {
-        // Define category order priority
-        const categoryOrder = {
-          'trophy': 1,
-          'daily': 2,
-          'streaming': 3,
-          'social': 4,
-          'special': 5,
-          'general': 6,
-          'gaming': 7
-        };
-        return (categoryOrder[a.achievement.category as keyof typeof categoryOrder] || 99) - 
-               (categoryOrder[b.achievement.category as keyof typeof categoryOrder] || 99);
-      }
-      
-      // Finally sort by points (highest first)
-      return b.achievement.points - a.achievement.points;
-    });
   },
-  
+
   async getGameAchievements(gameId: number): Promise<any[]> {
-    console.log('Getting game achievements for gameId:', gameId);
-    
-    // Get the game slug
+    // In a real app, this would fetch from the database
+    // For now, we'll return mock data based on the game ID
     const gameSlug = this.getGameSlugFromId(gameId);
-    console.log('Game slug:', gameSlug);
-    
-    // Get achievements for the specific game if they exist, or use the template
-    let achievements = defaultGameAchievements[gameSlug] || [];
-    
-    // If there are no specific achievements for this game, use the template
-    // This ensures that every game will show Xbox-style achievements
-    if (achievements.length === 0) {
-      console.log('No specific achievements found, using template');
-      
-      // Deep clone the template to avoid modifying the original
-      achievements = JSON.parse(JSON.stringify(defaultGameAchievements['game-template']));
-      
-      // For dynamic games, we can customize the achievements with the game ID
-      achievements = achievements.map(achievement => ({
-        ...achievement,
-        // Add a custom identifier to ensure uniqueness
-        id: `game-${gameId}-${achievement.name.toLowerCase().replace(/\s+/g, '-')}`,
-      }));
-    }
+    const achievements = defaultGameAchievements[gameSlug] || [];
     
     // Add game_id to each achievement
     return achievements.map(achievement => ({
       ...achievement,
       game_id: gameId,
-      id: achievement.id || `${gameSlug}-${achievement.name.toLowerCase().replace(/\s+/g, '-')}`,
-      // Ensure valid image paths (or use placeholder if needed)
-      icon_url: achievement.icon_url || `/images/achievements/default-${achievement.rarity || 'common'}.png`,
-      category: achievement.category || 'ingame',
-      // Set progress as requested
+      id: `${gameSlug}-${achievement.name.toLowerCase().replace(/\s+/g, '-')}`,
+      icon_url: `/images/achievements/${gameSlug}/${achievement.name.toLowerCase().replace(/\s+/g, '-')}.png`,
+      // Always set progress to 0 as requested
       currentValue: 0,
       targetValue: achievement.target_value,
       completed: false
@@ -810,7 +550,7 @@ export const achievementService = {
       // First, check if the achievement progress entry exists
       const { data: existingProgress, error: fetchError } = await supabase
         .from('achievement_progress')
-        .select('id, current_value, achievement_id')
+        .select('id, progress, target_value')
         .eq('user_id', userId)
         .eq('achievement_id', achievementType)
         .maybeSingle();
@@ -819,22 +559,13 @@ export const achievementService = {
   
       if (existingProgress) {
         // Update existing progress
-        const newValue = Math.min((existingProgress.current_value || 0) + incrementBy, 100); // Default max value of 100
-        
-        // Get the achievement to check target value
-        const { data: achievement } = await supabase
-          .from('achievements')
-          .select('target_value')
-          .eq('id', existingProgress.achievement_id)
-          .single();
-          
-        const targetValue = achievement?.target_value || 100;
-        const completed = newValue >= targetValue;
+        const newProgress = Math.min(existingProgress.progress + incrementBy, existingProgress.target_value);
+        const completed = newProgress >= existingProgress.target_value;
   
         const { error: updateError } = await supabase
           .from('achievement_progress')
           .update({ 
-            current_value: newValue,
+            progress: newProgress,
             completed,
             updated_at: new Date().toISOString()
           })
@@ -842,7 +573,7 @@ export const achievementService = {
   
         if (updateError) throw updateError;
       } else {
-        // Create new progress entry with initial progress
+        // Create new progress entry with 0 progress
         const { data: achievement, error: achievementError } = await supabase
           .from('achievements')
           .select('id, target_value')
@@ -857,10 +588,9 @@ export const achievementService = {
             .insert({
               user_id: userId,
               achievement_id: achievementType,
-              current_value: incrementBy, // Initialize with increment value
-              completed: incrementBy >= achievement.target_value,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              progress: 0, // Initialize at 0
+              target_value: achievement.target_value,
+              completed: false
             });
   
           if (insertError) throw insertError;
@@ -873,69 +603,13 @@ export const achievementService = {
 
   // Helper method to map game IDs to slugs for the mock data
   getGameSlugFromId(gameId: number): string {
-    // Hardcoded game mappings for demo purposes
-    const gameMap: Record<number, string> = {
+    const gameMap = {
       1: 'halo-series',
       2: 'tomb-raider',
       3: 'sea-of-thieves'
     };
-    
-    // If we have a specific mapping, use it
-    if (gameMap[gameId]) {
-      return gameMap[gameId];
-    }
-    
-    // If it's a new game ID from search results, create a generic slug
-    // This will ensure any game ID can be used
-    return `game-${gameId}`;
+    return gameMap[gameId] || 'unknown-game';
   }
-};
-
-// Transform the database achievements to the format expected by the UI
-const transformAchievementProgressFromDb = (
-  dbAchievementProgress: any[]
-): (AchievementProgress & { achievement: Achievement })[] => {
-  if (!dbAchievementProgress || !Array.isArray(dbAchievementProgress)) {
-    console.error('Invalid achievement progress data:', dbAchievementProgress);
-    return [];
-  }
-
-  return dbAchievementProgress.map(item => {
-    // Ensure the item and achievement exist
-    if (!item || !item.achievement) {
-      console.error('Invalid achievement progress item:', item);
-      return null;
-    }
-
-    return {
-      id: item.id || '',
-      userId: item.user_id || '',
-      achievementId: item.achievement_id || '',
-      currentValue: typeof item.current_value === 'number' ? item.current_value : 0,
-      completed: item.achievement?.required_amount != null 
-        ? (item.current_value >= item.achievement.required_amount) || Boolean(item.completed)
-        : Boolean(item.completed),
-      createdAt: item.created_at || new Date().toISOString(),
-      updatedAt: item.updated_at || new Date().toISOString(),
-      achievement: {
-        id: item.achievement.id || '',
-        name: item.achievement.name || 'Unknown Achievement',
-        description: item.achievement.description || '',
-        category: (item.achievement.category as Achievement["category"]) || 'general',
-        image: item.achievement.image || '/achievements/default.png',
-        requiredAmount: typeof item.achievement.required_amount === 'number' ? item.achievement.required_amount : 1,
-        target_value: typeof item.achievement.target_value === 'number' 
-          ? item.achievement.target_value 
-          : (typeof item.achievement.required_amount === 'number' ? item.achievement.required_amount : 1),
-        points: typeof item.achievement.points === 'number' ? item.achievement.points : 0,
-        progress_type: (item.achievement.progress_type as Achievement["progress_type"]) || "count",
-        reward_type: (item.achievement.reward_type as Achievement["reward_type"]) || "points",
-        visible: item.achievement.visible !== false, // Default to visible if not specified
-        createdAt: item.achievement.created_at || new Date().toISOString(),
-        updatedAt: item.achievement.updated_at || new Date().toISOString()
-      }
-    };
-  }).filter(Boolean) as (AchievementProgress & { achievement: Achievement })[];
 };
 
 export default achievementService;

@@ -5,7 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Clipt - Your gaming highlight platform" />
-    <title>Space Gaming Interface</title>
+    <title>Clipt</title>
     <!-- For SEO and social sharing -->
     <meta property="og:title" content="Clipt - Gaming Highlights Platform" />
     <meta property="og:description" content="Share and discover amazing gaming moments" />
@@ -93,85 +93,286 @@
     <!-- Preconnect to Supabase -->
     <link rel="preconnect" href="https://slnjliheyiiummxhrgmk.supabase.co" />
     <base href="/" />
-  <style>
-    /* Space theme styles */
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #050a2f;
-      color: #ffffff;
-      overflow: hidden;
-    }
-    
-    #root {
-      width: 100%;
-      min-height: 100vh;
-    }
-    
-    .space-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at 20% 30%, rgba(0, 229, 255, 0.2) 0%, transparent 40%),
-                radial-gradient(circle at 80% 70%, rgba(147, 51, 234, 0.2) 0%, transparent 40%);
-      pointer-events: none;
-      z-index: 1000;
-    }
-    
-    .space-grid {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: linear-gradient(rgba(0, 229, 255, 0.2) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(0, 229, 255, 0.2) 1px, transparent 1px);
-      background-size: 40px 40px;
-      transform: perspective(500px) rotateX(70deg);
-      opacity: 0.2;
-      pointer-events: none;
-      z-index: 1001;
-    }
-    
-    .space-planet {
-      position: fixed;
-      bottom: -100px;
-      right: -100px;
-      width: 300px;
-      height: 300px;
-      border-radius: 50%;
-      background: linear-gradient(45deg, #1e40af 0%, #3b82f6 100%);
-      opacity: 0.4;
-      box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
-      pointer-events: none;
-      z-index: 1002;
-    }
-    
-    @keyframes scan {
-      0% { top: -5px; }
-      100% { top: 100vh; }
-    }
-    
-    .space-scanline {
-      position: fixed;
-      height: 2px;
-      width: 100%;
-      background: linear-gradient(to right, transparent, #00e5ff, transparent);
-      z-index: 1003;
-      animation: scan 3s linear infinite;
-      opacity: 0.7;
-      pointer-events: none;
-    }
-  </style>
-</head>
-  <body>
-  <!-- Space theme elements -->
-  <div class="space-overlay"></div>
-  <div class="space-grid"></div>
-  <div class="space-planet"></div>
-  <div class="space-scanline"></div>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #0f0f1a;
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* GameBoy Controls */
+        .gameboy-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background-color: #111827;
+            border-top: 1px solid #2d3748;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+        
+        /* Joystick */
+        .joystick {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            background-color: #374151;
+            border-radius: 50%;
+            border: 2px solid #4b5563;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        
+        .d-pad-center {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background-color: #1f2937;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .d-pad-up, .d-pad-right, .d-pad-down, .d-pad-left {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background-color: #2d3748;
+        }
+        
+        .d-pad-up {
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        
+        .d-pad-right {
+            top: 50%;
+            right: 5px;
+            transform: translateY(-50%);
+            clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
+        }
+        
+        .d-pad-down {
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+        }
+        
+        .d-pad-left {
+            top: 50%;
+            left: 5px;
+            transform: translateY(-50%);
+            clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+        }
+        
+        /* CLIPT Button */
+        .center-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .clipt-button {
+            padding: 10px 20px;
+            margin-bottom: 10px;
+            border-radius: 9999px;
+            background-color: transparent;
+            font-weight: bold;
+            color: white;
+            border: 2px solid;
+            border-image: linear-gradient(45deg, #7c3aed, #3b82f6) 1;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .clipt-button:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 9999px;
+            border: 2px solid transparent;
+            background: linear-gradient(45deg, #7c3aed, #3b82f6) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: destination-out;
+            mask-composite: exclude;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(124, 58, 237, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+            }
+        }
+        
+        .bottom-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .small-button {
+            padding: 5px 10px;
+            background-color: #1f2937;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        
+        .action-button {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #1f2937;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .top-button {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+        
+        .right-button {
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .bottom-button {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 1px solid #8b5cf6;
+            color: #8b5cf6;
+        }
+        
+        .left-button {
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            border: 1px solid #10b981;
+            color: #10b981;
+        }
+    </style>
+  </head>
+  <body class="bg-background font-sans antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Fallback in case React doesn't render -->
+    <script>
+      setTimeout(() => {
+        const root = document.getElementById('root');
+        // Only add fallback if React hasn't rendered anything
+        if (!root || root.children.length === 0) {
+          console.log('React not rendering, showing fallback UI');
+          
+          // Add fallback GameBoy controller
+          const gameboy = document.createElement('div');
+          gameboy.className = 'gameboy-controls';
+          gameboy.style.position = 'fixed';
+          gameboy.style.bottom = '0';
+          gameboy.style.left = '0';
+          gameboy.style.right = '0';
+          gameboy.style.height = '100px';
+          gameboy.style.backgroundColor = '#111827';
+          gameboy.style.borderTop = '1px solid #2d3748';
+          gameboy.style.display = 'flex';
+          gameboy.style.alignItems = 'center';
+          gameboy.style.justifyContent = 'space-between';
+          gameboy.style.padding = '0 20px';
+          
+          gameboy.innerHTML = `
+            <!-- Joystick -->
+            <div style="width: 80px; height: 80px; position: relative;">
+              <div style="width: 80px; height: 80px; background-color: #374151; border-radius: 50%; border: 2px solid #4b5563; position: relative;">
+                <div style="position: absolute; width: 24px; height: 24px; background-color: #1f2937; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+                <div style="position: absolute; width: 24px; height: 24px; background-color: #2d3748; top: 5px; left: 50%; transform: translateX(-50%); clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>
+                <div style="position: absolute; width: 24px; height: 24px; background-color: #2d3748; top: 50%; right: 5px; transform: translateY(-50%); clip-path: polygon(0% 0%, 0% 100%, 100% 50%);"></div>
+                <div style="position: absolute; width: 24px; height: 24px; background-color: #2d3748; bottom: 5px; left: 50%; transform: translateX(-50%); clip-path: polygon(0% 0%, 100% 0%, 50% 100%);"></div>
+                <div style="position: absolute; width: 24px; height: 24px; background-color: #2d3748; top: 50%; left: 5px; transform: translateY(-50%); clip-path: polygon(0% 50%, 100% 0%, 100% 100%);"></div>
+              </div>
+            </div>
+            
+            <!-- Center buttons -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <button style="padding: 10px 20px; margin-bottom: 10px; border-radius: 9999px; background-color: transparent; color: white; font-weight: bold; border: 2px solid; border-image: linear-gradient(45deg, #7c3aed, #3b82f6) 1; box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);">
+                CLIPT
+              </button>
+              <div style="display: flex; gap: 10px;">
+                <button style="padding: 5px 10px; background-color: #1f2937; color: white; border: none; border-radius: 4px; font-size: 12px;">
+                  + POST
+                </button>
+                <button style="padding: 5px 10px; background-color: #1f2937; color: white; border: none; border-radius: 4px; font-size: 12px;">
+                  ☰
+                </button>
+              </div>
+            </div>
+            
+            <!-- Action buttons -->
+            <div style="position: relative; width: 80px; height: 80px;">
+              <button style="position: absolute; width: 36px; height: 36px; border-radius: 50%; background-color: #1f2937; border: 1px solid #ef4444; color: #ef4444; display: flex; align-items: center; justify-content: center; top: 0; left: 50%; transform: translateX(-50%);">❤️</button>
+              <button style="position: absolute; width: 36px; height: 36px; border-radius: 50%; background-color: #1f2937; border: 1px solid #3b82f6; color: #3b82f6; display: flex; align-items: center; justify-content: center; top: 50%; right: 0; transform: translateY(-50%);">↗️</button>
+              <button style="position: absolute; width: 36px; height: 36px; border-radius: 50%; background-color: #1f2937; border: 1px solid #8b5cf6; color: #8b5cf6; display: flex; align-items: center; justify-content: center; bottom: 0; left: 50%; transform: translateX(-50%);">👤</button>
+              <button style="position: absolute; width: 36px; height: 36px; border-radius: 50%; background-color: #1f2937; border: 1px solid #10b981; color: #10b981; display: flex; align-items: center; justify-content: center; top: 50%; left: 0; transform: translateY(-50%);">💬</button>
+            </div>
+          `;
+          
+          document.body.appendChild(gameboy);
+        }
+      }, 2000); // Wait 2 seconds for React to render
+    </script>
   </body>
 </html>

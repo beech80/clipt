@@ -13,7 +13,7 @@ import { igdbService } from '@/services/igdbService';
 import { Input } from '@/components/ui/input';
 import { Search, Trophy, Flame, Clock, ArrowUp, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import PostItem from '@/components/post/PostItem';
+import PostItem from '@/components/PostItem';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface StreamInfo {
@@ -132,86 +132,83 @@ const Discover = () => {
   });
 
   // Query for trending posts with improved algorithm
-  const { data: trendingPosts, isLoading: postsLoading, error: postsError } = useQuery({
+  const { data: trendingPosts, isLoading: postsLoading } = useQuery({
     queryKey: ['trending_posts', trendingFilter],
     queryFn: async () => {
-      try {
-        let query = supabase
-          .from('posts')
-          .select(`
-            id,
-            content,
-            image_url,
-            video_url,
-            user_id,
-            created_at,
-            post_type,
-            game_id,
-            game_name,
-            likes_count:likes(count),
-            comments_count:comments(count),
-            clip_votes:clip_votes(count),
-            profiles:user_id (
-              username,
-              avatar_url,
-              display_name
-            )
-          `)
-          .eq('is_published', true);
+      let query = supabase
+        .from('posts')
+        .select(`
+          id,
+          content,
+          image_url,
+          video_url,
+          user_id,
+          created_at,
+          post_type,
+          likes_count:likes(count),
+          comments_count:comments(count),
+          clip_votes:clip_votes(count),
+          profiles (
+            username,
+            avatar_url,
+            display_name
+          ),
+          games (
+            name,
+            id
+          )
+        `)
+        .eq('is_published', true);
 
-        // Filter based on selected trending criteria
-        switch (trendingFilter) {
-          case 'recent':
-            query = query.order('created_at', { ascending: false });
-            break;
-          case 'most_liked':
-            query = query.order('likes_count', { ascending: false });
-            break;
-          case 'most_discussed':
-            query = query.order('comments_count', { ascending: false });
-            break;
-        }
+      // Filter based on selected trending criteria
+      switch (trendingFilter) {
+        case 'recent':
+          query = query.order('created_at', { ascending: false });
+          break;
+        case 'most_liked':
+          query = query.order('likes_count', { ascending: false });
+          break;
+        case 'most_discussed':
+          query = query.order('comments_count', { ascending: false });
+          break;
+      }
 
-        // Fetch user's interests to enhance recommendations
-        if (user) {
-          const { data: userInterests } = await supabase
-            .from('user_interests')
-            .select('game_id')
-            .eq('user_id', user.id);
+      // Fetch user's interests to enhance recommendations
+      if (user) {
+        const { data: userInterests } = await supabase
+          .from('user_interests')
+          .select('game_id')
+          .eq('user_id', user.id);
+          
+        // If user has interests, prioritize posts related to those games
+        if (userInterests && userInterests.length > 0) {
+          const gameIds = userInterests.map(interest => interest.game_id);
+          // We'll fetch some posts related to user interests and some general trending
+          const { data: interestPosts } = await query
+            .in('game_id', gameIds)
+            .limit(5);
             
-          // If user has interests, prioritize posts related to those games
-          if (userInterests && userInterests.length > 0) {
-            const gameIds = userInterests.map(interest => interest.game_id);
-            // We'll fetch some posts related to user interests and some general trending
-            const { data: interestPosts } = await query
-              .in('game_id', gameIds)
-              .limit(5);
-              
-            // Then get general trending posts
-            const { data: generalPosts } = await query.limit(15);
-            
-            // Combine and deduplicate
-            if (interestPosts && generalPosts) {
-              const combined = [...interestPosts];
-              generalPosts.forEach(post => {
-                if (!combined.some(p => p.id === post.id)) {
-                  combined.push(post);
-                }
-              });
-              return combined.slice(0, 15);
-            }
+          // Then get general trending posts
+          const { data: generalPosts } = await query.limit(15);
+          
+          // Combine and deduplicate
+          if (interestPosts && generalPosts) {
+            const combined = [...interestPosts];
+            generalPosts.forEach(post => {
+              if (!combined.some(p => p.id === post.id)) {
+                combined.push(post);
+              }
+            });
+            return combined.slice(0, 15);
           }
         }
-
-        // If no user or no interests, just return trending posts
-        const { data, error } = await query.limit(15);
-        
-        if (error) throw error;
-        return data || [];
-      } catch (err) {
-        console.error("Error fetching trending posts:", err);
-        throw err;
       }
+
+      // If no user or no interests, just return trending posts
+      const { data, error } = await query.limit(15);
+      
+      if (error) throw error;
+      return data || [];
     }
   });
 
@@ -509,18 +506,6 @@ const Discover = () => {
                   <PostItem key={post.id} post={post} />
                 ))}
               </div>
-            ) : postsError ? (
-              <div className="text-center p-12">
-                <div className="text-red-500 mb-4">Failed to load posts</div>
-                <p className="text-gray-400">Please try again later</p>
-                <Button 
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => window.location.reload()}
-                >
-                  Retry
-                </Button>
-              </div>
             ) : (
               <div className="text-center p-12">
                 <Trophy className="mx-auto h-12 w-12 text-gaming-500 mb-4" />
@@ -528,7 +513,7 @@ const Discover = () => {
                 <p className="text-gray-400">Be the first to share your gaming moments!</p>
                 <Button 
                   className="mt-4"
-                  onClick={() => navigate('/post/new')}
+                  onClick={() => navigate('/clipts/create')}
                 >
                   Create Post
                 </Button>

@@ -1,563 +1,415 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
+import { Gamepad2, Trophy, MessageSquare, Settings, UserX } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useParams, useNavigate } from "react-router-dom";
+import AchievementList from "@/components/achievements/AchievementList";
+import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
-import { motion, AnimatePresence } from 'framer-motion';
-import GamingProfile from "@/components/profile/GamingProfile";
-import { getSavedClipts } from '@/lib/savedClipts';
-import '../styles/gaming/profile-gaming.css';
-import { Gamepad, Medal, Clock, User, MessageSquare, Settings, Rocket, Zap, Star } from 'lucide-react';
+import styled from "styled-components";
+import { UserLink } from '@/components/user/UserLink';
+import PostItem from '@/components/PostItem';
+
+/**
+ * Profile page component - displays user profile details
+ */
+const ProfileContent = styled.div`
+  max-height: none; /* Remove any height restrictions */
+  overflow-y: visible; /* Allow content to be visible */
+  padding-bottom: 250px; /* Add more padding at bottom for better scrolling */
+  
+  /* Apply CSS to ensure scrolling works */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  
+  /* Make sure content is fully visible */
+  display: block;
+  width: 100%;
+`;
 
 const Profile = () => {
   // Component state
   const { id } = useParams();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const profileContainerRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<'clips' | 'achievements'>('clips');
   const [profile, setProfile] = useState<ProfileType | null>(null);
-  const [userPosts, setUserPosts] = useState<any[]>([]);
-  const [savedCliptsData, setSavedCliptsData] = useState<any[]>([]);
-  const [achievements, setAchievements] = useState<any[]>([]);
-  const [followersCount, setFollowersCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('clipts');
-  const [tokenBalance, setTokenBalance] = useState(2500);
-  const [boostActive, setBoostActive] = useState(false);
+  const [userPosts, setUserPosts] = useState<any[]>([]);
   
+  // Stats for displaying counts
+  const [stats, setStats] = useState({
+    followers: 0,
+    following: 0,
+    achievements: 0
+  });
+
   // Safe profile ID handling
   const profileId = id || user?.id;
   const isOwnProfile = user?.id === profileId;
-  
-  // Create comprehensive achievements list with token rewards
-  const createSampleAchievements = () => [
-    // 🏆 Trophy & Weekly Top 10
-    {
-      id: 'first-taste-gold',
-      name: 'First Taste of Gold',
-      description: 'Earn 10 trophies on a post.',
-      points: 50,
-      tokens: 25,
-      type: 'trophy',
-      progress: 70,
-      reward: '25 Tokens + Gold Trophy Badge'
-    },
-    {
-      id: 'viral-sensation',
-      name: 'Viral Sensation',
-      description: 'Get 100 trophies on a single post.',
-      points: 200,
-      tokens: 100,
-      type: 'trophy',
-      progress: 32,
-      reward: '100 Tokens + Viral Badge'
-    },
-    {
-      id: 'breaking-in',
-      name: 'Breaking In',
-      description: 'Rank in the Top 10 of the weekly leaderboard once.',
-      points: 150,
-      tokens: 75,
-      type: 'trophy',
-      progress: 100,
-      date: '2025-04-28',
-      reward: '75 Tokens + Top 10 Badge',
-      isNew: true
-    },
-    {
-      id: 'hot-streak',
-      name: 'Hot Streak',
-      description: 'Stay in the Top 10 for 5 weeks in a row.',
-      points: 500,
-      tokens: 250,
-      type: 'trophy',
-      progress: 40,
-      reward: '250 Tokens + Streak Badge'
-    },
-    
-    // 📈 Follower Growth
-    {
-      id: 'rising-star',
-      name: 'Rising Star',
-      description: 'Reach 1,000 followers.',
-      points: 100,
-      tokens: 50,
-      type: 'follower',
-      progress: 65,
-      reward: '50 Tokens + Rising Star Badge'
-    },
-    {
-      id: 'influencer-status',
-      name: 'Influencer Status',
-      description: 'Gain 10,000 followers.',
-      points: 500,
-      tokens: 250,
-      type: 'follower',
-      progress: 20,
-      reward: '250 Tokens + Influencer Badge'
-    },
-    
-    // 🎥 Streaming Subscriber Milestones
-    {
-      id: 'first-supporter',
-      name: 'First Supporter',
-      description: 'Get your first streaming sub.',
-      points: 50,
-      tokens: 25,
-      type: 'streaming',
-      progress: 100,
-      date: '2025-03-15',
-      reward: '25 Tokens + Supporter Badge'
-    },
-    {
-      id: 'streaming-star',
-      name: 'Streaming Star',
-      description: 'Reach 100 streaming subscribers.',
-      points: 300,
-      tokens: 150,
-      type: 'streaming',
-      progress: 35,
-      reward: '150 Tokens + Streaming Star Banner'
-    },
-    
-    // 🤝 Engagement Boosters
-    {
-      id: 'hype-squad',
-      name: 'Hype Squad',
-      description: 'Leave 50 comments on others\'s posts.',
-      points: 75,
-      tokens: 40,
-      type: 'engagement',
-      progress: 100,
-      date: '2025-04-02',
-      reward: '40 Tokens + Hype Badge'
-    },
-    {
-      id: 'super-supporter',
-      name: 'Super Supporter',
-      description: 'Give out 100 trophies.',
-      points: 125,
-      tokens: 60,
-      type: 'engagement',
-      progress: 45,
-      reward: '60 Tokens + Super Support Badge'
-    },
-    {
-      id: 'conversation-starter',
-      name: 'Conversation Starter',
-      description: 'Receive 100 replies to your comments.',
-      points: 100,
-      tokens: 50,
-      type: 'engagement',
-      progress: 68,
-      reward: '50 Tokens + Conversation Badge'
-    },
-    {
-      id: 'community-builder',
-      name: 'Community Builder',
-      description: 'Start a post that gets 500+ comments.',
-      points: 250,
-      tokens: 125,
-      type: 'engagement',
-      progress: 12,
-      reward: '125 Tokens + Community Builder Title'
-    },
-    
-    // 📢 Sharing & Promotion
-    {
-      id: 'signal-booster',
-      name: 'Signal Booster',
-      description: 'Share 10 other creators\' posts.',
-      points: 50,
-      tokens: 25,
-      type: 'sharing',
-      progress: 100,
-      date: '2025-04-12',
-      reward: '25 Tokens + Signal Badge'
-    },
-    {
-      id: 'clipt-evangelist',
-      name: 'Clipt Evangelist',
-      description: 'Invite 5 friends to join Clipt.',
-      points: 150,
-      tokens: 75,
-      type: 'sharing',
-      progress: 80,
-      reward: '75 Tokens + Evangelist Title'
-    },
-    
-    // 🎮 Collab & Creator Support
-    {
-      id: 'duo-dynamic',
-      name: 'Duo Dynamic',
-      description: 'Collab on a post that earns 50 trophies.',
-      points: 150,
-      tokens: 75,
-      type: 'collab',
-      progress: 0,
-      reward: '75 Tokens + Duo Badge'
-    },
-    {
-      id: 'mentor-mode',
-      name: 'Mentor Mode',
-      description: 'Help a small creator reach 1,000 followers.',
-      points: 250,
-      tokens: 125,
-      type: 'collab',
-      progress: 0,
-      reward: '125 Tokens + Mentor Crown'
-    },
-    
-    // 🎉 Special & Hidden
-    {
-      id: 'og-clipt-creator',
-      name: 'OG Clipt Creator',
-      description: 'Joined within 3 months of launch.',
-      points: 100,
-      tokens: 50,
-      type: 'special',
-      progress: 100,
-      date: '2025-01-10',
-      reward: '50 Tokens + OG Badge'
-    },
-    {
-      id: 'day-one-grinder',
-      name: 'Day One Grinder',
-      description: 'Posted on Clipt\'s launch day.',
-      points: 200,
-      tokens: 100,
-      type: 'special',
-      progress: 100,
-      date: '2025-01-01',
-      reward: '100 Tokens + Day One Title'
-    },
-    {
-      id: 'mystery-viral',
-      name: 'Mystery Viral',
-      description: 'An old post goes viral after 30 days.',
-      points: 150,
-      tokens: 75,
-      type: 'special',
-      progress: 0,
-      reward: '75 Tokens + Mystery Badge'
-    },
-    {
-      id: 'shadow-supporter',
-      name: 'Shadow Supporter',
-      description: 'Consistently like/comment on someone\'s posts for a month.',
-      points: 100,
-      tokens: 50,
-      type: 'special',
-      progress: 75,
-      reward: '50 Tokens + Shadow Badge'
-    }
-  ];
 
-  // Create sample posts for testing
-  const createSamplePosts = () => [
-    {
-      id: 'sample-1',
-      title: 'Epic Sniper Shot',
-      content: 'Just landed this impossible shot!',
-      image_url: 'https://placehold.co/600x400/232842/FFFFFF?text=Gaming+Highlight',
-      video_url: null,
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      likes_count: 85,
-      views_count: 437,
-      user_id: {
-        id: profileId,
-        username: 'gameplay_master',
-        avatar_url: null
+  /**
+   * Fetch the user's profile data
+   */
+  const fetchProfileData = async (userId: string) => {
+    try {
+      // Try to get the profile by ID
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select()
+        .eq('id', userId)
+        .single();
+      
+      // If there's an error or no profile for current user, create one
+      if (error || !profile) {
+        if (userId === user?.id) {
+          console.log("No profile found for current user, creating one");
+          
+          // Create a default profile for the current user
+          const defaultProfile = {
+            id: userId,
+            username: `user_${userId.substring(0, 8)}`,
+            display_name: user?.user_metadata?.name || 'New User',
+            bio: 'Welcome to my Clipt profile!',
+            avatar_url: user?.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userId,
+            created_at: new Date().toISOString(),
+          };
+          
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .upsert(defaultProfile)
+            .select()
+            .single();
+          
+          if (createError) {
+            console.error("Error creating profile:", createError);
+            throw new Error('Failed to create profile');
+          }
+          
+          return newProfile;
+        } else {
+          // Profile doesn't exist and it's not the current user
+          console.error("Profile not found for user:", userId);
+          return null;
+        }
       }
-    },
-    {
-      id: 'sample-2',
-      title: 'Tournament Victory',
-      content: 'Won the championship!',
-      image_url: 'https://placehold.co/600x400/412864/FFFFFF?text=Tournament+Win',
-      video_url: 'https://www.example.com/fake-video.mp4',
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-      likes_count: 201,
-      views_count: 1429,
-      user_id: {
-        id: profileId,
-        username: 'gameplay_master',
-        avatar_url: null
+      
+      return profile;
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      
+      // Return a fallback profile for UI display when fetch fails
+      // This prevents the UI from showing errors to the user
+      if (userId === user?.id) {
+        return {
+          id: userId,
+          username: user?.email?.split('@')[0] || 'user',
+          display_name: user?.user_metadata?.name || 'Your Profile',
+          bio: 'Profile information temporarily unavailable',
+          avatar_url: user?.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userId,
+          created_at: new Date().toISOString(),
+        };
       }
-    },
-    {
-      id: 'sample-3',
-      title: 'Perfect Combo Streak',
-      content: 'Check out this combo!',
-      image_url: 'https://placehold.co/600x400/1e2a4d/FFFFFF?text=Pro+Combo',
-      video_url: null,
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-      likes_count: 124,
-      views_count: 832,
-      user_id: {
-        id: profileId,
-        username: 'gameplay_master',
-        avatar_url: null
-      }
+      return null;
     }
-  ];
+  };
 
-  // Fetch profile data
-  const fetchProfileData = async () => {
-    if (!profileId) {
-      // Create fallback data instead of showing error
-      setDefaultProfileData();
-      setLoading(false);
-      return;
-    }
+  // Load profile data when component mounts or profile ID changes
+  useEffect(() => {
+    if (!profileId) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    // Add a delay to ensure auth context is fully loaded
+    const timer = setTimeout(() => {
+      loadProfileData();
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [profileId, user]);
 
+  const loadProfileData = async () => {
     try {
       // Fetch profile data
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', profileId)
-        .single();
-
-      if (profileError) throw profileError;
-
-      if (profileData) {
-        setProfile(profileData);
-      } else {
-        // If profile doesn't exist but we have user data, create a placeholder
-        if (user && user.id === profileId) {
-          const placeholderProfile = {
-            id: user.id,
-            username: user.user_metadata?.username || 'user',
-            avatar_url: user.user_metadata?.avatar_url,
-            bio: 'Gaming enthusiast',
-            display_name: user.user_metadata?.full_name || 'New Gamer',
-            created_at: new Date().toISOString()
-          };
-          setProfile(placeholderProfile as any);
+      const profileData = await fetchProfileData(profileId);
+      
+      if (!profileData) {
+        setError("Profile not found");
+        setLoading(false);
+        return;
+      }
+      
+      setProfile(profileData);
+      console.log("Successfully loaded profile:", profileData);
+      
+      // Always ensure we have stats, even if they're zeroed out
+      setStats({
+        followers: profileData.followers || 0,
+        following: profileData.following || 0,
+        achievements: profileData.achievements || 0
+      });
+      
+      // Fetch user's posts for the clips tab
+      try {
+        const { data: postsData, error: postsError } = await supabase
+          .from('posts')
+          .select(`
+            id,
+            content,
+            image_url,
+            video_url,
+            user_id,
+            created_at,
+            post_type,
+            games (
+              name,
+              id
+            ),
+            likes_count:likes(count),
+            comments_count:comments(count),
+            clip_votes:clip_votes(count)
+          `)
+          .eq('user_id', profileId)
+          .order('created_at', { ascending: false });
+        
+        if (postsError) {
+          console.error("Error fetching posts:", postsError);
         } else {
-          setError('Profile not found');
+          console.log("User posts loaded:", postsData);
+          setUserPosts(postsData || []);
+        }
+      } catch (postError) {
+        console.error("Error fetching user posts:", postError);
+        // Continue execution even if posts fail to load
+      }
+      
+      // Initialize default achievements for the new user if needed
+      if (profileData.id === user?.id && (!profileData.achievements || profileData.achievements === 0)) {
+        try {
+          const { achievementService } = await import('@/services/achievementService');
+          await achievementService.createDefaultAchievementsForUser(user.id);
+          console.log("Created default achievements for user");
+        } catch (err) {
+          console.error("Failed to create default achievements:", err);
+          // Continue execution even if achievement creation fails
         }
       }
-
-      // Fetch user posts
-      const { data: postsData, error: postsError } = await supabase
-        .from('posts')
-        .select('*, user_id(*)')
-        .eq('user_id', profileId)
-        .order('created_at', { ascending: false });
-
-      if (postsError) {
-        console.error('Error fetching posts:', postsError);
-        // Use sample data if fetching fails
-        setUserPosts(createSamplePosts());
+      
+      // Success - clear any errors
+      setError(null);
+    } catch (error) {
+      console.error("Error in profile data loading:", error);
+      
+      // Create a fallback profile if this is the current user
+      if (profileId === user?.id) {
+        console.log("Creating fallback profile for current user");
+        const fallbackProfile = {
+          id: user.id,
+          username: user.email?.split('@')[0] || `user_${user.id.substring(0, 8)}`,
+          display_name: user.user_metadata?.name || 'Your Profile',
+          bio: 'Welcome to your Clipt profile!',
+          avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.id}`,
+          created_at: new Date().toISOString(),
+          followers: 0,
+          following: 0,
+          achievements: 0
+        };
+        
+        setProfile(fallbackProfile);
+        setStats({
+          followers: 0,
+          following: 0,
+          achievements: 0
+        });
+        setUserPosts([]);
+        setError(null); // Use fallback, don't show error
       } else {
-        setUserPosts(postsData.length > 0 ? postsData : createSamplePosts());
+        setError("Failed to load profile data");
       }
-
-      // Fetch saved clips for the user
-      if (user && user.id) {
-        const savedClipts = await getSavedClipts(user.id);
-        setSavedCliptsData(savedClipts || []);
-      }
-
-      // Fetch achievements
-      const { data: achievementsData, error: achievementsError } = await supabase
-        .from('achievements')
-        .select('*')
-        .eq('user_id', profileId);
-
-      if (achievementsError) {
-        console.error('Error fetching achievements:', achievementsError);
-        // Use sample achievements if fetching fails
-        setAchievements(createSampleAchievements());
-      } else {
-        setAchievements(achievementsData.length > 0 ? achievementsData : createSampleAchievements());
-      }
-
-      // Fetch followers count
-      try {
-        const { count: followers } = await supabase
-          .from('followers')
-          .select('*', { count: 'exact', head: true })
-          .eq('following_id', profileId);
-        
-        setFollowersCount(followers || 0);
-      } catch (err) {
-        console.error('Error fetching followers count:', err);
-        setFollowersCount(Math.floor(Math.random() * 100) + 10); // Sample count
-      }
-
-      // Fetch following count
-      try {
-        const { count: following } = await supabase
-          .from('followers')
-          .select('*', { count: 'exact', head: true })
-          .eq('follower_id', profileId);
-        
-        setFollowingCount(following || 0);
-      } catch (err) {
-        console.error('Error fetching following count:', err);
-        setFollowingCount(Math.floor(Math.random() * 50) + 5); // Sample count
-      }
-
-      // Fetch token balance if applicable
-      try {
-        const { data: tokenData } = await supabase
-          .from('user_tokens')
-          .select('balance')
-          .eq('user_id', profileId)
-          .single();
-        
-        if (tokenData) {
-          setTokenBalance(tokenData.balance);
-        }
-      } catch (err) {
-        console.error('Error fetching token balance:', err);
-        // Keep default token balance
-      }
-
-      // Check if user has active boost
-      try {
-        const { data: boostData } = await supabase
-          .from('user_boosts')
-          .select('*')
-          .eq('user_id', profileId)
-          .eq('is_active', true)
-          .single();
-        
-        setBoostActive(!!boostData);
-      } catch (err) {
-        console.error('Error fetching boost status:', err);
-        // Keep default boost status
-      }
-
-    } catch (error: any) {
-      console.error('Error fetching profile data:', error.message);
-      // Use default data instead of showing error
-      setDefaultProfileData();
     } finally {
       setLoading(false);
     }
   };
 
-  // Create default profile data as fallback
-  const setDefaultProfileData = () => {
-    // Set a default profile with gaming theme
-    setProfile({
-      id: 'default-user',
-      username: 'gamer_pro',
-      display_name: 'Pro Gamer',
-      avatar_url: 'https://placehold.co/200x200/252944/FFFFFF?text=Gamer',
-      bio: 'Gaming and streaming enthusiast',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      website: 'https://clipt.com',
-      location: 'Gaming Universe',
-      is_verified: true,
-      followers_count: 125,
-      following_count: 84,
-      achievements_count: 37,
-      enable_notifications: true,
-      enable_sounds: true
-    } as any);
-
-    // Set sample posts
-    setUserPosts(createSamplePosts());
-    
-    // Set sample achievements
-    setAchievements(createSampleAchievements());
-    
-    // Set counts
-    setFollowersCount(125);
-    setFollowingCount(84);
-    
-    // Set sample saved clips
-    setSavedCliptsData(createSamplePosts());
-    
-    // Set boost status
-    setBoostActive(true);
-  };
-
-  // Fetch data on initial load
-  useEffect(() => {
-    setLoading(true);
-    try {
-      fetchProfileData();
-    } catch (err) {
-      console.error('Error loading profile:', err);
-      setDefaultProfileData();
-      setLoading(false);
-    }
-  }, [profileId]);
-
-  // Handle tab switching
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-  };
-
-  // Show loading state
+  // Render loading state
   if (loading) {
     return (
-      <div className="gaming-loading-screen">
-        <div className="gaming-loading-text">LOADING PROFILE...</div>
-        <div className="loading-bar-container">
-          <div className="loading-bar"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="gaming-card p-8 w-full max-w-md">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-24 h-24 rounded-full bg-gaming-800 animate-pulse"></div>
+            <div className="w-40 h-6 bg-gaming-800 animate-pulse rounded"></div>
+            <div className="w-full h-4 bg-gaming-800 animate-pulse rounded"></div>
+            <div className="w-full h-4 bg-gaming-800 animate-pulse rounded"></div>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Show error state
+  // Render error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-4">
-        <div className="text-2xl font-bold text-red-500 mb-2">Error</div>
-        <p className="text-center mb-4">{error}</p>
-        <Button 
-          onClick={() => navigate('/')}
-          className="gaming-button glow-effect"
-        >
-          Return to Home
-        </Button>
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="gaming-card p-8 w-full max-w-md text-center">
+          <UserX className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Profile Error</h2>
+          <p className="text-gray-400 mb-4">{error}</p>
+          <Button onClick={() => navigate('/')}>
+            Go Home
+          </Button>
+        </div>
       </div>
     );
   }
 
-  // Render profile
+  // Render empty state if no profile
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="gaming-card p-8 w-full max-w-md text-center">
+          <UserX className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Profile Not Found</h2>
+          <p className="text-gray-400 mb-4">This profile doesn't exist or has been removed.</p>
+          <Button onClick={() => navigate('/')}>
+            Go Home
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Main profile content
   return (
-    <>
-      <AnimatePresence>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="min-h-screen"
-          ref={profileContainerRef}
-        >
-          {/* Main Profile Content */}
-          <GamingProfile
-            profile={profile}
-            tokenBalance={tokenBalance}
-            achievements={achievements}
-            userPosts={userPosts}
-            savedItems={savedCliptsData}
-            followersCount={followersCount}
-            followingCount={followingCount}
-            isOwnProfile={isOwnProfile}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            boostActive={boostActive}
-          />
+    <ProfileContent>
+      {/* Profile Header */}
+      <div className="gaming-card p-6 mb-6">
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+          {/* Avatar */}
+          <div className="relative">
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gaming-800 overflow-hidden border-4 border-gaming-500">
+              {profile.avatar_url ? (
+                <img 
+                  src={profile.avatar_url} 
+                  alt={profile.username || 'User'} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gaming-700 text-4xl font-bold text-gaming-300">
+                  {(profile.username?.[0] || profile.display_name?.[0] || 'U').toUpperCase()}
+                </div>
+              )}
+            </div>
+          </div>
           
-          {/* Bottom content removed as requested */}
-        </motion.div>
-      </AnimatePresence>
-    </>
+          {/* Profile Info */}
+          <div className="flex-1">
+            <div className="flex flex-col md:flex-row gap-4 items-center md:items-start justify-between">
+              <div className="text-center md:text-left">
+                <h1 className="text-2xl font-bold text-gaming-200 mb-1">
+                  {profile.display_name || profile.username || 'User'}
+                </h1>
+                <UserLink username={profile.username} />
+                <p className="text-gaming-300 max-w-md mb-4">{profile.bio || 'No bio provided'}</p>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                {isOwnProfile && (
+                  <Button 
+                    onClick={() => navigate('/profile/edit')} 
+                    variant="outline" 
+                    className="flex items-center gap-2 bg-[#1a1b4b] border border-white/10 text-white hover:bg-[#272a5b] px-4 py-1 rounded-sm"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Settings</span>
+                  </Button>
+                )}
+                {!isOwnProfile && (
+                  <Button
+                    onClick={() => navigate(`/messages/${profileId}`)}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Message</span>
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            {/* Stats */}
+            <div className="flex justify-center md:justify-start gap-6 mt-4">
+              <div className="text-center">
+                <p className="text-gaming-200 font-bold">{stats.followers}</p>
+                <p className="text-gaming-400 text-sm">Followers</p>
+              </div>
+              <div className="text-center">
+                <p className="text-gaming-200 font-bold">{stats.following}</p>
+                <p className="text-gaming-400 text-sm">Following</p>
+              </div>
+              <div className="text-center">
+                <p className="text-gaming-200 font-bold">{stats.achievements}</p>
+                <p className="text-gaming-400 text-sm">Achievements</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Tabs */}
+      <div className="flex justify-center mb-6">
+        <div className="gaming-card p-2">
+          <div className="flex gap-2">
+            <Toggle
+              pressed={activeTab === 'clips'}
+              onPressedChange={() => setActiveTab('clips')}
+              variant="outline"
+              className="flex gap-2 items-center"
+            >
+              <Gamepad2 className="w-4 h-4" />
+              <span>Clips</span>
+            </Toggle>
+            <Toggle
+              pressed={activeTab === 'achievements'}
+              onPressedChange={() => setActiveTab('achievements')}
+              variant="outline"
+              className="flex gap-2 items-center"
+            >
+              <Trophy className="w-4 h-4" />
+              <span>Achievements</span>
+            </Toggle>
+          </div>
+        </div>
+      </div>
+      
+      {/* Tab Content */}
+      {activeTab === 'clips' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {userPosts.length > 0 ? (
+            userPosts.map(post => (
+              <PostItem key={post.id} post={post} />
+            ))
+          ) : (
+            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60">
+              <Gamepad2 className="w-12 h-12 text-gaming-400 mb-4" />
+              <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Clips Yet</h3>
+              <p className="text-gaming-400">User hasn't posted any gaming clips</p>
+            </Card>
+          )}
+        </div>
+      ) : (
+        <div className="gaming-card p-6">
+          <AchievementList userId={profileId} />
+        </div>
+      )}
+    </ProfileContent>
   );
 };
 

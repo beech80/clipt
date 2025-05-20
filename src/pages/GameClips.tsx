@@ -1,19 +1,15 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BackButton } from "@/components/ui/back-button";
-import { Gamepad2, Heart } from "lucide-react";
+import { Gamepad2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { motion } from "framer-motion";
-import GameBoyControls from "@/components/GameBoyControls";
 
 export default function GameClips() {
   const { id } = useParams();
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
-  const [currentClipIndex, setCurrentClipIndex] = React.useState(0);
 
   const { data: game } = useQuery({
     queryKey: ['game', id],
@@ -86,9 +82,6 @@ export default function GameClips() {
           </div>
         )}
       </div>
-      
-      {/* Game controls with rainbow borders and joystick */}
-      <GameBoyControls />
     </div>
   );
 }

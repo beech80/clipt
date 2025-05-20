@@ -3,25 +3,14 @@
 export interface Profile {
   id: string;
   username: string;
-  display_name: string;
-  bio: string | null;
-  avatar_url: string | null;
-  created_at: string;
-  followers_count: number;
-  following_count: number;
-  achievements_count: number;
-  enable_notifications: boolean;
-  enable_sounds: boolean;
-  auto_download_media?: boolean;
-  hardware_acceleration?: boolean;
-  reduce_animations?: boolean;
-  background_processing?: boolean;
-  streaming_url?: string;
-  dark_mode?: boolean;
-  theme_preference?: string;
-  language_preference?: string;
-  timezone_preference?: string;
+  display_name?: string;
+  avatar_url?: string;
+  bio?: string;
   website?: string;
+  followers?: number;
+  following?: number;
+  achievements?: number;
+  created_at?: string;
   updated_at?: string;
 }
 
@@ -31,7 +20,7 @@ export interface ProfileStats {
   achievements: number;
 }
 
-export type AchievementCategory = 'streaming' | 'social' | 'general' | 'daily' | 'gaming' | 'trophy' | 'special';
+export type AchievementCategory = 'streaming' | 'social' | 'general' | 'daily' | 'gaming';
 export type ProgressType = 'count' | 'value' | 'boolean';
 export type RewardType = 'points' | 'badge' | 'title';
 
@@ -75,30 +64,4 @@ export interface GameAchievement {
   created_at?: string;
   updated_at?: string;
   game_id?: number;
-}
-
-// Database raw profile type for accurate typing from Supabase
-export interface DatabaseProfile {
-  id: string;
-  username: string;
-  display_name: string;
-  bio: string | null;
-  avatar_url: string | null;
-  website?: string;
-  followers_count: number;
-  following_count: number;
-  achievements_count: number;
-  created_at: string;
-  updated_at?: string;
-  enable_notifications: boolean;
-  enable_sounds: boolean;
-  auto_download_media?: boolean;
-  hardware_acceleration?: boolean;
-  reduce_animations?: boolean;
-  background_processing?: boolean;
-  streaming_url?: string;
-  dark_mode?: boolean;
-  theme_preference?: string;
-  language_preference?: string;
-  timezone_preference?: string;
 }
