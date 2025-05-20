@@ -73,7 +73,17 @@ const SquadsClipts = React.lazy(() => import('./pages/SquadsClipts'));
 const UserProfile = React.lazy(() => import('./pages/UserProfile'));
 // Using the fixed clean discovery page implementation
 const DiscoveryFixedClean = React.lazy(() => import('./pages/DiscoveryFixedClean'));
+// Enhanced discovery page with subscription options
+const DiscoveryNew = React.lazy(() => import('./pages/DiscoveryNew'));
+// Streamers discovery page with bottom navigation
+// DiscoveryStreamers removed as requested by user
+// Dark-themed discovery page with bottom navigation (chat, donate, clipt buttons)
+const DarkDiscovery = React.lazy(() => import('./pages/DarkDiscovery'));
+// Space-themed discovery page with orange-themed bottom navigation
+const SpaceDiscovery = React.lazy(() => import('./pages/SpaceDiscovery'));
 // DiscoveryNew removed due to syntax errors
+const Discovery = React.lazy(() => import('./pages/Discovery'));
+const DiscoverySimple = React.lazy(() => import('./pages/DiscoverySimple'));
 const Explore = React.lazy(() => import('./pages/Explore'));
 const AllStreamers = React.lazy(() => import('./pages/AllStreamers'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
@@ -116,6 +126,7 @@ const AdvancedSearch = React.lazy(() => import('./pages/AdvancedSearch'));
 const SearchPage = React.lazy(() => import('./pages/SearchPage'));
 const Search = React.lazy(() => import('./pages/Search'));
 const Posts = React.lazy(() => import('./pages/Posts'));
+const Live = React.lazy(() => import('./pages/Live'));
 
 // Protected route component to prevent redirecting authenticated users to login/signup
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -281,7 +292,10 @@ const AppContent = () => {
           </SuspenseBoundary>
         } />
         <Route path="/auth" element={<SuspenseBoundary><Auth /></SuspenseBoundary>} />
-        <Route path="/discovery" element={<SuspenseBoundary><DiscoveryNew /></SuspenseBoundary>} />
+        <Route path="/discovery" element={<SuspenseBoundary><Discovery /></SuspenseBoundary>} />
+        <Route path="/discovery-new" element={<SuspenseBoundary><DiscoveryNew /></SuspenseBoundary>} />
+        <Route path="/dark-discovery" element={<SuspenseBoundary><DarkDiscovery /></SuspenseBoundary>} />
+        <Route path="/space-discovery" element={<SuspenseBoundary><SpaceDiscovery /></SuspenseBoundary>} />
         <Route path="/login" element={<SuspenseBoundary><Login /></SuspenseBoundary>} />
         <Route path="/signup" element={<SuspenseBoundary><Signup /></SuspenseBoundary>} />
         <Route path="/streams" element={<SuspenseBoundary><Streaming /></SuspenseBoundary>} />
@@ -298,6 +312,7 @@ const AppContent = () => {
         <Route path="/clipts" element={<SuspenseBoundary loadingMessage="Loading clipts..."><Clipts /></SuspenseBoundary>} />
         <Route path="/top-clipts" element={<SuspenseBoundary loadingMessage="Loading top clipts..."><TopClipts /></SuspenseBoundary>} />
         <Route path="/squads-clipts" element={<SuspenseBoundary loadingMessage="Loading squads clipts..."><SquadsClipts /></SuspenseBoundary>} />
+        <Route path="/live" element={<SuspenseBoundary loadingMessage="Loading live streams..."><Live /></SuspenseBoundary>} />
         <Route path="/profile/:id?" element={<SuspenseBoundary loadingMessage="Loading profile..."><Profile /></SuspenseBoundary>} />
         <Route path="/explore" element={<SuspenseBoundary loadingMessage="Loading Explore page..."><Explore /></SuspenseBoundary>} />
         <Route path="/all-streamers" element={<SuspenseBoundary loadingMessage="Loading streamers..."><AllStreamers /></SuspenseBoundary>} />
