@@ -292,7 +292,7 @@ const AppContent = () => {
         } />
         <Route path="/auth" element={<SuspenseBoundary><Auth /></SuspenseBoundary>} />
         <Route path="/discovery" element={<SuspenseBoundary><Discovery /></SuspenseBoundary>} />
-        <Route path="/discovery-new" element={<SuspenseBoundary><DiscoveryNew /></SuspenseBoundary>} />
+        <Route path="/discovery-new" element={<SuspenseBoundary><Discovery /></SuspenseBoundary>} />
         <Route path="/dark-discovery" element={<SuspenseBoundary><DarkDiscovery /></SuspenseBoundary>} />
         <Route path="/space-discovery" element={<SuspenseBoundary><SpaceDiscovery /></SuspenseBoundary>} />
         <Route path="/login" element={<SuspenseBoundary><Login /></SuspenseBoundary>} />
