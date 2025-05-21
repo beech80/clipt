@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, ChevronLeft, Share2, MessageCircle, DollarSign, RefreshCw, Twitter, Facebook, Mail, Clipboard, Star, X, Send } from 'lucide-react';
+import { Users, ChevronLeft, Share2, MessageCircle, DollarSign, RefreshCw, Twitter, Facebook, Mail, Clipboard, Star, X, Send, Scissors } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
@@ -116,6 +116,7 @@ const AllStreamers = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
+  const [isCliptModalOpen, setIsCliptModalOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<Array<{user: string; message: string; time: string}>>([]);
   const [currentMessage, setCurrentMessage] = useState('');
@@ -258,6 +259,16 @@ const AllStreamers = () => {
     setIsShareModalOpen(true);
   };
 
+  // Handle creating a clip from the stream
+  const handleCliptStream = () => {
+    if (!streamers[currentIndex]) return;
+    setIsCliptModalOpen(true);
+    toast.success('Ready to create a clip!', {
+      description: 'Select the length and add a title to your clip',
+      position: 'top-center'
+    });
+  };
+
   // Copy link to clipboard
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -352,12 +363,7 @@ const AllStreamers = () => {
 
   return (
     <StreamContainer>
-      {/* Back button */}
-      <div className="absolute top-4 left-4 z-50">
-        <ActionButton onClick={goBack} style={{ width: '40px', height: '40px' }}>
-          <ChevronLeft size={24} />
-        </ActionButton>
-      </div>
+      {/* Back button removed */}
       
       {/* Main content - Swipeable stream views */}
       <AnimatePresence>
@@ -497,6 +503,12 @@ const AllStreamers = () => {
               <ActionButton onClick={handleShareStream}>
                 <Share2 size={24} />
               </ActionButton>
+              <ActionButton onClick={handleCliptStream} style={{ 
+                background: 'rgba(255, 85, 0, 0.3)',
+                borderColor: 'rgba(255, 85, 0, 0.8)'
+              }}>
+                <Scissors size={22} />
+              </ActionButton>
               <ActionButton onClick={handleSubscribe} style={{ 
                 background: isSubscribed ? 'rgba(255, 85, 0, 0.4)' : 'rgba(0, 0, 0, 0.7)',
                 borderColor: isSubscribed ? 'rgba(255, 85, 0, 0.9)' : 'rgba(255, 85, 0, 0.7)'
@@ -542,6 +554,70 @@ const AllStreamers = () => {
           </div>
         </div>
       )}
+      
+      {/* Clipt Modal - For creating clips */}
+      <Dialog open={isCliptModalOpen} onOpenChange={setIsCliptModalOpen}>
+        <DialogContent className="bg-[#151515] border border-orange-500/30 rounded-lg shadow-[0_0_30px_rgba(255,85,0,0.2)] max-w-md">
+          <div className="p-4">
+            <h2 className="text-xl font-bold text-white mb-4 text-center">Create a Clip</h2>
+            
+            <div className="mb-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm text-gray-300 block">Clip length</label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button className="bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/40 rounded-md py-2 text-orange-400 text-sm font-medium">
+                    15 sec
+                  </button>
+                  <button className="bg-orange-500/30 hover:bg-orange-500/40 border border-orange-500/60 rounded-md py-2 text-orange-400 text-sm font-medium ring-2 ring-orange-500/20">
+                    30 sec
+                  </button>
+                  <button className="bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/40 rounded-md py-2 text-orange-400 text-sm font-medium">
+                    60 sec
+                  </button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm text-gray-300 block">Clip title</label>
+                <input 
+                  type="text" 
+                  placeholder="Add a title for your clip..."
+                  className="w-full bg-black/30 text-white border border-orange-500/30 rounded-md p-2 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/40"
+                />
+              </div>
+              
+              <div className="flex items-center justify-between text-sm text-gray-400 px-1">
+                <span>Current viewers: {streamers[currentIndex]?.viewerCount.toLocaleString()}</span>
+                <div className="flex items-center gap-1">
+                  <Scissors size={14} className="text-orange-500" />
+                  <span>{Math.floor(Math.random() * 500) + 100} clips today</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setIsCliptModalOpen(false)}
+                className="flex-1 border border-gray-600 text-gray-300 bg-black/40 hover:bg-black/60 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  setIsCliptModalOpen(false);
+                  toast.success('Clip created!', {
+                    description: 'Your clip has been saved and shared with your followers',
+                  });
+                }}
+                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                <Scissors size={16} />
+                Create Clip
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       
       {/* Share Modal */}
       <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
