@@ -308,6 +308,9 @@ const AppContent = () => {
         <Route path="/group-chat" element={<SuspenseBoundary loadingMessage="Loading chat..."><GroupChat /></SuspenseBoundary>} />
         <Route path="/game/:id" element={<SuspenseBoundary loadingMessage="Loading game details..."><GameDetailsPage /></SuspenseBoundary>} />
         <Route path="/games" element={<SuspenseBoundary loadingMessage="Finding top games..."><TopGames /></SuspenseBoundary>} />
+        <Route path="/search" element={<SuspenseBoundary loadingMessage="Searching the galaxy..."><Search /></SuspenseBoundary>} />
+        <Route path="/search-page" element={<SuspenseBoundary loadingMessage="Searching the cosmos..."><SearchPage /></SuspenseBoundary>} />
+        <Route path="/advanced-search" element={<SuspenseBoundary loadingMessage="Searching across the universe..."><AdvancedSearch /></SuspenseBoundary>} />
         <Route path="/clipts" element={<SuspenseBoundary loadingMessage="Loading clipts..."><Clipts /></SuspenseBoundary>} />
         <Route path="/top-clipts" element={<SuspenseBoundary loadingMessage="Loading top clipts..."><TopClipts /></SuspenseBoundary>} />
         <Route path="/squads-clipts" element={<SuspenseBoundary loadingMessage="Loading squads clipts..."><SquadsClipts /></SuspenseBoundary>} />
