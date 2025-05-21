@@ -26,6 +26,8 @@ const StreamContainer = styled.div`
   position: relative;
   overflow: hidden;
   touch-action: pan-y;
+  display: flex;
+  flex-direction: column;
 `;
 
 const StreamHeader = styled.div`
@@ -72,14 +74,15 @@ const LiveBadge = styled.div`
 `;
 
 const ActionButtons = styled.div`
-  position: absolute;
-  bottom: 20px;
-  left: 0;
-  right: 0;
+  position: relative;
+  width: 100%;
   display: flex;
   justify-content: space-around;
-  padding: 0 20px;
+  padding: 15px 20px;
   z-index: 10;
+  background: rgba(0, 0, 0, 0.8);
+  border-top: 1px solid rgba(255, 85, 0, 0.3);
+  margin-top: auto;
 `;
 
 const ActionButton = styled.button`
@@ -369,7 +372,9 @@ const AllStreamers = () => {
               width: '100%', 
               height: '100vh', 
               position: 'relative',
-              background: '#000000'
+              background: '#000000',
+              display: 'flex',
+              flexDirection: 'column'
             }}
           >
             {/* Stream Header with Streamer Name */}
@@ -389,7 +394,7 @@ const AllStreamers = () => {
                 top: 0,
                 left: 0,
                 width: '100%',
-                height: '100%',
+                height: 'calc(100% - 80px)', /* Reduced height to make room for buttons below */
                 zIndex: 1,
                 backgroundImage: `url(${streamers[currentIndex].thumbnailUrl})`,
                 backgroundSize: 'cover',
@@ -453,24 +458,7 @@ const AllStreamers = () => {
               </span>
             </div>
             
-            {/* Action Buttons */}
-            <ActionButtons>
-              <ActionButton onClick={handleChatToggle}>
-                <MessageCircle size={24} />
-              </ActionButton>
-              <ActionButton onClick={handleDonate}>
-                <DollarSign size={24} />
-              </ActionButton>
-              <ActionButton onClick={handleShareStream}>
-                <Share2 size={24} />
-              </ActionButton>
-              <ActionButton onClick={handleSubscribe} style={{ 
-                background: isSubscribed ? 'rgba(255, 85, 0, 0.4)' : 'rgba(0, 0, 0, 0.7)',
-                borderColor: isSubscribed ? 'rgba(255, 85, 0, 0.9)' : 'rgba(255, 85, 0, 0.7)'
-              }}>
-                <Star size={24} fill={isSubscribed ? '#FF5500' : 'none'} />
-              </ActionButton>
-            </ActionButtons>
+            
             
             {/* Swipe indicators */}
             <div style={{
@@ -497,6 +485,25 @@ const AllStreamers = () => {
                 />
               ))}
             </div>
+            
+            {/* Action Buttons - Now positioned below the stream */}
+            <ActionButtons>
+              <ActionButton onClick={handleChatToggle}>
+                <MessageCircle size={24} />
+              </ActionButton>
+              <ActionButton onClick={handleDonate}>
+                <DollarSign size={24} />
+              </ActionButton>
+              <ActionButton onClick={handleShareStream}>
+                <Share2 size={24} />
+              </ActionButton>
+              <ActionButton onClick={handleSubscribe} style={{ 
+                background: isSubscribed ? 'rgba(255, 85, 0, 0.4)' : 'rgba(0, 0, 0, 0.7)',
+                borderColor: isSubscribed ? 'rgba(255, 85, 0, 0.9)' : 'rgba(255, 85, 0, 0.7)'
+              }}>
+                <Star size={24} fill={isSubscribed ? '#FF5500' : 'none'} />
+              </ActionButton>
+            </ActionButtons>
           </motion.div>
         )}
       </AnimatePresence>
