@@ -68,10 +68,10 @@ const RetroMessagesContainer = styled(motion.div)`
   -webkit-overflow-scrolling: none;
 `;
 
-const RetroHeader = styled.div`
-  background: linear-gradient(90deg, rgba(30, 10, 0, 0.95) 0%, rgba(50, 25, 0, 0.95) 50%, rgba(30, 10, 0, 0.95) 100%);
-  border-bottom: 2px solid #ff6a00;
-  border-top: 2px solid #ff8800;
+const CosmicHeader = styled.div`
+  background: linear-gradient(90deg, rgba(10, 10, 30, 0.95) 0%, rgba(20, 20, 50, 0.95) 50%, rgba(10, 10, 30, 0.95) 100%);
+  border-bottom: 2px solid #ff5500;
+  border-top: 2px solid #ff7700;
   padding: 1.25rem 1rem;
   display: flex;
   flex-direction: column;
@@ -84,8 +84,9 @@ const RetroHeader = styled.div`
   width: 100%;
   z-index: 10;
   backdrop-filter: blur(10px);
-  box-shadow: 0 4px 30px rgba(255, 136, 0, 0.35), 0 0 15px rgba(255, 102, 0, 0.2) inset;
+  box-shadow: 0 4px 30px rgba(255, 85, 0, 0.35), 0 0 15px rgba(255, 85, 0, 0.2) inset;
   text-align: center;
+  
   &:before {
     content: '';
     position: absolute;
@@ -93,34 +94,182 @@ const RetroHeader = styled.div`
     left: 0;
     right: 0;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 136, 0, 0.2), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 85, 0, 0.2), transparent);
+    pointer-events: none;
+  }
+  
+  /* Space theme star animation */
+  &:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(1px 1px at 50px 30px, #fff, rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 100px 20px, #fff, rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 150px 15px, #fff, rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 200px 25px, #fff, rgba(0,0,0,0));
+    background-size: 300px 150px;
+    opacity: 0.3;
+    z-index: -1;
     pointer-events: none;
   }
 `;
 
-const RetroChatsList = styled.div`
-  border-right: 2px solid #ff6a00;
+
+const CosmicChatsList = styled.div`
+  border-right: 2px solid #ff5500;
   overflow-y: auto;
   flex: 0 0 300px;
-  background-color: rgba(26, 13, 0, 0.8);
+  background: linear-gradient(180deg, rgba(15, 15, 35, 0.9) 0%, rgba(20, 20, 45, 0.9) 100%);
   height: 100%;
   max-height: calc(100vh - 80px); /* Ensure it doesn't extend beyond viewport */
   scrollbar-width: thin;
-  scrollbar-color: #ff6a00 #2a1500;
+  scrollbar-color: #ff5500 #0a0a20;
   overflow-x: hidden;
   overscroll-behavior: contain; /* Prevent scroll chaining */
+  position: relative;
+  
+  /* Cosmic styling with star-like dots */
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(circle at 50% 50%, rgba(255, 85, 0, 0.1) 1px, transparent 1px),
+                     radial-gradient(circle at 20% 20%, rgba(255, 85, 0, 0.1) 1px, transparent 1px),
+                     radial-gradient(circle at 80% 60%, rgba(255, 85, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px, 30px 30px, 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
   
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
   
   &::-webkit-scrollbar-track {
-    background: #2a1500;
+    background: #0a0a20;
   }
   
   &::-webkit-scrollbar-thumb {
-    background-color: #ff6a00;
+    background-color: #ff5500;
     border-radius: 8px;
+    box-shadow: 0 0 8px rgba(255, 85, 0, 0.5);
+  }
+`;
+
+const RetroChatsList = styled.div`
+  border-right: 2px solid #ff5500;
+  overflow-y: auto;
+  flex: 0 0 300px;
+  background: linear-gradient(180deg, rgba(10, 10, 35, 0.9) 0%, rgba(15, 15, 45, 0.9) 100%);
+  height: 100%;
+  max-height: calc(100vh - 80px);
+  scrollbar-width: thin;
+  scrollbar-color: #ff5500 #0a0a20;
+  overflow-x: hidden;
+  position: relative;
+  z-index: 1;
+  box-shadow: inset -5px 0 15px rgba(255, 85, 0, 0.1);
+  
+  /* Cosmic nebula background effect */
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+      radial-gradient(circle at 30% 20%, rgba(255, 100, 50, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 70% 60%, rgba(100, 50, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 50% 40%, rgba(50, 200, 255, 0.05) 0%, transparent 50%);
+    background-size: 200% 200%;
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  /* Star field effect */
+  &:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 10%, rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+      radial-gradient(1px 1px at 20% 30%, rgba(255, 255, 255, 0.7) 1px, transparent 1px),
+      radial-gradient(1px 1px at 30% 70%, rgba(255, 255, 255, 0.7) 1px, transparent 1px),
+      radial-gradient(1px 1px at 40% 40%, rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+      radial-gradient(1px 1px at 50% 60%, rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+      radial-gradient(1px 1px at 60% 20%, rgba(255, 255, 255, 0.6) 1px, transparent 1px),
+      radial-gradient(1px 1px at 70% 50%, rgba(255, 255, 255, 0.6) 1px, transparent 1px),
+      radial-gradient(1px 1px at 80% 90%, rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+      radial-gradient(1px 1px at 90% 30%, rgba(255, 255, 255, 0.5) 1px, transparent 1px);
+    background-size: 200% 200%;
+    opacity: 0.2;
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(10, 10, 32, 0.8);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #ff5500, #ff8800);
+    border-radius: 3px;
+    box-shadow: 0 0 8px rgba(255, 85, 0, 0.5);
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #ff7700, #ffaa00);
+    box-shadow: 0 0 12px rgba(255, 85, 0, 0.7);
+  }
+`;
+
+
+
+const CosmicChatBox = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: calc(100vh - 80px);
+  background: linear-gradient(135deg, rgba(10, 10, 30, 0.8) 0%, rgba(15, 15, 40, 0.8) 100%);
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  /* Space background with stars */
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(1px 1px at 25px 25px, rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0)),
+      radial-gradient(1px 1px at 50px 50px, rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0)),
+      radial-gradient(1px 1px at 75px 75px, rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0)),
+      radial-gradient(1px 1px at 100px 100px, rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0)),
+      radial-gradient(1px 1px at 125px 125px, rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0));
+    background-size: 150px 150px;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.3;
   }
 `;
 
@@ -129,32 +278,108 @@ const RetroChatBox = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-height: calc(100vh - 80px);
-  background: rgba(26, 13, 0, 0.3);
+  background: linear-gradient(140deg, rgba(5, 10, 35, 0.85) 0%, rgba(15, 25, 60, 0.85) 50%, rgba(20, 15, 40, 0.85) 100%);
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #ff5500 rgba(10, 10, 32, 0.8);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 85, 0, 0.15);
+  border-left: 1px solid rgba(255, 85, 0, 0.3);
+  z-index: 1;
+  
+  /* Deep space nebula background effect */
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(255, 100, 50, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(100, 50, 255, 0.08) 0%, transparent 60%),
+      radial-gradient(circle at 50% 50%, rgba(50, 180, 255, 0.05) 0%, transparent 55%);
+    background-size: 200% 200%;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.8;
+  }
+  
+  /* Advanced star field with twinkling effect */
+  &:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+      radial-gradient(1px 1px at 5% 5%, rgba(255, 255, 255, 0.9) 1px, transparent 1px),
+      radial-gradient(1px 1px at 15% 25%, rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+      radial-gradient(1px 1px at 25% 45%, rgba(255, 255, 255, 0.7) 1px, transparent 1px),
+      radial-gradient(1px 1px at 35% 65%, rgba(255, 255, 255, 0.7) 1px, transparent 1px),
+      radial-gradient(1px 1px at 45% 85%, rgba(255, 255, 255, 0.6) 1px, transparent 1px),
+      radial-gradient(1px 1px at 55% 15%, rgba(255, 255, 255, 0.6) 1px, transparent 1px),
+      radial-gradient(1px 1px at 65% 35%, rgba(255, 255, 255, 0.7) 1px, transparent 1px),
+      radial-gradient(1px 1px at 75% 55%, rgba(255, 255, 255, 0.7) 1px, transparent 1px),
+      radial-gradient(1px 1px at 85% 75%, rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+      radial-gradient(1px 1px at 95% 95%, rgba(255, 255, 255, 0.9) 1px, transparent 1px);
+    background-size: 250% 250%;
+    opacity: 0.2;
+    z-index: -1;
+    pointer-events: none;
+    animation: twinkling 8s linear infinite;
+  }
+  
+  @keyframes twinkling {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+  }
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(10, 10, 32, 0.8);
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #ff5500, #ff8800);
+    border-radius: 3px;
+    box-shadow: 0 0 8px rgba(255, 85, 0, 0.5);
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #ff7700, #ffaa00);
+    box-shadow: 0 0 12px rgba(255, 85, 0, 0.7);
+  }
 `;
+
+
 
 const RetroChatItem = styled(motion.div)`
   padding: 0.75rem 1rem;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  border-bottom: 1px solid #1f1b4a;
-  background: linear-gradient(90deg, rgba(23, 23, 37, 0.4) 0%, rgba(16, 15, 40, 0.4) 100%);
-  transition: all 0.3s ease;
   
+  /* Cosmic glow effect on hover */
   &:hover {
-    background: linear-gradient(90deg, rgba(44, 39, 95, 0.4) 0%, rgba(39, 34, 89, 0.4) 100%);
+    background: rgba(30, 30, 70, 0.5);
+    border-left: 2px solid rgba(255, 85, 0, 0.7);
+    box-shadow: inset 0 0 15px rgba(255, 85, 0, 0.1);
   }
   
+  /* Active state with orange accent */
   &.active {
-    background: linear-gradient(90deg, rgba(54, 48, 121, 0.6) 0%, rgba(39, 34, 89, 0.6) 100%);
-    box-shadow: inset 0 0 10px rgba(128, 81, 255, 0.3);
-    border-left: 4px solid #8051ff;
+    background: rgba(255, 85, 0, 0.15);
+    border-left: 2px solid #FF5500;
   }
   
+  /* Top border glow */
   &:before {
     content: '';
     position: absolute;
@@ -162,7 +387,28 @@ const RetroChatItem = styled(motion.div)`
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(128, 81, 255, 0.3), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 85, 0, 0.3), transparent);
+  }
+  
+  /* Space particle effect */
+  &:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.1;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  /* Ensure content appears above effects */
+  & > * {
+    position: relative;
+    z-index: 1;
   }
 `;
 
@@ -249,6 +495,56 @@ const RetroButton = styled(motion.button)`
   svg {
     margin-right: 0.5rem;
     filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
+  }
+`;
+
+const RetroHeader = styled.div`
+  background: linear-gradient(90deg, rgba(10, 10, 30, 0.95) 0%, rgba(20, 20, 50, 0.95) 50%, rgba(10, 10, 30, 0.95) 100%);
+  border-bottom: 2px solid #ff5500;
+  border-top: 2px solid #ff7700;
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 30px rgba(255, 85, 0, 0.35), 0 0 15px rgba(255, 85, 0, 0.2) inset;
+  text-align: center;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 85, 0, 0.2), transparent);
+    pointer-events: none;
+  }
+  
+  /* Space theme star animation */
+  &:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(1px 1px at 50px 30px, #fff, rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 100px 20px, #fff, rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 150px 15px, #fff, rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 200px 25px, #fff, rgba(0,0,0,0));
+    background-size: 300px 150px;
+    opacity: 0.3;
+    z-index: -1;
+    pointer-events: none;
   }
 `;
 
@@ -919,100 +1215,72 @@ const Messages = () => {
             </div>
           </RetroHeader>
           {/* Main content */}
-          <div className="flex h-full max-h-[calc(100vh-80px)] pt-16 pb-20 relative overflow-hidden">
-            {/* Chats sidebar */}
-            <RetroChatsList>
-              {/* Search input */}
-              <div className="p-4 border-b border-indigo-900 bg-gradient-to-r from-indigo-950/30 to-purple-950/30">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400 h-4 w-4" />
-                  <RetroInput 
-                    placeholder="Search messages..."
-                    className="pl-9"
-                    value={searchTerm}
-                    onChange={(e) => handleSearch(e.target.value)}
-                  />
-                </div>
+          <div className="h-full max-h-[calc(100vh-80px)] pt-16 pb-20 relative overflow-hidden">
+            {/* Chat interface - Full width */}
+            <RetroChatBox>
+              {/* Message Grid Layout */}
+              <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {activeChats.map((chat, index) => (
+                  <motion.div
+                    key={chat.id}
+                    className="cosmic-message-card border border-indigo-800/40 rounded-lg p-4 bg-indigo-950/30 backdrop-blur-sm hover:border-orange-500/70 cursor-pointer transition-all duration-300"
+                    whileHover={{ 
+                      y: -5,
+                      boxShadow: '0 10px 25px -5px rgba(255, 85, 0, 0.3), 0 0 10px rgba(255, 85, 0, 0.2) inset'
+                    }}
+                    onClick={() => {
+                      setSelectedChat(chat);
+                      // Auto-prepare message if sharing a post
+                      if (sharedPostId && chat) {
+                        const shareUrl = `${window.location.origin}/post/${sharedPostId}`;
+                        setMessage(`Check out this Clipt: ${shareUrl}`);
+                      }
+                      // Navigate to single chat view
+                      navigate(`/messages/${chat.recipient_id}`);
+                    }}
+                  >
+                    {/* Message Card Header */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <Avatar className="cyber-border-sm border-2 border-indigo-700/50">
+                        <AvatarImage src={chat.recipient_avatar} />
+                        <AvatarFallback className="bg-indigo-900">{chat.recipient_name?.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-bold text-cyan-300 glitch-text-sm" data-text={chat.recipient_name}>{chat.recipient_name}</div>
+                        <span className="text-xs text-purple-400">
+                          {chat.last_message_time ? new Date(chat.last_message_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
+                        </span>
+                      </div>
+                      {/* Notification Badge */}
+                      {chat.unread_count > 0 && <NotificationBadge className="ml-auto" />}
+                    </div>
+                    
+                    {/* Message Preview */}
+                    <p className="text-sm text-purple-200 line-clamp-2 mt-1 opacity-80">
+                      {chat.last_message || "No messages yet"}
+                    </p>
+                    
+                    {/* Interactive Elements */}
+                    <div className="mt-3 pt-2 border-t border-indigo-800/20 flex justify-end">
+                      <motion.div 
+                        className="text-xs text-orange-400 font-medium flex items-center gap-1"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <MessageSquare className="w-3 h-3" /> View Conversation
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                ))}
+                
+                {/* New Message functionality now accessible via the header button */}
               </div>
               
-              {/* Chats list */}
-              <motion.div variants={containerVariants}>
-                {isSearching ? (
-                  <div className="p-4 text-center text-indigo-500">Searching<span className="loading-dots">...</span></div>
-                ) : activeChats.length > 0 ? (
-                  activeChats.map((chat, index) => (
-                    <RetroChatItem
-                      key={chat.id}
-                      className={selectedChat?.id === chat.id ? 'active' : ''}
-                      variants={itemVariants}
-                      custom={index}
-                      onClick={() => {
-                        setSelectedChat(chat);
-                        // If using a shared post ID, automatically prepare a message
-                        if (sharedPostId && chat) {
-                          const shareUrl = `${window.location.origin}/post/${sharedPostId}`;
-                          setMessage(`Check out this Clipt: ${shareUrl}`);
-                        }
-                      }}
-                      whileHover={{ x: 4 }}
-                    >   
-                      {/* Show notification badge for unread messages */}
-                      {chat.unread_count > 0 && <NotificationBadge />}
-                      <div className="flex items-center gap-3">
-                        <Avatar className="cyber-border-sm border-2 border-indigo-700/50">
-                          <AvatarImage src={chat.recipient_avatar} />
-                          <AvatarFallback className="bg-indigo-900">{chat.recipient_name?.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 overflow-hidden">
-                          <div className="flex items-baseline justify-between">
-                            <div className="font-bold text-cyan-300 glitch-text-sm" data-text={chat.recipient_name}>{chat.recipient_name}</div>
-                            <span className="text-xs text-purple-400">
-                              {chat.last_message_time ? new Date(chat.last_message_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
-                            </span>
-                          </div>
-                          <p className="text-sm text-purple-200 truncate mt-1 opacity-80">
-                            {chat.last_message || "No messages yet"}
-                          </p>
-                        </div>
-                      </div>
-                    </RetroChatItem>
-                  ))
-                ) : (
-                  <div className="text-center py-12" style={{visibility: 'hidden', height: '1px', overflow: 'hidden', opacity: 0}}>
-                    {/* Completely hidden elements */}
-                  </div>
-                )}
-              </motion.div>
-            </RetroChatsList>
-            {/* Chat interface */}
-            <RetroChatBox>
-              {/* Empty state when no chat is selected */}
+              {/* Conditional rendering for message grid or single conversation */}
               {!selectedChat ? (
-                <div className="flex flex-col items-center justify-center h-full px-4">
-                  <GlitchEffect>
-                    <MessageSquare className="w-20 h-20 mb-6 text-purple-500" />
-                  </GlitchEffect>
-                  <motion.h2 
-                    className="text-2xl font-bold mb-3 retro-text-glow text-cyan-300"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <RetroFlickerEffect>YOUR MESSAGES</RetroFlickerEffect>
-                  </motion.h2>
-                  <p className="text-purple-300 text-center mb-8 cyber-text">Select a conversation or start a new one</p>
-                  <RetroButton
-                    as={motion.button}
-                    onClick={() => setShowNewChatDialog(true)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> NEW MESSAGE
-                  </RetroButton>
-                  
-
-                </div>
+                // Show the message grid when no chat is selected
+                <></>
               ) : (
+                // Show the single conversation view when a chat is selected
                 <>
                   {/* Chat header with recipient info */}
                   <div className="p-3 border-b border-indigo-900/50 bg-gradient-to-r from-indigo-950/50 to-purple-950/50 flex items-center">
