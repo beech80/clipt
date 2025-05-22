@@ -613,16 +613,14 @@
 /* Main controller container */
 .gameboy-controls {
   position: fixed;
-  bottom: 15px;  /* Moved further down */
-  left: 20%;    /* Shifted left edge to create more space on the left */
-  right: 10px;  /* Moved closer to the right edge */
+  bottom: 0;       /* At the very bottom */
+  right: 0;        /* At the very right */
   display: flex;
-  justify-content: flex-end; /* Align content toward the right */
-  align-items: center;
-  padding: 0;
+  justify-content: flex-end; /* Align to right */
+  align-items: flex-end;         /* Align to bottom */
+  padding: 0;                     /* No padding to allow exact positioning */
   background: transparent;
   z-index: 1000;
-  height: 0; /* No height to prevent blocking content */
   pointer-events: none; /* This makes the container not block video interaction */
   overflow: visible;
 }
@@ -1068,22 +1066,21 @@
 
 .action-buttons.diamond-layout {
   position: fixed;
-  bottom: 2px; /* Positioned much lower in the corner */
-  right: 2px; /* Positioned much further to the right */
-  background-color: transparent;
-  border-radius: 0;
-  padding: 0;
-  width: 140px; /* Reduced size to be more compact */
-  height: 140px; /* Reduced size to be more compact */
+  bottom: 0px;
+  right: 0px;
+  width: 110px;
+  height: 110px;
   display: grid;
   grid-template-areas:
     ". top ."
     "left . right"
     ". bottom .";
-  gap: 12px; /* Slightly reduced gap to keep buttons closer */
+  gap: 8px; /* Reduced gap to keep buttons closer */
   z-index: 1000;
   pointer-events: auto; /* Ensure buttons remain clickable */
-  transform: scale(0.88); /* Slight scale down to fit more nicely in the corner */
+  transform: scale(0.7); /* Scaled down more to fit better in the extreme corner */
+  padding-right: 5px; /* Add padding to position properly */
+  padding-bottom: 5px; /* Add padding to position properly */
 }
 
 .action-button::before {
