@@ -199,7 +199,59 @@
   display: none;
 }
 
-/* Active joystick state */
+/* Enhanced joystick styling */
+@keyframes rainbow-spin {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.rainbow-border-button {
+  position: relative;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #111;
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+  overflow: hidden;
+  z-index: 1;
+}
+
+.rainbow-border-button::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000);
+  background-size: 400%;
+  z-index: -1;
+  animation: rainbow-spin 3s linear infinite;
+}
+
+.rainbow-border-button::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: #111;
+  z-index: -1;
+}
+
+.clipt-button::after {
+  background: #000;
+}
+
 .joystick.active {
   transform: scale(1.05);
 }
@@ -620,9 +672,12 @@
   align-items: flex-end;         /* Align to bottom */
   padding: 0;                     /* No padding to allow exact positioning */
   background: transparent;
-  z-index: 1000;
+  z-index: 9999;
   pointer-events: none; /* This makes the container not block video interaction */
   overflow: visible;
+  margin: 0;
+  width: 120px;
+  height: 120px;
 }
 
 /* Remove sections since we're using absolute positioning */
@@ -1066,21 +1121,21 @@
 
 .action-buttons.diamond-layout {
   position: fixed;
-  bottom: 0px;
-  right: 0px;
-  width: 110px;
-  height: 110px;
+  bottom: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
   display: grid;
   grid-template-areas:
     ". top ."
     "left . right"
     ". bottom .";
-  gap: 8px; /* Reduced gap to keep buttons closer */
-  z-index: 1000;
+  gap: 5px; /* Minimal gap for the tightest layout */
+  z-index: 9999;
   pointer-events: auto; /* Ensure buttons remain clickable */
-  transform: scale(0.7); /* Scaled down more to fit better in the extreme corner */
-  padding-right: 5px; /* Add padding to position properly */
-  padding-bottom: 5px; /* Add padding to position properly */
+  transform: scale(0.6); /* Extremely scaled down to fit in the corner */
+  margin: 0;
+  padding: 0;
 }
 
 .action-button::before {
@@ -1109,8 +1164,8 @@
 }
 
 .action-button {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: none;
   display: flex;
@@ -1120,12 +1175,28 @@
   position: relative;
   overflow: visible;
   transition: transform 0.15s;
-  z-index: 5;
+  z-index: 9999;
   background-color: transparent;
   box-shadow: none;
 }
 
-
+.joystick {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  height: 80px;
+  background: rgba(13, 16, 56, 0.5);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  cursor: pointer;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  overflow: visible;
+}
 
 .action-buttons.diamond-layout .action-button svg {
   width: 22px;
