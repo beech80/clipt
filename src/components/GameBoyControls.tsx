@@ -569,7 +569,7 @@ const GameBoyControls: React.FC = () => {
   return (
     <div className="gameboy-controls">
       {/* Left joystick with rainbow border */}
-      <div className="left-joystick" style={{ position: 'fixed', bottom: '15px', left: '10px', zIndex: 9999, pointerEvents: 'auto' }}>
+      <div className="left-joystick" style={{ position: 'fixed', bottom: '15px', left: '20px', zIndex: 9999, pointerEvents: 'auto' }}>
         <div 
           className={`joystick xbox-style rainbow-border ${isJoystickActive ? 'active' : ''} ${isTouched ? 'touched' : ''}`} 
           ref={joystickRef} 
@@ -582,75 +582,246 @@ const GameBoyControls: React.FC = () => {
         </div>
       </div>
       
-      {/* Center Menu Controls */}
-      <div className="center-controls" style={{ position: 'fixed', bottom: '25px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, display: 'flex', gap: '20px', pointerEvents: 'auto' }}>
-        {/* Menu Button (hamburger icon) */}
-        <button 
-          className="menu-button select-button rainbow-border-button"
-          onClick={handleSelectButtonClick}
-          aria-label="Open Game Menu"
-        >
-          <div style={{ fontSize: '22px', color: '#fff' }}>≡</div>
-        </button>
+      {/* Center Menu Buttons */}
+      <div style={{ position: 'fixed', bottom: '25px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, display: 'flex', gap: '15px', pointerEvents: 'auto' }}>
+        {/* Menu Button */}
+        <div className="circular-menu-button" style={{ width: '45px', height: '45px', position: 'relative' }}>
+          <button 
+            onClick={handleSelectButtonClick}
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              background: 'black',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              zIndex: 2
+            }}
+            aria-label="Menu"
+          >
+            <div style={{ fontSize: '22px', color: '#fff' }}>≡</div>
+          </button>
+          <div style={{
+            position: 'absolute',
+            top: -2,
+            left: -2,
+            right: -2,
+            bottom: -2,
+            borderRadius: '50%',
+            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
+            backgroundSize: '300%',
+            zIndex: 1,
+            animation: 'rainbow-spin 4s linear infinite'
+          }}></div>
+        </div>
         
-        {/* Clipt Button - Center */}
-        <button 
-          className="menu-button clipt-button rainbow-border-button"
-          onClick={() => handleMenuItemClick('/')}
-          aria-label="Go to Clipt Home"
-        >
-          <span style={{ color: '#adff2f', fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.5px' }}>CLIPT</span>
-        </button>
+        {/* CLIPT Button */}
+        <div className="circular-menu-button" style={{ width: '45px', height: '45px', position: 'relative' }}>
+          <button 
+            onClick={() => handleMenuItemClick('/')}
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              background: 'black',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              zIndex: 2
+            }}
+            aria-label="CLIPT Home"
+          >
+            <span style={{ color: '#adff2f', fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.5px' }}>CLIPT</span>
+          </button>
+          <div style={{
+            position: 'absolute',
+            top: -2,
+            left: -2,
+            right: -2,
+            bottom: -2,
+            borderRadius: '50%',
+            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
+            backgroundSize: '300%',
+            zIndex: 1,
+            animation: 'rainbow-spin 4s linear infinite'
+          }}></div>
+        </div>
         
         {/* Camera Button */}
-        <button 
-          className="menu-button post-button rainbow-border-button"
-          onClick={() => handleActionButtonClick('post')}
-          aria-label="Create New Post"
-        >
-          <div style={{ fontSize: '20px' }}>📷</div>
-        </button>
+        <div className="circular-menu-button" style={{ width: '45px', height: '45px', position: 'relative' }}>
+          <button 
+            onClick={() => handleActionButtonClick('post')}
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              background: 'black',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              zIndex: 2
+            }}
+            aria-label="Camera"
+          >
+            <div style={{ fontSize: '20px' }}>📷</div>
+          </button>
+          <div style={{
+            position: 'absolute',
+            top: -2,
+            left: -2,
+            right: -2,
+            bottom: -2,
+            borderRadius: '50%',
+            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
+            backgroundSize: '300%',
+            zIndex: 1,
+            animation: 'rainbow-spin 4s linear infinite'
+          }}></div>
+        </div>
       </div>
       
       {/* Action buttons with rainbow borders in diamond layout */}
       <div className="action-buttons diamond-layout" style={{ position: 'fixed', bottom: '15px', right: '15px', zIndex: 9999, pointerEvents: 'auto' }}>
         {/* Comment button (top - blue) */}
         <button 
-          className={`action-button comment-button top rainbow-border-button ${commentActive ? 'active' : ''}`}
+          className={`action-button comment-button top ${commentActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('comment')}
           aria-label="Comment"
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            background: 'black',
+            border: 'none',
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white'
+          }}
         >
           <MessageSquare className="gameboy-action-icon" />
+          <div style={{
+            position: 'absolute',
+            top: -2,
+            left: -2,
+            right: -2,
+            bottom: -2,
+            borderRadius: '50%',
+            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
+            backgroundSize: '300%',
+            zIndex: -1,
+            animation: 'rainbow-spin 4s linear infinite'
+          }}></div>
         </button>
         
         {/* Like button (left - red) */}
         <button 
-          className={`action-button like-button left rainbow-border-button ${likeActive ? 'active' : ''}`}
+          className={`action-button like-button left ${likeActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('like')}
           aria-label="Like post"
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            background: 'black',
+            border: 'none',
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white'
+          }}
         >
           <Heart className="gameboy-action-icon" />
+          <div style={{
+            position: 'absolute',
+            top: -2,
+            left: -2,
+            right: -2,
+            bottom: -2,
+            borderRadius: '50%',
+            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
+            backgroundSize: '300%',
+            zIndex: -1,
+            animation: 'rainbow-spin 4s linear infinite'
+          }}></div>
         </button>
         
         {/* Follow button (right - yellow) */}
         <button 
-          className={`action-button follow-button right rainbow-border-button ${followActive ? 'active' : ''}`}
+          className={`action-button follow-button right ${followActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('follow')}
           aria-label="Follow user"
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            background: 'black',
+            border: 'none',
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white'
+          }}
         >
           <Bookmark className="gameboy-action-icon" />
+          <div style={{
+            position: 'absolute',
+            top: -2,
+            left: -2,
+            right: -2,
+            bottom: -2,
+            borderRadius: '50%',
+            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
+            backgroundSize: '300%',
+            zIndex: -1,
+            animation: 'rainbow-spin 4s linear infinite'
+          }}></div>
         </button>
         
         {/* Trophy button (bottom - yellow) */}
         <button 
-          className={`action-button rank-button bottom rainbow-border-button ${rankActive ? 'active' : ''}`}
+          className={`action-button rank-button bottom ${rankActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('rank')}
           aria-label="Rank post"
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            background: 'black',
+            border: 'none',
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white'
+          }}
         >
           <Award className="gameboy-action-icon" />
           {rankActive && currentRank > 0 && (
             <span className="rank-indicator">{currentRank}</span>
           )}
+          <div style={{
+            position: 'absolute',
+            top: -2,
+            left: -2,
+            right: -2,
+            bottom: -2,
+            borderRadius: '50%',
+            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
+            backgroundSize: '300%',
+            zIndex: -1,
+            animation: 'rainbow-spin 4s linear infinite'
+          }}></div>
         </button>
       </div>
     </div>
