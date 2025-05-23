@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Gamepad, Medal, Zap, Rocket, Trophy, Heart, Star, Users, MessageSquare, Eye } from 'lucide-react';
+ import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Gamepad, Medal, Zap, Rocket, Trophy, Heart, Star, Users, MessageSquare, Eye, Award, ChevronLeft, ChevronRight, ThumbsUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 import '../../styles/gaming/profile-gaming.css';
 
 // Define achievement interface for type safety
@@ -18,6 +19,19 @@ interface Achievement {
   date?: string;
   reward?: string;
   isNew?: boolean;
+}
+
+// Define comment interface
+interface Comment {
+  id: string;
+  content: string;
+  created_at: string;
+  user: {
+    id?: string;
+    name: string;
+    avatar: string;
+  };
+  likes: number;
 }
 
 interface GamingProfileProps {
@@ -271,19 +285,111 @@ const GamingProfile: React.FC<GamingProfileProps> = ({
   onTabChange,
   boostActive = false
 }) => {
-  // State for full-screen post viewing
+  // State for selected post and post navigation
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
-  const [currentPostIndex, setCurrentPostIndex] = useState<number>(0);
-  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right'>('right');
+  const [currentPostIndex, setCurrentPostIndex] = useState<number | null>(null);
   
+  // State for post interactions
+  const [userLiked, setUserLiked] = useState<Record<string, boolean>>({});
+  const [likes, setLikes] = useState<Record<string, number>>({});
+  const [userGaveTrophy, setUserGaveTrophy] = useState<Record<string, boolean>>({});
+  const [trophyCount, setTrophyCount] = useState<Record<string, number>>({});
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right'>('left');
+  
+  // State for comments
+  const [showComments, setShowComments] = useState<boolean>(false);
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState<string>('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState<boolean>(false);
+  
+  // Refs
+  const postContainerRef = useRef<HTMLDivElement>(null);
+  const commentInputRef = useRef<HTMLInputElement>(null);
+  // Navigation
+  const navigate = useNavigate();
+  
+  // Go to profile settings
+  const goToSettings = () => {
+    navigate('/settings/profile');
+  };
+  
+  // Initialize post interaction data
+  useEffect(() => {
+    if (userPosts && userPosts.length > 0) {
+      // Initialize likes count
+      const initialLikes: Record<string, number> = {};
+      const initialTrophies: Record<string, number> = {};
+      
+      userPosts.forEach(post => {
+        initialLikes[post.id] = post.likes_count || Math.floor(Math.random() * 100);
+        initialTrophies[post.id] = post.trophy_count || Math.floor(Math.random() * 20);
+      });
+      
+      setLikes(initialLikes);
+      setTrophyCount(initialTrophies);
+    }
+  }, [userPosts]);
+  
+  // Handle keyboard navigation for posts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedPost) return;
+      
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        showNextPost();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        showPreviousPost();
+      } else if (e.key === 'Escape') {
+        setSelectedPost(null);
+        setShowComments(false);
+        document.body.classList.remove('overflow-hidden');
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedPost, currentPostIndex]);
+
+  // Additional state for viewing posts
+  const [viewingPost, setViewingPost] = useState(false);
+
+  // For cool animated star background
+  const [stars, setStars] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Initialize interaction states
+  useEffect(() => {
+    // Initialize like and trophy counts for posts
+    const initialLikes: {[key: string]: number} = {};
+    const initialTrophies: {[key: string]: number} = {};
+    const initialUserLiked: {[key: string]: boolean} = {};
+    const initialUserGaveTrophy: {[key: string]: boolean} = {};
+    
+    userPosts.forEach(post => {
+      initialLikes[post.id] = post.likes_count || Math.floor(Math.random() * 100);
+      initialTrophies[post.id] = post.trophy_count || Math.floor(Math.random() * 20);
+      initialUserLiked[post.id] = false;
+      initialUserGaveTrophy[post.id] = false;
+    });
+    
+    setLikes(initialLikes);
+    setTrophyCount(initialTrophies);
+    setUserLiked(initialUserLiked);
+    setUserGaveTrophy(initialUserGaveTrophy);
+  }, [userPosts]);
+
   // Handle post click to show full-screen view
   const handlePostClick = (post: any, index: number) => {
     setSelectedPost(post);
     setCurrentPostIndex(index);
-    // Add body class to prevent scrolling when modal is open
     document.body.classList.add('overflow-hidden');
+    
+    // Load initial comments for the post
+    if (post) {
+      toggleComments(post.id, false);
+    }
   };
-  
+
   // Show next post in full-screen view
   const showNextPost = () => {
     if (currentPostIndex < userPosts.length - 1) {
@@ -294,13 +400,276 @@ const GamingProfile: React.FC<GamingProfileProps> = ({
   };
   
   // Show previous post in full-screen view
+
+  // Show previous post in full-screen view
   const showPreviousPost = () => {
-    if (currentPostIndex > 0) {
-      setSwipeDirection('right');
+    if (currentPostIndex !== null && currentPostIndex > 0) {
       setCurrentPostIndex(currentPostIndex - 1);
       setSelectedPost(userPosts[currentPostIndex - 1]);
     }
   };
+  
+  // Handle double-click to like a post
+  const handleDoubleClick = (postId: string) => {
+    // Only like if not already liked
+    if (!userLiked[postId]) {
+      handleLikePost(postId);
+      
+      // Show animation effect on double-click
+      const updatedLiked = { ...userLiked };
+      updatedLiked[postId] = true;
+      setUserLiked(updatedLiked);
+      
+      setTimeout(() => {
+        if (commentInputRef.current) {
+          commentInputRef.current.focus();
+        }
+      }, 300);
+    }
+  };
+  
+  // Handle liking a post
+  const handleLikePost = (postId: string) => {
+    // Toggle like status
+    const isLiked = userLiked[postId];
+    
+    if (isLiked) {
+      // Unlike the post
+      setLikes(prev => ({
+        ...prev,
+        [postId]: Math.max(0, (prev[postId] || 1) - 1)
+      }));
+      
+      setUserLiked(prev => ({
+        ...prev,
+        [postId]: false
+      }));
+      
+      toast.error('Post unliked', {
+        icon: <Heart className="w-4 h-4 text-gray-500" />
+      });
+    } else {
+      // Like the post
+      setLikes(prev => ({
+        ...prev,
+        [postId]: (prev[postId] || 0) + 1
+      }));
+      
+      setUserLiked(prev => ({
+        ...prev,
+        [postId]: true
+      }));
+      
+      toast.success('Cosmic clip liked!', {
+        position: 'bottom-center',
+        className: 'cosmic-toast',
+        duration: 1500,
+        icon: <Heart className="w-4 h-4 text-red-500" />
+      });
+    }
+    
+    // In a production app, we would update the database
+    // supabase.from('likes').upsert({ post_id: postId, user_id: profile.id, liked: !isLiked })
+  };
+
+  // Handle giving a trophy to a post (for ranking)
+  const handleGiveTrophy = (postId: string) => {
+    if (userGaveTrophy[postId]) {
+      toast.error('You already ranked this post', {
+        position: 'bottom-center',
+        className: 'cosmic-toast',
+        duration: 1500
+      });
+      return;
+    }
+    
+    // Update trophy count
+    setTrophyCount(prev => ({
+      ...prev,
+      [postId]: (prev[postId] || 0) + 1
+    }));
+    
+    // Update user gave trophy status
+    setUserGaveTrophy(prev => ({
+      ...prev,
+      [postId]: true
+    }));
+    
+    // In a production app, we would update the database here
+    // supabase.from('trophies').insert({ post_id: postId, user_id: profile.id })
+    
+    toast.success('Trophy given! This post will rank higher', {
+      position: 'bottom-center',
+      className: 'cosmic-toast',
+      duration: 1500,
+      icon: <Trophy className="w-4 h-4 text-yellow-500" />
+    });
+  };
+
+  // Handle posting a new comment
+  const handleAddComment = (postId: string) => {
+    if (!newComment.trim()) return;
+    
+    setIsSubmittingComment(true);
+    
+    try {
+      // Generate a unique ID for the comment
+      const commentId = `comment-${Date.now()}`;
+      
+      // Create a new comment object
+      const newCommentObj = {
+        id: commentId,
+        content: newComment,
+        created_at: new Date().toISOString(),
+        user: {
+          id: profile?.id || 'current-user',
+          name: profile?.display_name || profile?.username || 'Current User',
+          avatar: profile?.avatar_url || `https://placehold.co/100/252944/FFFFFF?text=${profile?.username?.charAt(0) || 'U'}`
+        },
+        likes: 0
+      };
+      
+      // Add comment to the list
+      setComments(prev => [newCommentObj, ...prev]);
+      
+      // Clear the input field
+      setNewComment('');
+      
+      // In a production app, we would save to the database
+      // supabase.from('comments').insert({
+      //   post_id: postId,
+      //   user_id: profile.id,
+      //   content: newComment
+      // })
+      
+      toast.success('Comment added to cosmic post!', {
+        position: 'bottom-center',
+        className: 'cosmic-toast',
+        duration: 1500,
+        icon: <MessageSquare className="w-4 h-4 text-blue-400" />
+      });
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      toast.error('Failed to add comment. Please try again.');
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  // Toggle comments visibility
+  const toggleComments = (postId: string, toggle = true) => {
+    // If we're toggling, flip the current state, otherwise just load comments
+    if (toggle) {
+      setShowComments(!showComments);
+    } else {
+      setShowComments(true);
+    }
+    
+    // If we're showing comments and there are none yet, fetch them
+    if (showComments === false || !toggle) {
+      // In a production app, we would fetch from database
+      // supabase.from('comments').select('*').eq('post_id', postId).order('created_at', { ascending: false })
+      
+      // Simulate loading comments with a small delay
+      setTimeout(() => {
+        // Generate random comments for demo purposes
+        const dummyUsers = [
+          { name: 'CosmicGamer', avatar: 'https://placehold.co/100/252944/FFFFFF?text=C' },
+          { name: 'StarDust42', avatar: 'https://placehold.co/100/252944/FFFFFF?text=S' },
+          { name: 'NebulaNinja', avatar: 'https://placehold.co/100/252944/FFFFFF?text=N' },
+          { name: 'GalaxyQuest', avatar: 'https://placehold.co/100/252944/FFFFFF?text=G' },
+          { name: 'VoidWalker', avatar: 'https://placehold.co/100/252944/FFFFFF?text=V' }
+        ];
+        
+        const commentTexts = [
+          "Amazing gameplay! What settings are you using?",
+          "That was an incredible move at 0:42!",
+          "How did you pull off that combo?",
+          "The graphics in this game are next level.",
+          "You're definitely in the top players for this game!",
+          "I need to learn that technique, any tips?",
+          "What's your streaming schedule?",
+          "This deserves more trophies for sure."
+        ];
+        
+        // Generate 0-5 random comments
+        const randomCommentCount = Math.floor(Math.random() * 6);
+        const generatedComments = [];
+        
+        for (let i = 0; i < randomCommentCount; i++) {
+          const randomUser = dummyUsers[Math.floor(Math.random() * dummyUsers.length)];
+          const randomText = commentTexts[Math.floor(Math.random() * commentTexts.length)];
+          
+          generatedComments.push({
+            id: `comment-${Date.now()}-${i}`,
+            content: randomText,
+            created_at: new Date(Date.now() - Math.random() * 86400000).toISOString(), // Random time in last 24h
+            user: randomUser,
+            likes: Math.floor(Math.random() * 10)
+          });
+        }
+        
+        // Sort by most recent
+        generatedComments.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        
+        setComments(generatedComments);
+      }, 300);
+      
+      // If no comments loaded yet, add some sample ones
+      if (comments.length === 0) {
+        const sampleComments = [
+          {
+            id: 'comment-1',
+            user: {
+              id: 'user-1',
+              name: 'Cosmic Gamer',
+              avatar: 'https://placehold.co/100x100/252944/FFFFFF?text=CG'
+            },
+            content: 'This is amazing content! Love the gaming clips!',
+            created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+            likes: 12
+          },
+          {
+            id: 'comment-2',
+            user: {
+              id: 'user-2',
+              name: 'Pro Streamer',
+              avatar: 'https://placehold.co/100x100/252944/FFFFFF?text=PS'
+            },
+            content: 'Your skills are next level! Would love to collab sometime.',
+            created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+            likes: 5
+          },
+          {
+            id: 'comment-3',
+            user: {
+              id: 'user-3',
+              name: 'Gaming Enthusiast',
+              avatar: 'https://placehold.co/100x100/252944/FFFFFF?text=GE'
+            },
+            content: 'The cosmic theme of your profile is out of this world! 🌌',
+            created_at: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
+            likes: 8
+          }
+        ];
+        
+        setComments(sampleComments);
+      }
+    }
+    
+    // Focus on comment input when showing comments
+    if (!showComments && toggle) {
+      setTimeout(() => {
+        if (commentInputRef.current) {
+          commentInputRef.current.focus();
+        }
+      }, 300);
+    }
+  };
+
+  // Swipe direction already defined above
   
   // Handle keyboard navigation for posts
   useEffect(() => {
@@ -330,7 +699,6 @@ const GamingProfile: React.FC<GamingProfileProps> = ({
     };
   }, [selectedPost, currentPostIndex, userPosts]);
   
-  const navigate = useNavigate();
   // Generate random stars for background
   const generateStars = (count: number) => {
     return Array.from({ length: count }).map((_, index) => {
