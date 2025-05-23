@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import './enhanced-joystick.css';
 import './rainbow-buttons.css';
+import './center-controls-fix.css';
 
 const GameBoyControls: React.FC = () => {
   // Create refs for joystick elements
