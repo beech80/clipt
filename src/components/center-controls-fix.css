@@ -1,0 +1,26 @@
+/* Center controls adjustments for better mobile viewing */
+.center-controls {
+  position: absolute;
+  left: 48% !important; /* Move slightly to the left from center */
+  transform: translateX(-50%); /* Center relative to the adjusted position */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  z-index: 9999;
+  pointer-events: auto;
+}
+
+/* Menu and camera button row adjustments */
+.menu-camera-row {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+/* Button styles remain unchanged to preserve cosmic theme */
+.clipt-logo-button, .control-button {
+  /* Preserve existing styles while ensuring the buttons work */
+  position: relative;
+  z-index: 9999;
+}
