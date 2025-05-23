@@ -1131,22 +1131,17 @@
 }
 
 .action-buttons.diamond-layout {
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  width: 100px;
-  height: 100px;
+  position: absolute;
+  right: 15px;
+  bottom: 40px;
+  width: 120px;
+  height: 120px;
   display: grid;
   grid-template-areas:
     ". top ."
     "left . right"
     ". bottom .";
-  gap: 5px; /* Minimal gap for the tightest layout */
-  z-index: 9999;
-  pointer-events: auto; /* Ensure buttons remain clickable */
-  transform: scale(0.6); /* Extremely scaled down to fit in the corner */
-  margin: 0;
-  padding: 0;
+  z-index: 100;
 }
 
 .action-button::before {
