@@ -1,7 +1,9 @@
 /* Center controls adjustments for better mobile viewing */
 .center-controls {
-  position: absolute;
-  left: 48% !important; /* Move slightly to the left from center */
+  position: fixed !important;
+  left: 49% !important; /* Move slightly to the left */
+  top: 85% !important; /* Position at 85% from the top */
+  bottom: auto !important;
   transform: translateX(-50%); /* Center relative to the adjusted position */
   display: flex;
   flex-direction: column;
