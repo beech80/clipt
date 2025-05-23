@@ -245,124 +245,130 @@ const GameBoyControls: React.FC = () => {
     let deltaX = clientX - centerX;
     let deltaY = clientY - centerY;
     
-    // Calculate distance from center (Pythagorean theorem)
+    // Calculate distance from center
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     
-    // Limit the maximum joystick movement to the radius of the joystick base
-    const maxRadius = rect.width / 2;
+    // Calculate max radius (70% of joystick radius)
+    const maxRadius = rect.width * 0.35;
     
-    // If distance is greater than maxRadius, normalize the movement
+    let intensity = 0;
+    
+    // If the distance is greater than the max radius, normalize to max radius
     if (distance > maxRadius) {
-      const angle = Math.atan2(deltaY, deltaX);
-      deltaX = Math.cos(angle) * maxRadius;
-      deltaY = Math.sin(angle) * maxRadius;
+      deltaX = (deltaX / distance) * maxRadius;
+      deltaY = (deltaY / distance) * maxRadius;
+      intensity = 1; // Maximum intensity
+    } else {
+      intensity = distance / maxRadius; // Proportional intensity
     }
     
-    // Update joystick position with CSS variables
-    joystickInner.style.setProperty('--x', `${deltaX}px`);
-    joystickInner.style.setProperty('--y', `${deltaY}px`);
-    joystickInner.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-    
-    // Update joystick position state for other components
+    // Update joystick position state
     setJoystickPosition({ x: deltaX, y: deltaY });
     
-    // Normalize the delta values between -1 and 1 for intensity calculation
-    const normalizedX = deltaX / maxRadius;
-    const normalizedY = deltaY / maxRadius;
+    // Set joystick inner element position using CSS variables
+    joystickInner.style.setProperty('--x', `${deltaX}px`);
+    joystickInner.style.setProperty('--y', `${deltaY}px`);
+    joystickInner.style.transition = 'none';
+    joystickInner.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
     
-    // Calculate intensity (distance from center, normalized)
-    const intensity = Math.min(1, Math.sqrt(normalizedX * normalizedX + normalizedY * normalizedY));
+    // Calculate angle to determine direction for scrolling
+    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
     
-    // Find scrollable container based on current route
-    if (!scrollTarget) {
-      const target = findScrollableContainer();
-      if (target) {
-        setScrollTarget(target);
+    // Determine joystick direction based on position
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    
+    if (absX > absY && absX > 10) {
+      if (deltaX > 0) {
+        // Scroll logic for right direction
+        scrollHorizontal(1);
+      } else {
+        // Scroll logic for left direction
+        scrollHorizontal(-1);
       }
-    }
-    
-    // Handle vertical scroll based on joystick position
-    if (Math.abs(normalizedY) > 0.3) {
-      // If moving up or down significantly
-      if (normalizedY < -0.3) {
-        // Up
-        scrollVertical(-intensity);
-      } else if (normalizedY > 0.3) {
-        // Down
-        scrollVertical(intensity);
+    } else if (absY > absX && absY > 10) {
+      if (deltaY > 0) {
+        // Scroll down
+        scrollVertical(absY / maxRadius);
+      } else {
+        // Scroll up
+        scrollVertical(-absY / maxRadius);
       }
     } else {
-      // Stop scrolling if within dead zone
       stopScrolling();
     }
   };
-  
+
   // Horizontal scrolling function for situations where horizontal scroll is needed
   const scrollHorizontal = (direction: number) => {
-    if (!scrollTarget) return;
+    const scrollContainer = findScrollableContainer();
     
-    const speed = Math.abs(direction) * 20; // Scale speed based on joystick intensity
-    
-    scrollSpeedRef.current = speed;
-    scrollDirectionRef.current = direction < 0 ? 'up' : 'down';
-    
-    scrollTarget.scrollBy({
-      left: direction * speed,
-      behavior: 'auto',
-    });
+    if (scrollContainer) {
+      scrollContainer.scrollBy({
+        left: direction * 20,
+        behavior: 'smooth'
+      });
+    }
   };
-  
+
   // Vertical scrolling with adaptive speed
   const scrollVertical = (intensity: number) => {
-    if (!scrollTarget) return;
+    const scrollContainer = findScrollableContainer();
+    setIsScrolling(true);
     
-    // Calculate scroll speed based on intensity (non-linear for better control)
-    const speed = Math.pow(Math.abs(intensity), 1.5) * 30; // Adjust multiplier for speed
-    
-    // Set scroll direction
-    scrollDirectionRef.current = intensity < 0 ? 'up' : 'down';
-    scrollSpeedRef.current = speed;
-    
-    // Start scrolling if not already
-    if (!isScrolling) {
-      setIsScrolling(true);
-      lastScrollTime.current = Date.now();
-      requestAnimationFrame(animateScroll);
+    if (scrollContainer) {
+      setScrollTarget(scrollContainer);
+      
+      // Calculate scroll speed based on joystick intensity
+      const baseSpeed = 5;
+      const maxSpeed = 25;
+      const scrollSpeed = Math.abs(intensity) * maxSpeed + baseSpeed;
+      scrollSpeedRef.current = scrollSpeed;
+      
+      // Determine scroll direction
+      scrollDirectionRef.current = intensity < 0 ? 'up' : 'down';
+      
+      // If not already scrolling, start the scroll animation
+      if (!isScrolling) {
+        requestAnimationFrame(animateScroll);
+      }
     }
   };
-  
+
   // Stop scrolling
   const stopScrolling = () => {
-    if (isScrolling) {
-      setIsScrolling(false);
-      scrollDirectionRef.current = 'none';
-      scrollSpeedRef.current = 0;
-    }
+    setIsScrolling(false);
+    scrollDirectionRef.current = 'none';
+    scrollSpeedRef.current = 0;
   };
-  
+
   // Find scrollable container based on current route
   const findScrollableContainer = (): Element | null => {
-    const path = location.pathname;
+    // Try to find a scrollable container
+    // First priority: elements with overflow-y: auto/scroll
+    const scrollableElements = Array.from(document.querySelectorAll('[style*="overflow-y:auto"], [style*="overflow-y:scroll"], [style*="overflow: auto"], .scrollable-container'));
     
-    // Check for different content areas based on route
-    if (path.includes('post/')) {
-      // Post detail page
-      return document.querySelector('.post-detail-content') || document.querySelector('.main-content');
-    } else if (path.includes('clipts') || path === '/') {
-      // Main feed or clips feed
-      return document.querySelector('.clips-feed') || document.querySelector('.feed-container');
-    } else if (path.includes('profile')) {
-      // Profile page
-      return document.querySelector('.profile-content') || document.querySelector('.content-area');
-    } else if (path.includes('squads')) {
-      // Squads page
-      return document.querySelector('.squads-content') || document.querySelector('.main-content');
+    // Filter to only elements that are actually scrollable
+    const actuallyScrollableElements = scrollableElements.filter(el => {
+      const style = window.getComputedStyle(el);
+      return (style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollHeight > el.clientHeight;
+    });
+    
+    if (actuallyScrollableElements.length > 0) {
+      // Return the first scrollable element
+      return actuallyScrollableElements[0];
     }
     
-    // Default to document for general scrolling
+    // Second priority: document.body or main content container
+    const mainContent = document.querySelector('main') || document.querySelector('.app-content-wrapper');
+    if (mainContent && mainContent.scrollHeight > mainContent.clientHeight) {
+      return mainContent;
+    }
+    
+    // Default to document.documentElement (html)
     return document.documentElement;
   };
-  
+
   // Animate the scroll with momentum
   const animateScroll = () => {
     if (!isScrolling || !scrollTarget) return;
@@ -383,20 +389,21 @@ const GameBoyControls: React.FC = () => {
     // Continue animation loop
     requestAnimationFrame(animateScroll);
   };
-  
+
   // Handle menu item click
   const handleMenuItemClick = (path: string) => {
+    console.log('Navigating to:', path);
     navigate(path);
     setMenuVisible(false);
   };
-  
+
   // Handle the select button (menu navigation)
   const handleSelectButtonClick = () => {
     navigate('/game-menu');
   };
-  
+
   // Handle action button click
-  const handleActionButtonClick = async (action: 'like' | 'comment' | 'rank' | 'follow' | 'post') => {
+  const handleActionButtonClick = async (action: 'like' | 'comment' | 'rank' | 'save' | 'post') => {
     // Allow post button to work without a post ID
     if (action === 'post') {
       navigate('/clip-editor/new');
@@ -565,16 +572,11 @@ const GameBoyControls: React.FC = () => {
     }
   };
 
-  // Render the controller UI
   return (
     <div className="gameboy-controls">
       {/* Left joystick with rainbow border */}
-      <div className="left-joystick" style={{ position: 'fixed', bottom: '15px', left: '20px', zIndex: 9999, pointerEvents: 'auto' }}>
-        <div 
-          className={`joystick xbox-style rainbow-border ${isJoystickActive ? 'active' : ''} ${isTouched ? 'touched' : ''}`} 
-          ref={joystickRef} 
-          aria-label="Joystick control for navigation"
-        >
+      <div className="left-joystick">
+        <div className={`joystick xbox-style rainbow-border ${isJoystickActive ? 'active' : ''} ${isTouched ? 'touched' : ''}`} ref={joystickRef} aria-label="Joystick control for navigation">
           <div 
             ref={joystickInnerRef} 
             className={`joystick-inner ${momentumActive ? 'momentum' : ''}`}
@@ -582,246 +584,90 @@ const GameBoyControls: React.FC = () => {
         </div>
       </div>
       
-      {/* Center Menu Buttons */}
-      <div style={{ position: 'fixed', bottom: '25px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, display: 'flex', gap: '15px', pointerEvents: 'auto' }}>
-        {/* Menu Button */}
-        <div className="circular-menu-button" style={{ width: '45px', height: '45px', position: 'relative' }}>
-          <button 
-            onClick={handleSelectButtonClick}
-            style={{
-              width: '100%',
-              height: '100%',
-              borderRadius: '50%',
-              background: 'black',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              zIndex: 2
-            }}
-            aria-label="Menu"
-          >
-            <div style={{ fontSize: '22px', color: '#fff' }}>≡</div>
-          </button>
-          <div style={{
-            position: 'absolute',
-            top: -2,
-            left: -2,
-            right: -2,
-            bottom: -2,
-            borderRadius: '50%',
-            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
-            backgroundSize: '300%',
-            zIndex: 1,
-            animation: 'rainbow-spin 4s linear infinite'
-          }}></div>
-        </div>
+      {/* Center controls layout */}
+      <div className="center-controls">
+        {/* CLIPT logo button with rainbow border */}
+        <button 
+          className="clipt-logo-button rainbow-border" 
+          onClick={() => navigate('/clipts')}
+          aria-label="Go to Clipts"
+        >
+          <span className="clipt-logo-text">CLIPT</span>
+        </button>
         
-        {/* CLIPT Button */}
-        <div className="circular-menu-button" style={{ width: '45px', height: '45px', position: 'relative' }}>
+        {/* Menu and Camera buttons row */}
+        <div className="menu-camera-row">
+          {/* Menu button (hamburger) with rainbow border */}
           <button 
-            onClick={() => handleMenuItemClick('/')}
-            style={{
-              width: '100%',
-              height: '100%',
-              borderRadius: '50%',
-              background: 'black',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              zIndex: 2
-            }}
-            aria-label="CLIPT Home"
+            className="control-button rainbow-border" 
+            onClick={handleSelectButtonClick} 
+            aria-label="Toggle game menu"
           >
-            <span style={{ color: '#adff2f', fontSize: '12px', fontWeight: 'bold', letterSpacing: '0.5px' }}>CLIPT</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
           </button>
-          <div style={{
-            position: 'absolute',
-            top: -2,
-            left: -2,
-            right: -2,
-            bottom: -2,
-            borderRadius: '50%',
-            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
-            backgroundSize: '300%',
-            zIndex: 1,
-            animation: 'rainbow-spin 4s linear infinite'
-          }}></div>
-        </div>
-        
-        {/* Camera Button */}
-        <div className="circular-menu-button" style={{ width: '45px', height: '45px', position: 'relative' }}>
+          
+          {/* Camera post button with rainbow border */}
           <button 
-            onClick={() => handleActionButtonClick('post')}
-            style={{
-              width: '100%',
-              height: '100%',
-              borderRadius: '50%',
-              background: 'black',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              zIndex: 2
-            }}
-            aria-label="Camera"
+            className="control-button rainbow-border"
+            onClick={() => navigate('/post-form')}
+            aria-label="Create a new post"
           >
-            <div style={{ fontSize: '20px' }}>📷</div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19 6h-4l-2-3H11L9 6H5"></path>
+            </svg>
           </button>
-          <div style={{
-            position: 'absolute',
-            top: -2,
-            left: -2,
-            right: -2,
-            bottom: -2,
-            borderRadius: '50%',
-            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
-            backgroundSize: '300%',
-            zIndex: 1,
-            animation: 'rainbow-spin 4s linear infinite'
-          }}></div>
         </div>
       </div>
       
+
+
+      {/* Note: Game Menu moved to a separate route page */}
+
       {/* Action buttons with rainbow borders in diamond layout */}
-      <div className="action-buttons diamond-layout" style={{ position: 'fixed', bottom: '15px', right: '15px', zIndex: 9999, pointerEvents: 'auto' }}>
+      <div className="action-buttons diamond-layout">
         {/* Comment button (top - blue) */}
         <button 
-          className={`action-button comment-button top ${commentActive ? 'active' : ''}`}
+          className={`action-button comment-button top rainbow-border ${commentActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('comment')}
           aria-label="Comment"
-          style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            background: 'black',
-            border: 'none',
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white'
-          }}
         >
-          <MessageSquare className="gameboy-action-icon" />
-          <div style={{
-            position: 'absolute',
-            top: -2,
-            left: -2,
-            right: -2,
-            bottom: -2,
-            borderRadius: '50%',
-            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
-            backgroundSize: '300%',
-            zIndex: -1,
-            animation: 'rainbow-spin 4s linear infinite'
-          }}></div>
+          <MessageSquare size={20} strokeWidth={2.5} className="gameboy-action-icon" style={{ color: '#4287ff', fill: '#4287ff', stroke: '#4287ff', filter: 'drop-shadow(0 0 10px rgba(66, 135, 255, 1))' }} />
         </button>
         
         {/* Like button (left - red) */}
         <button 
-          className={`action-button like-button left ${likeActive ? 'active' : ''}`}
+          className={`action-button like-button left rainbow-border ${likeActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('like')}
           aria-label="Like post"
-          style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            background: 'black',
-            border: 'none',
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white'
-          }}
         >
-          <Heart className="gameboy-action-icon" />
-          <div style={{
-            position: 'absolute',
-            top: -2,
-            left: -2,
-            right: -2,
-            bottom: -2,
-            borderRadius: '50%',
-            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
-            backgroundSize: '300%',
-            zIndex: -1,
-            animation: 'rainbow-spin 4s linear infinite'
-          }}></div>
+          <Heart size={20} strokeWidth={2.5} className="gameboy-action-icon" style={{ color: '#ff4d4d', fill: '#ff4d4d', stroke: '#ff4d4d', filter: 'drop-shadow(0 0 10px rgba(255, 77, 77, 1))' }} />
         </button>
         
         {/* Follow button (right - yellow) */}
         <button 
-          className={`action-button follow-button right ${followActive ? 'active' : ''}`}
+          className={`action-button follow-button right rainbow-border ${followActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('follow')}
           aria-label="Follow user"
-          style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            background: 'black',
-            border: 'none',
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white'
-          }}
         >
-          <Bookmark className="gameboy-action-icon" />
-          <div style={{
-            position: 'absolute',
-            top: -2,
-            left: -2,
-            right: -2,
-            bottom: -2,
-            borderRadius: '50%',
-            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
-            backgroundSize: '300%',
-            zIndex: -1,
-            animation: 'rainbow-spin 4s linear infinite'
-          }}></div>
+          <Bookmark size={20} strokeWidth={2.5} className="gameboy-action-icon" style={{ color: '#ffcc33', fill: '#ffcc33', stroke: '#ffcc33', filter: 'drop-shadow(0 0 10px rgba(255, 204, 51, 1))' }} />
         </button>
         
         {/* Trophy button (bottom - yellow) */}
         <button 
-          className={`action-button rank-button bottom ${rankActive ? 'active' : ''}`}
+          className={`action-button trophy-button bottom rainbow-border ${rankActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('rank')}
           aria-label="Rank post"
-          style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            background: 'black',
-            border: 'none',
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white'
-          }}
         >
-          <Award className="gameboy-action-icon" />
+          <Award size={20} strokeWidth={2.5} className="gameboy-action-icon" style={{ color: '#4dff88', fill: '#4dff88', stroke: '#4dff88', filter: 'drop-shadow(0 0 10px rgba(77, 255, 136, 1))' }} />
           {rankActive && currentRank > 0 && (
-            <span className="rank-indicator">{currentRank}</span>
+            <span className="rank-indicator" style={{ backgroundColor: '#FFCC00', color: '#000' }}>{currentRank}</span>
           )}
-          <div style={{
-            position: 'absolute',
-            top: -2,
-            left: -2,
-            right: -2,
-            bottom: -2,
-            borderRadius: '50%',
-            background: 'linear-gradient(45deg, #ff0000, #ff9a00, #d0de21, #4fdc4a, #3fdad8, #2fc9e2, #1c7fee, #5f15f2, #ba0cf8, #fb07d9, #ff0000)',
-            backgroundSize: '300%',
-            zIndex: -1,
-            animation: 'rainbow-spin 4s linear infinite'
-          }}></div>
         </button>
       </div>
     </div>
