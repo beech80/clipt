@@ -1131,16 +1131,16 @@
 }
 
 .action-buttons.diamond-layout {
-  position: absolute;
-  right: 35px;
-  bottom: 80px;
+  position: fixed; /* Fixed positioning for consistent placement */
+  right: 15px;
+  bottom: -350px; /* Extremely large negative value to place buttons completely off screen below all others */
   width: 120px;
   height: 120px;
   display: grid;
   grid-template-areas:
     ". top ."
     "left . right"
-    ". bottom .";
+    ". bottom ."; 
   z-index: 100;
 }
 
