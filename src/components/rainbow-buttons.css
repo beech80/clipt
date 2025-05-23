@@ -20,6 +20,22 @@
   z-index: 10;
 }
 
+.action-buttons.diamond-layout {
+  display: grid;
+  grid-template-areas:
+    ". top ."
+    "left . right"
+    ". bottom .";
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-gap: 8px;
+  width: 120px;
+  height: 120px;
+  position: fixed;
+  top: 74%;
+  right: 10px;
+  z-index: 100;
+}
+
 .action-button.rainbow-border::before {
   content: '';
   position: absolute;
