@@ -630,7 +630,7 @@ const GameBoyControls: React.FC = () => {
       {/* Note: Game Menu moved to a separate route page */}
 
       {/* Action buttons with rainbow borders in diamond layout */}
-      <div className="action-buttons diamond-layout" style={{ position: 'fixed', top: '75%', right: '8px', zIndex: 100 }}>
+      <div className="action-buttons diamond-layout" style={{ position: 'fixed', top: '74%', right: '10px', zIndex: 100 }}>
         {/* Comment button (top - blue) */}
         <button 
           className={`action-button comment-button top rainbow-border ${commentActive ? 'active' : ''}`}
