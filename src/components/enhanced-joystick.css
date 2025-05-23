@@ -1132,8 +1132,8 @@
 
 .action-buttons.diamond-layout {
   position: absolute;
-  right: 15px;
-  bottom: 40px;
+  right: 35px;
+  bottom: 80px;
   width: 120px;
   height: 120px;
   display: grid;
