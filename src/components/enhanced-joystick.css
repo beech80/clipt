@@ -1187,9 +1187,9 @@
 }
 
 .joystick {
-  position: fixed;
-  top: 74%;
-  left: 10px;
+  position: fixed !important;
+  top: 74% !important;
+  left: 10px !important;
   width: 80px;
   height: 80px;
   background: rgba(13, 16, 56, 0.5);
