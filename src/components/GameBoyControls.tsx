@@ -35,6 +35,7 @@ const GameBoyControls: React.FC = () => {
   const [isJoystickActive, setIsJoystickActive] = useState(false);
   const [isTouched, setIsTouched] = useState(false);
   const [momentumActive, setMomentumActive] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Track scroll position and reference
   const [scrollTarget, setScrollTarget] = useState<Element | null>(null);
@@ -130,6 +131,31 @@ const GameBoyControls: React.FC = () => {
     
     fetchUserAndPostData();
   }, [currentPostId]);
+
+  // Set up event listeners for joystick control
+  useEffect(() => {
+    // Ensure the joystick element exists
+    if (!joystickRef.current || !joystickInnerRef.current) return;
+    
+    // Find the initial scrollable container
+    setScrollTarget(findScrollableContainer());
+    
+    // Start animation loop
+    let animationFrameId: number;
+    const animate = () => {
+      if (isScrolling) {
+        animateScroll();
+      }
+      animationFrameId = requestAnimationFrame(animate);
+    };
+    animationFrameId = requestAnimationFrame(animate);
+    
+    // Clean up animation frame
+    return () => {
+      setIsScrolling(false);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [location.pathname]);
 
   // Setup joystick interaction with touch/mouse events
   useEffect(() => {
@@ -229,6 +255,98 @@ const GameBoyControls: React.FC = () => {
   }, []);
   
   // Handle joystick movement logic
+  // Handle mouse/touch down on joystick
+  const handleMouseDown = (e: MouseEvent | TouchEvent) => {
+    e.preventDefault();
+    
+    // Get joystick DOM element
+    const joystick = joystickRef.current;
+    if (!joystick) return;
+    
+    // Get size and position of joystick
+    const joystickRect = joystick.getBoundingClientRect();
+    
+    // Set initial position
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    // Start dragging
+    setIsDragging(true);
+    setIsJoystickActive(true);
+    setIsTouched(true);
+    
+    // Add event listeners for move and up events
+    document.addEventListener('mousemove', handleMouseMove as unknown as EventListener);
+    document.addEventListener('touchmove', handleMouseMove as unknown as EventListener, { passive: false });
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchend', handleMouseUp);
+  };
+  
+  // Handle mouse/touch movement
+  const handleMouseMove = (e: MouseEvent | TouchEvent) => {
+    if (!isDragging) return;
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    handleJoystickMovement(clientX, clientY);
+    
+    // Prevent default to avoid scrolling the page
+    if (e.cancelable) e.preventDefault();
+  };
+  
+  // Handle mouse/touch up
+  const handleMouseUp = () => {
+    if (!isDragging) return;
+    
+    // Get inner joystick DOM element
+    const joystickInner = joystickInnerRef.current;
+    if (!joystickInner) return;
+    
+    // Reset joystick position with a smooth animation
+    joystickInner.style.setProperty('--x', '0px');
+    joystickInner.style.setProperty('--y', '0px');
+    joystickInner.style.transition = 'transform 0.3s ease-out';
+    joystickInner.style.transform = 'translate(0, 0)';
+    
+    // Add momentum class for smoother reset animation
+    joystickInner.classList.add('momentum');
+    setMomentumActive(true);
+    
+    // Stop dragging and reset state
+    setIsDragging(false);
+    setJoystickPosition({ x: 0, y: 0 });
+    
+    // Apply easing to scrolling to gradually slow down
+    let slowdownTimer = setInterval(() => {
+      scrollSpeedRef.current *= 0.9;
+      
+      if (Math.abs(scrollSpeedRef.current) < 0.5) {
+        clearInterval(slowdownTimer);
+        scrollSpeedRef.current = 0;
+        setIsScrolling(false);
+        scrollDirectionRef.current = 'none';
+      }
+    }, 50);
+    
+    // Remove the event listeners
+    document.removeEventListener('mousemove', handleMouseMove as unknown as EventListener);
+    document.removeEventListener('touchmove', handleMouseMove as unknown as EventListener);
+    document.removeEventListener('mouseup', handleMouseUp);
+    document.removeEventListener('touchend', handleMouseUp);
+    
+    // Reset touched state after animation completes
+    setTimeout(() => {
+      setIsTouched(false);
+      setIsJoystickActive(false);
+      setMomentumActive(false);
+      if (joystickInner) {
+        joystickInner.classList.remove('momentum');
+        joystickInner.style.transition = '';
+      }
+    }, 300);
+  };
+  
   const handleJoystickMovement = (clientX: number, clientY: number) => {
     // Get joystick element and its dimensions
     const joystick = joystickRef.current;
@@ -572,18 +690,23 @@ const GameBoyControls: React.FC = () => {
     }
   };
 
+  // Component JSX
   return (
     <div className="gameboy-controls">
-      {/* Left joystick with rainbow border */}
-      <div className="left-joystick">
-        <div className={`joystick xbox-style rainbow-border ${isJoystickActive ? 'active' : ''} ${isTouched ? 'touched' : ''}`} ref={joystickRef} aria-label="Joystick control for navigation">
-          <div 
-            ref={joystickInnerRef} 
-            className={`joystick-inner ${momentumActive ? 'momentum' : ''}`}
-          ></div>
-        </div>
+      {/* Joystick with cosmic rainbow border */}
+      <div 
+        ref={joystickRef} 
+        className={`joystick xbox-style rainbow-border ${isTouched ? 'touched' : ''}`}
+        onMouseDown={(e) => handleMouseDown(e as unknown as MouseEvent)}
+        onTouchStart={(e) => handleMouseDown(e as unknown as TouchEvent)}
+        aria-label="Joystick control for navigation"
+      >
+        <div 
+          ref={joystickInnerRef} 
+          className={`joystick-inner ${momentumActive ? 'momentum' : ''}`}
+          style={{ '--x': `${joystickPosition.x}px`, '--y': `${joystickPosition.y}px` } as React.CSSProperties}
+        ></div>
       </div>
-      
       {/* Center controls layout */}
       <div className="center-controls">
         {/* CLIPT logo button with rainbow border */}
