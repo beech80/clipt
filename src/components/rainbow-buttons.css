@@ -31,8 +31,9 @@
   width: 120px;
   height: 120px;
   position: fixed !important;
-  top: 74% !important;
-  right: 10px !important;
+  top: 77% !important;
+  right: 16px !important;
+  bottom: auto !important;
   z-index: 9999 !important;
 }
 

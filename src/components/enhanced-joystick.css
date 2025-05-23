@@ -1188,8 +1188,9 @@
 
 .joystick {
   position: fixed !important;
-  top: 74% !important;
-  left: 10px !important;
+  bottom: 15px !important;
+  left: 20px !important;
+  top: auto !important;
   width: 80px;
   height: 80px;
   background: rgba(13, 16, 56, 0.5);
@@ -1200,8 +1201,14 @@
   user-select: none;
   cursor: pointer;
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-  z-index: 9999;
+  z-index: 9999 !important;
   overflow: visible;
+  transform: translateY(0) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  max-height: 80px !important;
+  max-width: 80px !important;
+  transition: none !important;
 }
 
 .action-buttons.diamond-layout .action-button svg {
