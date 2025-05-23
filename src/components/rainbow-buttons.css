@@ -30,10 +30,10 @@
   grid-gap: 8px;
   width: 120px;
   height: 120px;
-  position: fixed;
-  top: 74%;
-  right: 10px;
-  z-index: 100;
+  position: fixed !important;
+  top: 74% !important;
+  right: 10px !important;
+  z-index: 9999 !important;
 }
 
 .action-button.rainbow-border::before {
