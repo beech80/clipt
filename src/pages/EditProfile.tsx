@@ -7,7 +7,7 @@ import { Profile } from "@/types/profile";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, User, Settings, Globe, Rocket, Star, Command, Save, Sparkles } from "lucide-react";
-import { CosmicProfileForm } from "@/components/profile/CosmicProfileForm";
+import { ProfileEditForm } from "@/components/profile/ProfileEditForm-new";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -281,7 +281,7 @@ const EditProfile = () => {
                   
                   {/* Form Content */}
                   <div className="px-6 py-5 relative z-10">
-                    {userId && <CosmicProfileForm userId={userId} />}
+                    {userId && <ProfileEditForm userId={userId} />}
                     {!userId && (
                       <div className="p-4 text-center">
                         <Sparkles className="h-12 w-12 text-indigo-400 mx-auto mb-4 opacity-50" />
