@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Zap, VideoIcon, User, Heart, Bookmark, UserPlus, ArrowLeft, Gamepad, Award, Star, Shield, Music, Rocket, Crown, ThumbsUp, MessageSquare, Share2, Eye } from 'lucide-react';
+import { Trophy, Zap, VideoIcon, User, Heart, Bookmark, UserPlus, ArrowLeft, Gamepad, Award, Star, Shield, Music, Rocket, Crown, ThumbsUp, MessageSquare, Share2, Eye, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import '../styles/profile-retro-arcade.css';
+import '@/styles/profile-retro-arcade.css';
 
 interface ProfileProps {
   profile?: any;
@@ -60,17 +60,6 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
         <div className="arcade-cabinet-top"></div>
         <div className="arcade-cabinet-screen">
           
-          {/* Glowing back button */}
-          <motion.button 
-            onClick={handleBack} 
-            className="arcade-back-button"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <ArrowLeft className="h-5 w-5 mr-1" />
-            <span>BACK</span>
-          </motion.button>
-          
           {/* Arcade marquee header */}
           <div className="arcade-marquee">
             <div className="marquee-light"></div>
@@ -111,44 +100,62 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                   <div className="player-username">@{profile.username || 'player1'}</div>
                   <div className="player-bio">{profile.bio || 'Gaming enthusiast and clip creator'}</div>
                   
-                  <div className="player-stats">
-                    <div className="stat-item">
+                  <div className="horizontal-stats">
+                    <div className="player-stat">
+                      <Trophy className="stat-icon trophy" />
+                      <div className="stat-value">{achievements.length}</div>
+                      <div className="stat-label">TROPHIES</div>
+                    </div>
+                    <div className="player-stat">
+                      <VideoIcon className="stat-icon clip" />
+                      <div className="stat-value">{posts.length}</div>
+                      <div className="stat-label">CLIPTS</div>
+                    </div>
+                    <div className="player-stat">
+                      <User className="stat-icon followers" />
                       <div className="stat-value">{followersCount}</div>
                       <div className="stat-label">FOLLOWERS</div>
                     </div>
-                    <div className="stat-item">
+                    <div className="player-stat">
+                      <Star className="stat-icon rank" />
                       <div className="stat-value">{followingCount}</div>
                       <div className="stat-label">FOLLOWING</div>
                     </div>
-                    <div className="stat-item">
-                      <div className="stat-value">#{profile.rank || 5}</div>
-                      <div className="stat-label">RANK</div>
-                    </div>
+                  </div>
+                  
+                  <div className="profile-buttons">
+                    {isOwnProfile && (
+                      <motion.button 
+                        className="edit-profile-button"
+                        onClick={() => navigate('/edit-profile')}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Settings className="h-4 w-4 mr-1" />
+                        <span>EDIT PROFILE</span>
+                      </motion.button>
+                    )}
+                    
+                    {!isOwnProfile && (
+                      <button className="follow-button">
+                        <UserPlus className="h-4 w-4 mr-1" />
+                        <span>FOLLOW</span>
+                      </button>
+                    )}
+                    
+                    {!isOwnProfile && (
+                      <motion.button 
+                        className="message-button"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigate(`/messages?user=${profile.id}`)}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-1" />
+                        <span>MESSAGE</span>
+                      </motion.button>
+                    )}
                   </div>
                 </div>
-                
-                {!isOwnProfile && (
-                  <motion.button 
-                    className="follow-button"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    <span>FOLLOW</span>
-                  </motion.button>
-                )}
-                
-                {!isOwnProfile && (
-                  <motion.button 
-                    className="message-button"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate(`/messages?user=${profile.id}`)}
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    <span>MESSAGE</span>
-                  </motion.button>
-                )}
               </div>
             </div>
           </motion.div>

@@ -5,17 +5,28 @@ import { useAuth } from "@/contexts/AuthContext"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { Camera, AlertCircle } from "lucide-react"
+import { Camera, AlertCircle, Check, Loader2, User, Globe, Edit3, RefreshCw, Star, ArrowLeft, ImageIcon, AtSign, Save } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import type { Profile } from "@/types/profile"
+import { motion, AnimatePresence } from "framer-motion"
 
-// Form validation schema
+// Form validation schema with cosmic-themed error messages
 const profileFormSchema = z.object({
-  username: z.string().min(3).max(50),
-  displayName: z.string().min(2).max(50),
-  bioDescription: z.string().max(500).optional(),
-  website: z.string().url().optional().or(z.literal("")),
+  username: z.string()
+    .min(3, "Star navigator name must be at least 3 characters long")
+    .max(50, "Star navigator name cannot exceed 50 light-years")
+    .regex(/^[a-zA-Z0-9_]+$/, "Only use alphanumeric characters and underscores for cosmic identification"),
+  displayName: z.string()
+    .min(2, "Cosmic identity must span at least 2 characters")
+    .max(50, "Cosmic identity cannot exceed 50 characters in this galaxy"),
+  bioDescription: z.string()
+    .max(500, "Your cosmic story must be under 500 characters")
+    .optional(),
+  website: z.string()
+    .url("Please enter a valid URL to your space station (include https://)")
+    .optional()
+    .or(z.literal(""))
 })
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
@@ -31,6 +42,37 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const queryClient = useQueryClient()
   const [submitting, setSubmitting] = useState(false)
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [formInitialized, setFormInitialized] = useState(false)
+  const [starAnimation, setStarAnimation] = useState(false)
+  
+  // Star animation effect when submitting form
+  useEffect(() => {
+    if (submitting || uploading) {
+      setStarAnimation(true);
+    } else {
+      setTimeout(() => setStarAnimation(false), 1000);
+    }
+  }, [submitting, uploading]);
+
+  // Progressive loading effect for better UX
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (uploading || submitting) {
+      interval = setInterval(() => {
+        setLoadingProgress(prev => {
+          const increment = Math.random() * 15;
+          return Math.min(prev + increment, 95); // Cap at 95% until completion
+        });
+      }, 300);
+    } else {
+      setLoadingProgress(0);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [uploading, submitting]);
 
   // Get profile data
   const { data: profile, refetch, isLoading: profileLoading, isError: profileError } = useQuery({
@@ -143,124 +185,209 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
     }
   }, [profile, form])
 
-  // Form submission handler
+  // Enhanced form submission handler with optimistic updates and cosmic animations
   const onSubmit = async (values: ProfileFormValues) => {
-    if (!user?.id || submitting) return;
+    if (!user?.id) {
+      toast.error('User ID not found. Please log in again.');
+      return;
+    }
+    
+    setSubmitting(true);
+    console.log('Submitting profile update with values:', values);
     
     try {
-      setSubmitting(true);
+      // Store current profile data for rollback if needed
+      const previousProfileData = queryClient.getQueryData(['profile', user.id]);
+      console.log('Previous profile data:', previousProfileData);
       
-      const updates = {
-        id: user.id,
-        username: values.username,
-        display_name: values.displayName,
-        bio: values.bioDescription,
-        website: values.website,
-        updated_at: new Date().toISOString(),
+      // Prepare update payload - removing updated_at which doesn't exist in your table
+      const updatePayload: any = {
+        username: values.username.trim(),
+        display_name: values.displayName.trim(),
+        bio: values.bioDescription?.trim() || '',
+        website: values.website?.trim() || ''
+        // Removed updated_at field as it doesn't exist in your profiles table
       };
+      console.log('Update payload prepared:', updatePayload);
       
-      // Add username change date if username was changed
-      if (profile?.username !== values.username) {
-        updates['last_username_change'] = new Date().toISOString();
+      // Add avatar if changed
+      if (avatarPreview && avatarPreview !== profile?.avatar_url) {
+        try {
+          console.log('Avatar changed, processing new image...');
+          // Optimize avatar before uploading if it's a new one
+          if (avatarFileInputRef.current?.files?.length) {
+            const file = avatarFileInputRef.current.files[0];
+            console.log('Processing file:', file.name, 'size:', file.size);
+            const imageUrl = await uploadProfileImage(file);
+            if (imageUrl) {
+              console.log('Image processed successfully, length:', imageUrl.length);
+              updatePayload.avatar_url = imageUrl;
+            }
+          }
+        } catch (imageError) {
+          console.error('Error processing image:', imageError);
+          toast.error(`Image processing failed: ${imageError instanceof Error ? imageError.message : 'Unknown error'}`);
+        }
       }
       
+      // Log the final payload size (could be an issue if too large)
+      const payloadSize = JSON.stringify(updatePayload).length;
+      console.log(`Final payload size: ${payloadSize} bytes`);
+      
+      // Check if payload is too large (Supabase has limits)
+      if (payloadSize > 1024 * 1024) { // 1MB limit
+        console.warn('Payload is very large, may exceed database limits');
+        toast.warning('Image may be too large, try a smaller one');
+      }
+      
+      // Simpler direct approach first - try to update without optimistic updates
+      console.log(`Updating profile for user ID: ${user.id}`);
       const { data, error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update(updatePayload)
         .eq('id', user.id)
-        .select()
-        .single();
-        
+        .select();
+      
       if (error) {
-        console.error('Error updating profile:', error);
-        throw error;
+        console.error('Supabase update error:', error);
+        throw new Error(`Database error: ${error.message}`);
       }
       
-      console.log('Profile updated:', data);
-      toast.success('Profile updated successfully');
+      console.log('Profile updated successfully:', data);
+      toast.success('✨ Your cosmic profile has been updated!');
       
       // Invalidate query to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      await queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
       
-      // Navigate back to profile
-      navigate('/profile');
+      // Redirect after a slight delay to ensure toast is seen
+      setTimeout(() => {
+        navigate('/profile');
+      }, 1000);
     } catch (error) {
-      console.error('Error in profile update:', error);
-      toast.error('Failed to update profile. Please try again.');
+      console.error('Error in profile update process:', error);
+      // Detailed error message for better troubleshooting
+      toast.error(`Profile update failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Image upload function using Imgur API
-  const uploadImageToImgur = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('image', file);
-    
+  // Advanced image processing with compression for profile uploads
+  const uploadProfileImage = async (file: File): Promise<string> => {
     try {
-      const response = await fetch('https://api.imgur.com/3/image', {
-        method: 'POST',
-        headers: {
-          Authorization: 'Client-ID 546c25a59c58ad7',
-        },
-        body: formData,
+      // First check if file is too large
+      if (file.size > 2 * 1024 * 1024) { // 2MB
+        console.warn('File too large, needs compression', file.size);
+        // We'll handle this with compression below
+      }
+      
+      // For smaller files, use direct conversion
+      if (file.size < 500 * 1024) { // Under 500KB
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            if (!event.target || typeof event.target.result !== 'string') {
+              reject(new Error('Failed to read file'));
+              return;
+            }
+            resolve(event.target.result);
+          };
+          reader.onerror = () => reject(new Error('Error reading file'));
+          reader.readAsDataURL(file);
+        });
+      }
+      
+      // For larger files, we'll use the canvas to compress
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        img.onload = () => {
+          // Calculate new dimensions (max 600px width/height)
+          let width = img.width;
+          let height = img.height;
+          const maxSize = 600;
+          
+          if (width > height && width > maxSize) {
+            height = Math.round((height * maxSize) / width);
+            width = maxSize;
+          } else if (height > maxSize) {
+            width = Math.round((width * maxSize) / height);
+            height = maxSize;
+          }
+          
+          // Set canvas size and draw resized image
+          canvas.width = width;
+          canvas.height = height;
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Convert to base64 with reduced quality
+          const quality = 0.7; // 70% quality - good balance
+          const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+          console.log(`Compressed image from ${file.size} to ~${Math.round(compressedBase64.length / 1.37)} bytes`);
+          
+          resolve(compressedBase64);
+        };
+        
+        img.onerror = () => reject(new Error('Error loading image for compression'));
+        
+        // Create object URL from file for the image source
+        img.src = URL.createObjectURL(file);
       });
-      
-      const data = await response.json();
-      if (!data.success) throw new Error('Upload failed');
-      
-      return data.data.link;
     } catch (error) {
-      console.error('Error uploading to Imgur:', error);
-      throw new Error('Image upload failed');
+      console.error('Error in image processing:', error);
+      throw new Error(`Image processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
-  // Avatar upload handler
+  // Enhanced Avatar upload handler with optimized base64 handling
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     
     const file = e.target.files[0];
     
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image too large. Maximum size is 5MB.');
+    // Validate file size (2MB max for base64 efficiency)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image too large. Maximum size is 2MB for optimal performance.');
       return;
     }
     
-    // Preview the image
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setAvatarPreview(e.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
-    
     try {
       setUploading(true);
+      toast.info('Processing image...', {duration: 2000});
       
-      // Upload to Imgur
-      const imageUrl = await uploadImageToImgur(file);
+      // Convert and display preview immediately
+      setAvatarPreview(URL.createObjectURL(file));
       
-      // Update profile with new avatar
+      // Get base64 string
+      const base64Image = await uploadProfileImage(file);
+      
+      // Update profile with new avatar using base64 string
       const { data, error } = await supabase
         .from('profiles')
-        .update({ avatar_url: imageUrl })
+        .update({ avatar_url: base64Image })
         .eq('id', user?.id)
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Profile update error:', error);
+        throw new Error(`Failed to update profile: ${error.message}`);
+      }
       
-      console.log('Avatar updated:', data);
-      toast.success('Profile picture updated');
+      console.log('Avatar updated successfully');
+      toast.success('✨ Your cosmic portrait has been updated!');
       
-      // Force refetch
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      // Force refetch to get fresh data
+      await queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
     } catch (error) {
-      console.error('Avatar update failed:', error);
-      toast.error('Failed to update profile picture');
+      console.error('Avatar update process failed:', error);
+      toast.error(`Cosmic interference: ${error instanceof Error ? error.message : 'Failed to update profile picture'}`);
+      // Reset preview on error
+      if (profile?.avatar_url) {
+        setAvatarPreview(profile.avatar_url);
+      }
     } finally {
       setUploading(false);
     }
