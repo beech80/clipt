@@ -48,7 +48,7 @@ const BackButton: React.FC = () => {
           height="28" 
           viewBox="0 0 24 24" 
           fill="none" 
-          stroke="#FF5500" 
+          stroke="#FFFFFF" 
           strokeWidth="2.5" 
           strokeLinecap="round" 
           strokeLinejoin="round"

@@ -613,10 +613,10 @@ const BoostStore = () => {
   
   // Keyboard shortcut for sending messages
   useEffect(() => {
+    // This function is now handled directly in the input's onKeyDown
+    // to prevent duplicate message submissions
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        handleSendMessage();
-      }
+      // Now handled by input's onKeyDown event handler
     };
     
     document.addEventListener('keydown', handleKeyDown);
@@ -918,6 +918,12 @@ const BoostStore = () => {
               ref={inputRef}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
               placeholder="Ask about streaming boosts..."
               className="flex-1 bg-transparent border-none outline-none text-white placeholder-indigo-300"
             />

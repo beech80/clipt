@@ -314,13 +314,14 @@ export function CosmicProfileForm({ userId }: { userId?: string }) {
       
       setLoadingProgress(100);
       
-      // Show success message
-      toast.success("Profile updated successfully");
+      // Show enhanced success message with cosmic theme
+      toast.success("Profile updated successfully", {
+        description: "Redirecting you to your cosmic profile...",
+        icon: <Star className="w-5 h-5 text-yellow-300" />
+      });
       
-      // Redirect to profile page after successful update
-      setTimeout(() => {
-        navigate(`/profile/${values.username}`);
-      }, 1500);
+      // Redirect to profile page immediately after successful update
+      navigate(`/profile/${values.username}`);
       
     } catch (error: any) {
       console.error('Exception updating profile:', error);

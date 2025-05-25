@@ -43,33 +43,35 @@ const SquadsClipts = () => {
   const [initialPostSet, setInitialPostSet] = useState(false);
   const [navigationDirection, setNavigationDirection] = useState<'next' | 'prev' | null>(null);
 
-  // Fetch squad clips
+  // Get URL parameters
+  const location = useNavigate();
+  const searchParams = new URLSearchParams(window.location.search);
+  const refresh = searchParams.get('refresh');
+  
+  // Force refresh if needed
+  useEffect(() => {
+    if (refresh) {
+      console.log('Refresh parameter detected, refetching squad posts');
+      refetch();
+    }
+  }, [refresh]);
+  
+  // Enhanced fetch with aggressive refresh for Squads Clipts
   const { data: squadPosts = [], isLoading, refetch } = useQuery({
-    queryKey: ['squad-posts'],
+    queryKey: ['squad-posts', refresh, Date.now()], // Force new query on each render
+    refetchOnWindowFocus: true, // Refresh when window gains focus
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchInterval: 5000, // Refetch every 5 seconds
+    staleTime: 0, // Always consider data stale
+    cacheTime: 0, // Don't cache results
     queryFn: async () => {
       if (!user) return [];
+
+      console.log('Fetching all posts for Squad Clipts page');
       
-      // Get user's squad members from friends table (simplified approach)
-      const { data: squadMembers, error: squadError } = await supabase
-        .from('friends')
-        .select('friend_id')
-        .eq('user_id', user.id)
-        .eq('status', 'accepted');
-        
-      if (squadError) {
-        console.error("Error fetching squad members:", squadError);
-        return [];
-      }
-      
-      // Include current user in the squad
-      const squadIds = [...(squadMembers?.map(member => member.friend_id) || []), user.id];
-      
-      if (squadIds.length === 0) {
-        return [];
-      }
-      
-      // Get posts from squad members
-      const { data: posts, error: postsError } = await supabase
+      // Using only existing database columns in the query
+      // to ensure compatibility with current schema
+      const { data: allPosts, error: postsError } = await supabase
         .from('posts')
         .select(`
           id,
@@ -91,18 +93,21 @@ const SquadsClipts = () => {
             display_name
           )
         `)
-        .in('user_id', squadIds)
-        .eq('is_published', true)
-        .order('created_at', { ascending: false });
+        .eq('is_published', true) // Only show published posts
+        .eq('post_type', 'squad') // For Squad posts
+        .order('created_at', { ascending: false }) // Newest first
+        .limit(30); // Increased limit for better content variety
         
       if (postsError) {
         console.error("Error fetching squad posts:", postsError);
         return [];
       }
       
+      console.log('Found posts for Squad Clipts:', allPosts?.length || 0);
+      
       // Check which posts are liked by current user
-      if (user) {
-        const postIds = posts.map(post => post.id);
+      if (user && allPosts && allPosts.length > 0) {
+        const postIds = allPosts.map(post => post.id);
         const { data: likeData } = await supabase
           .from('likes')
           .select('post_id')
@@ -227,13 +232,17 @@ const SquadsClipts = () => {
     }
   };
 
-  // Set initial post when posts are loaded
+  // Set initial post when posts are loaded and log post data for debugging
   useEffect(() => {
-    if (squadPosts.length > 0 && !initialPostSet) {
+    if (squadPosts.length > 0) {
+      console.log('Squad posts loaded successfully:', squadPosts.length, squadPosts);
+      // Always reset to the first post when posts are refreshed
       setCurrentPostIndex(0);
       setInitialPostSet(true);
+    } else {
+      console.log('No squad posts found. Please check post creation process.');
     }
-  }, [squadPosts, initialPostSet]);
+  }, [squadPosts]);
 
   // Add keyboard navigation
   useEffect(() => {
@@ -302,7 +311,14 @@ const SquadsClipts = () => {
         </div>
         
         {/* Main content area */}
-        {squadPosts.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-screen">
+            <div className="p-8 bg-gray-900/80 backdrop-blur-md rounded-xl border border-orange-500/30 shadow-lg shadow-orange-500/10 text-center">
+              <div className="animate-pulse text-orange-400 mb-3 text-xl">Loading Squad Clipts...</div>
+              <div className="text-orange-300 text-sm">Scanning the cosmos for your squad's latest posts</div>
+            </div>
+          </div>
+        ) : squadPosts.length > 0 ? (
           <div style={{ paddingTop: '60px', height: 'calc(100vh - 60px)' }}>
             <div className="relative h-full">
               <div className="h-full" style={{ maxHeight: 'calc(100vh - 120px)', overflow: 'hidden', scrollBehavior: 'smooth' }}>

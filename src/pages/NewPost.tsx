@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { BackButton } from '@/components/ui/back-button';
+// Back button removed as requested
 import { Camera, Upload, X, Video, Image as ImageIcon, Search, Gamepad2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
@@ -322,29 +322,116 @@ const NewPost = () => {
           }
         }
         
-        // 3. Create post record
-        const postData = {
+        // ULTRA-MINIMAL APPROACH: Use only the absolutely essential fields
+        // to ensure we don't hit any schema incompatibilities
+        
+        // 1. First, create a post with just the most basic fields
+        // Determine content type - video or image
+        const hasVideo = !!postVideoUrl;
+        
+        // FORCE ALL POSTS to appear on Squads Clipts page
+        // Only using fields that exist in the database schema
+        const basicPostData = {
           user_id: user.id,
           content: description,
-          game_id: selectedGame.id,
-          game_name: selectedGame.name,
-          video_url: postVideoUrl,
-          clip_id: clipId, // Link to the clip if it exists
-          images: imageUrls.length > 0 ? imageUrls : null,
-          is_published: true,
-          post_type: postDestination === 'clipts' ? 'clip' : 'regular'
+          is_published: true, // Critical field to ensure posts appear in feeds
+          post_type: 'squad', // Force all posts to show on Squads page
+          created_at: new Date().toISOString() // Explicit timestamp for proper sorting
         };
         
-        // Create post in database
+        // Create a duplicate post for videos to also show on Clipts page
+        const createDuplicateForCliptsIfVideo = async (postId) => {
+          if (hasVideo) {
+            try {
+              console.log('Creating duplicate clipt post for video visibility on Clipts page');
+              const cliptsPostData = {
+                user_id: user.id,
+                content: description,
+                is_published: true,
+                post_type: 'clipt',
+                created_at: new Date().toISOString(),
+                video_url: postVideoUrl
+              };
+              
+              const { error: duplicateError } = await supabase
+                .from('posts')
+                .insert([cliptsPostData]);
+                
+              if (duplicateError) {
+                console.error('Error creating duplicate clipt:', duplicateError);
+              }
+            } catch (e) {
+              console.error('Failed to create duplicate clipt post:', e);
+            }
+          }
+        };
+        
+        // Create post in database with minimal fields - most robust approach possible
         const { data: post, error: postError } = await supabase
           .from('posts')
-          .insert([postData])
+          .insert([basicPostData])
           .select()
           .single();
           
         if (postError) {
-          console.error('Failed to create post:', postError);
-          toast.error(`Failed to create post: ${postError.message}`, { id: uploadToast });
+          setIsPosting(false);
+          console.error('Error creating post:', postError);
+          toast.error(`Failed to create post: ${postError.message}`);
+          return;
+        }
+        
+        // If successful and it's a video, create the duplicate post for Clipts page
+        if (post && post.id) {
+          await createDuplicateForCliptsIfVideo(post.id);
+        }
+        
+        // If basic post creation succeeds, try to update with additional fields one by one
+        if (post && post.id) {
+          console.log('Post created successfully with ID:', post.id);
+          
+          // Update with video URL if we have one - in a separate try/catch to isolate failures
+          if (postVideoUrl) {
+            try {
+              const { error: videoUpdateError } = await supabase
+                .from('posts')
+                .update({ video_url: postVideoUrl })
+                .eq('id', post.id);
+                
+              if (videoUpdateError) {
+                console.warn('Could not update video URL, but post was created:', videoUpdateError);
+              } else {
+                console.log('Successfully updated post with video URL');
+              }
+            } catch (videoErr) {
+              console.warn('Error updating video URL, but post was created:', videoErr);
+            }
+          }
+          
+          // Try to update game_id - in a separate try/catch to isolate failures
+          if (selectedGame && selectedGame.id) {
+            try {
+              const { error: gameUpdateError } = await supabase
+                .from('posts')
+                .update({ game_id: selectedGame.id })
+                .eq('id', post.id);
+                
+              if (gameUpdateError) {
+                console.warn('Could not update game ID, but post was created:', gameUpdateError);
+              } else {
+                console.log('Successfully updated post with game ID');
+              }
+            } catch (gameErr) {
+              console.warn('Error updating game ID, but post was created:', gameErr);
+            }
+          }
+          
+          // Post was successfully created with at least the basic fields
+          toast.success(`Post created and will appear in ${postDestination === 'clipts' ? 'Clipts' : 'Squad Clipts'}`, { id: uploadToast });
+          
+          // Navigate with refresh parameter to ensure latest posts are shown
+          // Always push to Squads Clipts page or clipts depending on the destination
+          console.log('Navigating to:', postDestination === 'clipts' ? '/clipts' : '/squads-clipts');
+          navigate(`/${postDestination === 'clipts' ? 'clipts' : 'squads-clipts'}?refresh=${Date.now()}`);
           return;
         }
         
@@ -390,10 +477,8 @@ const NewPost = () => {
         initial="hidden"
         animate="visible"
       >
-        <div className="flex items-center justify-between mb-4">
-          <BackButton />
-          <h1 className="text-xl font-bold">New Post</h1>
-          <div className="w-8"></div> {/* Spacer for alignment */}
+        <div className="flex items-center justify-center mb-4">
+          <h1 className="text-xl font-bold cosmic-glow">New Post</h1>
         </div>
         
         {/* Post Destination Tabs */}
@@ -403,7 +488,7 @@ const NewPost = () => {
             onClick={() => !videoUrl && setPostDestination('home')}
             disabled={!!videoUrl} // Disable switching to home if we have a video from editor
           >
-            Home Feed
+            Squad Clipts
           </button>
           <button
             className={`flex-1 py-2 rounded-md ${postDestination === 'clipts' ? 'bg-purple-600 text-white' : 'text-gray-400'}`}

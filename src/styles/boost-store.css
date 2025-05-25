@@ -1,0 +1,309 @@
+/* Boost Store Modal Styling for Retro Arcade Profile */
+
+.boost-store-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  perspective: 1000px;
+  backdrop-filter: blur(3px);
+}
+
+.boost-store-modal {
+  width: 100%;
+  max-width: 800px;
+  background: linear-gradient(135deg, #080420 0%, #1f0942 100%);
+  border: 3px solid #00ffff;
+  border-radius: 10px;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 255, 0.5),
+    0 0 40px rgba(0, 255, 255, 0.3),
+    inset 0 0 15px rgba(0, 255, 255, 0.3);
+  overflow: hidden;
+  transform-style: preserve-3d;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.boost-store-header {
+  background: linear-gradient(90deg, #1a0038, #3a0ca3, #1a0038);
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #00ffff;
+  position: relative;
+}
+
+.boost-store-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.8), transparent);
+  animation: headerShine 3s infinite;
+}
+
+@keyframes headerShine {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+
+.boost-store-header h2 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1rem;
+  color: #00ffff;
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+.player-tokens {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #ffff00;
+  border-radius: 20px;
+  padding: 5px 12px;
+  color: #ffff00;
+  font-family: 'VT323', monospace;
+  font-size: 1.2rem;
+}
+
+.boost-store-content {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.boost-item {
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #7b2cbf;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.boost-item::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at center,
+    rgba(123, 44, 191, 0.1) 0%,
+    transparent 70%
+  );
+  animation: boostPulse 3s infinite alternate;
+  opacity: 0.3;
+  z-index: 0;
+}
+
+@keyframes boostPulse {
+  0% { transform: scale(0.95); opacity: 0.3; }
+  100% { transform: scale(1.05); opacity: 0.5; }
+}
+
+.boost-icon {
+  margin-bottom: 10px;
+  width: 50px;
+  height: 50px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid currentColor;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+  z-index: 1;
+}
+
+.boost-details {
+  flex: 1;
+  z-index: 1;
+}
+
+.boost-name {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.7rem;
+  color: #ffffff;
+  margin: 0 0 10px 0;
+  letter-spacing: 1px;
+  text-shadow: 0 0 5px currentColor;
+}
+
+.boost-description {
+  font-family: 'VT323', monospace;
+  font-size: 1rem;
+  color: #a0a0a0;
+  margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+.boost-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.boost-duration {
+  font-family: 'VT323', monospace;
+  font-size: 0.9rem;
+  color: #00ffff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid #00ffff;
+}
+
+.boost-cost {
+  font-family: 'VT323', monospace;
+  font-size: 1.1rem;
+  color: #ffff00;
+  display: flex;
+  align-items: center;
+}
+
+.purchase-button {
+  margin-top: 15px;
+  background: linear-gradient(to right, #3a0ca3, #4361ee);
+  border: 2px solid #00ffff;
+  color: white;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.5rem;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 1;
+  text-transform: uppercase;
+}
+
+.purchase-button:hover:not(:disabled) {
+  background: linear-gradient(to right, #4361ee, #4cc9f0);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+}
+
+.purchase-button:disabled {
+  background: #333;
+  border-color: #555;
+  color: #777;
+  cursor: not-allowed;
+}
+
+.boost-store-footer {
+  padding: 15px 20px;
+  text-align: center;
+  border-top: 2px solid rgba(0, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.close-button {
+  background: #240046;
+  border: 2px solid #00ffff;
+  color: #00ffff;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.5rem;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 1px;
+}
+
+.close-button:hover {
+  background: #3a0ca3;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+}
+
+/* Floating boost button styling */
+.floating-boost-button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: linear-gradient(135deg, #7209b7, #3a0ca3);
+  border: 3px solid #00ffff;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  z-index: 99;
+  box-shadow: 
+    0 0 10px rgba(0, 255, 255, 0.5),
+    0 0 20px rgba(0, 255, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.floating-boost-button:hover {
+  transform: translateY(-5px) scale(1.1);
+  box-shadow: 
+    0 0 15px rgba(0, 255, 255, 0.6),
+    0 0 30px rgba(0, 255, 255, 0.4);
+}
+
+.floating-boost-button span {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.4rem;
+  margin-top: 3px;
+  color: #00ffff;
+}
+
+/* Animation for the boost button */
+@keyframes boostPulse {
+  0% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.7), 0 0 30px rgba(0, 255, 255, 0.5); }
+  100% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3); }
+}
+
+.floating-boost-button {
+  animation: boostPulse 2s infinite;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .boost-store-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .boost-store-header h2 {
+    font-size: 0.7rem;
+  }
+  
+  .floating-boost-button {
+    width: 50px;
+    height: 50px;
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  .floating-boost-button span {
+    font-size: 0.3rem;
+  }
+}

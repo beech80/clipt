@@ -536,34 +536,58 @@
 }
 
 /* Player stats */
-.player-stats {
+.horizontal-stats {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-top: 15px;
-  flex-wrap: wrap;
+  gap: 15px;
+  margin: 15px 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 10px 0;
+  scrollbar-width: none; /* Firefox */
+}
+
+.horizontal-stats::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
 
 @media (min-width: 768px) {
-  .player-stats {
-    justify-content: flex-start;
+  .horizontal-stats {
+    justify-content: space-around;
+    overflow-x: visible;
   }
 }
 
-.stat-item {
+.player-stat {
   background: rgba(0, 0, 0, 0.5);
   border: 2px solid var(--arcade-border);
   border-radius: 5px;
-  padding: 10px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 80px;
+  min-width: 70px;
   transition: transform 0.2s ease;
 }
 
-.stat-item:hover {
+.player-stat:hover {
   transform: translateY(-5px);
+}
+
+/* Profile buttons container */
+.profile-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+@media (min-width: 768px) {
+  .profile-buttons {
+    justify-content: flex-start;
+  }
 }
 
 .stat-icon {
@@ -594,30 +618,87 @@
   color: #a0a0a0;
 }
 
-.follow-button {
-  margin-top: 20px;
-  background: var(--neon-purple);
+.edit-profile-button {
+  background: linear-gradient(135deg, var(--neon-purple), var(--cyber-purple));
   border: 2px solid var(--neon-blue);
+  border-radius: 8px;
   color: white;
-  font-size: 0.7rem;
-  padding: 8px 16px;
+  padding: 8px 15px;
+  font-size: 0.6rem;
   display: flex;
   align-items: center;
-  gap: 8px;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
   transition: all 0.2s ease;
+  width: auto;
+  min-width: 140px;
+}
+
+.edit-profile-button:hover {
+  background: linear-gradient(135deg, var(--cyber-purple), var(--neon-blue));
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
+  transform: translateY(-3px);
+}
+
+.message-button {
+  background: linear-gradient(135deg, var(--cyber-teal), var(--neon-blue));
+  border: 2px solid var(--neon-blue);
+  border-radius: 8px;
+  color: white;
+  padding: 8px 15px;
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+.message-button:hover {
+  background: linear-gradient(135deg, var(--neon-blue), var(--cyber-teal));
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+  transform: translateY(-3px);
+}
+
+/* Profile buttons container */
+.profile-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+  margin-bottom: 10px;
 }
 
 @media (min-width: 768px) {
-  .follow-button {
-    margin-top: 0;
+  .profile-buttons {
+    justify-content: flex-start;
   }
+}
+
+.follow-button {
+  background: var(--neon-purple);
+  border: 2px solid var(--neon-blue);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.6rem;
+  padding: 8px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  transition: all 0.2s ease;
+  min-width: 100px;
 }
 
 .follow-button:hover {
   background: var(--accent-blue);
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
 /* Enhanced Arcade Control Panel & Tabs */
