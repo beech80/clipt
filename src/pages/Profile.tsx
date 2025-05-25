@@ -6,7 +6,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
 import { motion, AnimatePresence } from 'framer-motion';
-import RetroArcadeProfile from "@/components/profile/RetroArcadeProfile";
+import SpaceProfile from "@/components/profile/SpaceProfile";
 import { getSavedClipts } from '@/lib/savedClipts';
 import '../styles/gaming/profile-gaming.css';
 import { Gamepad, Medal, Clock, User, MessageSquare, Settings, Rocket, Zap, Star, Shield, Crown } from 'lucide-react';
@@ -600,7 +600,7 @@ const Profile = () => {
           ref={profileContainerRef}
         >
           {/* Main Profile Content */}
-          <RetroArcadeProfile
+          <SpaceProfile
             profile={profile}
             posts={userPosts}
             achievements={achievements}
