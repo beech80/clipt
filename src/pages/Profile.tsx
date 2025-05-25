@@ -6,10 +6,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
 import { motion, AnimatePresence } from 'framer-motion';
-import GamingProfile from "@/components/profile/GamingProfile";
+import RetroArcadeProfile from "@/components/profile/RetroArcadeProfile";
 import { getSavedClipts } from '@/lib/savedClipts';
 import '../styles/gaming/profile-gaming.css';
-import { Gamepad, Medal, Clock, User, MessageSquare, Settings, Rocket, Zap, Star } from 'lucide-react';
+import { Gamepad, Medal, Clock, User, MessageSquare, Settings, Rocket, Zap, Star, Shield, Crown } from 'lucide-react';
+import '../styles/boost-store.css';
 
 const Profile = () => {
   // Component state
@@ -25,14 +26,73 @@ const Profile = () => {
   const [followingCount, setFollowingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('clipts');
+  const [activeTab, setActiveTab] = useState('trophies');
   const [tokenBalance, setTokenBalance] = useState(2500);
   const [boostActive, setBoostActive] = useState(false);
+  const [showBoostStore, setShowBoostStore] = useState(false);
+  const [availableBoosts, setAvailableBoosts] = useState<any[]>([]);
   
   // Safe profile ID handling
   const profileId = id || user?.id;
   const isOwnProfile = user?.id === profileId;
   
+  // Handle boost store visibility
+  const toggleBoostStore = () => {
+    setShowBoostStore(prev => !prev);
+  };
+
+  // Purchase a boost
+  const purchaseBoost = (boostId: string, boostName: string, boostCost: number) => {
+    if (tokenBalance < boostCost) {
+      toast.error('Not enough tokens to purchase this boost!');
+      return;
+    }
+
+    // Simulate purchase in demo mode
+    setTokenBalance(prev => prev - boostCost);
+    setBoostActive(true);
+    toast.success(`${boostName} activated successfully!`);
+    setShowBoostStore(false);
+  };
+
+  // Initialize available boosts
+  useEffect(() => {
+    setAvailableBoosts([
+      {
+        id: 'cosmic-visibility',
+        name: 'Cosmic Visibility',
+        description: 'Increase your posts visibility by 50% for 24 hours',
+        cost: 75,
+        duration: '24 hours',
+        icon: <Rocket className="h-5 w-5 text-purple-400" />
+      },
+      {
+        id: 'engagement-amplifier',
+        name: 'Engagement Amplifier',
+        description: 'Double your engagement rates for 12 hours',
+        cost: 60,
+        duration: '12 hours',
+        icon: <Zap className="h-5 w-5 text-blue-400" />
+      },
+      {
+        id: 'royal-treatment',
+        name: 'Royal Treatment',
+        description: 'Your profile appears at the top of discovery for 6 hours',
+        cost: 100,
+        duration: '6 hours',
+        icon: <Crown className="h-5 w-5 text-yellow-400" />
+      },
+      {
+        id: 'shield-protection',
+        name: 'Shield Protection',
+        description: 'Block any negative interactions for 48 hours',
+        cost: 50,
+        duration: '48 hours',
+        icon: <Shield className="h-5 w-5 text-green-400" />
+      }
+    ]);
+  }, []);
+
   // Create comprehensive achievements list with token rewards
   const createSampleAchievements = () => [
     // 🏆 Trophy & Weekly Top 10
@@ -540,21 +600,103 @@ const Profile = () => {
           ref={profileContainerRef}
         >
           {/* Main Profile Content */}
-          <GamingProfile
+          <RetroArcadeProfile
             profile={profile}
-            tokenBalance={tokenBalance}
+            posts={userPosts}
             achievements={achievements}
-            userPosts={userPosts}
             savedItems={savedCliptsData}
             followersCount={followersCount}
             followingCount={followingCount}
             isOwnProfile={isOwnProfile}
             activeTab={activeTab}
             onTabChange={handleTabChange}
-            boostActive={boostActive}
           />
           
-          {/* Bottom content removed as requested */}
+          {/* Boost Store Modal */}
+          <AnimatePresence>
+            {showBoostStore && (
+              <motion.div
+                className="boost-store-overlay"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowBoostStore(false)}
+              >
+                <motion.div 
+                  className="boost-store-modal"
+                  initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                  animate={{ scale: 1, y: 0, opacity: 1 }}
+                  exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                  transition={{ type: 'spring', bounce: 0.3 }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="boost-store-header">
+                    <h2 className="glow-text">POWER BOOST STATION</h2>
+                    <div className="player-tokens">
+                      <Star className="h-5 w-5 mr-1" />
+                      <span>{tokenBalance}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="boost-store-content">
+                    {availableBoosts.map((boost) => (
+                      <motion.div 
+                        key={boost.id}
+                        className="boost-item"
+                        whileHover={{ scale: 1.03, boxShadow: '0 0 15px rgba(157, 0, 255, 0.6)' }}
+                      >
+                        <div className="boost-icon">{boost.icon}</div>
+                        <div className="boost-details">
+                          <h3 className="boost-name">{boost.name}</h3>
+                          <p className="boost-description">{boost.description}</p>
+                          <div className="boost-meta">
+                            <span className="boost-duration">{boost.duration}</span>
+                            <div className="boost-cost">
+                              <Star className="h-4 w-4 mr-1" />
+                              <span>{boost.cost}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button 
+                          className="purchase-button"
+                          onClick={() => purchaseBoost(boost.id, boost.name, boost.cost)}
+                          disabled={tokenBalance < boost.cost}
+                        >
+                          <Zap className="h-4 w-4 mr-1" />
+                          <span>ACTIVATE</span>
+                        </Button>
+                      </motion.div>
+                    ))}
+                  </div>
+                  
+                  <div className="boost-store-footer">
+                    <Button 
+                      className="close-button"
+                      onClick={() => setShowBoostStore(false)}
+                    >
+                      CLOSE
+                    </Button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          {/* Floating Boost Button */}
+          {isOwnProfile && (
+            <motion.button
+              className="floating-boost-button"
+              onClick={toggleBoostStore}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Rocket className="h-6 w-6" />
+              <span>BOOSTS</span>
+            </motion.button>
+          )}
         </motion.div>
       </AnimatePresence>
     </>
