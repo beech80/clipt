@@ -44,23 +44,14 @@ const Clipts = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPostIndex, setCurrentPostIndex] = useState(0);
 
-  // Modified fetch function that returns no posts
+  // Enhanced fetch function to display VIDEO posts only in the cosmic Clipts feed
   const fetchPostsDirectly = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('Clipts page is now post-free');
+      console.log('Fetching VIDEO posts for Cosmic Clipts feed...');
       
-      // Set empty posts array immediately
-      setTimeout(() => {
-        setRawPosts([]);
-        setIsLoading(false);
-      }, 500); // Short delay to simulate loading
-      
-      return;
-      
-      // The following code is commented out to ensure no posts are fetched
-      /*
+      // Fetch only video posts with correct schema compatibility
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -82,14 +73,32 @@ const Clipts = () => {
             name
           )
         `)
-        .not('video_url', 'is', null)
-        .not('video_url', 'eq', '')
-        .eq('is_published', true)
+        .eq('is_published', true) // Only show published posts
+        .eq('post_type', 'clipt') // Only clipt type posts for Clipts page
+        .not('video_url', 'is', null) // Must have a video URL
+        .order('created_at', { ascending: false }) // Newest first
         .limit(50);
-      */
       
-      // No posts processing needed
-      console.log('No posts to process - Clipts page is empty');
+      if (error) {
+        throw error;
+      }
+      
+      console.log(`Loaded ${data?.length || 0} video posts for Clipts feed`);
+      
+      // Process posts to ensure compatibility with the component
+      const processedPosts = data?.map(post => {
+        return {
+          ...post,
+          username: post.profiles?.username || 'User',
+          display_name: post.profiles?.display_name || post.profiles?.username || 'Anonymous',
+          avatar_url: post.profiles?.avatar_url,
+          // Ensure video URL has proper extension
+          video_url: post.video_url ? getVideoUrlWithProperExtension(post.video_url) : null,
+        };
+      }) || [];
+      
+      setRawPosts(processedPosts);
+      setIsLoading(false);
     } catch (e) {
       console.error('Error in fetchPostsDirectly:', e);
       setError(`Failed to load posts: ${e instanceof Error ? e.message : 'Unknown error'}`);

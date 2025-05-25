@@ -1,0 +1,121 @@
+/* Cosmic GameBoy Control Styles */
+.xbox-joystick {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(30, 30, 40, 0.8) 0%, rgba(20, 20, 30, 0.9) 70%);
+  border-radius: 50%;
+  box-shadow: 
+    0 0 15px rgba(0, 200, 255, 0.3),
+    inset 0 0 10px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(0, 200, 255, 0.2);
+  overflow: hidden;
+  backdrop-filter: blur(5px);
+}
+
+.xbox-joystick::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(45deg, rgba(0, 255, 255, 0.2), rgba(0, 255, 0, 0.2), rgba(255, 255, 0, 0.2), rgba(255, 0, 255, 0.2), rgba(0, 255, 255, 0.2));
+  background-size: 300%;
+  animation: rainbow-spin 3s linear infinite;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.xbox-joystick-thumb {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 45%;
+  height: 45%;
+  background: radial-gradient(circle, #333 0%, #222 100%);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 
+    0 0 10px rgba(0, 0, 0, 0.7),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(0, 200, 255, 0.3);
+}
+
+.action-button {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  position: relative;
+}
+
+.action-button::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(45deg, rgba(0, 255, 255, 0.7), rgba(0, 255, 0, 0.7), rgba(255, 255, 0, 0.7), rgba(255, 0, 255, 0.7), rgba(0, 255, 255, 0.7));
+  background-size: 300%;
+  animation: rainbow-spin 3s linear infinite;
+  z-index: -1;
+}
+
+.gameboy-container {
+  background-image: url('/cosmic-bg.png'), linear-gradient(to bottom, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.95));
+  background-blend-mode: overlay;
+  background-size: cover;
+}
+
+.clip-button {
+  position: relative;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2a2f3c 0%, #1a1f2c 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.clip-button::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(45deg, rgba(0, 255, 255, 0.7), rgba(0, 255, 0, 0.7), rgba(255, 255, 0, 0.7), rgba(255, 0, 255, 0.7), rgba(0, 255, 255, 0.7));
+  background-size: 300%;
+  animation: rainbow-spin 3s linear infinite;
+  z-index: -1;
+}
+
+.clip-button-icon {
+  color: #fff;
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+}
+
+.clip-button-text {
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 5px;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+}
+
+@keyframes rainbow-spin {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 25%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

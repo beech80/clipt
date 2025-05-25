@@ -62,7 +62,8 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-function Profile() {
+function 
+Profile() {
   // Component state
   const { id } = useParams();
   const { user } = useAuth();
