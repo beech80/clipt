@@ -160,6 +160,108 @@ const Messages = () => {
     };
   }, []);
   
+  // Check for direct message user in localStorage
+  useEffect(() => {
+    const checkForDirectMessage = () => {
+      const storedUser = localStorage.getItem('directMessageUser');
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          // Set as direct message user
+          setDirectMessageUser(userData);
+          
+          // Check if chat already exists
+          const existingChat = activeChats.find(chat => 
+            chat.recipient_id === userData.id
+          );
+          
+          if (existingChat) {
+            // Select existing chat
+            setSelectedChat(existingChat);
+          } else {
+            // Create new chat with this user
+            const newChat = {
+              id: `chat-${Date.now()}`,
+              recipient_id: userData.id,
+              recipient_username: userData.username || 'User',
+              recipient_avatar: userData.avatar_url,
+              last_message: '',
+              last_message_time: new Date().toISOString(),
+              messages: []
+            };
+            
+            // Add to active chats
+            setActiveChats(prev => [newChat, ...prev]);
+            setSelectedChat(newChat);
+          }
+          
+          // Clear from localStorage
+          localStorage.removeItem('directMessageUser');
+        } catch (error) {
+          console.error('Error parsing direct message user:', error);
+        }
+      }
+    };
+    
+    // Check after active chats are loaded
+    if (activeChats.length > 0) {
+      checkForDirectMessage();
+    }
+  }, [activeChats]);
+  
+  // Handle direct messaging when userId is provided in URL
+  useEffect(() => {
+    const initDirectMessage = async () => {
+      if (userId && user) {
+        try {
+          // Fetch user profile to get their details
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+            
+          if (profileError) {
+            console.error("Error fetching user profile:", profileError);
+            toast.error("Couldn't find this user");
+            return;
+          }
+          
+          if (profileData) {
+            // Check if chat already exists
+            const existingChat = activeChats.find(chat => chat.recipient_id === userId);
+            
+            if (existingChat) {
+              // Select existing chat
+              setSelectedChat(existingChat);
+            } else {
+              // Create new chat with this user
+              const newChat = {
+                id: `chat-${Date.now()}`,
+                recipient_id: profileData.id,
+                recipient_username: profileData.username || 'User',
+                recipient_avatar: profileData.avatar_url,
+                last_message: '',
+                last_message_time: new Date().toISOString(),
+                messages: []
+              };
+              
+              setActiveChats(prev => [newChat, ...prev]);
+              setSelectedChat(newChat);
+            }
+          }
+        } catch (error) {
+          console.error("Error starting direct message from URL:", error);
+          toast.error("Failed to start conversation");
+        }
+      }
+    };
+    
+    if (userId) {
+      initDirectMessage();
+    }
+  }, [userId, user, activeChats]);
+  
   const { user } = useAuth();
   const navigate = useNavigate();
   const { userId } = useParams();

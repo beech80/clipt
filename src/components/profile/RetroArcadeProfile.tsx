@@ -148,7 +148,16 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                         className="message-button"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate(`/messages?user=${profile.id}`)}
+                        onClick={() => {
+                          const chatId = `chat-direct-${Date.now()}`;
+                          localStorage.setItem('directMessageUser', JSON.stringify({
+                            id: profile.id,
+                            username: profile.username || 'User',
+                            avatar_url: profile.avatar_url,
+                            display_name: profile.display_name || profile.username
+                          }));
+                          navigate('/messages');
+                        }}
                       >
                         <MessageSquare className="h-4 w-4 mr-1" />
                         <span>MESSAGE</span>
