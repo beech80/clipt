@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, Zap, VideoIcon, User, Heart, Bookmark, UserPlus, ArrowLeft, Gamepad, Award, Star, Shield, Music, Rocket, Crown, ThumbsUp, MessageSquare, Share2, Eye, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import '@/styles/profile-space.css';
+import '@/styles/profile-enhanced.css';
+import '@/styles/cosmic-effects.css';
 
 interface ProfileProps {
   profile?: any;
