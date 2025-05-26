@@ -148,16 +148,7 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                         className="message-button"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          const chatId = `chat-direct-${Date.now()}`;
-                          localStorage.setItem('directMessageUser', JSON.stringify({
-                            id: profile.id,
-                            username: profile.username || 'User',
-                            avatar_url: profile.avatar_url,
-                            display_name: profile.display_name || profile.username
-                          }));
-                          navigate('/messages');
-                        }}
+                        onClick={() => navigate(`/messages?userId=${profile.id}&username=${profile.username || 'User'}&displayName=${profile.display_name || profile.username}`)}
                       >
                         <MessageSquare className="h-4 w-4 mr-1" />
                         <span>MESSAGE</span>
@@ -399,12 +390,12 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                       <h3 className="empty-title">YOUR COLLECTION IS EMPTY</h3>
                       <p className="empty-text">Save clipts from other players to view them here!</p>
                       <motion.button 
-                        className="explore-button"
+                        className="message-button"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate('/discovery')}
+                        onClick={() => navigate(`/messages?directUser=${profile.id}`)}
                       >
-                        <span>EXPLORE CONTENT</span>
+                        <span>MESSAGE USER</span>
                       </motion.button>
                     </motion.div>
                   )}
