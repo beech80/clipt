@@ -117,6 +117,30 @@ const RetroHeader = styled.div`
   }
 `;
 
+// Other styled components
+const RetroInput = styled.input`
+  background-color: rgba(10, 10, 35, 0.6);
+  border: 2px solid #ff5b17;
+  border-radius: 4px;
+  color: #ffffff;
+  padding: 10px 15px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  width: 100%;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 8px rgba(255, 91, 23, 0.5);
+  
+  &:focus {
+    outline: none;
+    border-color: #ff8c00;
+    box-shadow: 0 0 12px rgba(255, 140, 0, 0.7);
+  }
+  
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+`;
+
 // Other styled components remain the same
 
 const Messages = () => {
