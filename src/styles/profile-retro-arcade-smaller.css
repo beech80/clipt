@@ -1,0 +1,126 @@
+/* Smaller Retro Arcade Profile */
+
+/* Reduce overall size of the arcade cabinet */
+.arcade-cabinet-frame {
+  max-width: 900px;
+  min-height: calc(100vh - 120px);
+}
+
+/* Make the player card more compact */
+.player-card {
+  padding: 15px;
+  margin: 10px auto;
+  max-width: 800px;
+}
+
+/* Reduce avatar size */
+.avatar-frame {
+  width: 90px;
+  height: 90px;
+}
+
+/* Adjust player info sizes */
+.player-name {
+  font-size: 1rem;
+}
+
+.player-username {
+  font-size: 0.7rem;
+}
+
+.player-bio {
+  font-size: 0.65rem;
+  margin: 5px 0;
+}
+
+/* Make stats smaller */
+.horizontal-stats {
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.player-stat {
+  min-width: 60px;
+  padding: 5px 8px;
+}
+
+.stat-value {
+  font-size: 0.9rem;
+}
+
+.stat-label {
+  font-size: 0.5rem;
+}
+
+/* Make arcade marquee smaller */
+.arcade-marquee {
+  padding: 5px 0;
+  margin-bottom: 10px;
+}
+
+.arcade-title {
+  font-size: 1rem;
+}
+
+.marquee-light {
+  width: 6px;
+  height: 6px;
+}
+
+/* Reduce tab sizes */
+.arcade-control-panel {
+  padding: 8px;
+  margin: 10px 0;
+}
+
+.arcade-profile-tab {
+  font-size: 0.6rem;
+  padding: 5px 10px;
+}
+
+/* Make achievement cards smaller */
+.achievement-card {
+  padding: 8px;
+}
+
+.achievement-title {
+  font-size: 0.7rem;
+}
+
+.achievement-description {
+  font-size: 0.55rem;
+}
+
+/* Reduce content area spacing */
+.tab-content {
+  padding: 10px;
+}
+
+/* Make buttons smaller */
+.profile-buttons {
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.edit-profile-button, 
+.message-button, 
+.follow-button {
+  font-size: 0.55rem;
+  padding: 6px 12px;
+  min-width: 100px;
+}
+
+/* Reduce spacing between elements */
+.player-info > * {
+  margin-bottom: 5px;
+}
+
+/* Adjust player level indicator */
+.player-level {
+  bottom: -8px;
+  padding: 3px 8px;
+}
+
+.level-number {
+  font-size: 0.8rem;
+}
