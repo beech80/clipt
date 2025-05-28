@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, Zap, VideoIcon, User, Heart, Bookmark, UserPlus, ArrowLeft, Gamepad, Award, Star, Shield, Music, Rocket, Crown, ThumbsUp, MessageSquare, Share2, Eye, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import '@/styles/profile-retro-arcade.css';
+import '@/styles/profile-retro-arcade-smaller.css'; // Smaller profile CSS
+import '@/styles/post-modal.css'; // Post modal styling
 
 interface ProfileProps {
   profile?: any;
@@ -29,6 +32,13 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
 }) => {
   const navigate = useNavigate();
   const [localActiveTab, setLocalActiveTab] = useState<'trophies' | 'clipts' | 'saved'>(activeTab as any || 'trophies');
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const [showCommentInput, setShowCommentInput] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [showRankingSuccess, setShowRankingSuccess] = useState(false);
 
   useEffect(() => {
     if (activeTab) {
@@ -45,6 +55,156 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
 
   const handleBack = () => {
     navigate(-1);
+  };
+  
+  const handleViewPost = (post: any) => {
+    setSelectedPost(post);
+    setShowPostModal(true);
+  };
+  
+  const closePostModal = () => {
+    setShowPostModal(false);
+    setShowCommentInput(false);
+    setShowComments(false);
+    setCommentText('');
+    // Give time for animation to complete before clearing selected post
+    setTimeout(() => setSelectedPost(null), 300);
+  };
+  
+  const handleLikePost = (postId: string) => {
+    // Check if post is already liked
+    if (likedPosts.includes(postId)) {
+      // Unlike post
+      setLikedPosts(prev => prev.filter(id => id !== postId));
+      // Update the post's like count in selectedPost state
+      if (selectedPost && selectedPost.id === postId) {
+        setSelectedPost(prev => ({
+          ...prev,
+          likes_count: (prev.likes_count || 0) - 1,
+          isLiked: false
+        }));
+      }
+    } else {
+      // Like post
+      setLikedPosts(prev => [...prev, postId]);
+      // Update the post's like count in selectedPost state
+      if (selectedPost && selectedPost.id === postId) {
+        setSelectedPost(prev => ({
+          ...prev,
+          likes_count: (prev.likes_count || 0) + 1,
+          isLiked: true
+        }));
+      }
+    }
+  };
+  
+  const handleCommentToggle = () => {
+    // Always show comments when comment button is clicked
+    setShowComments(true);
+    // Toggle comment input
+    setShowCommentInput(prev => !prev);
+    if (!showCommentInput) {
+      // Focus on comment input after it appears
+      setTimeout(() => {
+        const commentInput = document.getElementById('comment-input');
+        if (commentInput) commentInput.focus();
+      }, 100);
+    }
+  };
+  
+  const handleCommentSubmit = (postId: string) => {
+    if (!commentText.trim()) return;
+    
+    // In a real app, you would send this to your backend
+    console.log(`Commenting on post ${postId}: ${commentText}`);
+    
+    // Create a new comment object
+    const newComment = {
+      id: `temp-${Date.now()}`,
+      content: commentText,
+      created_at: new Date().toISOString(),
+      user: {
+        id: profile.id,
+        display_name: profile.display_name || 'You',
+        avatar_url: profile.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=you'
+      }
+    };
+    
+    // Update the post's comment count in selectedPost state
+    if (selectedPost && selectedPost.id === postId) {
+      setSelectedPost(prev => ({
+        ...prev,
+        comments_count: (prev.comments_count || 0) + 1,
+        // Add the new comment to the beginning of the comments array
+        comments: [newComment, ...(prev.comments || [])]
+      }));
+      
+      // Update the post in the posts array
+      setPosts(currentPosts => 
+        currentPosts.map(post => 
+          post.id === postId ? {
+            ...post,
+            comments_count: (post.comments_count || 0) + 1,
+            comments: [newComment, ...(post.comments || [])]
+          } : post
+        )
+      );
+    }
+    
+    // Reset comment input but keep comment section visible
+    setCommentText('');
+    // Keep comments visible after posting
+    setShowComments(true);
+    
+    // Show success toast
+    toast.success('Comment posted!');
+  };
+  
+  const handleSharePost = (postId: string, title: string) => {
+    // In a real app, you would implement social sharing
+    // For this demo, we'll simulate a clipboard copy
+    const shareUrl = `https://clipt.space/post/${postId}`;
+    
+    // Try to use clipboard API if available
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => {
+          alert(`Link to "${title}" copied to clipboard!`);
+        })
+        .catch(() => {
+          // Fallback for clipboard API failure
+          prompt('Copy this link to share:', shareUrl);
+        });
+    } else {
+      // Fallback for browsers without clipboard API
+      prompt('Copy this link to share:', shareUrl);
+    }
+    
+    // Update share count in the UI
+    if (selectedPost && selectedPost.id === postId) {
+      setSelectedPost(prev => ({
+        ...prev,
+        shares_count: (prev.shares_count || 0) + 1
+      }));
+    }
+  };
+  
+  const handleRankForTop10 = (postId: string) => {
+    // Simulate ranking the post for Top 10
+    setShowRankingSuccess(true);
+    
+    // Update the post with a ranked property
+    if (selectedPost && selectedPost.id === postId) {
+      setSelectedPost(prev => ({
+        ...prev,
+        ranked_for_top10: true
+      }));
+    }
+    
+    // Hide success message after a delay
+    setTimeout(() => {
+      setShowRankingSuccess(false);
+    }, 3000);
   };
 
   return (
@@ -148,7 +308,10 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                         className="message-button"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate(`/messages?userId=${profile.id}&username=${profile.username || 'User'}&displayName=${profile.display_name || profile.username}`)}
+                        onClick={() => {
+                          // Directly navigate to messages with userId in URL params
+                          navigate(`/messages?userId=${profile.id}&username=${encodeURIComponent(profile.username || 'User')}&displayName=${encodeURIComponent(profile.display_name || profile.username)}`);
+                        }}
                       >
                         <MessageSquare className="h-4 w-4 mr-1" />
                         <span>MESSAGE</span>
@@ -276,6 +439,9 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.1 * index }}
                           whileHover={{ scale: 1.03, boxShadow: '0 0 15px rgba(0, 195, 255, 0.6)' }}
+                          onClick={() => handleViewPost(post)}
+                          role="button"
+                          aria-label={`View post: ${post.title}`}
                         >
                           <div className="clipt-thumbnail">
                             <img src={post.image_url || 'https://placehold.co/600x400/121212/00C3FF?text=Game+Clipt'} alt="Clipt thumbnail" />
@@ -393,10 +559,17 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                         className="message-button"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate(`/messages?directUser=${profile.id}`)}
-                      >
-                        <span>MESSAGE USER</span>
-                      </motion.button>
+                        onClick={() => {
+                          const targetUser = {
+                            id: profile.id,
+                            username: profile.username || 'User',
+                            displayName: profile.display_name || profile.username
+                          };
+                          // Store in sessionStorage for more reliability
+                          sessionStorage.setItem('directMessageTarget', JSON.stringify(targetUser));
+                          navigate('/messages');
+                        }}
+                      ></motion.button>
                     </motion.div>
                   )}
                 </motion.div>
@@ -420,6 +593,281 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
           </div>
         </div>
       </div>
+      
+      {/* Post viewing modal */}
+      <AnimatePresence>
+        {showPostModal && selectedPost && (
+          <motion.div 
+            className="post-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closePostModal}
+          >
+            <motion.div 
+              className="post-modal"
+              initial={{ scale: 0.9, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 20, opacity: 0 }}
+              transition={{ type: 'spring', bounce: 0.3 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="post-modal-header">
+                <h2 className="post-title">{selectedPost.title || 'Untitled Clipt'}</h2>
+                <button className="close-modal-button" onClick={closePostModal}>
+                  <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="post-modal-content">
+                <div className="post-video-container">
+                  {selectedPost.video_url ? (
+                    <video 
+                      controls 
+                      autoPlay 
+                      className="post-video"
+                      src={selectedPost.video_url}
+                      poster={selectedPost.image_url || 'https://placehold.co/1280x720/121212/00C3FF?text=Game+Clipt'}
+                    />
+                  ) : (
+                    <div className="post-image-container">
+                      <img 
+                        src={selectedPost.image_url || 'https://placehold.co/1280x720/121212/00C3FF?text=Game+Clipt'} 
+                        alt={selectedPost.title || 'Clipt'} 
+                        className="post-image"
+                      />
+                      <div className="post-demo-play">
+                        <p>Demo Mode - Video would play here</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="post-details">
+                  <div className="post-creator">
+                    <img 
+                      src={selectedPost.creator_avatar || profile.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=player'} 
+                      alt="Creator" 
+                      className="creator-avatar"
+                    />
+                    <div className="creator-info">
+                      <p className="creator-name">{selectedPost.creator_name || profile.display_name || 'Gamer'}</p>
+                      <p className="post-date">{new Date(selectedPost.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="post-description">
+                    {selectedPost.description || 'An amazing gaming moment captured and shared with the Clipt community!'}
+                  </div>
+                  
+                  <div className="post-stats">
+                    <div className="stat">
+                      <ThumbsUp className={`stat-icon ${likedPosts.includes(selectedPost.id) ? 'liked' : ''}`} />
+                      <span>{selectedPost.likes_count || Math.floor(Math.random() * 100) + 5}</span>
+                    </div>
+                    <div className="stat">
+                      <MessageSquare className="stat-icon" />
+                      <span>{selectedPost.comments_count || Math.floor(Math.random() * 20) + 1}</span>
+                    </div>
+                    <div className="stat">
+                      <Eye className="stat-icon" />
+                      <span>{selectedPost.views_count || Math.floor(Math.random() * 1000) + 100}</span>
+                    </div>
+                    <div className="stat">
+                      <Share2 className="stat-icon" />
+                      <span>{selectedPost.shares_count || Math.floor(Math.random() * 10) + 1}</span>
+                    </div>
+                    {selectedPost.ranked_for_top10 && (
+                      <div className="stat trophy-stat">
+                        <Trophy className="stat-icon trophy-icon" />
+                        <span>Ranked</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Success message for ranking */}
+                  {showRankingSuccess && (
+                    <div className="ranking-success">
+                      <Trophy className="ranking-icon" />
+                      <span>Successfully ranked for Top 10!</span>
+                    </div>
+                  )}
+                  
+                  {/* Comments Section */}
+                  {showComments && (
+                    <div className="comments-section">
+                      <h3 className="comments-header">
+                        <MessageSquare className="comments-icon" /> 
+                        Comments ({selectedPost.comments?.length || selectedPost.comments_count || 0})
+                      </h3>
+                      
+                      {/* Existing comments */}
+                      <div className="comments-list">
+                        {selectedPost.comments && selectedPost.comments.length > 0 ? (
+                          selectedPost.comments.map((comment: any, index: number) => (
+                            <motion.div 
+                              key={comment.id || index}
+                              className="comment-item"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                            >
+                              <div className="comment-author">
+                                <img 
+                                  src={comment.user?.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=comment'} 
+                                  alt="User" 
+                                  className="comment-avatar"
+                                />
+                                <div className="comment-meta">
+                                  <span className="comment-username">{comment.user?.display_name || 'Cosmic Gamer'}</span>
+                                  <span className="comment-time">
+                                    {new Date(comment.created_at || Date.now()).toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="comment-content">{comment.content || comment.text || 'Great clip!'}</p>
+                            </motion.div>
+                          ))
+                        ) : (
+                          // Sample comments if no real comments exist
+                          [
+                            {
+                              id: 'sample-1',
+                              content: 'This is amazing gameplay! How did you pull off that move?',
+                              created_at: new Date(Date.now() - 3600000).toISOString(),
+                              user: {
+                                display_name: 'CosmicGamer42',
+                                avatar_url: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=cosmic'
+                              }
+                            },
+                            {
+                              id: 'sample-2',
+                              content: 'The graphics in this game are incredible! What settings are you using?',
+                              created_at: new Date(Date.now() - 7200000).toISOString(),
+                              user: {
+                                display_name: 'NebulaPlayer',
+                                avatar_url: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=nebula'
+                              }
+                            },
+                            {
+                              id: 'sample-3',
+                              content: 'LOL that was so clutch! 🚀',
+                              created_at: new Date(Date.now() - 10800000).toISOString(),
+                              user: {
+                                display_name: 'StarDust99',
+                                avatar_url: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=stardust'
+                              }
+                            }
+                          ].map((comment, index) => (
+                            <motion.div 
+                              key={comment.id}
+                              className="comment-item"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                            >
+                              <div className="comment-author">
+                                <img 
+                                  src={comment.user.avatar_url} 
+                                  alt="User" 
+                                  className="comment-avatar"
+                                />
+                                <div className="comment-meta">
+                                  <span className="comment-username">{comment.user.display_name}</span>
+                                  <span className="comment-time">
+                                    {new Date(comment.created_at).toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="comment-content">{comment.content}</p>
+                            </motion.div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Comment input area */}
+                  {showCommentInput && (
+                    <div className="comment-input-container">
+                      <textarea
+                        id="comment-input"
+                        className="comment-input"
+                        placeholder="Add your comment..."
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        rows={3}
+                      />
+                      <div className="comment-actions">
+                        <button 
+                          className="cancel-comment-button"
+                          onClick={() => {
+                            setShowCommentInput(false);
+                            setCommentText('');
+                          }}
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          className="submit-comment-button"
+                          onClick={() => handleCommentSubmit(selectedPost.id)}
+                          disabled={!commentText.trim()}
+                        >
+                          Post Comment
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="post-actions">
+                    <button 
+                      className={`action-button like-button ${likedPosts.includes(selectedPost.id) ? 'active' : ''}`}
+                      onClick={() => handleLikePost(selectedPost.id)}
+                    >
+                      <ThumbsUp className="action-icon" />
+                      {likedPosts.includes(selectedPost.id) ? 'Liked' : 'Like'}
+                    </button>
+                    <button 
+                      className={`action-button comment-button ${showCommentInput ? 'active' : ''}`}
+                      onClick={handleCommentToggle}
+                    >
+                      <MessageSquare className="action-icon" /> Comment
+                    </button>
+                    <button 
+                      className="action-button share-button"
+                      onClick={() => handleSharePost(selectedPost.id, selectedPost.title || 'Clipt Post')}
+                    >
+                      <Share2 className="action-icon" /> Share
+                    </button>
+                    {/* Add Rank for Top 10 button for videos */}
+                    {(selectedPost.video_url || selectedPost.type === 'video') && !selectedPost.ranked_for_top10 && (
+                      <button 
+                        className="action-button rank-button"
+                        onClick={() => handleRankForTop10(selectedPost.id)}
+                      >
+                        <Trophy className="action-icon" /> Rank for Top 10
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
