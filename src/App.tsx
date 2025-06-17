@@ -114,7 +114,7 @@ const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
 const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
 const AllCommentsPage = React.lazy(() => import('./pages/AllCommentsPage'));
 const GroupChat = React.lazy(() => import('./pages/GroupChat'));
-const SquadChat = React.lazy(() => import('./pages/SquadChat'));
+const SquadChat = React.lazy(() => import('./pages/SquadChat.tsx'));
 const CommentsFullPage = React.lazy(() => import('./pages/CommentsFullPage'));
 const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'));
 const VideoDebug = React.lazy(() => import('./pages/VideoDebug'));
