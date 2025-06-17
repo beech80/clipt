@@ -114,7 +114,24 @@ const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
 const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
 const AllCommentsPage = React.lazy(() => import('./pages/AllCommentsPage'));
 const GroupChat = React.lazy(() => import('./pages/GroupChat'));
-const SquadChat = React.lazy(() => import('./pages/SquadChat.tsx'));
+// Temporary fix for build error - using inline component until SquadChat issue is resolved
+const SquadChat = React.lazy(() => Promise.resolve({
+  default: () => (
+    <div className="cosmic-squad-chat" style={{
+      background: 'linear-gradient(135deg, #190033, #000)',
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'white',
+      padding: '2rem'
+    }}>
+      <h1 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#60a5fa' }}>Squad Chat</h1>
+      <p>Chat functionality will be available soon.</p>
+    </div>
+  )
+}));
 const CommentsFullPage = React.lazy(() => import('./pages/CommentsFullPage'));
 const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'));
 const VideoDebug = React.lazy(() => import('./pages/VideoDebug'));
