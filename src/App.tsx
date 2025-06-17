@@ -60,8 +60,8 @@ const GlobalStyle = createGlobalStyle`
 import TabsNavigation from '@/components/TabsNavigation';
 
 const LandingPage = React.lazy(() => import('./pages/LandingPage'));
-// Explicitly import the .tsx version to use our cosmic space theme with game icons
-const SpaceLanding = React.lazy(() => import('./pages/SpaceLanding.tsx'));
+// Import cosmic space landing page with game icons - using a more robust import approach
+const SpaceLanding = React.lazy(() => import('./pages/SpaceLanding'));
 const Home = React.lazy(() => import('./pages/Home'));
 const Auth = React.lazy(() => import('./pages/Auth'));
 const NewPost = React.lazy(() => import('./pages/NewPost'));
@@ -114,24 +114,30 @@ const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
 const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
 const AllCommentsPage = React.lazy(() => import('./pages/AllCommentsPage'));
 const GroupChat = React.lazy(() => import('./pages/GroupChat'));
-// Temporary fix for build error - using inline component until SquadChat issue is resolved
-const SquadChat = React.lazy(() => Promise.resolve({
-  default: () => (
-    <div className="cosmic-squad-chat" style={{
-      background: 'linear-gradient(135deg, #190033, #000)',
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: 'white',
-      padding: '2rem'
-    }}>
-      <h1 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#60a5fa' }}>Squad Chat</h1>
-      <p>Chat functionality will be available soon.</p>
-    </div>
-  )
-}));
+// Using an inline React.lazy component for SquadChat to avoid import issues
+const SquadChat = React.lazy(() => {
+  const SquadChatComponent = function() {
+    return React.createElement(
+      'div',
+      { 
+        className: 'cosmic-squad-chat', 
+        style: {
+          background: 'linear-gradient(135deg, #190033, #000)',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          padding: '2rem'
+        }
+      },
+      React.createElement('h1', { style: { fontSize: '2rem', marginBottom: '1rem', color: '#60a5fa' } }, 'Squad Chat'),
+      React.createElement('p', null, 'Chat functionality will be available soon.')
+    );
+  };
+  return Promise.resolve({ default: SquadChatComponent });
+});
 const CommentsFullPage = React.lazy(() => import('./pages/CommentsFullPage'));
 const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'));
 const VideoDebug = React.lazy(() => import('./pages/VideoDebug'));
