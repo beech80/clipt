@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, Eye, EyeOff, Server, Check, Video, BarChart, Share2, Shield, Zap, Settings, ChevronLeft, AlertTriangle, Users, Tv, Cpu, Activity } from "lucide-react";
+import { Copy, Eye, EyeOff, Server, Check, Video, BarChart, Share2, Shield, Zap, Settings, ChevronLeft, AlertTriangle, Users, Tv, Cpu, Activity, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -274,7 +274,7 @@ export default function StreamSetup() {
           </div>
 
           <Tabs defaultValue="setup" value={activeTab}>
-            <TabsList className="grid grid-cols-3" style={{ background: 'rgba(255, 88, 0, 0.15)', borderColor: 'rgba(255, 135, 0, 0.3)' }}>
+            <TabsList className="grid grid-cols-3 max-w-[600px] mx-auto mb-8 bg-gray-800/40" style={{ background: 'rgba(255, 88, 0, 0.15)', borderColor: 'rgba(255, 135, 0, 0.3)' }}>
               <TabsTrigger 
                 value="setup" 
                 onClick={() => setActiveTab("setup")}
@@ -284,7 +284,18 @@ export default function StreamSetup() {
                 }}
               >
                 <Settings className="h-4 w-4 mr-2" style={{ color: activeTab === "setup" ? '#FF7700' : 'inherit' }} />
-                Setup
+                OBS Setup
+              </TabsTrigger>
+              <TabsTrigger 
+                value="mobile" 
+                onClick={() => setActiveTab("mobile")}
+                style={{ 
+                  color: activeTab === "mobile" ? '#FF7700' : 'rgba(255, 255, 255, 0.7)', 
+                  fontWeight: activeTab === "mobile" ? 'bold' : 'normal'
+                }}
+              >
+                <Smartphone className="h-4 w-4 mr-2" style={{ color: activeTab === "mobile" ? '#FF7700' : 'inherit' }} />
+                Mobile Stream
               </TabsTrigger>
               <TabsTrigger 
                 value="stats" 
@@ -296,17 +307,6 @@ export default function StreamSetup() {
               >
                 <BarChart className="h-4 w-4 mr-2" style={{ color: activeTab === "stats" ? '#FF7700' : 'inherit' }} />
                 Analytics
-              </TabsTrigger>
-              <TabsTrigger 
-                value="guide" 
-                onClick={() => setActiveTab("guide")}
-                style={{ 
-                  color: activeTab === "guide" ? '#FF7700' : 'rgba(255, 255, 255, 0.7)', 
-                  fontWeight: activeTab === "guide" ? 'bold' : 'normal'
-                }}
-              >
-                <Video className="h-4 w-4 mr-2" style={{ color: activeTab === "guide" ? '#FF7700' : 'inherit' }} />
-                OBS Guide
               </TabsTrigger>
             </TabsList>
             
@@ -775,6 +775,271 @@ export default function StreamSetup() {
                   </p>
                 </CardFooter>
               </Card>
+            </TabsContent>
+            
+            {/* Mobile Stream Tab */}
+            <TabsContent value="mobile" className="space-y-6">
+              <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4 }}
+              >
+                <Card className="stream-card" style={{
+                  background: 'linear-gradient(135deg, rgba(25, 0, 51, 0.6), rgba(40, 0, 60, 0.8))',
+                  border: '1px solid rgba(255, 135, 0, 0.3)',
+                  boxShadow: '0 8px 20px rgba(255, 88, 0, 0.15)'
+                }}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-xl" style={{
+                      color: '#FF7700',
+                      textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                    }}>
+                      <Smartphone className="h-5 w-5 text-orange-400" />
+                      Mobile Streaming
+                    </CardTitle>
+                    <CardDescription style={{ color: 'white' }}>
+                      Stream directly from your mobile device with our space-themed interface
+                    </CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-6">
+                    <div className="flex flex-col md:flex-row gap-6">
+                      {/* Left column - Mobile Stream Preview */}
+                      <div className="flex-1">
+                        <div className="mb-4 text-lg font-semibold text-white flex items-center gap-2">
+                          <Tv size={18} />
+                          Mobile Stream Preview
+                        </div>
+                        
+                        <div className="relative rounded-lg overflow-hidden" style={{
+                          background: '#190033',
+                          border: '2px solid rgba(255, 119, 0, 0.4)',
+                          height: '480px',
+                          boxShadow: '0 8px 20px rgba(25, 0, 51, 0.4)'
+                        }}>
+                          {/* Mock phone screen with cosmic theme */}
+                          <div className="absolute inset-0 flex flex-col">
+                            {/* Phone Header */}
+                            <div className="bg-black bg-opacity-70 py-3 px-4 flex justify-between items-center border-b border-orange-500/20">
+                              <div className="flex items-center gap-2 text-white">
+                                <ChevronLeft size={18} />
+                                <span>Ready to Stream</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-white">
+                                <Users size={16} />
+                                <span>0</span>
+                              </div>
+                            </div>
+                            
+                            {/* Phone Content - Camera Preview */}
+                            <div className="flex-grow relative">
+                              {/* Animated stars background */}
+                              <div className="absolute inset-0 overflow-hidden">
+                                <div className="stars-small"></div>
+                                <div className="stars-medium"></div>
+                                <div className="stars-large"></div>
+                              </div>
+                              
+                              {/* Camera placeholder */}
+                              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <div className="rounded-full h-16 w-16 bg-black bg-opacity-60 flex items-center justify-center mb-4">
+                                  <Video size={32} className="text-orange-500" />
+                                </div>
+                                <p className="text-white text-opacity-80 text-center px-8">
+                                  Your camera preview will appear here
+                                </p>
+                                <div className="mt-4 text-center">
+                                  <span className="bg-black bg-opacity-50 text-white py-1 px-3 rounded-full text-sm">
+                                    Space Stream Title
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Phone Footer - Controls */}
+                            <div className="bg-black bg-opacity-70 py-3 px-6 flex justify-between items-center border-t border-orange-500/20">
+                              <Button variant="ghost" className="rounded-full h-12 w-12 p-0" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                                <Activity size={20} className="text-white" />
+                              </Button>
+                              
+                              <Button
+                                className="rounded-full h-14 w-14 p-0"
+                                style={{
+                                  background: 'linear-gradient(135deg, #FF5500, #FF7700)',
+                                  boxShadow: '0 0 15px rgba(255, 119, 0, 0.5)'
+                                }}
+                              >
+                                <Video size={24} className="text-white" />
+                              </Button>
+                              
+                              <Button variant="ghost" className="rounded-full h-12 w-12 p-0" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                                <Copy size={20} className="text-white" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Right column - Instructions */}
+                      <div className="flex-1">
+                        <div className="mb-4 text-lg font-semibold text-white flex items-center gap-2">
+                          <Zap size={18} />
+                          How to Stream from Your Phone
+                        </div>
+                        
+                        <div className="space-y-6">
+                          <div className="stream-setup-step" style={{ 
+                            background: 'linear-gradient(135deg, rgba(25, 0, 51, 0.7), rgba(40, 0, 70, 0.9))', 
+                            borderRadius: '12px',
+                            padding: '20px',
+                            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+                            border: '1px solid rgba(255, 119, 0, 0.3)'
+                          }}>
+                            <h4 className="font-semibold" style={{ 
+                              color: '#FFAA00',
+                              fontSize: '18px',
+                              marginBottom: '10px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px'
+                            }}>
+                              <div style={{ 
+                                background: 'linear-gradient(135deg, #FFAA00, #FF9A40)',
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: 'bold'
+                              }}>1</div>
+                              Access Mobile Stream
+                            </h4>
+                            <div style={{ color: 'white', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1 text-orange-400">•</div>
+                                <div>Navigate to any page in the app on your mobile device</div>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1 text-orange-400">•</div>
+                                <div>Locate the glowing "GO LIVE" button at the bottom-right corner</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="stream-setup-step" style={{ 
+                            background: 'linear-gradient(135deg, rgba(25, 0, 51, 0.7), rgba(40, 0, 70, 0.9))', 
+                            borderRadius: '12px',
+                            padding: '20px',
+                            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+                            border: '1px solid rgba(255, 119, 0, 0.3)'
+                          }}>
+                            <h4 className="font-semibold" style={{ 
+                              color: '#FFAA00',
+                              fontSize: '18px',
+                              marginBottom: '10px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px'
+                            }}>
+                              <div style={{ 
+                                background: 'linear-gradient(135deg, #FFAA00, #FF9A40)',
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: 'bold'
+                              }}>2</div>
+                              Configure Your Stream
+                            </h4>
+                            <div style={{ color: 'white', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1 text-orange-400">•</div>
+                                <div>Allow camera and microphone permissions when prompted</div>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1 text-orange-400">•</div>
+                                <div>Enter a title for your stream</div>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1 text-orange-400">•</div>
+                                <div>Use the toggle buttons to switch between front/back cameras or mute audio</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="stream-setup-step" style={{ 
+                            background: 'linear-gradient(135deg, rgba(25, 0, 51, 0.7), rgba(40, 0, 70, 0.9))', 
+                            borderRadius: '12px',
+                            padding: '20px',
+                            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+                            border: '1px solid rgba(255, 119, 0, 0.3)'
+                          }}>
+                            <h4 className="font-semibold" style={{ 
+                              color: '#FFAA00',
+                              fontSize: '18px',
+                              marginBottom: '10px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px'
+                            }}>
+                              <div style={{ 
+                                background: 'linear-gradient(135deg, #FFAA00, #FF9A40)',
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: 'bold'
+                              }}>3</div>
+                              Start Streaming
+                            </h4>
+                            <div style={{ color: 'white', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1 text-orange-400">•</div>
+                                <div>Tap the large orange "GO LIVE" button to begin streaming</div>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1 text-orange-400">•</div>
+                                <div>Your stream will appear on your profile for viewers to watch</div>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                <div className="mt-1 text-orange-400">•</div>
+                                <div>Chat with viewers in real-time with our space-themed chat interface</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <motion.div 
+                            whileHover={{ scale: 1.02 }}
+                            className="flex justify-center"
+                          >
+                            <Button
+                              onClick={() => navigate('/mobile-stream')}
+                              className="w-full md:w-auto py-6"
+                              style={{
+                                background: 'linear-gradient(135deg, #FF5500, #FF7700)',
+                                color: 'white',
+                                border: 'none',
+                                boxShadow: '0 4px 12px rgba(255, 85, 0, 0.3)'
+                              }}
+                            >
+                              <Smartphone className="h-5 w-5 mr-2" />
+                              Try Mobile Streaming Now
+                            </Button>
+                          </motion.div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </TabsContent>
           </Tabs>
         </motion.div>

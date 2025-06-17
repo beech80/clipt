@@ -46,41 +46,41 @@ const SpaceLanding: React.FC = () => {
 
       {/* Floating elements */}
       <div className="absolute inset-0 z-0">
-        {/* Satellites */}
+        {/* Game-themed floating elements instead of emojis */}
         <motion.div 
           className="absolute w-12 h-12 text-gray-300"
           style={{ top: '10%', left: '15%', transform: 'rotate(15deg)' }}
           {...floatAnimation}
         >
-          🛰️
+          <Gamepad2 size={32} className="text-blue-200" />
         </motion.div>
         <motion.div 
           className="absolute w-12 h-12 text-gray-300"
           style={{ top: '20%', right: '20%', transform: 'rotate(-20deg)' }}
           {...floatAnimation}
         >
-          🚀
+          <Video size={32} className="text-purple-300" />
         </motion.div>
         <motion.div 
           className="absolute w-12 h-12 text-gray-300"
           style={{ bottom: '15%', left: '25%' }}
           {...floatAnimation}
         >
-          🔭
+          <Camera size={32} className="text-cyan-200" />
         </motion.div>
         <motion.div 
           className="absolute w-8 h-8 text-blue-200"
           style={{ top: '30%', left: '80%' }}
           {...floatAnimation}
         >
-          🌠
+          <Gamepad2 size={24} className="text-green-200" />
         </motion.div>
         <motion.div 
           className="absolute w-6 h-6"
           style={{ bottom: '30%', right: '18%' }}
           {...floatAnimation}
         >
-          📡
+          <Video size={20} className="text-pink-200" />
         </motion.div>
         
         {/* Planets */}

@@ -60,7 +60,8 @@ const GlobalStyle = createGlobalStyle`
 import TabsNavigation from '@/components/TabsNavigation';
 
 const LandingPage = React.lazy(() => import('./pages/LandingPage'));
-const SpaceLanding = React.lazy(() => import('./pages/SpaceLanding'));
+// Explicitly import the .tsx version to use our cosmic space theme with game icons
+const SpaceLanding = React.lazy(() => import('./pages/SpaceLanding.tsx'));
 const Home = React.lazy(() => import('./pages/Home'));
 const Auth = React.lazy(() => import('./pages/Auth'));
 const NewPost = React.lazy(() => import('./pages/NewPost'));
@@ -113,6 +114,7 @@ const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
 const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
 const AllCommentsPage = React.lazy(() => import('./pages/AllCommentsPage'));
 const GroupChat = React.lazy(() => import('./pages/GroupChat'));
+const SquadChat = React.lazy(() => import('./pages/SquadChat'));
 const CommentsFullPage = React.lazy(() => import('./pages/CommentsFullPage'));
 const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'));
 const VideoDebug = React.lazy(() => import('./pages/VideoDebug'));
@@ -282,7 +284,7 @@ const AppContent = () => {
   return (
     <PageTransition>
       <Routes>
-        <Route path="/" element={<CleanSpaceLanding />} />
+        <Route path="/" element={<SpaceLanding />} />
         <Route path="/boost-store" element={<SuspenseBoundary><BoostStore /></SuspenseBoundary>} />
         <Route path="/edit-profile" element={<SuspenseBoundary><EditProfile /></SuspenseBoundary>} />
         <Route path="/home" element={
@@ -306,6 +308,7 @@ const AppContent = () => {
         <Route path="/post/:postId/comments" element={<SuspenseBoundary loadingMessage="Loading comments..."><CommentsPage /></SuspenseBoundary>} />
         <Route path="/comments-full/:postId" element={<SuspenseBoundary loadingMessage="Loading comments..."><CommentsFullPage /></SuspenseBoundary>} />
         <Route path="/group-chat" element={<SuspenseBoundary loadingMessage="Loading chat..."><GroupChat /></SuspenseBoundary>} />
+        <Route path="/squad-chat/:id" element={<SuspenseBoundary loadingMessage="Loading Squad Chat..."><SquadChat /></SuspenseBoundary>} />
         <Route path="/game/:id" element={<SuspenseBoundary loadingMessage="Loading game details..."><GameDetailsPage /></SuspenseBoundary>} />
         <Route path="/games" element={<SuspenseBoundary loadingMessage="Finding top games..."><TopGames /></SuspenseBoundary>} />
         <Route path="/search" element={<SuspenseBoundary loadingMessage="Searching the galaxy..."><Search /></SuspenseBoundary>} />
