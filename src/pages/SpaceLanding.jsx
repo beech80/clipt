@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Gamepad2, Video, Camera } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const SpaceLanding: React.FC = () => {
+const SpaceLanding = () => {
   const navigate = useNavigate();
 
   // Animation for floating elements
@@ -20,7 +20,7 @@ const SpaceLanding: React.FC = () => {
   };
   
   // Handle navigation to different sections
-  const handleNavigation = (path: string) => {
+  const handleNavigation = (path) => {
     navigate(path);
   };
   
@@ -169,7 +169,6 @@ const SpaceLanding: React.FC = () => {
             <span className="text-xs uppercase font-medium">Posts</span>
           </motion.button>
         </div>
-
         {/* Start Game button */}
         <motion.button
           className="mt-8 px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-md text-white font-medium flex items-center justify-center"
@@ -199,6 +198,7 @@ const SpaceLanding: React.FC = () => {
 
       {/* No inline style needed - using useEffect to inject styles */}
     </div>
+
   );
 };
 
