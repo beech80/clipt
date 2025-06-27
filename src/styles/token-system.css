@@ -1,0 +1,206 @@
+/* Token System Styles */
+.token-system-container {
+  background-image: 
+    radial-gradient(circle at 20% 35%, rgba(139, 92, 246, 0.15), transparent 25%),
+    radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.15), transparent 20%);
+}
+
+.cosmic-card {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background-color: rgba(30, 27, 75, 0.45);
+  box-shadow: 
+    0 0 20px rgba(139, 92, 246, 0.2),
+    0 0 10px rgba(236, 72, 153, 0.1) inset;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.cosmic-card:hover {
+  box-shadow: 
+    0 0 25px rgba(139, 92, 246, 0.3),
+    0 0 15px rgba(236, 72, 153, 0.15) inset;
+}
+
+.cosmic-card-content {
+  padding: 2rem;
+}
+
+/* Activity Cards */
+.activity-card {
+  background-color: rgba(49, 46, 129, 0.3);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  transition: all 0.2s ease;
+}
+
+.activity-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.activity-icon {
+  color: #8b5cf6;
+  height: 2rem;
+  width: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.activity-text {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #e9d5ff;
+}
+
+.activity-tokens {
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+/* Token Cap Cards */
+.token-cap-card {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.2) 0%, rgba(219, 39, 119, 0.2) 100%);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  transition: all 0.2s ease;
+}
+
+.token-cap-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+}
+
+.token-cap-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #e9d5ff;
+}
+
+.token-amount {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.coin-icon {
+  color: #fbbf24;
+  height: 1.5rem;
+  width: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+/* Table Styles */
+.tier-table-header {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #a78bfa;
+  background-color: rgba(79, 70, 229, 0.2);
+}
+
+.tier-table-cell {
+  padding: 1rem;
+  vertical-align: top;
+  font-size: 0.9375rem;
+  color: #e9d5ff;
+}
+
+/* Boost Cards */
+.boost-card {
+  border-radius: 0.75rem;
+  border: 1px solid;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.boost-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+}
+
+.boost-header {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.boost-header h3 {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: white;
+}
+
+.boost-cost {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background-color: rgba(139, 92, 246, 0.2);
+  border-radius: 9999px;
+}
+
+.boost-coin {
+  color: #fbbf24;
+  height: 1rem;
+  width: 1rem;
+  margin-right: 0.25rem;
+}
+
+.boost-content {
+  padding: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.boost-icon {
+  flex-shrink: 0;
+  height: 2.5rem;
+  width: 2.5rem;
+}
+
+/* Token Tier Cards */
+.token-tier-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.token-tier-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .cosmic-card-content {
+    padding: 1.5rem;
+  }
+  
+  .boost-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .boost-content {
+    flex-direction: column;
+    text-align: center;
+  }
+}

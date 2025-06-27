@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 /**
@@ -81,23 +81,26 @@ const CleanSpaceLanding: React.FC = () => {
         <Link to="/clipts" style={{ textDecoration: 'none', position: 'relative', zIndex: 250 }}>
           <motion.button 
             style={{
-              backgroundColor: 'rgba(0, 229, 255, 0.2)',
-              border: '3px solid #00e5ff',
+              backgroundColor: '#ff6600',
+              border: 'none',
               color: '#ffffff',
-              fontSize: '1.75rem',
+              fontSize: '1.5rem',
               fontWeight: 700,
               textTransform: 'uppercase',
-              padding: '1rem 3rem',
+              padding: '0.75rem 2.5rem',
               borderRadius: '0.5rem',
               cursor: 'pointer',
               position: 'relative',
               overflow: 'hidden',
               letterSpacing: '0.1em',
-              boxShadow: '0 0 15px rgba(0, 229, 255, 0.6), 0 0 30px rgba(0, 229, 255, 0.4)',
-              textShadow: '0 0 10px #00e5ff',
+              boxShadow: '0 4px 15px rgba(255, 102, 0, 0.4)',
               zIndex: 200
             }}
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ 
+              scale: 1.05,
+              backgroundColor: '#ff7700',
+              boxShadow: '0 6px 20px rgba(255, 102, 0, 0.5)'
+            }}
             whileTap={{ scale: 0.95 }}
           >
             START GAME

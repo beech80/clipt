@@ -1,16 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BackButton } from '@/components/ui/back-button';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+import { loadStripe } from '@stripe/stripe-js';
+import { BackButton } from '@/components/ui/back-button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { EnhancedStreamPlayer } from '@/components/streaming/EnhancedStreamPlayer';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Share2, Heart, MessageSquare, Gamepad2, Zap, Trophy, Users, Sword, Eye, Scissors, DollarSign } from 'lucide-react';
-import { toast } from 'sonner';
-import { followService } from '@/services/followService';
+import { Loader2, Share2, Heart, MessageSquare, Gamepad2, Zap, Trophy, Users, Sword, Eye, Scissors, DollarSign, Bell, X } from 'lucide-react';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
+import PushNotificationTest from '@/components/PushNotificationTest';
 import styled, { keyframes } from 'styled-components';
+
+// Follow service for managing follow relationships
+const followService = {
+  follow: async (followerId: string, followeeId: string) => {
+    const { error } = await supabase
+      .from('follows')
+      .insert({ follower_id: followerId, following_id: followeeId });
+    
+    if (error) throw error;
+    return true;
+  },
+  
+  unfollow: async (followerId: string, followeeId: string) => {
+    const { error } = await supabase
+      .from('follows')
+      .delete()
+      .match({ follower_id: followerId, following_id: followeeId });
+    
+    if (error) throw error;
+    return true;
+  }
+};
 
 interface StreamData {
   id: string;
@@ -181,6 +206,10 @@ const StreamView = () => {
   const [streamer, setStreamer] = useState<StreamerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [followLoading, setFollowLoading] = useState(false);
+  const [showAchievement, setShowAchievement] = useState(false);
+  const [showBoostModal, setShowBoostModal] = useState(false);
+  const [selectedBoost, setSelectedBoost] = useState<string | null>(null);
+  const [tokenBalance, setTokenBalance] = useState(200);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
@@ -188,6 +217,7 @@ const StreamView = () => {
   const [donationMessage, setDonationMessage] = useState<string>('');
   const [isCliptModalOpen, setIsCliptModalOpen] = useState(false);
   const [clipDuration, setClipDuration] = useState<string>('30');
+  const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
 
   useEffect(() => {
     const fetchStreamData = async () => {
@@ -385,7 +415,7 @@ const StreamView = () => {
     setIsDonateModalOpen(true);
   };
   
-  const submitDonation = () => {
+  const submitDonation = async () => {
     if (!streamer) return;
     
     const amount = parseFloat(donationAmount);
@@ -394,33 +424,53 @@ const StreamView = () => {
       return;
     }
     
-    // Visual effect for donation
-    const donationElement = document.createElement('div');
-    donationElement.className = 'fixed top-1/4 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-bounce';
-    donationElement.innerHTML = `
-      <div class="flex items-center gap-2">
-        <span class="text-2xl">🎁</span>
-        <div>
-          <p class="font-bold">$${amount.toFixed(2)} Donation!</p>
-          <p>Thanks for supporting ${streamer.display_name || streamer.username}!</p>
-          ${donationMessage ? `<p class="text-sm italic mt-1">"${donationMessage}"</p>` : ''}
-        </div>
-      </div>
-    `;
-    document.body.appendChild(donationElement);
-    
-    // Remove after animation
-    setTimeout(() => {
-      donationElement.classList.add('animate-fade-out');
-      setTimeout(() => document.body.removeChild(donationElement), 1000);
-    }, 4000);
-    
-    toast.success(`Donation of $${amount.toFixed(2)} to ${streamer.display_name || streamer.username} is being processed!`);
-    setIsDonateModalOpen(false);
-    
-    // Reset donation form
-    setDonationAmount('5');
-    setDonationMessage('');
+    try {
+      // Show loading state
+      toast.loading('Processing donation...');
+      
+      // Call our backend API to create a Stripe checkout session
+      const response = await fetch('/api/create-donation-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: amount * 100, // Convert to cents for Stripe
+          streamerName: streamer.display_name || streamer.username,
+          streamerId: streamer.id,
+          message: donationMessage
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process donation');
+      }
+
+      const { sessionId } = await response.json();
+      
+      // Load Stripe and redirect to checkout
+      const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUB);
+      if (!stripe) throw new Error('Failed to load Stripe');
+      
+      const result = await stripe.redirectToCheckout({ sessionId });
+      
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+      
+      // Close modal
+      setIsDonateModalOpen(false);
+      
+      // Reset donation form (this will only happen if the redirect fails)
+      setDonationAmount('5');
+      setDonationMessage('');
+      
+    } catch (error) {
+      toast.dismiss();
+      toast.error(`Donation failed: ${error.message}`);
+      console.error('Donation error:', error);
+    }
   };
 
   const handleCliptStream = () => {
@@ -458,7 +508,7 @@ const StreamView = () => {
       
       // Add clip notification
       const clipNotification = document.createElement('div');
-      clipNotification.className = 'fixed top-20 right-4 bg-black/80 border border-orange-500 text-white px-4 py-3 rounded-lg shadow-lg z-50';
+      clipNotification.className = 'fixed top-20 right-4 bg-black/80 border border-orange-500/30 text-white px-4 py-3 rounded-lg shadow-lg z-50';
       clipNotification.innerHTML = `
         <div class="flex items-center gap-2">
           <span class="text-orange-500"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6H9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h7l4-4V8a2 2 0 0 0-2-2Z"/><path d="M15 13h3"/></svg></span>
@@ -516,7 +566,7 @@ const StreamView = () => {
           <>
             {/* Stream Title */}
             <div className="mb-4 text-center">
-              <h2 className="text-white text-md font-bold px-4 py-2 bg-black/60 rounded-lg border-l-4 border-orange-500 shadow-[0_0_15px_rgba(255,85,0,0.2)]">
+              <h2 className="text-white text-md font-bold px-4 py-2 bg-black/60 rounded-lg border-l-4 border-orange-500/30 shadow-[0_0_15px_rgba(255,85,0,0.2)]">
                 {stream?.title || 'Live Stream'}
               </h2>
             </div>
@@ -610,6 +660,48 @@ const StreamView = () => {
                 <Share2 className="h-4 w-4" />
                 Share
               </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-purple-500/20 border-purple-500/30 text-purple-500 hover:bg-purple-500/30 flex items-center gap-1"
+                onClick={() => setShowBoostModal(true)}
+              >
+                <Zap className="h-4 w-4" />
+                Boost
+              </Button>
+              <div className="stream-actions">
+                <Button
+                  variant={streamer?.is_following ? "outline" : "default"}
+                  size="sm"
+                  disabled={followLoading}
+                  onClick={handleFollowToggle}
+                  className="retro-button follow-button"
+                >
+                  {followLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {streamer?.is_following ? "Following" : "Follow"}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setNotificationDrawerOpen(true)}
+                  className="retro-button notification-button ml-2"
+                  title="Enable stream notifications"
+                >
+                  <Bell className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleShareStream}
+                  className="retro-button share-button"
+                >
+                  <Share2 className="mr-2 h-4 w-4" />
+                  Share
+                </Button>
+              </div>
             </div>
             
             {/* Chat Panel */}
@@ -772,6 +864,7 @@ const StreamView = () => {
                         size="sm"
                         className="bg-orange-500/20 border-orange-500/30 text-orange-500 hover:bg-orange-500/30"
                         onClick={submitDonation}
+                        disabled={parseFloat(donationAmount) <= 0}
                       >
                         Donate
                       </Button>

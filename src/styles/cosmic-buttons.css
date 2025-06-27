@@ -1,0 +1,127 @@
+/* Cosmic Space-Themed Buttons */
+.cosmic-button-container {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  margin-top: 15px !important;
+  gap: 10px !important;
+  background: rgba(10, 10, 30, 0.4) !important;
+  padding: 10px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2) !important;
+}
+
+.cosmic-action-button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(10, 10, 25, 0.8), rgba(20, 15, 40, 0.8));
+  border: 1px solid #3a1f7a;
+  border-radius: 4px;
+  padding: 8px 10px;
+  min-width: 20%;
+  flex: 1;
+  height: 36px;
+  transition: all 0.3s ease;
+  color: #e0e0e0;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5), inset 0 0 5px rgba(80, 0, 200, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.cosmic-action-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, var(--neon-blue), var(--neon-pink), var(--neon-purple));
+  z-index: -1;
+  filter: blur(10px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cosmic-action-button:hover {
+  transform: translateY(-3px);
+}
+
+.cosmic-action-button:hover::before {
+  opacity: 0.7;
+}
+
+.cosmic-action-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  filter: drop-shadow(0 0 2px currentColor);
+}
+
+/* Like button */
+.cosmic-action-button.like-button {
+  border-color: var(--neon-pink);
+}
+
+.cosmic-action-button.like-button:hover,
+.cosmic-action-button.like-button.active {
+  background: linear-gradient(135deg, rgba(247, 37, 133, 0.2), rgba(200, 30, 100, 0.3));
+  color: var(--neon-pink);
+  box-shadow: 0 0 15px rgba(247, 37, 133, 0.4), inset 0 0 10px rgba(247, 37, 133, 0.2);
+}
+
+.cosmic-action-button.like-button .cosmic-action-icon {
+  color: var(--neon-pink);
+}
+
+/* Comment button */
+.cosmic-action-button.comment-button {
+  border-color: var(--neon-blue);
+}
+
+.cosmic-action-button.comment-button:hover,
+.cosmic-action-button.comment-button.active {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 150, 200, 0.3));
+  color: var(--neon-blue);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.4), inset 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+.cosmic-action-button.comment-button .cosmic-action-icon {
+  color: var(--neon-blue);
+}
+
+/* Share button */
+.cosmic-action-button.share-button {
+  border-color: var(--neon-green);
+}
+
+.cosmic-action-button.share-button:hover {
+  background: linear-gradient(135deg, rgba(77, 255, 77, 0.2), rgba(30, 200, 30, 0.3));
+  color: var(--neon-green);
+  box-shadow: 0 0 15px rgba(77, 255, 77, 0.4), inset 0 0 10px rgba(77, 255, 77, 0.2);
+}
+
+.cosmic-action-button.share-button .cosmic-action-icon {
+  color: var(--neon-green);
+}
+
+/* Rank button */
+.cosmic-action-button.rank-button {
+  border-color: var(--neon-yellow);
+}
+
+.cosmic-action-button.rank-button:hover {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 180, 0, 0.3));
+  color: var(--neon-yellow);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4), inset 0 0 10px rgba(255, 215, 0, 0.2);
+}
+
+.cosmic-action-button.rank-button .cosmic-action-icon {
+  color: var(--neon-yellow);
+}

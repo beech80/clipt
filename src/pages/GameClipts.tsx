@@ -4,6 +4,7 @@ import { Search, MessageCircle, ChevronLeft, ChevronRight, Zap, X, Send, User, H
 import { motion, AnimatePresence } from 'framer-motion';
 import NavigationBar from '@/components/NavigationBar';
 import { toast } from 'sonner';
+import { loadStripe } from '@stripe/stripe-js';
 import '../styles/discovery-retro.css';
 import '../styles/navigation-bar.css';
 import '../styles/discovery-donations.css';
@@ -83,11 +84,68 @@ const GameClipts: React.FC<GameCliptsProps> = () => {
     setShowDonateForm(false);
   };
   
-  const handleDonationSubmit = (e: React.FormEvent) => {
+  const [donationAmount, setDonationAmount] = useState('');
+  const [donationMessage, setDonationMessage] = useState('');
+  const [isProcessingDonation, setIsProcessingDonation] = useState(false);
+
+  const handleDonationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success(`Donated to ${currentStream.user.name}!`);
-    setShowDonateForm(false);
-    setShowController(true);
+    
+    const amount = parseFloat(donationAmount || '5'); // Default to $5 if empty
+    
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid donation amount');
+      return;
+    }
+    
+    setIsProcessingDonation(true);
+    
+    try {
+      // Show loading toast
+      toast.loading('Processing donation...');
+      
+      // Call our backend API to create a Stripe checkout session
+      const response = await fetch('/api/create-donation-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: amount * 100, // Convert to cents for Stripe
+          streamerName: currentStream.user.name,
+          streamerId: currentStream.user.id,
+          message: donationMessage
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process donation');
+      }
+
+      const { sessionId } = await response.json();
+      
+      // Load Stripe and redirect to checkout
+      const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUB);
+      if (!stripe) throw new Error('Failed to load Stripe');
+      
+      await stripe.redirectToCheckout({ sessionId });
+      
+      // Close donation form (this will only happen if the redirect fails)
+      setShowDonateForm(false);
+      setShowController(true);
+      
+      // Reset form
+      setDonationAmount('');
+      setDonationMessage('');
+      
+    } catch (error) {
+      toast.dismiss();
+      toast.error(`Donation failed: ${error.message}`);
+      console.error('Donation error:', error);
+    } finally {
+      setIsProcessingDonation(false);
+    }
   };
   
   const handleFollowToggle = () => {
@@ -344,10 +402,34 @@ const GameClipts: React.FC<GameCliptsProps> = () => {
             
             <form onSubmit={handleDonationSubmit} className="donation-form">
               <div className="amount-options">
-                <button type="button" className="amount-option">$5</button>
-                <button type="button" className="amount-option">$10</button>
-                <button type="button" className="amount-option">$20</button>
-                <button type="button" className="amount-option">$50</button>
+                <button 
+                  type="button" 
+                  className={`amount-option ${donationAmount === '5' ? 'active' : ''}`}
+                  onClick={() => setDonationAmount('5')}
+                >
+                  $5
+                </button>
+                <button 
+                  type="button" 
+                  className={`amount-option ${donationAmount === '10' ? 'active' : ''}`}
+                  onClick={() => setDonationAmount('10')}
+                >
+                  $10
+                </button>
+                <button 
+                  type="button" 
+                  className={`amount-option ${donationAmount === '20' ? 'active' : ''}`}
+                  onClick={() => setDonationAmount('20')}
+                >
+                  $20
+                </button>
+                <button 
+                  type="button" 
+                  className={`amount-option ${donationAmount === '50' ? 'active' : ''}`}
+                  onClick={() => setDonationAmount('50')}
+                >
+                  $50
+                </button>
               </div>
               
               <div className="custom-amount">
@@ -359,6 +441,8 @@ const GameClipts: React.FC<GameCliptsProps> = () => {
                     type="number" 
                     placeholder="Enter amount"
                     min="1"
+                    value={donationAmount}
+                    onChange={(e) => setDonationAmount(e.target.value)}
                   />
                 </div>
               </div>
@@ -369,14 +453,24 @@ const GameClipts: React.FC<GameCliptsProps> = () => {
                   id="donation-message"
                   placeholder="Say something nice..."
                   rows={3}
+                  value={donationMessage}
+                  onChange={(e) => setDonationMessage(e.target.value)}
                 />
               </div>
               
               <button 
                 type="submit" 
                 className="donate-submit-button"
+                disabled={isProcessingDonation || !donationAmount || parseFloat(donationAmount) <= 0}
               >
-                <DollarSign className="h-5 w-5 mr-2" /> Send Support
+                {isProcessingDonation ? (
+                  <>Processing...</>
+                ) : (
+                  <>
+                    <DollarSign className="h-5 w-5 mr-2" /> 
+                    Send Support {donationAmount ? `($${parseFloat(donationAmount).toFixed(2)})` : ''}
+                  </>
+                )}
               </button>
             </form>
           </motion.div>

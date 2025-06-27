@@ -1,0 +1,405 @@
+/* Subscription Page Styles */
+.subscription-page {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  overflow: hidden;
+  color: white;
+  cursor: not-allowed;
+}
+
+/* Cosmic Background */
+.cosmic-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #4c1d95 100%);
+  z-index: -2;
+}
+
+.stars {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+                    radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                    radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0)),
+                    radial-gradient(2px 2px at 160px 120px, #ddd, rgba(0,0,0,0)),
+                    radial-gradient(1px 1px at 200px 90px, #fff, rgba(0,0,0,0)),
+                    radial-gradient(2px 2px at 320px 200px, #fff, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 400px 400px;
+  animation: stars-animation 180s linear infinite;
+  opacity: 0.7;
+  z-index: -1;
+}
+
+.nebula-1 {
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 80%;
+  height: 130%;
+  background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.2) 0%, rgba(0,0,0,0) 70%);
+  z-index: -1;
+}
+
+.nebula-2 {
+  position: absolute;
+  bottom: -50%;
+  left: -20%;
+  width: 80%;
+  height: 130%;
+  background: radial-gradient(ellipse at center, rgba(236, 72, 153, 0.15) 0%, rgba(0,0,0,0) 70%);
+  z-index: -1;
+}
+
+/* Subscription Container */
+.subscription-container {
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.subscription-card {
+  background: rgba(23, 25, 35, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  padding: 2rem;
+  box-shadow: 0 0 40px rgba(139, 92, 246, 0.2),
+              0 0 20px rgba(236, 72, 153, 0.1) inset;
+  position: relative;
+}
+
+/* Back Button */
+.back-button {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  color: #fff;
+  transform: translateX(-2px);
+}
+
+/* Token System Info */
+.token-system-info {
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.token-system-info h3 {
+  color: rgba(236, 72, 153, 0.9);
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.token-system-info p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+
+/* Title and Description */
+.subscription-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  margin-top: 1rem;
+  color: white;
+}
+
+.subscription-title .glow {
+  text-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
+}
+
+.subscription-description {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+}
+
+/* Tiers Container */
+.tiers-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.tier-card {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.25rem;
+  text-align: left;
+  width: 100%;
+  position: relative;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.tier-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.tier-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.tier-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tier-title h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.tier-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.pro-icon {
+  color: #4ade80; /* Green */
+}
+
+.maxed-icon {
+  color: #ec4899; /* Pink */
+}
+
+.tier-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.tier-price span {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+.tier-description {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.tier-features {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tier-features ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+
+.tier-features ul li {
+  padding: 0.3rem 0;
+  position: relative;
+  padding-left: 1.5rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.tier-features ul li:before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  color: rgba(236, 72, 153, 0.9);
+}
+
+.tier-features ul li strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Selected Tiers */
+.selected-pro {
+  background: rgba(74, 222, 128, 0.15);
+  border-color: rgba(74, 222, 128, 0.5);
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
+}
+
+.selected-maxed {
+  background: rgba(236, 72, 153, 0.15);
+  border-color: rgba(236, 72, 153, 0.5);
+  box-shadow: 0 0 20px rgba(236, 72, 153, 0.2);
+}
+
+.selected-check {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.selected-pro .selected-check {
+  background-color: #4ade80;
+  color: #0f172a;
+}
+
+.selected-maxed .selected-check {
+  background-color: #ec4899;
+  color: #0f172a;
+}
+
+/* Subscribe Button */
+.subscribe-button {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s;
+  margin-top: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.subscribe-button.active {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  border: none;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+.subscribe-button.active:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
+}
+
+.subscribe-button.disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+}
+
+.subscribe-button.loading {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  opacity: 0.8;
+  cursor: wait;
+  position: relative;
+}
+
+.subscribe-button.loading:before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top: 3px solid #fff;
+  border-radius: 50%;
+  left: 30%;
+  top: calc(50% - 10px);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Subscription Details */
+.subscription-details {
+  margin-top: 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.subscription-details small {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+}
+
+/* Animations */
+@keyframes stars-animation {
+  from { transform: translateY(0px); }
+  to { transform: translateY(-400px); }
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .subscription-card {
+    padding: 1.5rem;
+  }
+  
+  .tiers-container {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .tier-card {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .token-system-info {
+    padding: 0.8rem;
+  }
+  
+  .subscription-title {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .subscription-card {
+    padding: 1.5rem;
+  }
+  
+  .back-button {
+    top: 1rem;
+    left: 1rem;
+  }
+  
+  .subscription-title {
+    font-size: 1.5rem;
+    margin-top: 1.5rem;
+  }
+}

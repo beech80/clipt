@@ -438,9 +438,32 @@ const GameDetailsPage = () => {
         
         {/* Center section with game title */}
         <div className="text-center flex-1">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            {game ? `${game.name} Clipts` : 'Game Clipts'}
-          </h1>
+          <motion.h1 
+            className="text-3xl font-bold" 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ 
+              opacity: 1, 
+              y: 0,
+              textShadow: [
+                '0 0 4px rgba(255, 85, 85, 0.7), 0 0 8px rgba(255, 85, 85, 0.5)', 
+                '0 0 8px rgba(131, 56, 236, 0.7), 0 0 16px rgba(131, 56, 236, 0.5)', 
+                '0 0 4px rgba(255, 85, 85, 0.7), 0 0 8px rgba(255, 85, 85, 0.5)'
+              ]
+            }}
+            transition={{ 
+              duration: 2.5, 
+              repeat: Infinity, 
+              repeatType: "reverse",
+              ease: "easeInOut"
+            }}
+          >
+            <span className="inline-flex items-center">
+              <Gamepad2 className="h-6 w-6 mr-2 text-orange-400" />
+              <span className="bg-gradient-to-r from-orange-400 via-purple-400 to-blue-400 bg-clip-text text-transparent"> 
+                {game ? `${game.name} Clipts` : 'Game Clipts'}
+              </span>
+            </span>
+          </motion.h1>
         </div>
         
         {/* Notification bell */}

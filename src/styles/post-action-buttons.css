@@ -1,0 +1,149 @@
+/* Post Action Buttons with Space Theme */
+.cosmic-button-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 195, 255, 0.2);
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(0, 195, 255, 0.1);
+  margin-bottom: 1rem;
+  clear: both;
+}
+
+.post-actions-container {
+  width: 100%;
+  padding: 10px;
+  margin-top: 15px;
+  background: rgba(10, 10, 25, 0.3);
+  border-radius: 5px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.post-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.post-actions .action-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 5px;
+  border-radius: 5px;
+  background: linear-gradient(135deg, rgba(15, 15, 35, 0.8), rgba(30, 25, 60, 0.8));
+  transition: all 0.3s ease;
+  color: #e0e0e0;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: bold;
+  min-height: 36px;
+  border-width: 1px;
+  border-style: solid;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.post-actions .action-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.post-actions .action-button:hover::after {
+  opacity: 1;
+}
+
+.post-actions .action-button:hover {
+  transform: translateY(-2px);
+}
+
+/* Like button */
+.post-actions .like-button {
+  border-color: rgba(247, 37, 133, 0.5);
+}
+
+.post-actions .like-button:hover,
+.post-actions .like-button.active {
+  box-shadow: 0 0 15px rgba(247, 37, 133, 0.4);
+  color: #ff66a3;
+}
+
+/* Comment button */
+.post-actions .comment-button {
+  border-color: rgba(58, 134, 255, 0.5);
+}
+
+.post-actions .comment-button:hover,
+.post-actions .comment-button.active {
+  box-shadow: 0 0 15px rgba(58, 134, 255, 0.4);
+  color: #3a86ff;
+}
+
+/* Share button */
+.post-actions .share-button {
+  border-color: rgba(80, 250, 123, 0.5);
+}
+
+.post-actions .share-button:hover {
+  box-shadow: 0 0 15px rgba(80, 250, 123, 0.4);
+  color: #50fa7b;
+}
+
+/* Rank button */
+.post-actions .rank-button {
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.post-actions .rank-button:hover {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+}
+
+.post-actions .action-icon {
+  width: 16px;
+  height: 16px;
+  filter: drop-shadow(0 0 2px currentColor);
+}
+
+/* Add subtle glow animation to buttons on hover */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(var(--glow-color), 0.3); }
+  50% { box-shadow: 0 0 15px rgba(var(--glow-color), 0.5); }
+}
+
+.post-actions .action-button:hover {
+  animation: pulse-glow 1.5s infinite;
+}
+
+.post-actions .like-button:hover {
+  --glow-color: 247, 37, 133;
+}
+
+.post-actions .comment-button:hover {
+  --glow-color: 58, 134, 255;
+}
+
+.post-actions .share-button:hover {
+  --glow-color: 80, 250, 123;
+}
+
+.post-actions .rank-button:hover {
+  --glow-color: 255, 215, 0;
+}

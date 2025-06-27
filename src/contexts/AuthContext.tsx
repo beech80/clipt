@@ -210,7 +210,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             followers: 0,
             following: 0,
             achievements: 0,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            level: 0,
+            xp: 0,
+            prestige: 0,
+            tokens: 0
           });
           
         if (createError) {

@@ -1,0 +1,80 @@
+/* Post Modal Buttons - Cosmic Space Theme */
+.post-modal-action-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  margin-top: 0;
+  width: 100%;
+}
+
+.post-modal-action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 25, 0.8);
+  border: 1px solid var(--arcade-border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  width: 23%;
+  transition: all 0.3s ease;
+  color: #e0e0e0;
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.post-modal-action-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+}
+
+.post-modal-like-button {
+  border-color: var(--neon-pink);
+}
+
+.post-modal-like-button:hover,
+.post-modal-like-button.active {
+  background: rgba(247, 37, 133, 0.2);
+  color: var(--neon-pink);
+  box-shadow: 0 0 15px rgba(247, 37, 133, 0.7);
+}
+
+.post-modal-comment-button {
+  border-color: var(--neon-blue);
+}
+
+.post-modal-comment-button:hover,
+.post-modal-comment-button.active {
+  background: rgba(0, 255, 255, 0.2);
+  color: var(--neon-blue);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
+}
+
+.post-modal-share-button {
+  border-color: var(--neon-green);
+}
+
+.post-modal-share-button:hover {
+  background: rgba(77, 255, 77, 0.2);
+  color: var(--neon-green);
+  box-shadow: 0 0 15px rgba(77, 255, 77, 0.7);
+}
+
+.post-modal-rank-button {
+  border-color: var(--neon-yellow);
+}
+
+.post-modal-rank-button:hover {
+  background: rgba(255, 255, 0, 0.2);
+  color: var(--neon-yellow);
+  box-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
+}
+
+.post-modal-action-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 5px;
+  filter: drop-shadow(0 0 2px currentColor);
+}

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLIPT Space Landing</title>
+  <style>
+    /* Reset styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    /* Main container */
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #1A0544;
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Stars animation */
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+    
+    .stars-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .star {
+      position: absolute;
+      background-color: white;
+      border-radius: 50%;
+    }
+    
+    /* Planets */
+    .blue-planet {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      left: 80px;
+      top: 80px;
+      background-color: #3B82F6;
+      border-radius: 50%;
+    }
+    
+    .orange-planet {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      right: 80px;
+      top: 80px;
+      background-color: #F97316;
+      border-radius: 50%;
+    }
+    
+    /* Space elements */
+    .space-element {
+      position: absolute;
+      font-size: 12px;
+      color: white;
+    }
+    
+    /* Content container */
+    .content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    
+    /* Logo */
+    .logo {
+      color: white;
+      font-size: 3.75rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      margin-bottom: 3rem;
+      text-shadow: 0 0 10px rgba(255,255,255,0.8);
+    }
+    
+    /* Button grid */
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      width: 16rem;
+      margin-bottom: 2rem;
+    }
+    
+    /* Orange buttons */
+    .orange-button {
+      background-color: #F97316;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-weight: 600;
+      border-radius: 0.25rem;
+      border: none;
+      cursor: pointer;
+    }
+    
+    /* Purple button */
+    .purple-button {
+      background-color: #9333EA;
+      color: white;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.25rem;
+      width: 12rem;
+      margin-bottom: 1.5rem;
+      border: none;
+      cursor: pointer;
+    }
+    
+    /* Brown button */
+    .brown-button {
+      background-color: #92400E;
+      color: white;
+      font-weight: 600;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      border: 1px solid #78350F;
+      width: 10rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- Stars background -->
+  <div class="stars-container" id="stars-container"></div>
+  
+  <!-- Blue planet -->
+  <div class="blue-planet"></div>
+  
+  <!-- Orange planet -->
+  <div class="orange-planet"></div>
+  
+  <!-- Space elements -->
+  <div class="space-element" style="right: 120px; bottom: 120px; transform: rotate(45deg);">🛸</div>
+  <div class="space-element" style="left: 40%; bottom: 200px;">🛰️</div>
+  <div class="space-element" style="right: 30%; bottom: 40%;">✨</div>
+  
+  <!-- Main content -->
+  <div class="content">
+    <!-- Logo -->
+    <h1 class="logo">CLIPT</h1>
+    
+    <!-- Button grid -->
+    <div class="button-grid">
+      <button class="orange-button" onclick="window.location.href='/streams'">STREAMING</button>
+      <button class="orange-button" onclick="window.location.href='/posts'">POSTS</button>
+    </div>
+    
+    <!-- Game button -->
+    <button class="purple-button" onclick="window.location.href='/boost'">START GAME 🎮</button>
+    
+    <!-- Menu button -->
+    <button class="brown-button" onclick="window.location.href='/menu'">SELECT MENU</button>
+  </div>
+  
+  <script>
+    // Generate stars
+    function createStars() {
+      const starsContainer = document.getElementById('stars-container');
+      for (let i = 0; i < 200; i++) {
+        const star = document.createElement('div');
+        const size = Math.random() * 2 + 1;
+        star.className = 'star';
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.top = `${Math.random() * 100}%`;
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.opacity = Math.random() * 0.7 + 0.3;
+        star.style.animation = `twinkle ${Math.random() * 4 + 2}s infinite ${Math.random() * 3}s`;
+        starsContainer.appendChild(star);
+      }
+    }
+    
+    // Initialize stars
+    window.onload = createStars;
+  </script>
+</body>
+</html>

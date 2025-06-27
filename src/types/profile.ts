@@ -23,6 +23,18 @@ export interface Profile {
   timezone_preference?: string;
   website?: string;
   updated_at?: string;
+  level?: number;
+  xp?: number;
+  prestige?: number;
+  verified?: boolean;
+  selected_title?: string;
+  last_username_change?: string;
+  bio_description?: string;
+  custom_theme?: any;
+  font_size?: string;
+  name?: string;
+  tokens?: number;
+  [key: string]: any; // Allow for additional properties
 }
 
 export interface ProfileStats {

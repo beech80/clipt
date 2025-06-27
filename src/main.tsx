@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './index.css';
 import './styles/performance-settings.css';
+import './styles/squad-chat.css';
 import { Toaster } from 'sonner';
 
 // Create a client with proper configuration
@@ -40,6 +41,9 @@ const queryClient = new QueryClient({
   },
 });
 
+// Add debug logging to see if root element exists
+console.log('Root element found:', document.getElementById('root'));
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
@@ -50,3 +54,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+console.log('App mounted successfully');

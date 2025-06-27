@@ -1,0 +1,118 @@
+/* Post Modal Action Buttons Fix - Cosmic Theme */
+
+/* Direct targeting for post modal buttons */
+.post-modal button.like-button,
+.post-modal button.comment-button, 
+.post-modal button.share-button, 
+.post-modal button.rank-button {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 1 1 auto !important;
+  width: auto !important;
+  max-width: 25% !important;
+  margin: 0 5px !important;
+  text-align: center !important;
+  padding: 8px 5px !important;
+  border-radius: 4px !important;
+  background: linear-gradient(135deg, rgba(10, 10, 25, 0.8), rgba(25, 20, 40, 0.8)) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+.post-modal .post-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 10px !important;
+  gap: 12px !important;
+  width: 100% !important;
+  margin-top: 15px !important;
+  background: rgba(15, 10, 35, 0.5) !important;
+  border-radius: 5px !important;
+  border: 1px solid rgba(150, 0, 255, 0.2) !important;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3) !important;
+  z-index: 10 !important;
+}
+
+.post-modal .like-button, 
+.post-modal .comment-button,
+.post-modal .share-button,
+.post-modal .rank-button {
+  flex: 1 !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 5px !important;
+  background: linear-gradient(135deg, rgba(10, 10, 25, 0.8), rgba(25, 20, 40, 0.8)) !important;
+  border-radius: 4px !important;
+  padding: 8px 6px !important;
+  min-height: 36px !important;
+  max-width: none !important;
+  width: auto !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  transition: all 0.3s ease !important;
+  border: 1px solid rgba(100, 100, 255, 0.3) !important;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2) !important;
+  color: #e0e0e0 !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.post-modal .like-button:hover, 
+.post-modal .comment-button:hover,
+.post-modal .share-button:hover,
+.post-modal .rank-button:hover {
+  transform: translateY(-2px) !important;
+  filter: brightness(1.2) !important;
+}
+
+.post-modal .like-button {
+  border-color: rgba(255, 50, 150, 0.5) !important;
+}
+
+.post-modal .like-button:hover,
+.post-modal .like-button.active {
+  box-shadow: 0 0 15px rgba(255, 50, 150, 0.5) !important;
+  color: #ff66a3 !important;
+}
+
+.post-modal .comment-button {
+  border-color: rgba(0, 210, 255, 0.5) !important;
+}
+
+.post-modal .comment-button:hover,
+.post-modal .comment-button.active {
+  box-shadow: 0 0 15px rgba(0, 210, 255, 0.5) !important;
+  color: #33d6ff !important;
+}
+
+.post-modal .share-button {
+  border-color: rgba(50, 255, 100, 0.5) !important;
+}
+
+.post-modal .share-button:hover {
+  box-shadow: 0 0 15px rgba(50, 255, 100, 0.5) !important;
+  color: #66ffaa !important;
+}
+
+.post-modal .rank-button {
+  border-color: rgba(255, 215, 0, 0.5) !important;
+}
+
+.post-modal .rank-button:hover {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5) !important;
+  color: #ffd700 !important;
+}
+
+/* Set icons to proper size */
+.post-modal .action-icon {
+  width: 16px !important;
+  height: 16px !important;
+  filter: drop-shadow(0 0 2px currentColor) !important;
+}

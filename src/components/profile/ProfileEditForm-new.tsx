@@ -5,7 +5,8 @@ import { useAuth } from "@/contexts/AuthContext"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { Camera, AlertCircle, Check, Loader2, User, Globe, Edit3, RefreshCw, Star, ArrowLeft, ImageIcon, AtSign, Save } from "lucide-react"
+import { Camera, AlertCircle, Check, Loader2, User, Globe, Edit3, RefreshCw, Star, ArrowLeft, ImageIcon, AtSign, Save, Trophy, Flame, Beaker, Eye } from "lucide-react"
+import UserTitle from "../common/UserTitle"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import type { Profile } from "@/types/profile"
@@ -20,6 +21,7 @@ const profileFormSchema = z.object({
   displayName: z.string()
     .min(2, "Cosmic identity must span at least 2 characters")
     .max(50, "Cosmic identity cannot exceed 50 characters in this galaxy"),
+  selectedTitle: z.string().optional(),
   bioDescription: z.string()
     .max(500, "Your cosmic story must be under 500 characters")
     .optional(),
@@ -82,80 +84,96 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
       
       console.log('Fetching profile for user:', user.id);
       
-      // First check if profile exists
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+      try {
+        // First check if profile exists
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
 
-      if (error) {
-        console.error('Error fetching profile:', error);
-        
-        // If the profile doesn't exist, try to create one
-        if (error.code === 'PGRST116') { // PostgreSQL error for no rows returned
-          console.log('Profile not found, attempting to create one');
+        if (error) {
+          console.error('Error fetching profile:', error);
           
-          try {
-            // Create a default profile
-            const username = user.email 
-              ? user.email.split('@')[0] 
-              : `user_${Math.random().toString(36).substring(2, 10)}`;
+          // If the profile doesn't exist, try to create one
+          if (error.code === 'PGRST116') { // PostgreSQL error for no rows returned
+            console.log('Profile not found, attempting to create one');
             
-            const newProfile = {
-              id: user.id,
-              username,
-              display_name: user.user_metadata?.name || username,
-              bio: 'Welcome to my Clipt profile!',
-              avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.id}`,
-              created_at: new Date().toISOString()
-            };
-            
-            // Insert new profile
-            const { data: newData, error: createError } = await supabase
-              .from('profiles')
-              .insert(newProfile)
-              .select('*')
-              .single();
+            try {
+              // Create a default profile
+              const username = user.email 
+                ? user.email.split('@')[0] 
+                : `user_${Math.random().toString(36).substring(2, 10)}`;
               
-            if (createError) {
-              console.error('Error creating profile:', createError);
-              throw new Error('Could not create profile');
+              const newProfile = {
+                id: user.id,
+                username,
+                display_name: user.user_metadata?.name || username,
+                bio: 'Welcome to my Clipt profile!',
+                avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.id}`,
+                created_at: new Date().toISOString(),
+                level: 0,
+                xp: 0,
+                prestige: 0,
+                tokens: 0
+              };
+              
+              // Insert new profile
+              const { data: newData, error: createError } = await supabase
+                .from('profiles')
+                .insert([newProfile])
+                .select('*')
+                .single();
+              
+              if (createError) {
+                console.error('Error creating profile:', createError);
+                throw new Error('Could not create profile');
+              }
+              
+              console.log('Created new profile:', newData);
+              return newData as unknown as Profile;
+            } catch (createErr) {
+              console.error('Error in profile creation process:', createErr);
+              throw new Error('Failed to create profile');
             }
-            
-            console.log('Created new profile:', newData);
-            return newData as Profile;
-          } catch (createErr) {
-            console.error('Error in profile creation process:', createErr);
-            throw new Error('Failed to create profile');
+          }
+          
+          throw new Error('Could not load profile data');
+        }
+
+        if (!data) {
+          console.error('Profile not found for user:', user.id);
+          throw new Error('Profile not found');
+        }
+        
+        // Check username change date if it exists
+        if (data) {
+          const lastUsernameChangeField = data.last_username_change || data.username_last_changed;
+          if (lastUsernameChangeField) {
+            try {
+              const changeDate = new Date(lastUsernameChangeField);
+              const today = new Date();
+              const diffTime = today.getTime() - changeDate.getTime();
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              
+              // Can only change username once every 60 days
+              if (diffDays < 60) {
+                setCanChangeUsername(false);
+                setLastUsernameChange(changeDate);
+                setDaysUntilNextChange(60 - diffDays);
+              }
+            } catch (error) {
+              console.error('Error parsing username change date:', error);
+            }
           }
         }
         
-        throw new Error('Could not load profile data');
+        console.log('Profile data loaded:', data);
+        return data as unknown as Profile;
+      } catch (err) {
+        console.error('Error in profile data loading:', err);
+        throw new Error('Failed to load profile data');
       }
-
-      if (!data) {
-        console.error('Profile not found for user:', user.id);
-        throw new Error('Profile not found');
-      }
-      
-      // Check username change date if it exists
-      if (data.last_username_change) {
-        const changeDate = new Date(data.last_username_change);
-        const today = new Date();
-        const diffTime = today.getTime() - changeDate.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        // Can only change username once every 60 days
-        if (diffDays < 60) {
-          setCanChangeUsername(false);
-          setLastUsernameChange(changeDate);
-          setDaysUntilNextChange(60 - diffDays);
-        }
-      }
-      
-      console.log('Profile data loaded:', data);
-      return data as Profile;
     },
     refetchOnMount: true,
     refetchOnWindowFocus: false,
@@ -168,6 +186,7 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
     defaultValues: {
       username: "",
       displayName: "",
+      selectedTitle: "",
       bioDescription: "",
       website: "",
     },
@@ -179,6 +198,7 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
       form.reset({
         username: profile.username || "",
         displayName: profile.display_name || "",
+        selectedTitle: profile.selected_title || "",
         bioDescription: profile.bio || "",
         website: profile.website || "",
       })
@@ -205,7 +225,8 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
         username: values.username.trim(),
         display_name: values.displayName.trim(),
         bio: values.bioDescription?.trim() || '',
-        website: values.website?.trim() || ''
+        website: values.website?.trim() || '',
+        selected_title: values.selectedTitle || null
         // Removed updated_at field as it doesn't exist in your profiles table
       };
       console.log('Update payload prepared:', updatePayload);
@@ -581,6 +602,56 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
             <p style={{ color: '#f43f5e', fontSize: '0.75rem', marginTop: '4px' }}>
               {form.formState.errors.displayName.message}
             </p>
+          )}
+        </div>
+        
+        {/* Title Selection */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#e0e0e0', marginBottom: '6px' }}>
+            Profile Title
+            {(!profile || !profile.level || profile.level < 30) && (
+              <span style={{ marginLeft: '6px', fontSize: '0.75rem', color: '#FF5500', fontWeight: 'normal' }}>
+                (Unlocks at Level 30)
+              </span>
+            )}
+          </label>
+          <select
+            disabled={!profile || !profile.level || profile.level < 30}
+            {...form.register('selectedTitle')}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              backgroundColor: '#121212',
+              border: '1px solid #333',
+              borderRadius: '4px',
+              color: 'white',
+              appearance: 'none',
+              backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 fill=%27none%27 stroke=%27%23888%27 viewBox=%270 0 12 12%27%3E%3Cpath d=%27M2 4l4 4 4-4%27/%3E%3C/svg%3E")',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 12px center',
+              opacity: (!profile || !profile.level || profile.level < 30) ? 0.6 : 1,
+              cursor: (!profile || !profile.level || profile.level < 30) ? 'not-allowed' : 'pointer',
+            }}
+          >
+            <option value="">No Title</option>
+            <option value="clipt-legend" style={{ padding: '8px' }}>🏆 Clipt Legend</option>
+            <option value="timeline-terror" style={{ padding: '8px' }}>🔥 Timeline Terror</option>
+            <option value="the-architect" style={{ padding: '8px' }}>🌎 The Architect</option>
+            <option value="meta-maker" style={{ padding: '8px' }}>⚗️ Meta Maker</option>
+            <option value="shadow-mode" style={{ padding: '8px' }}>👁️ Shadow Mode</option>
+          </select>
+          
+          {(!profile || !profile.level || profile.level < 30) && (
+            <p style={{ fontSize: '0.75rem', color: '#9e9e9e', marginTop: '4px' }}>
+              Reach level 30 to unlock profile titles! You are currently level {profile?.level || 0}.
+            </p>
+          )}
+          
+          {form.watch('selectedTitle') && (
+            <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#121212', borderRadius: '4px', border: '1px solid #333' }}>
+              <div style={{ marginBottom: '8px', color: '#9e9e9e', fontSize: '0.85rem' }}>Title Preview:</div>
+              <UserTitle titleId={form.watch('selectedTitle')} size="large" />
+            </div>
           )}
         </div>
 

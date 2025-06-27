@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import ConnectStripeButton from '../components/ConnectStripeButton';
 import { Link, useNavigate } from "react-router-dom";
 import {
   Card,
@@ -334,7 +335,7 @@ const StreamingPage: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
               <div>Live Stream Preview</div>
-              <Badge variant={isLive ? "default" : "outline"} className={`${isLive ? 'bg-red-500' : ''}`}>
+              <Badge variant={isLive ? "default" : "outline"} className={`${isLive ? 'bg-red-500' : ''} text-white`}>
                 {isLive ? 'LIVE' : 'OFFLINE'}
               </Badge>
             </CardTitle>
@@ -352,7 +353,7 @@ const StreamingPage: React.FC = () => {
                     </Badge>
                   </div>
                   <div className="text-center cosmic-float">
-                    <div className="text-sm text-gray-400 mb-1">Your stream is live</div>
+                    <div className="text-sm text-white mb-1">Your stream is live</div>
                     <div className="flex space-x-2 justify-center">
                       <Button variant="outline" size="sm" onClick={() => setIsChatEnabled(!isChatEnabled)}>
                         {isChatEnabled ? <MessageCircle className="w-4 h-4" /> : <MessageCircle className="w-4 h-4 text-gray-500" />}
@@ -368,7 +369,7 @@ const StreamingPage: React.FC = () => {
                 </>
               ) : (
                 <div className="text-center">
-                  <p className="text-gray-400 mb-4">Start your stream to see preview</p>
+                  <p className="text-white mb-4">Start your stream to see preview</p>
                   <Button 
                     onClick={toggleLiveStatus} 
                     className="cosmic-button"
@@ -405,14 +406,7 @@ const StreamingPage: React.FC = () => {
                   size="sm" 
                   className="cosmic-pulse border-purple-500/30" 
                   onClick={() => {
-                    if (isLive) {
-                      setShowAnalytics(true);
-                    } else {
-                      toast("Analytics are available when you're live", {
-                        description: "Start streaming to see your analytics",
-                        icon: <BarChart className="w-4 h-4" />
-                      });
-                    }
+                    setShowAnalytics(true);
                   }}
                 >
                   <BarChart className="w-4 h-4 mr-1" /> Analytics
@@ -425,14 +419,22 @@ const StreamingPage: React.FC = () => {
                 >
                   <Smartphone className="w-4 h-4 mr-1" /> Mobile Stream
                 </Button>
+                
+                {/* Stripe Connect Button for Direct Payment */}
+                <ConnectStripeButton
+                  streamerId="streamer-123" /* Replace with actual user ID from your auth system */
+                  streamerName="YourStreamerName" /* Replace with actual username */
+                  streamerEmail="streamer@example.com" /* Replace with actual email */
+                  className="ml-2 h-9 text-sm"
+                />
               </div>
             </div>
           </CardContent>
           <CardFooter className="flex justify-between border-t border-purple-900/30 pt-4">
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-white">
               {isLive ? `Live for ${formatTime(streamDuration)}` : 'Stream offline'}
             </div>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-white">
               {isLive ? `${viewerCount} viewers` : 'No viewers'}
             </div>
           </CardFooter>
@@ -449,12 +451,12 @@ const StreamingPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
               <Card className="cosmic-float" style={{ background: 'rgba(20, 10, 40, 0.7)', borderColor: 'rgba(138, 43, 226, 0.4)', animationDelay: '0.1s' }}>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center">
+                  <CardTitle className="text-sm text-white flex items-center">
                     <Users className="w-4 h-4 mr-2" /> Live Viewers
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{viewerCount}</div>
+                  <div className="text-2xl font-bold text-white">{viewerCount}</div>
                   <div className="flex items-center text-xs text-green-400 mt-1">
                     <ArrowUp className="w-3 h-3 mr-1" /> +{Math.floor(viewerCount * 0.12)} since start
                   </div>
@@ -464,13 +466,13 @@ const StreamingPage: React.FC = () => {
               
               <Card className="cosmic-float" style={{ background: 'rgba(20, 10, 40, 0.7)', borderColor: 'rgba(138, 43, 226, 0.4)', animationDelay: '0.2s' }}>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center">
+                  <CardTitle className="text-sm text-white flex items-center">
                     <MessageCircle className="w-4 h-4 mr-2" /> Chat Rate
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{chatCount}</div>
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="text-2xl font-bold text-white">{chatCount}</div>
+                  <div className="text-xs text-white mt-1">
                     {Math.round(chatCount / Math.max(streamDuration / 60, 1))} msgs/min
                   </div>
                   <Progress value={Math.min((chatCount / 50) * 100, 100)} className="mt-2 bg-purple-900/20" />
@@ -479,12 +481,12 @@ const StreamingPage: React.FC = () => {
               
               <Card className="cosmic-float" style={{ background: 'rgba(20, 10, 40, 0.7)', borderColor: 'rgba(138, 43, 226, 0.4)', animationDelay: '0.3s' }}>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center">
+                  <CardTitle className="text-sm text-white flex items-center">
                     <Star className="w-4 h-4 mr-2" /> Subscriptions
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{Math.floor(viewerCount * 0.15)}</div>
+                  <div className="text-2xl font-bold text-white">{Math.floor(viewerCount * 0.15)}</div>
                   <div className="flex items-center text-xs text-green-400 mt-1">
                     <TrendingUp className="w-3 h-3 mr-1" /> +3 today
                   </div>
@@ -494,13 +496,13 @@ const StreamingPage: React.FC = () => {
               
               <Card className="cosmic-float" style={{ background: 'rgba(20, 10, 40, 0.7)', borderColor: 'rgba(138, 43, 226, 0.4)', animationDelay: '0.4s' }}>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center">
+                  <CardTitle className="text-sm text-white flex items-center">
                     <Activity className="w-4 h-4 mr-2" /> Stream Health
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">Excellent</div>
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="text-2xl font-bold text-white">Excellent</div>
+                  <div className="text-xs text-white mt-1">
                     1080p @ 60fps
                   </div>
                   <Progress value={95} className="mt-2 bg-purple-900/20" />
@@ -512,7 +514,7 @@ const StreamingPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card style={{ background: 'rgba(20, 10, 40, 0.7)', borderColor: 'rgba(138, 43, 226, 0.4)' }}>
                 <CardHeader>
-                  <CardTitle className="text-sm">Audience Demographics</CardTitle>
+                  <CardTitle className="text-sm text-white">Audience Demographics</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -584,7 +586,7 @@ const StreamingPage: React.FC = () => {
               
               <Card style={{ background: 'rgba(20, 10, 40, 0.7)', borderColor: 'rgba(138, 43, 226, 0.4)' }}>
                 <CardHeader>
-                  <CardTitle className="text-sm">Revenue & Engagement</CardTitle>
+                  <CardTitle className="text-sm text-white">Revenue & Engagement</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -593,7 +595,7 @@ const StreamingPage: React.FC = () => {
                         <GiftIcon className="w-4 h-4 mr-2 text-purple-400" />
                         <span className="text-sm">Donations</span>
                       </div>
-                      <div className="text-xl font-bold">${(viewerCount * 0.3).toFixed(2)}</div>
+                      <div className="text-xl font-bold text-white">${(viewerCount * 0.3).toFixed(2)}</div>
                       <div className="text-xs text-green-400 flex items-center">
                         <TrendingUp className="w-3 h-3 mr-1" /> +12% from last stream
                       </div>
@@ -604,7 +606,7 @@ const StreamingPage: React.FC = () => {
                         <Zap className="w-4 h-4 mr-2 text-yellow-400" />
                         <span className="text-sm">Bits/Tips</span>
                       </div>
-                      <div className="text-xl font-bold">{viewerCount * 25}</div>
+                      <div className="text-xl font-bold text-white">{viewerCount * 25}</div>
                       <div className="text-xs text-green-400 flex items-center">
                         <TrendingUp className="w-3 h-3 mr-1" /> +8% from last stream
                       </div>
@@ -758,10 +760,10 @@ const StreamingPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <Card style={{ background: 'rgba(30, 15, 50, 0.5)' }}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Peak Viewers</CardTitle>
+                    <CardTitle className="text-sm text-white">Peak Viewers</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{viewerCount + 2}</div>
+                    <div className="text-2xl font-bold text-white">{viewerCount + 2}</div>
                     <div className="text-xs text-green-400 flex items-center">
                       <TrendingUp className="w-3 h-3 mr-1" /> +5% from last stream
                     </div>
@@ -770,10 +772,10 @@ const StreamingPage: React.FC = () => {
                 
                 <Card style={{ background: 'rgba(30, 15, 50, 0.5)' }}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Chat Messages</CardTitle>
+                    <CardTitle className="text-sm text-white">Chat Messages</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{chatCount}</div>
+                    <div className="text-2xl font-bold text-white">{chatCount}</div>
                     <div className="text-xs text-green-400 flex items-center">
                       <TrendingUp className="w-3 h-3 mr-1" /> +12% from last stream
                     </div>
@@ -782,16 +784,16 @@ const StreamingPage: React.FC = () => {
                 
                 <Card style={{ background: 'rgba(30, 15, 50, 0.5)' }}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Uptime</CardTitle>
+                    <CardTitle className="text-sm text-white">Uptime</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{formatTime(streamDuration)}</div>
+                    <div className="text-2xl font-bold text-white">{formatTime(streamDuration)}</div>
                   </CardContent>
                 </Card>
                 
                 <Card style={{ background: 'rgba(30, 15, 50, 0.5)' }}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Stream Health</CardTitle>
+                    <CardTitle className="text-sm text-white">Stream Health</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center">
@@ -1007,7 +1009,7 @@ const StreamingPage: React.FC = () => {
                   <div className="rounded-lg bg-black/50 p-4 w-48 h-48 flex items-center justify-center border border-purple-500/30">
                     <div className="text-center">
                       <QRCode value="https://clipt.app/mobile-stream" size={120} className="mb-2" />
-                      <p className="text-xs text-gray-400">Scan with your phone</p>
+                      <p className="text-xs text-white">Scan with your phone</p>
                     </div>
                   </div>
                 </div>
@@ -1176,7 +1178,7 @@ const StreamingPage: React.FC = () => {
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-center justify-between px-3 py-2 border border-purple-500/10 rounded bg-gray-800/50">
                   <div className="flex items-center">
-                    <MessageCircle className="w-4 h-4 mr-2 text-gray-400" />
+                    <MessageCircle className="w-4 h-4 mr-2 text-white" />
                     <span>Chat</span>
                   </div>
                   <Button 
@@ -1191,7 +1193,7 @@ const StreamingPage: React.FC = () => {
                 
                 <div className="flex items-center justify-between px-3 py-2 border border-purple-500/10 rounded bg-gray-800/50">
                   <div className="flex items-center">
-                    <Mic className="w-4 h-4 mr-2 text-gray-400" />
+                    <Mic className="w-4 h-4 mr-2 text-white" />
                     <span>Stream Audio</span>
                   </div>
                   <Button 
@@ -1227,10 +1229,10 @@ const StreamingPage: React.FC = () => {
       <Dialog open={showAnalytics} onOpenChange={setShowAnalytics}>
         <DialogContent className="sm:max-w-[750px]" style={{ background: 'rgba(20, 10, 40, 0.95)', backdropFilter: 'blur(10px)', border: '1px solid rgba(138, 43, 226, 0.4)' }}>
           <DialogHeader>
-            <DialogTitle className="flex items-center">
+            <DialogTitle className="flex items-center text-white">
               <BarChart className="w-5 h-5 mr-2" /> Streamer Analytics Dashboard
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-white">
               Comprehensive analytics and insights for your stream
             </DialogDescription>
           </DialogHeader>
@@ -1238,17 +1240,17 @@ const StreamingPage: React.FC = () => {
           <div className="overflow-y-auto pr-1" style={{ maxHeight: 'calc(80vh - 140px)' }}>
             {/* Real-time Performance */}
             <div className="mb-6">
-              <h3 className="text-md font-bold mb-3 flex items-center text-purple-400">
+              <h3 className="text-md font-bold mb-3 flex items-center text-white">
                 <Activity className="w-4 h-4 mr-2" /> Real-time Performance
               </h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                 <Card style={{ background: 'rgba(30, 15, 50, 0.5)', borderColor: 'rgba(138, 43, 226, 0.2)' }} className="cosmic-pulse">
                   <CardHeader className="pb-2 pt-3">
-                    <CardTitle className="text-xs">CCU</CardTitle>
+                    <CardTitle className="text-xs text-white">CCU</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="text-xl font-bold">{viewerCount}</div>
+                    <div className="text-xl font-bold text-white">{viewerCount}</div>
                     <div className="flex items-center text-xs text-green-400">
                       <TrendingUp className="w-3 h-3 mr-1" /> +{Math.floor(viewerCount * 0.05)}
                     </div>
@@ -1257,34 +1259,34 @@ const StreamingPage: React.FC = () => {
                 
                 <Card style={{ background: 'rgba(30, 15, 50, 0.5)', borderColor: 'rgba(138, 43, 226, 0.2)' }} className="cosmic-pulse">
                   <CardHeader className="pb-2 pt-3">
-                    <CardTitle className="text-xs">Peak Viewers</CardTitle>
+                    <CardTitle className="text-xs text-white">Peak Viewers</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="text-xl font-bold">{viewerCount + Math.floor(viewerCount * 0.3)}</div>
-                    <div className="text-xs text-gray-400">{formatTime(streamDuration - 600)}s ago</div>
+                    <div className="text-xl font-bold text-white">{viewerCount + Math.floor(viewerCount * 0.3)}</div>
+                    <div className="text-xs text-white">{formatTime(streamDuration - 600)}s ago</div>
                   </CardContent>
                 </Card>
                 
                 <Card style={{ background: 'rgba(30, 15, 50, 0.5)', borderColor: 'rgba(138, 43, 226, 0.2)' }} className="cosmic-pulse">
                   <CardHeader className="pb-2 pt-3">
-                    <CardTitle className="text-xs">Chat Rate</CardTitle>
+                    <CardTitle className="text-xs text-white">Chat Rate</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="text-xl font-bold">{Math.round(chatCount / (streamDuration / 60))}/min</div>
+                    <div className="text-xl font-bold text-white">{Math.round(chatCount / (streamDuration / 60))}/min</div>
                     <Progress value={Math.min((chatCount / 100) * 100, 100)} className="mt-1 h-1 bg-purple-900/20" />
                   </CardContent>
                 </Card>
                 
                 <Card style={{ background: 'rgba(30, 15, 50, 0.5)', borderColor: 'rgba(138, 43, 226, 0.2)' }} className="cosmic-pulse">
                   <CardHeader className="pb-2 pt-3">
-                    <CardTitle className="text-xs">Stream Health</CardTitle>
+                    <CardTitle className="text-xs text-white">Stream Health</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="flex items-center">
                       <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                      <span className="text-lg font-medium">Excellent</span>
+                      <span className="text-lg font-medium text-white">Excellent</span>
                     </div>
-                    <div className="text-xs text-gray-400">1080p @ 60fps</div>
+                    <div className="text-xs text-white">1080p @ 60fps</div>
                   </CardContent>
                 </Card>
               </div>
@@ -1292,46 +1294,46 @@ const StreamingPage: React.FC = () => {
             
             {/* Growth Metrics */}
             <div className="mb-6">
-              <h3 className="text-md font-bold mb-3 flex items-center text-blue-400">
+              <h3 className="text-md font-bold mb-3 flex items-center text-white">
                 <TrendingUp className="w-4 h-4 mr-2" /> Growth & Engagement
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Card style={{ background: 'rgba(30, 15, 50, 0.5)', borderColor: 'rgba(138, 43, 226, 0.2)' }}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Session Metrics</CardTitle>
+                    <CardTitle className="text-sm text-white">Session Metrics</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <div className="space-y-1">
-                          <div className="text-xs text-gray-400">New Followers</div>
-                          <div className="text-lg font-bold">{Math.floor(viewerCount * 0.15)}</div>
+                          <div className="text-xs text-white">New Followers</div>
+                          <div className="text-lg font-bold text-white">{Math.floor(viewerCount * 0.15)}</div>
                         </div>
                         
                         <div className="space-y-1">
-                          <div className="text-xs text-gray-400">New Subscribers</div>
-                          <div className="text-lg font-bold">{Math.floor(viewerCount * 0.06)}</div>
+                          <div className="text-xs text-white">New Subscribers</div>
+                          <div className="text-lg font-bold text-white">{Math.floor(viewerCount * 0.06)}</div>
                         </div>
                         
                         <div className="space-y-1">
-                          <div className="text-xs text-gray-400">Avg. Watch Time</div>
-                          <div className="text-lg font-bold">{Math.floor(streamDuration * 0.45 / 60)}m</div>
+                          <div className="text-xs text-white">Avg. Watch Time</div>
+                          <div className="text-lg font-bold text-white">{Math.floor(streamDuration * 0.45 / 60)}m</div>
                         </div>
                       </div>
                       
                       <div>
                         <div className="flex justify-between items-center mb-1">
-                          <div className="text-xs font-medium">Viewer Retention</div>
-                          <div className="text-xs">{70 + Math.floor(Math.random() * 12)}%</div>
+                          <div className="text-xs font-medium text-white">Viewer Retention</div>
+                          <div className="text-xs text-white">{70 + Math.floor(Math.random() * 12)}%</div>
                         </div>
                         <Progress value={78} className="h-1.5 bg-purple-900/20" />
                       </div>
                       
                       <div>
                         <div className="flex justify-between items-center mb-1">
-                          <div className="text-xs font-medium">Chat Engagement</div>
-                          <div className="text-xs">{50 + Math.floor(Math.random() * 20)}%</div>
+                          <div className="text-xs font-medium text-white">Chat Engagement</div>
+                          <div className="text-xs text-white">{50 + Math.floor(Math.random() * 20)}%</div>
                         </div>
                         <Progress value={65} className="h-1.5 bg-purple-900/20" />
                       </div>
@@ -1341,38 +1343,38 @@ const StreamingPage: React.FC = () => {
                 
                 <Card style={{ background: 'rgba(30, 15, 50, 0.5)', borderColor: 'rgba(138, 43, 226, 0.2)' }}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Traffic Sources</CardTitle>
+                    <CardTitle className="text-sm text-white">Traffic Sources</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <div>
                         <div className="flex justify-between items-center mb-1">
-                          <div className="text-xs">Direct / Homepage</div>
-                          <div className="text-xs">{Math.floor(viewerCount * 0.45)}</div>
+                          <div className="text-xs text-white">Direct / Homepage</div>
+                          <div className="text-xs text-white">{Math.floor(viewerCount * 0.45)}</div>
                         </div>
                         <Progress value={45} className="h-1.5 bg-purple-900/20" />
                       </div>
                       
                       <div>
                         <div className="flex justify-between items-center mb-1">
-                          <div className="text-xs">Recommended</div>
-                          <div className="text-xs">{Math.floor(viewerCount * 0.30)}</div>
+                          <div className="text-xs text-white">Recommended</div>
+                          <div className="text-xs text-white">{Math.floor(viewerCount * 0.30)}</div>
                         </div>
                         <Progress value={30} className="h-1.5 bg-purple-900/20" />
                       </div>
                       
                       <div>
                         <div className="flex justify-between items-center mb-1">
-                          <div className="text-xs">Social Media</div>
-                          <div className="text-xs">{Math.floor(viewerCount * 0.15)}</div>
+                          <div className="text-xs text-white">Social Media</div>
+                          <div className="text-xs text-white">{Math.floor(viewerCount * 0.15)}</div>
                         </div>
                         <Progress value={15} className="h-1.5 bg-purple-900/20" />
                       </div>
                       
                       <div>
                         <div className="flex justify-between items-center mb-1">
-                          <div className="text-xs">External Websites</div>
-                          <div className="text-xs">{Math.floor(viewerCount * 0.10)}</div>
+                          <div className="text-xs text-white">External Websites</div>
+                          <div className="text-xs text-white">{Math.floor(viewerCount * 0.10)}</div>
                         </div>
                         <Progress value={10} className="h-1.5 bg-purple-900/20" />
                       </div>
@@ -1384,50 +1386,50 @@ const StreamingPage: React.FC = () => {
             
             {/* Revenue & Support */}
             <div className="mb-6">
-              <h3 className="text-md font-bold mb-3 flex items-center text-green-400">
+              <h3 className="text-md font-bold mb-3 flex items-center text-white">
                 <Zap className="w-4 h-4 mr-2" /> Revenue & Support
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <Card style={{ background: 'rgba(30, 15, 50, 0.5)', borderColor: 'rgba(138, 43, 226, 0.2)' }}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Donations</CardTitle>
+                    <CardTitle className="text-sm text-white">Donations</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">${(viewerCount * 0.35).toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-white">${(viewerCount * 0.35).toFixed(2)}</div>
                     <div className="flex items-center text-xs text-green-400 mt-1">
                       <TrendingUp className="w-3 h-3 mr-1" /> +18% from last stream
                     </div>
-                    <div className="text-xs text-gray-400 mt-3">Top donation: ${(viewerCount * 0.1).toFixed(2)}</div>
+                    <div className="text-xs text-white mt-3">Top donation: ${(viewerCount * 0.1).toFixed(2)}</div>
                   </CardContent>
                 </Card>
                 
                 <Card style={{ background: 'rgba(30, 15, 50, 0.5)', borderColor: 'rgba(138, 43, 226, 0.2)' }}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Subscriptions</CardTitle>
+                    <CardTitle className="text-sm text-white">Subscriptions</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">${(viewerCount * 0.25).toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-white">${(viewerCount * 0.25).toFixed(2)}</div>
                     <div className="flex items-center text-xs text-green-400 mt-1">
                       <TrendingUp className="w-3 h-3 mr-1" /> +5% from last stream
                     </div>
                     <div className="flex justify-between mt-3">
-                      <div className="text-xs text-gray-400">New subs: {Math.floor(viewerCount * 0.06)}</div>
-                      <div className="text-xs text-gray-400">Renewals: {Math.floor(viewerCount * 0.09)}</div>
+                      <div className="text-xs text-white">New subs: {Math.floor(viewerCount * 0.06)}</div>
+                      <div className="text-xs text-white">Renewals: {Math.floor(viewerCount * 0.09)}</div>
                     </div>
                   </CardContent>
                 </Card>
                 
                 <Card style={{ background: 'rgba(30, 15, 50, 0.5)', borderColor: 'rgba(138, 43, 226, 0.2)' }}>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Bits & Channel Points</CardTitle>
+                    <CardTitle className="text-sm text-white">Bits & Channel Points</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{viewerCount * 25}</div>
+                    <div className="text-2xl font-bold text-white">{viewerCount * 25}</div>
                     <div className="flex items-center text-xs text-green-400 mt-1">
                       <TrendingUp className="w-3 h-3 mr-1" /> +12% from last stream
                     </div>
-                    <div className="text-xs text-gray-400 mt-3">Channel points redeemed: {viewerCount * 250}</div>
+                    <div className="text-xs text-white mt-3">Channel points redeemed: {viewerCount * 250}</div>
                   </CardContent>
                 </Card>
               </div>
@@ -1435,7 +1437,7 @@ const StreamingPage: React.FC = () => {
             
             {/* Stream Quality Metrics */}
             <div>
-              <h3 className="text-md font-bold mb-3 flex items-center text-yellow-400">
+              <h3 className="text-md font-bold mb-3 flex items-center text-white">
                 <Server className="w-4 h-4 mr-2" /> Stream Quality
               </h3>
               
@@ -1443,33 +1445,33 @@ const StreamingPage: React.FC = () => {
                 <CardContent className="pt-4">
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
-                      <div className="text-xs text-gray-400">Resolution</div>
-                      <div className="font-medium">1920x1080</div>
+                      <div className="text-xs text-white">Resolution</div>
+                      <div className="font-medium text-white">1920x1080</div>
                     </div>
                     
                     <div className="space-y-1">
-                      <div className="text-xs text-gray-400">Framerate</div>
-                      <div className="font-medium">60 FPS</div>
+                      <div className="text-xs text-white">Framerate</div>
+                      <div className="font-medium text-white">60 FPS</div>
                     </div>
                     
                     <div className="space-y-1">
-                      <div className="text-xs text-gray-400">Bitrate</div>
-                      <div className="font-medium">6000 kbps</div>
+                      <div className="text-xs text-white">Bitrate</div>
+                      <div className="font-medium text-white">6000 kbps</div>
                     </div>
                     
                     <div className="space-y-1">
-                      <div className="text-xs text-gray-400">Dropped Frames</div>
-                      <div className="font-medium">0.05%</div>
+                      <div className="text-xs text-white">Dropped Frames</div>
+                      <div className="font-medium text-white">0.05%</div>
                     </div>
                     
                     <div className="space-y-1">
-                      <div className="text-xs text-gray-400">CPU Usage</div>
-                      <div className="font-medium">12%</div>
+                      <div className="text-xs text-white">CPU Usage</div>
+                      <div className="font-medium text-white">12%</div>
                     </div>
                     
                     <div className="space-y-1">
-                      <div className="text-xs text-gray-400">Uptime</div>
-                      <div className="font-medium">{formatTime(streamDuration)}</div>
+                      <div className="text-xs text-white">Uptime</div>
+                      <div className="font-medium text-white">{formatTime(streamDuration)}</div>
                     </div>
                   </div>
                 </CardContent>
@@ -1481,6 +1483,7 @@ const StreamingPage: React.FC = () => {
             <Button 
               variant="outline" 
               onClick={() => setShowAnalytics(false)}
+              className="text-white"
             >
               Close
             </Button>
@@ -1533,7 +1536,7 @@ const CosmicChatViewer = ({ isLive, chatCount }: { isLive: boolean; chatCount: n
   
   if (!isLive) {
     return (
-      <div className="text-center py-8 text-gray-400">
+      <div className="text-center py-8 text-white">
         <MessageSquareOff className="w-12 h-12 mx-auto mb-2 opacity-30" />
         <p>Chat is disabled while offline</p>
         <p className="text-sm mt-2">Start streaming to enable the chat</p>
@@ -1544,7 +1547,7 @@ const CosmicChatViewer = ({ isLive, chatCount }: { isLive: boolean; chatCount: n
   return (
     <div className="space-y-3">
       {chatCount === 0 ? (
-        <div className="text-center py-6 text-gray-400">
+        <div className="text-center py-6 text-white">
           <p>No chat messages yet</p>
           <p className="text-sm mt-1">Messages will appear here when viewers chat</p>
         </div>

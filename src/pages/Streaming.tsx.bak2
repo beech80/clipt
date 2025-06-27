@@ -1,0 +1,246 @@
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Copy, Eye, EyeOff, Server, Check, Video, BarChart, Share2, Shield, Zap, Settings, ChevronLeft, 
+  Users, Tv, MessageCircle, Star, GiftIcon, AlertTriangle, Rocket, Activity, Smartphone, ArrowUp, 
+  TrendingUp, Radio, Globe, Menu, Play, Pause, Mic, MicOff, Camera, PanelLeft } from "lucide-react";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+
+import CosmicChatViewer from "@/components/CosmicChatViewer";
+
+// CSS for cosmic animations and effects
+const cosmicStyles = `
+  @keyframes floatAnimation {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  @keyframes pulseGlow {
+    0% { box-shadow: 0 0 5px rgba(138, 43, 226, 0.4); }
+    50% { box-shadow: 0 0 15px rgba(138, 43, 226, 0.7); }
+    100% { box-shadow: 0 0 5px rgba(138, 43, 226, 0.4); }
+  }
+  
+  @keyframes starTwinkle {
+    0% { opacity: 0.2; }
+    50% { opacity: 0.8; }
+    100% { opacity: 0.2; }
+  }
+  
+  @keyframes cosmicPulse {
+    0% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.05); opacity: 0.9; }
+    100% { transform: scale(1); opacity: 0.7; }
+  }
+  
+  @keyframes nebulaDrift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  @keyframes cometTrail {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+    30% { opacity: 0.7; }
+    70% { opacity: 0.5; }
+    100% { transform: translateX(200%) translateY(200%) rotate(45deg); opacity: 0; }
+  }
+  
+  .cosmic-float {
+    animation: floatAnimation 6s infinite ease-in-out;
+  }
+  
+  .cosmic-pulse {
+    animation: pulseGlow 3s infinite ease-in-out;
+  }
+  
+  .cosmic-star {
+    position: absolute;
+    background-color: white;
+    border-radius: 50%;
+    width: 2px;
+    height: 2px;
+    animation: starTwinkle var(--twinkle-duration, 4s) infinite ease-in-out;
+    animation-delay: var(--twinkle-delay, 0s);
+    opacity: var(--star-opacity, 0.7);
+  }
+  
+  .cosmic-button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, rgba(128, 0, 128, 0.8), rgba(75, 0, 130, 0.8));
+  }
+  
+  .cosmic-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.6s ease;
+  }
+  
+  .cosmic-button:hover::before {
+    left: 100%;
+  }
+  
+  .cosmic-comet {
+    position: absolute;
+    width: 50px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #fff, #fff, transparent);
+    opacity: 0;
+    animation: cometTrail 6s infinite ease-out;
+    animation-delay: var(--comet-delay, 0s);
+    box-shadow: 0 0 10px 1px rgba(255, 255, 255, 0.5);
+    pointer-events: none;
+  }
+  
+  .nebula-bg {
+    background: linear-gradient(135deg, rgba(25, 25, 50, 0), rgba(60, 10, 80, 0.2), rgba(15, 15, 35, 0));
+    background-size: 400% 400%;
+    animation: nebulaDrift 15s infinite ease-in-out;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+`;
+
+// Main Streaming Page Component
+const StreamingPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("live");
+  const [showChatViewer, setShowChatViewer] = useState(false);
+  const [showStreamManager, setShowStreamManager] = useState(false);
+  const [showStreamSetup, setShowStreamSetup] = useState(false);
+  const [isLive, setIsLive] = useState(false);
+  const [streamDuration, setStreamDuration] = useState(0);
+  const [viewerCount, setViewerCount] = useState(0);
+  const [chatCount, setChatCount] = useState(0);
+  const [streamLayout, setStreamLayout] = useState("default");
+  const [isChatEnabled, setIsChatEnabled] = useState(true);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [streamTitle, setStreamTitle] = useState("");
+  const [streamCategory, setStreamCategory] = useState("gaming");
+  const [streamGame, setStreamGame] = useState("");
+  const [isCameraEnabled, setIsCameraEnabled] = useState(true);
+  const [isMicEnabled, setIsMicEnabled] = useState(true);
+
+  // Function to toggle chat viewer modal with enhanced reliability
+  const toggleChatViewer = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setShowChatViewer(!showChatViewer);
+    console.log('Chat viewer toggled:', !showChatViewer);
+  };
+
+  // Toggle stream manager
+  const toggleStreamManager = () => {
+    setShowStreamManager(!showStreamManager);
+  };
+
+  // Toggle mobile streaming setup dialog
+  const toggleStreamSetup = () => {
+    setShowStreamSetup(!showStreamSetup);
+  };
+  
+  // Function to start stream from mobile
+  const startMobileStream = () => {
+    if (!streamTitle.trim()) {
+      toast.error("Please enter a stream title");
+      return;
+    }
+    
+    setIsLive(true);
+    setShowStreamSetup(false);
+    toast.success("Mobile stream started!");
+    
+    // Simulate increasing viewers/chat
+    setViewerCount(3);
+    setChatCount(1);
+  };
+
+  // Change stream layout mode
+  const changeStreamLayout = (layout: string) => {
+    setStreamLayout(layout);
+    toast.success(`Stream layout changed to ${layout}`);
+  };
+  
+  // Function to copy to clipboard
+  const copyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        toast.success(`${type} copied to clipboard`);
+      },
+      (err) => {
+        toast.error(`Could not copy ${type.toLowerCase()}: ${err}`);
+      }
+    );
+  };
+  
+  // Handle Go Live toggle
+  const toggleLiveStatus = () => {
+    if (isLive) {
+      // End stream
+      setIsLive(false);
+      setStreamDuration(0);
+      setViewerCount(0);
+      setChatCount(0);
+      toast.success("Stream ended");
+    } else {
+      if (window.innerWidth < 768) {
+        // Mobile workflow - show setup dialog
+        setShowStreamSetup(true);
+      } else {
+        // Desktop - go live directly
+        setIsLive(true);
+        toast.success("You're now live!");
+      }
+    }
+  };
+  
+  // Effect to increment stream duration and random viewer counts while live
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (isLive) {
+      interval = setInterval(() => {
+        setStreamDuration(prev => prev + 1);
+        
+        // Randomly increase viewer counts for demo purposes
+        if (Math.random() > 0.7) {
+          setViewerCount(prev => prev + Math.floor(Math.random() * 3));
+        }
+        
+        // Randomly increase chat message counts for demo
+        if (Math.random() > 0.6) {
+          setChatCount(prev => prev + Math.floor(Math.random() * 2));
+        }
+      }, 1000);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isLive]);}
+
+export default StreamingPage;

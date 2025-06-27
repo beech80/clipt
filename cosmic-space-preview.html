@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Space Theme - Clipt</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(to bottom, #0f0524 0%, #1a0f33 50%, #250a46 100%);
+            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .space-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite alternate;
+        }
+        
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            animation: float 20s infinite alternate ease-in-out;
+        }
+        
+        .comet {
+            position: absolute;
+            top: 20%;
+            left: -5%;
+            width: 150px;
+            height: 3px;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%);
+            box-shadow: 0 0 20px rgba(255,255,255,0.8);
+            border-radius: 50%;
+            animation: cometMove 15s infinite linear;
+            transform: rotate(15deg);
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            padding: 2rem;
+            backdrop-filter: blur(5px);
+            background-color: rgba(20, 10, 40, 0.7);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 30px rgba(128, 0, 255, 0.3);
+            width: 80%;
+            max-width: 600px;
+            z-index: 10;
+        }
+        
+        .logo {
+            font-size: 3rem;
+            margin: 0 0 1rem 0;
+            text-transform: uppercase;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 128, 255, 0.8), 0 0 20px rgba(128, 0, 255, 0.5);
+            background: linear-gradient(to right, #ff00cc, #3333ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 3px;
+        }
+        
+        .tagline {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #b8a8ff;
+            text-shadow: 0 0 5px rgba(184, 168, 255, 0.5);
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 30px;
+            font-family: 'Orbitron', sans-serif;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #9c27b0, #673ab7);
+            color: white;
+            border: none;
+            box-shadow: 0 0 15px rgba(156, 39, 176, 0.7);
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 0 25px rgba(156, 39, 176, 0.9);
+            transform: translateY(-3px);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #e0cfff;
+            border: 2px solid #7e57c2;
+            box-shadow: 0 0 10px rgba(126, 87, 194, 0.4);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 0 20px rgba(126, 87, 194, 0.6);
+            transform: translateY(-3px);
+            border-color: #9575cd;
+        }
+        
+        /* Chat Section */
+        .chat-container {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(20, 10, 40, 0.95);
+            z-index: 20;
+            padding: 1rem;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background-color: rgba(25, 15, 50, 0.8);
+            border-radius: 15px;
+            margin-bottom: 1rem;
+        }
+        
+        .header-title {
+            font-size: 1.2rem;
+            color: #fff;
+            text-shadow: 0 0 5px rgba(255, 128, 255, 0.8);
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            color: #b8a8ff;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: rgba(15, 5, 30, 0.7);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .message {
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            max-width: 80%;
+            position: relative;
+        }
+        
+        .message-incoming {
+            align-self: flex-start;
+            background: linear-gradient(to right, #1a0f33, #250a46);
+            border-left: 3px solid #9c27b0;
+        }
+        
+        .message-outgoing {
+            align-self: flex-end;
+            background: linear-gradient(to left, #3a1366, #5c2a9d);
+            border-right: 3px solid #ff00cc;
+        }
+        
+        .message-username {
+            font-size: 0.8rem;
+            color: #b8a8ff;
+            margin-bottom: 0.3rem;
+        }
+        
+        .message-content {
+            color: #fff;
+        }
+        
+        .message-time {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 0.3rem;
+            text-align: right;
+        }
+        
+        .chat-input {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background-color: rgba(25, 15, 50, 0.8);
+            border-radius: 15px;
+        }
+        
+        .input-textarea {
+            flex: 1;
+            padding: 0.8rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background-color: rgba(15, 5, 30, 0.9);
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            resize: none;
+        }
+        
+        .input-textarea:focus {
+            outline: none;
+            border-color: #9c27b0;
+            box-shadow: 0 0 10px rgba(156, 39, 176, 0.5);
+        }
+        
+        .send-btn {
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(to right, #9c27b0, #673ab7);
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .send-btn:hover {
+            box-shadow: 0 0 15px rgba(156, 39, 176, 0.7);
+            transform: translateY(-2px);
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+        
+        @keyframes cometMove {
+            0% { transform: translateX(0) rotate(15deg); }
+            100% { transform: translateX(200vw) rotate(15deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="space-container" id="spaceContainer">
+        <!-- Stars and planets will be dynamically added by JavaScript -->
+        <div class="comet"></div>
+    </div>
+    
+    <div class="content" id="landingContent">
+        <h1 class="logo">Cosmic Squad</h1>
+        <p class="tagline">Connect with your cosmic squad in deep space</p>
+        
+        <div class="buttons">
+            <button class="btn btn-primary" id="enterChatBtn">Enter Chat</button>
+            <button class="btn btn-secondary" id="exploreBtn">Explore Universe</button>
+        </div>
+    </div>
+    
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <button class="back-btn" id="backBtn">←</button>
+            <div class="header-title">Cosmic Squad Chat</div>
+            <div style="width: 20px;"></div> <!-- Spacer for alignment -->
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <!-- Sample messages for preview -->
+            <div class="message message-incoming">
+                <div class="message-username">CosmicGamer</div>
+                <div class="message-content">Welcome to the squad chat! Who's online tonight?</div>
+                <div class="message-time">10:15 PM</div>
+            </div>
+            
+            <div class="message message-outgoing">
+                <div class="message-username">You</div>
+                <div class="message-content">Just arrived from the Andromeda galaxy. Ready for the cosmic stream!</div>
+                <div class="message-time">10:16 PM</div>
+            </div>
+            
+            <div class="message message-incoming">
+                <div class="message-username">StarDust</div>
+                <div class="message-content">The stream starts in 5 minutes. Everyone get your cosmic tokens ready!</div>
+                <div class="message-time">10:17 PM</div>
+            </div>
+            
+            <div class="message message-incoming">
+                <div class="message-username">NeonNinja</div>
+                <div class="message-content">I'm using my Stream Surge boost tonight. Let's hit 1000 viewers!</div>
+                <div class="message-time">10:18 PM</div>
+            </div>
+            
+            <div class="message message-outgoing">
+                <div class="message-username">You</div>
+                <div class="message-content">I've got my Chain Reaction ready to go. This is going to be epic!</div>
+                <div class="message-time">10:19 PM</div>
+            </div>
+        </div>
+        
+        <div class="chat-input">
+            <textarea class="input-textarea" placeholder="Type your cosmic message..."></textarea>
+            <button class="send-btn">Send</button>
+        </div>
+    </div>
+    
+    <script>
+        // Generate stars and planets
+        function generateCosmicObjects() {
+            const spaceContainer = document.getElementById('spaceContainer');
+            
+            // Generate stars
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.width = `${Math.random() * 3 + 1}px`;
+                star.style.height = star.style.width;
+                star.style.opacity = Math.random() * 0.8 + 0.2;
+                star.style.animationDelay = `${Math.random() * 3}s`;
+                star.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                spaceContainer.appendChild(star);
+            }
+            
+            // Generate planets
+            for (let i = 0; i < 5; i++) {
+                const planet = document.createElement('div');
+                planet.className = 'planet';
+                planet.style.top = `${Math.random() * 100}%`;
+                planet.style.left = `${Math.random() * 100}%`;
+                const size = Math.random() * 30 + 20;
+                planet.style.width = `${size}px`;
+                planet.style.height = `${size}px`;
+                
+                const hue = Math.floor(Math.random() * 360);
+                planet.style.background = `radial-gradient(circle at 30% 30%, hsl(${hue}, 70%, 60%), hsl(${hue}, 90%, 20%))`;
+                planet.style.boxShadow = `0 0 20px rgba(${hue / 360 * 255}, ${100 + hue / 360 * 155}, 255, 0.6)`;
+                
+                planet.style.animationDelay = `${Math.random() * 5}s`;
+                planet.style.animationDuration = `${Math.random() * 10 + 20}s`;
+                
+                spaceContainer.appendChild(planet);
+            }
+        }
+        
+        // Handle button clicks
+        document.getElementById('enterChatBtn').addEventListener('click', () => {
+            document.getElementById('landingContent').style.display = 'none';
+            document.getElementById('chatContainer').style.display = 'flex';
+        });
+        
+        document.getElementById('exploreBtn').addEventListener('click', () => {
+            alert('Exploring the cosmic universe!');
+        });
+        
+        document.getElementById('backBtn').addEventListener('click', () => {
+            document.getElementById('chatContainer').style.display = 'none';
+            document.getElementById('landingContent').style.display = 'block';
+        });
+        
+        // Send message on button click or Enter key
+        const messageInput = document.querySelector('.input-textarea');
+        const sendBtn = document.querySelector('.send-btn');
+        
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text) {
+                const chatMessages = document.getElementById('chatMessages');
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message message-outgoing';
+                
+                const username = document.createElement('div');
+                username.className = 'message-username';
+                username.textContent = 'You';
+                
+                const content = document.createElement('div');
+                content.className = 'message-content';
+                content.textContent = text;
+                
+                const time = document.createElement('div');
+                time.className = 'message-time';
+                const now = new Date();
+                time.textContent = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
+                
+                messageDiv.appendChild(username);
+                messageDiv.appendChild(content);
+                messageDiv.appendChild(time);
+                
+                chatMessages.appendChild(messageDiv);
+                
+                // Auto scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Clear input
+                messageInput.value = '';
+            }
+        }
+        
+        sendBtn.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        // Initialize
+        generateCosmicObjects();
+    </script>
+</body>
+</html>

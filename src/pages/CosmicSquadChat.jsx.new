@@ -1,0 +1,348 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { MessageSquare, Send, ArrowLeft, Smile, Reply, X } from 'lucide-react';
+import { toast } from 'sonner';
+
+// Amazing Cosmic Squad Chat Component with space theme
+const CosmicSquadChat = () => {
+  const { streamerId } = useParams();
+  const navigate = useNavigate();
+  
+  // Empty messages array - cleared for launch
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [pinnedMessage] = useState({
+    id: 0,
+    username: 'CosmicStreamer',
+    content: 'Welcome to the exclusive Squad Chat! Only subscribers can access this space.',
+    created_at: new Date().toISOString()
+  });
+  const [showPinnedMessage] = useState(false); // Always hide pinned message
+  const [likedMessages, setLikedMessages] = useState([]);
+  const [replyingTo, setReplyingTo] = useState(null);
+  
+  // Mention system state (cleared)
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionFilter, setMentionFilter] = useState('');
+  const [mentionIndex, setMentionIndex] = useState(0);
+  const [mentionOptions, setMentionOptions] = useState([]);
+  
+  const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  const textareaRef = useRef(null);
+  
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  
+  // Empty useEffect - no scrolling needed for empty chat
+  useEffect(() => {
+    // No scrolling needed for empty chat
+  }, []);
+  
+  // Animation variants for cosmic objects
+  const cosmicObjects = [
+    { type: 'star', top: '10%', left: '15%', size: '3px', opacity: 0.7 },
+    { type: 'star', top: '25%', left: '80%', size: '2px', opacity: 0.5 },
+    { type: 'star', top: '40%', left: '35%', size: '4px', opacity: 0.9 },
+    { type: 'star', top: '70%', left: '65%', size: '3px', opacity: 0.6 },
+    { type: 'star', top: '85%', left: '25%', size: '2px', opacity: 0.7 },
+    { type: 'planet', top: '15%', left: '75%', size: '30px', opacity: 0.9 },
+    { type: 'planet', top: '75%', left: '10%', size: '20px', opacity: 0.8 },
+    { type: 'comet', top: '30%', left: '0%', width: '50px', height: '2px', opacity: 0.8 },
+    { type: 'comet', top: '60%', left: '0%', width: '70px', height: '3px', opacity: 0.6 }
+  ];
+  
+  // Simplified filtering for mentions
+  const filteredMentionOptions = mentionFilter
+    ? mentionOptions.filter(user => 
+        user.username.toLowerCase().includes(mentionFilter.toLowerCase())
+      )
+    : mentionOptions;
+  
+  // Handle message input - simplified without token calculation
+  const handleMessageChange = (e) => {
+    const text = e.target.value;
+    setNewMessage(text);
+    
+    // Basic mention detection with @ symbol
+    const mentionMatch = text.match(/@(\w*)$/);
+    if (mentionMatch) {
+      setMentionFilter(mentionMatch[1]);
+      setShowMentions(true);
+      setMentionIndex(0);
+    } else {
+      setShowMentions(false);
+    }
+  };
+  
+  // Add mention to message input - simplified
+  const selectMention = (user) => {
+    const mentionMatch = newMessage.match(/@(\w*)$/);
+    if (mentionMatch) {
+      const startIndex = newMessage.lastIndexOf('@');
+      const newText = newMessage.substring(0, startIndex) + '@' + user.username + ' ';
+      setNewMessage(newText);
+      setShowMentions(false);
+      textareaRef.current?.focus();
+    }
+  };
+  
+  // Keyboard navigation for mentions - simplified
+  const handleKeyDown = (e) => {
+    if (showMentions && filteredMentionOptions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setMentionIndex(prev => (prev + 1) % filteredMentionOptions.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setMentionIndex(prev => (prev - 1 + filteredMentionOptions.length) % filteredMentionOptions.length);
+      } else if (e.key === 'Enter' && filteredMentionOptions[mentionIndex]) {
+        e.preventDefault();
+        selectMention(filteredMentionOptions[mentionIndex]);
+      } else if (e.key === 'Escape') {
+        setShowMentions(false);
+      }
+    } else if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+  
+  // Send a new message
+  const sendMessage = () => {
+    if (!newMessage.trim()) return;
+    
+    // Copy mentioned usernames
+    const mentions = [];
+    const mentionRegex = /@(\w+)/g;
+    let match;
+    
+    while ((match = mentionRegex.exec(newMessage)) !== null) {
+      mentions.push(match[1]);
+    }
+    
+    // Clear the input field
+    setNewMessage('');
+    setShowMentions(false);
+    setReplyingTo(null);
+    
+    // Create a new message object
+    const newMsg = {
+      id: Date.now(),
+      user_id: 'current-user',
+      username: 'You',
+      content: newMessage,
+      created_at: new Date().toISOString(),
+      avatar_url: 'https://i.pravatar.cc/150?img=33',
+      reply_to: replyingTo,
+      reply_username: replyingTo !== null 
+        ? messages.find(m => m.id === replyingTo)?.username 
+        : null
+    };
+    
+    // Add message to state
+    setMessages(prev => [...prev, newMsg]);
+    
+    // Simulate sending message
+    toast.success('Message sent!');
+    
+    // Show mention notification if applicable
+    if (mentions.length > 0) {
+      toast.success(`Mentioned ${mentions.join(', ')}!`);
+    }
+  };
+  
+  // Cancel reply
+  const cancelReply = () => {
+    setReplyingTo(null);
+  };
+  
+  // Handle back button
+  const handleBack = () => {
+    navigate(-1);
+  };
+  
+  return (
+    <div className="relative flex flex-col h-screen bg-gradient-to-b from-purple-950/20 to-indigo-950/30 overflow-hidden">
+      {/* Floating space objects */}
+      {cosmicObjects.map((obj, i) => (
+        <div key={i}
+          className={`absolute rounded-full ${obj.type === 'comet' ? 'animate-comet' : 'animate-twinkle'}`}
+          style={{
+            top: obj.top,
+            left: obj.left,
+            width: obj.size || obj.width || '2px',
+            height: obj.size || obj.height || '2px',
+            opacity: obj.opacity,
+            background: obj.type === 'star' ? 'white' : 
+                      obj.type === 'planet' ? 'radial-gradient(circle, rgba(176,108,235,1) 0%, rgba(91,33,182,1) 100%)' :
+                      'linear-gradient(90deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%)'
+          }}
+        />
+      ))}
+      
+      {/* Header */}
+      <div className="relative z-10 p-4 flex items-center border-b border-purple-900">
+        <button
+          onClick={handleBack}
+          className="mr-3 p-2 text-white hover:text-purple-300 transition-colors"
+        >
+          <ArrowLeft size={24} />
+        </button>
+        <h1 className="text-white text-xl font-bold">Squad Chat</h1>
+      </div>
+      
+      {/* Messages container - Completely empty, only showing welcome message */}
+      <div
+        ref={chatContainerRef}
+        className="relative z-10 flex-grow p-4 overflow-y-auto"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(9, 0, 20, 0.2), rgba(9, 0, 20, 0.6))',
+          backdropFilter: 'blur(5px)'
+        }}
+      >
+        {messages.length === 0 ? (
+          /* Welcome message only */
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center text-purple-300 p-8 max-w-md">
+              <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-300 mb-3">Welcome to Squad Chat</h2>
+              <p className="text-purple-200 opacity-80">This exclusive space is for subscribers only. Share your thoughts with the cosmic community.</p>
+            </div>
+          </div>
+        ) : (
+          /* Message display - will only show if user adds messages */
+          <div className="space-y-4">
+            {messages.map((message) => (
+              <div key={message.id} className="flex flex-col space-y-1">
+                {message.reply_to && (
+                  <div className="ml-8 -mb-1 flex items-center text-xs text-purple-300">
+                    <Reply size={12} className="mr-1" />
+                    <span>Replying to </span>
+                    <span className="font-bold ml-1">{message.reply_username}</span>
+                  </div>
+                )}
+                
+                <div className={`flex items-start gap-3 ${message.reply_to ? 'ml-8' : ''}`}>
+                  <img
+                    src={message.avatar_url}
+                    alt={message.username}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  
+                  <div className="flex-grow">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-white">{message.username}</span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(message.created_at).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    
+                    <div className="mt-1 text-white">{message.content}</div>
+                    
+                    <div className="mt-2 flex gap-3">
+                      <button
+                        className={`text-xs flex items-center gap-1 ${
+                          likedMessages.includes(message.id) ? 'text-rose-500' : 'text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        <Smile size={14} />
+                        <span>Like</span>
+                      </button>
+                      
+                      <button
+                        className="text-xs flex items-center gap-1 text-gray-400 hover:text-white"
+                      >
+                        <Reply size={14} />
+                        <span>Reply</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        <div ref={messagesEndRef} />
+      </div>
+      
+      {/* Reply indicator */}
+      {replyingTo !== null && (
+        <div className="relative z-10 mx-4 px-3 py-2 bg-purple-900/50 backdrop-blur-sm rounded-t-lg border-t border-l border-r border-purple-700 flex justify-between items-center">
+          <div className="flex items-center text-sm text-purple-300">
+            <Reply size={14} className="mr-1" />
+            <span>Replying to </span>
+            <span className="font-bold ml-1">
+              {messages.find(m => m.id === replyingTo)?.username}
+            </span>
+          </div>
+          
+          <button
+            onClick={cancelReply}
+            className="text-gray-400 hover:text-white"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+      
+      {/* Input area - Clean redesigned version with no gift/token features */}
+      <div className="relative z-10 px-4 pb-4 pt-2 bg-transparent backdrop-blur-sm border-t border-purple-900">
+        <div className="mt-1 text-xs text-gray-500 flex justify-between items-center px-2 mb-3">
+          <div>Press Enter to send</div>
+          <div>{new Date().toLocaleDateString()} • Cosmic Space Chat</div>
+        </div>
+        
+        {/* Simple text area for messages - no tokens functionality */}
+        <div className="mt-3">
+          <div className="relative">
+            <textarea 
+              ref={textareaRef}
+              value={newMessage}
+              onChange={handleMessageChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Share your thoughts with the squad..." 
+              className="w-full p-3 bg-purple-900/20 border border-purple-700 rounded-lg text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+              style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.15)', minHeight: '80px', resize: 'vertical' }}
+            />
+            
+            {/* Mention dropdown */}
+            {showMentions && filteredMentionOptions.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full max-h-40 overflow-y-auto rounded-md bg-purple-900/90 border border-purple-600 shadow-lg">
+                {filteredMentionOptions.map((option, idx) => (
+                  <div
+                    key={option.id}
+                    className={`px-3 py-2 flex items-center gap-2 cursor-pointer ${idx === mentionIndex ? 'bg-purple-700' : 'hover:bg-purple-800'}`}
+                    onClick={() => selectMention(option)}
+                  >
+                    {option.avatar_url && (
+                      <img src={option.avatar_url} alt={option.username} className="h-6 w-6 rounded-full" />
+                    )}
+                    <span>{option.username}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-2 flex justify-end">
+            <button 
+              onClick={sendMessage}
+              disabled={!newMessage.trim()}
+              className="px-4 py-2 bg-gradient-to-r from-purple-700 to-indigo-700 text-white rounded-md hover:from-purple-600 hover:to-indigo-600 transition-all flex items-center gap-2"
+            >
+              <Send size={16} />
+              <span>Send</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CosmicSquadChat;

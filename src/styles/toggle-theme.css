@@ -1,0 +1,38 @@
+/* Custom toggle switch colors for the space theme */
+
+/* Orange toggle for notifications and security settings */
+.orange-toggle[data-state="checked"] {
+  background-color: #FF5500 !important;
+}
+
+.orange-toggle[data-state="checked"]:hover {
+  background-color: #FF7700 !important;
+}
+
+/* Purple toggle for chat moderation */
+.purple-toggle[data-state="checked"] {
+  background-color: #5539cc !important;
+}
+
+.purple-toggle[data-state="checked"]:hover {
+  background-color: #7B68EE !important;
+}
+
+/* Animation for the toggle switch */
+[role="switch"] {
+  transition: all 0.2s ease-in-out;
+}
+
+[role="switch"][data-state="checked"] > span {
+  transform: translateX(100%);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Glow effect for toggles */
+[role="switch"][data-state="checked"] {
+  box-shadow: 0 0 8px rgba(255, 85, 0, 0.5);
+}
+
+.purple-toggle[data-state="checked"] {
+  box-shadow: 0 0 8px rgba(123, 104, 238, 0.5);
+}

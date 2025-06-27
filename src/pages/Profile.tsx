@@ -11,6 +11,7 @@ import { getSavedClipts } from '@/lib/savedClipts';
 import '../styles/gaming/profile-gaming.css';
 import { Gamepad, Medal, Clock, User, MessageSquare, Settings, Rocket, Zap, Star, Shield, Crown } from 'lucide-react';
 import '../styles/boost-store.css';
+import MaxedTierProgress from '../components/MaxedTierProgress';
 
 const Profile = () => {
   // Component state
@@ -31,6 +32,9 @@ const Profile = () => {
   const [boostActive, setBoostActive] = useState(false);
   const [showBoostStore, setShowBoostStore] = useState(false);
   const [availableBoosts, setAvailableBoosts] = useState<any[]>([]);
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [userTier, setUserTier] = useState<'free' | 'pro' | 'maxed'>('free');
+  const [subscriptionCount, setSubscriptionCount] = useState(0);
   
   // Safe profile ID handling
   const profileId = id || user?.id;
@@ -59,36 +63,36 @@ const Profile = () => {
   useEffect(() => {
     setAvailableBoosts([
       {
-        id: 'cosmic-visibility',
-        name: 'Cosmic Visibility',
-        description: 'Increase your posts visibility by 50% for 24 hours',
-        cost: 75,
+        id: 'squad-blast',
+        name: 'Squad Blast',
+        description: "Push your clip to your top 25 friends' Squads Page for 24 hours",
+        cost: 40,
         duration: '24 hours',
-        icon: <Rocket className="h-5 w-5 text-purple-400" />
+        icon: <Rocket className="h-5 w-5 text-orange-400" />
       },
       {
-        id: 'engagement-amplifier',
-        name: 'Engagement Amplifier',
-        description: 'Double your engagement rates for 12 hours',
+        id: 'chain-reaction',
+        name: 'Chain Reaction',
+        description: 'Each like/comment/share spreads your clip to 5 more users for 6 hours (stackable)',
         cost: 60,
-        duration: '12 hours',
+        duration: '6 hours',
         icon: <Zap className="h-5 w-5 text-blue-400" />
       },
       {
-        id: 'royal-treatment',
-        name: 'Royal Treatment',
-        description: 'Your profile appears at the top of discovery for 6 hours',
-        cost: 100,
-        duration: '6 hours',
+        id: 'im-the-king-now',
+        name: "I'm the King Now",
+        description: 'Place your stream in Top 10 for the selected game for 2 hours + golden crown badge',
+        cost: 80,
+        duration: '2 hours',
         icon: <Crown className="h-5 w-5 text-yellow-400" />
       },
       {
-        id: 'shield-protection',
-        name: 'Shield Protection',
-        description: 'Block any negative interactions for 48 hours',
+        id: 'stream-surge',
+        name: 'Stream Surge',
+        description: 'Push your stream to 200+ active viewers in your genre for 30 mins + trending badge',
         cost: 50,
-        duration: '48 hours',
-        icon: <Shield className="h-5 w-5 text-green-400" />
+        duration: '30 mins',
+        icon: <Zap className="h-5 w-5 text-purple-400" />
       }
     ]);
   }, []);
@@ -481,6 +485,43 @@ const Profile = () => {
         // Keep default token balance
       }
 
+      // Fetch user subscriptions
+      try {
+        const { data: subscriptionsData } = await supabase
+          .from('user_subscriptions')
+          .select('*')
+          .eq('user_id', profileId);
+        
+        if (subscriptionsData) {
+          setSubscriptions(subscriptionsData);
+          setSubscriptionCount(subscriptionsData.length);
+          
+          // Set user tier based on subscription count or direct subscription
+          if (subscriptionsData.length >= 2) {
+            setUserTier('maxed');
+          } else if (subscriptionsData.length === 1) {
+            setUserTier('pro');
+          } else {
+            // Check if user has direct maxed subscription
+            const { data: directMaxed } = await supabase
+              .from('user_subscriptions_direct')
+              .select('*')
+              .eq('user_id', profileId)
+              .eq('tier', 'maxed')
+              .single();
+            
+            if (directMaxed) {
+              setUserTier('maxed');
+            } else {
+              setUserTier('free');
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching subscriptions:', err);
+        // Keep default subscriptions
+      }
+
       // Check if user has active boost
       try {
         const { data: boostData } = await supabase
@@ -610,7 +651,11 @@ const Profile = () => {
             isOwnProfile={isOwnProfile}
             activeTab={activeTab}
             onTabChange={handleTabChange}
+            onBoostClick={toggleBoostStore}
+            onSquadChatClick={() => navigate(`/squad-chat/${profile.id}`)}
           />
+          
+          {/* Boost Store Modal */}
           
           {/* Boost Store Modal */}
           <AnimatePresence>
@@ -682,21 +727,7 @@ const Profile = () => {
             )}
           </AnimatePresence>
           
-          {/* Floating Boost Button */}
-          {isOwnProfile && (
-            <motion.button
-              className="floating-boost-button"
-              onClick={toggleBoostStore}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <Rocket className="h-6 w-6" />
-              <span>BOOSTS</span>
-            </motion.button>
-          )}
+          {/* Floating Boost Button removed - functionality moved to tab navigation */}
         </motion.div>
       </AnimatePresence>
     </>

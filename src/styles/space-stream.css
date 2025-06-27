@@ -1,0 +1,187 @@
+/* Space-themed background animations for the mobile streaming page */
+
+/* Stars background animation */
+.stars {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 800 800'%3E%3Cg fill='none' stroke='%23FFFFFF' stroke-opacity='0.2'%3E%3Ccircle r='1' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E");
+  animation: animateBg 80s linear infinite;
+}
+
+.stars2 {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 800 800'%3E%3Cg fill='%23FFFFFF' fill-opacity='0.3'%3E%3Ccircle r='1'/%3E%3C/g%3E%3C/svg%3E");
+  animation: animateBg 60s linear infinite;
+}
+
+.stars3 {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 800 800'%3E%3Cg fill='%23FFFFFF' fill-opacity='0.4'%3E%3Ccircle r='1.5'/%3E%3C/g%3E%3C/svg%3E");
+  animation: animateBg 40s linear infinite;
+}
+
+@keyframes animateBg {
+  0% { background-position: 0 0; }
+  100% { background-position: 1000px 1000px; }
+}
+
+/* Cosmic glow effects */
+.cosmic-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.3;
+  background: radial-gradient(circle, rgba(255,85,0,0.6) 0%, rgba(255,85,0,0) 70%);
+  animation: glowPulse 4s ease-in-out infinite alternate;
+}
+
+@keyframes glowPulse {
+  0% { opacity: 0.2; transform: scale(1); }
+  100% { opacity: 0.4; transform: scale(1.2); }
+}
+
+/* Animated gradient borders */
+.gradient-border {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  z-index: -1;
+  background: linear-gradient(45deg, #FF5500, #FF8800, #FF5500);
+  background-size: 200% 200%;
+  animation: gradientShift 6s ease infinite;
+  border-radius: 12px;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* Pulsing live indicator */
+.live-pulse {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #FF0000;
+  margin-right: 6px;
+  animation: livePulse 1.5s infinite;
+}
+
+@keyframes livePulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Button hover effects */
+.space-button {
+  background: linear-gradient(135deg, rgba(255,85,0,1) 0%, rgba(255,136,0,1) 100%);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 30px;
+  color: white;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(255, 85, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.space-button::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.8s;
+}
+
+.space-button:hover::before {
+  transform: translateX(100%);
+}
+
+.space-button:hover {
+  box-shadow: 0 4px 30px rgba(255, 85, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Mobile camera toggle button */
+.camera-toggle-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FF5500 0%, #FF8800 100%);
+  box-shadow: 0 4px 15px rgba(255, 85, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+.camera-toggle-button:active {
+  transform: scale(0.9);
+  box-shadow: 0 2px 8px rgba(255, 85, 0, 0.3);
+}
+
+/* Video container cosmic effects */
+.video-cosmic-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.video-cosmic-container::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: linear-gradient(135deg, rgba(255,85,0,0.1), rgba(255,136,0,0.05), rgba(88,13,155,0.1));
+  z-index: -1;
+  filter: blur(20px);
+  border-radius: 15px;
+}
+
+/* Chat message animations */
+.chat-message-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.chat-message-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.chat-message-exit {
+  opacity: 1;
+}
+
+.chat-message-exit-active {
+  opacity: 0;
+  transition: opacity 300ms;
+}
+
+/* Space theme tweaks for mobile */
+@media (max-width: 767px) {
+  .stars, .stars2, .stars3 {
+    opacity: 0.7; /* Reduce opacity slightly on mobile */
+  }
+  
+  .video-cosmic-container::after {
+    opacity: 0.6; /* Reduce glow intensity on mobile */
+  }
+}

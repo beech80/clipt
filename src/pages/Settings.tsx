@@ -12,6 +12,10 @@ import { AccessibilitySettings } from "@/components/accessibility/AccessibilityS
 import { TwoFactorSettings } from "@/components/settings/TwoFactorSettings";
 import { DataPrivacySettings } from "@/components/settings/DataPrivacySettings";
 import { StreamSettings } from "@/components/streaming/StreamSettings";
+import { ChatModerationSettings } from "@/components/streaming/ChatModerationSettings";
+import { NotificationSettings } from "@/components/settings/NotificationSettings";
+import { PerformanceSettings } from "@/components/settings/PerformanceSettings";
+import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { usePerformanceSettings } from "@/hooks/usePerformanceSettings";
 import { useAuthSecurity } from "@/hooks/useAuthSecurity";
 import {
@@ -385,296 +389,23 @@ const Settings = () => {
 
         <div className="px-4 py-6 w-full" style={{ maxWidth: '100%' }}>
           <div className="grid grid-cols-1 gap-6 w-full" style={{ padding: '0 0 80px 0' }}>
-            {/* 🔐 Security & Account */}
-            <Card className="p-6 w-full" style={{ 
-              background: '#2A1A12', 
-              borderRadius: '12px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-              border: '1px solid #3A2A22',
-              position: 'relative',
-              overflow: 'hidden',
-              width: '100%',
-              color: 'white'           
-            }}>
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '4px',
-                background: 'linear-gradient(90deg, #FF5500, #FF7700)',
-              }}></div>
-              <div className="flex items-center gap-3 mb-6">
-                <div style={{ 
-                  background: 'linear-gradient(135deg, #FF7700, #FF5500)', 
-                  width: '36px', 
-                  height: '36px', 
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 2px 6px rgba(37, 99, 235, 0.2)'
-                }}>
-                  <Shield className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-xl font-semibold text-white">Security & Account</h2>
-              </div>
-              <div className="space-y-4 relative">
-                <div style={{
-                  position: 'absolute',
-                  right: '-10px',
-                  bottom: '-10px',
-                  width: '90px',
-                  height: '90px',
-                  borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(255, 119, 0, 0.1) 0%, rgba(255, 119, 0, 0) 70%)',
-                  zIndex: 0
-                }}></div>
-                <div className="flex items-center justify-between relative z-10 hover:bg-white/10 p-2 rounded-lg transition-colors duration-200">
-                  <div className="space-y-0.5">
-                    <Label className="text-white">Two-Factor Authentication (2FA)</Label>
-                    <p className="text-sm text-gray-400">
-                      Secure your account with additional verification
-                    </p>
-                  </div>
-                  <Switch
-                    checked={profile?.enable_2fa}
-                    onCheckedChange={() => handleToggle('enable_2fa')}
-                    className="orange-toggle"
-                  />
-                </div>
-                <div className="flex items-center justify-between relative z-10 hover:bg-white/10 p-2 rounded-lg transition-colors duration-200">
-                  <div className="space-y-0.5">
-                    <Label className="text-white">Email & Phone Verification</Label>
-                    <p className="text-sm text-gray-400">
-                      Verify your contact methods for security
-                    </p>
-                  </div>
-                  <Switch
-                    checked={profile?.contact_verified}
-                    onCheckedChange={() => handleToggle('contact_verified')}
-                    className="orange-toggle"
-                  />
-                </div>
-                <Separator className="my-2" />
-                <div className="grid grid-cols-1 gap-4 mt-6 pt-4 border-t border-gray-200">
-                  <Button
-                    className="w-full transition-all duration-200 hover:scale-105" 
-                    variant="outline"
-                    onClick={handleSignOut}
-                    style={{
-                      background: 'linear-gradient(135deg, #FF3A00, #FF5500)',
-                      borderColor: '#FF7700',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      boxShadow: '0 2px 4px rgba(239, 68, 68, 0.15)'
-                    }}
-                  >
-                    <LogOut className="w-4 h-4 mr-2 text-red-600" /> Sign Out
-                  </Button>
-                
-                  <Button
-                    className="w-full transition-all duration-200 hover:scale-105" 
-                    variant="outline"
-                    style={{
-                      background: 'linear-gradient(135deg, #3A2A22, #2A1A12)',
-                      borderColor: '#FF7700',
-                      color: 'white',
-                      fontWeight: '500',
-                      boxShadow: '0 2px 4px rgba(37, 99, 235, 0.15)'
-                    }}
-                  >
-                    <HardDrive className="w-4 h-4 mr-2 text-blue-600" /> Export User Data
-                  </Button>
-                </div>
-              </div>
-            </Card>
 
-            {/* 🔔 Notifications */}
-            <Card className="p-6 w-full" style={{ 
-              background: '#2A1A12', 
-              borderRadius: '12px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-              border: '1px solid #3A2A22',
-              position: 'relative',
-              overflow: 'hidden',
-              width: '100%',
-              color: 'white'           
-            }}>
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '4px',
-                background: 'linear-gradient(90deg, #FF5500, #FF7700)',
-              }}></div>
-              <div className="flex items-center gap-3 mb-6">
-                <div style={{ 
-                  background: 'linear-gradient(135deg, #FF7700, #FF5500)', 
-                  width: '36px', 
-                  height: '36px', 
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 2px 6px rgba(219, 39, 119, 0.2)'
-                }}>
-                  <Bell className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-xl font-semibold text-white">Notifications</h2>
-              </div>
-              <div className="space-y-4 relative">
-                <div style={{
-                  position: 'absolute',
-                  right: '-10px',
-                  bottom: '-10px',
-                  width: '90px',
-                  height: '90px',
-                  borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(255, 119, 0, 0.1) 0%, rgba(255, 119, 0, 0) 70%)',
-                  zIndex: 0
-                }}></div>
-                <div className="flex items-center justify-between relative z-10 hover:bg-white/10 p-2 rounded-lg transition-colors duration-200">
-                  <div className="space-y-0.5">
-                    <Label className="text-white">Email Notifications</Label>
-                    <p className="text-sm text-gray-400">
-                      Receive important updates via email
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notificationPreferences?.email_notifications}
-                    onCheckedChange={(checked) => handleNotificationToggle('email_notifications', checked)}
-                    className="orange-toggle"
-                  />
-                </div>
-                <div className="flex items-center justify-between relative z-10 hover:bg-white/10 p-2 rounded-lg transition-colors duration-200">
-                  <div className="space-y-0.5">
-                    <Label className="text-white">Push Notifications</Label>
-                    <p className="text-sm text-gray-400">
-                      Receive real-time alerts on your device
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notificationPreferences?.push_notifications}
-                    onCheckedChange={(checked) => handleNotificationToggle('push_notifications', checked)}
-                    className="orange-toggle"
-                  />
-                </div>
-                <div className="flex items-center justify-between relative z-10 hover:bg-white/10 p-2 rounded-lg transition-colors duration-200">
-                  <div className="space-y-0.5">
-                    <Label className="text-white">Stream Alerts</Label>
-                    <p className="text-sm text-gray-400">
-                      Get notified when streamers go live
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notificationPreferences?.stream_notifications}
-                    onCheckedChange={(checked) => handleNotificationToggle('stream_notifications', checked)}
-                    className="orange-toggle"
-                  />
-                </div>
-              </div>
-            </Card>
+
+
             
-            {/* 🧠 Performance */}
-            <Card className="p-6 w-full" style={{ 
-              background: '#2A1A12', 
-              borderRadius: '12px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-              border: '1px solid #3A2A22',
-              position: 'relative',
-              overflow: 'hidden',
-              width: '100%',
-              color: 'white'           
-            }}>
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '4px',
-                background: 'linear-gradient(90deg, #FF5500, #FF7700)',
-              }}></div>
-              <div className="flex items-center gap-3 mb-6">
-                <div style={{ 
-                  background: 'linear-gradient(135deg, #FF7700, #FF5500)', 
-                  width: '36px', 
-                  height: '36px', 
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 2px 6px rgba(16, 185, 129, 0.2)'
-                }}>
-                  <Gauge className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-xl font-semibold text-white">Performance</h2>
-              </div>
-              <div className="space-y-4 relative">
-                <div style={{
-                  position: 'absolute',
-                  right: '-10px',
-                  bottom: '-10px',
-                  width: '90px',
-                  height: '90px',
-                  borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(255, 119, 0, 0.1) 0%, rgba(255, 119, 0, 0) 70%)',
-                  zIndex: 0
-                }}></div>
-                <div className="flex items-center justify-between relative z-10 hover:bg-white/10 p-2 rounded-lg transition-colors duration-200">
-                  <div className="space-y-0.5">
-                    <Label className="text-white">Hardware Acceleration</Label>
-                    <p className="text-sm text-gray-400">
-                      Use GPU for better performance
-                    </p>
-                  </div>
-                  <Switch
-                    checked={hardwareAcceleration}
-                    onCheckedChange={() => toggleHardwareAcceleration(!hardwareAcceleration)}
-                    className="orange-toggle"
-                  />
-                </div>
-                <div className="flex items-center justify-between relative z-10 hover:bg-white/10 p-2 rounded-lg transition-colors duration-200">
-                  <div className="space-y-0.5">
-                    <Label className="text-white">Reduce Animations</Label>
-                    <p className="text-sm text-gray-400">
-                      Disable animations for better performance
-                    </p>
-                  </div>
-                  <Switch
-                    checked={reduceAnimations}
-                    onCheckedChange={() => toggleReduceAnimations(!reduceAnimations)}
-                    className="orange-toggle"
-                  />
-                </div>
-                <div className="flex items-center justify-between relative z-10 hover:bg-white/10 p-2 rounded-lg transition-colors duration-200">
-                  <div className="space-y-0.5">
-                    <Label className="text-white">Background Processing</Label>
-                    <p className="text-sm text-gray-400">
-                      Allow processing when app is in background
-                    </p>
-                  </div>
-                  <Switch
-                    checked={backgroundProcessing}
-                    onCheckedChange={() => toggleBackgroundProcessing(!backgroundProcessing)}
-                    className="orange-toggle"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between relative z-10 hover:bg-white/10 p-2 rounded-lg transition-colors duration-200">
-                  <Label htmlFor="follower-notifications">Follower Notifications</Label>
-                  <Switch
-                    id="follower-notifications"
-                    checked={notificationPreferences?.follower_notifications}
-                    onCheckedChange={(checked) => handleNotificationToggle('follower_notifications', checked)}
-                    className="orange-toggle"
-                  />
-                </div>
-              </div>
-            </Card>
-
+            {/* Security & Account Settings */}
+            <SecuritySettings userId={user?.id || 'default-user'} />
+            
+            {/* Notification Settings */}
+            <NotificationSettings userId={user?.id || 'default-user'} />
+            
+            {/* Performance Settings */}
+            <PerformanceSettings userId={user?.id || 'default-user'} />
+            
             {user && <StreamSettings userId={user.id} />}
+            
+            {/* Chat Moderation Settings */}
+            <ChatModerationSettings userId={user?.id || 'default-user'} roomId={user?.id || 'default-room'} />
           </div>
         </div>
       </div>

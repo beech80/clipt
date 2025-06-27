@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Gift, MessageSquare, Video, Volume2, VolumeX, Users, Trophy, Zap, Heart, Share2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import Hls from 'hls.js';
+import { generatePlaybackUrl } from '@/config/streamingConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -39,9 +40,21 @@ interface StreamGift {
 interface EnhancedStreamPlayerProps {
   streamId: string;
   onClipCreate?: (startTime: number, endTime: number) => void;
+  // Cloudflare specific properties
+  cfStreamKey?: string;
+  cfAccountId?: string;
+  quality?: 'auto' | '1080p' | '720p' | '480p' | '360p';
+  isCloudflareStream?: boolean;
 }
 
-export const EnhancedStreamPlayer = ({ streamId, onClipCreate }: EnhancedStreamPlayerProps) => {
+export const EnhancedStreamPlayer = ({ 
+  streamId, 
+  onClipCreate,
+  cfStreamKey,
+  cfAccountId,
+  quality = 'auto',
+  isCloudflareStream = true
+}: EnhancedStreamPlayerProps) => {
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [message, setMessage] = useState('');
@@ -114,22 +127,103 @@ export const EnhancedStreamPlayer = ({ streamId, onClipCreate }: EnhancedStreamP
     refetchInterval: 1000
   });
 
-  // Initialize HLS player
+  // Initialize HLS player with Cloudflare Stream optimizations
   useEffect(() => {
-    if (!stream?.stream_url || !videoRef.current) return;
+    if (!videoRef.current) return;
+    
+    let streamUrl = stream?.stream_url;
+    
+    // If using Cloudflare Stream, generate URL from streamId
+    if (isCloudflareStream) {
+      // Generate Cloudflare Stream URL
+      streamUrl = generatePlaybackUrl(streamId);
+      
+      // Apply quality selection if specified
+      if (quality !== 'auto') {
+        streamUrl = streamUrl.replace('/manifest/video.m3u8', `/manifest/video-${quality}.m3u8`);
+      }
+      
+      console.log('Using Cloudflare Stream URL:', streamUrl);
+    } else if (!streamUrl) {
+      // No stream URL available
+      return;
+    }
 
-    const hls = new Hls({
-      enableWorker: true,
-      lowLatencyMode: true,
-    });
+    // Check if HLS.js is supported in this browser
+    if (Hls.isSupported()) {
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        // Cloudflare specific optimizations
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
+        startLevel: -1, // Auto level selection
+        abrEwmaDefaultEstimate: 500000, // Start with a 500kbps estimate
+        abrEwmaFastLive: 3.0,
+        abrEwmaSlowLive: 9.0,
+        liveSyncDurationCount: 3, // Live sync window (in segments)
+        liveMaxLatencyDurationCount: 10,
+        liveDurationInfinity: true,
+      });
 
-    hls.loadSource(stream.stream_url);
-    hls.attachMedia(videoRef.current);
+      // Handle HLS errors
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        if (data.fatal) {
+          switch(data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              console.error('HLS network error', data);
+              hls.startLoad(); // Try to recover on network errors
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              console.error('HLS media error', data);
+              hls.recoverMediaError(); // Try to recover media errors
+              break;
+            default:
+              // Cannot recover from this error
+              console.error('Fatal HLS error:', data);
+              hls.destroy();
+              break;
+          }
+        }
+      });
 
-    return () => {
-      hls.destroy();
-    };
-  }, [stream?.stream_url]);
+      // Load the stream
+      hls.loadSource(streamUrl);
+      hls.attachMedia(videoRef.current);
+      
+      // Handle successful loading
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        // Try to play when manifest is loaded
+        if (videoRef.current) {
+          videoRef.current.play().catch(e => {
+            console.warn('Auto-play prevented:', e);
+            // Most browsers require user interaction - mute to try again
+            if (videoRef.current) {
+              videoRef.current.muted = true;
+              videoRef.current.play().catch(err => console.error('Still cannot play:', err));
+            }
+          });
+        }
+      });
+
+      return () => {
+        hls.destroy();
+      };
+    }
+    // For browsers that have built-in HLS support (Safari)
+    else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+      videoRef.current.src = streamUrl;
+      videoRef.current.addEventListener('loadedmetadata', () => {
+        videoRef.current?.play().catch(e => console.warn('Auto-play prevented:', e));
+      });
+      
+      return () => {
+        if (videoRef.current) videoRef.current.src = '';
+      };
+    } else {
+      console.error('HLS playback not supported in this browser');
+    }
+  }, [streamId, stream?.stream_url, isCloudflareStream, quality]);
 
   // Subscribe to viewer count updates
   useEffect(() => {
@@ -217,17 +311,30 @@ export const EnhancedStreamPlayer = ({ streamId, onClipCreate }: EnhancedStreamP
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div className="md:col-span-3 space-y-4">
         {/* Video Player */}
-        <div className="relative w-full aspect-video bg-gradient-to-b from-purple-900/40 to-black rounded-lg overflow-hidden shadow-[0_0_15px_rgba(120,0,255,0.5)] border border-purple-500/50">
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-blue-600/10 z-0"
-            animate={{ opacity: [0.5, 0.7, 0.5] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
+        <div className="relative rounded-xl overflow-hidden w-full aspect-video bg-black">
+          {/* Cloudflare Stream watermark */}
+          {isCloudflareStream && (
+            <div className="absolute top-2 left-2 z-10 text-xs flex items-center bg-black/30 px-2 py-1 rounded-md backdrop-blur-sm">
+              <img 
+                src="https://www.cloudflare.com/favicon.ico" 
+                alt="Cloudflare" 
+                className="w-4 h-4 mr-1" 
+              />
+              <span className="text-white opacity-70">Secured by Cloudflare</span>
+            </div>
+          )}
+          
           <video
             ref={videoRef}
-            className="w-full h-full z-10 relative"
+            className="w-full h-full"
+            controls
             playsInline
+            autoPlay
+            controlsList="nodownload"
+            poster={stream?.thumbnail_url || undefined}
           />
+
+          {/* Video overlay controls */}
           <motion.div 
             className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-full text-white font-bold text-sm border border-purple-500/50 shadow-[0_0_8px_rgba(120,0,255,0.5)]"
             initial={{ opacity: 0, y: -10 }}

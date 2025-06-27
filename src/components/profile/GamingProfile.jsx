@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gamepad, Medal, Zap, Rocket, Trophy, Heart, Star, Users, MessageSquare, Eye, Award, ChevronLeft, ChevronRight, ThumbsUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,25 @@ function GamingProfile(props) {
     onTabChange,
     boostActive = false
   } = props;
+  
+  // State for follow and subscribe buttons
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const navigate = useNavigate();
+  
+  // Handle follow button click
+  const handleFollowClick = () => {
+    setIsFollowing(!isFollowing);
+    toast.success(isFollowing ? 'Unfollowed user' : 'Now following user');
+    // In production: api.toggleFollowUser(profile.id)
+  };
+  
+  // Handle subscribe button click
+  const handleSubscribeClick = () => {
+    setIsSubscribed(!isSubscribed);
+    toast.success(isSubscribed ? 'Unsubscribed from user' : 'Subscribed to user!');
+    // In production: api.toggleSubscribeUser(profile.id)
+  };
 
   // Return the cosmic space-themed UI
   return (
@@ -61,6 +80,39 @@ function GamingProfile(props) {
           <p className="text-indigo-300">
             {tokenBalance} Cosmic Tokens • {followersCount} Followers • {followingCount} Following
           </p>
+          
+          {/* Profile buttons - Follow and Subscribe */}
+          {!isOwnProfile && (
+            <div className="profile-buttons flex gap-2 flex-wrap mt-4">
+              <motion.button 
+                className="cosmic-button bg-indigo-900/40 border border-purple-500 text-white py-2 px-4 rounded-lg flex items-center"
+                whileHover={{ scale: 1.05, boxShadow: '0 0 10px rgba(139, 92, 246, 0.6)' }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleFollowClick}
+                style={{
+                  backgroundColor: isFollowing ? 'rgba(139, 92, 246, 0.3)' : 'rgba(139, 92, 246, 0.2)',
+                  boxShadow: isFollowing ? '0 0 10px rgba(147, 51, 234, 0.5)' : 'none'
+                }}
+              >
+                <Heart className={`h-4 w-4 mr-2 ${isFollowing ? 'fill-current' : ''}`} />
+                <span>{isFollowing ? 'FOLLOWING' : 'FOLLOW'}</span>
+              </motion.button>
+              
+              <motion.button 
+                className="cosmic-button bg-indigo-900/40 border border-pink-500 text-white py-2 px-4 rounded-lg flex items-center"
+                whileHover={{ scale: 1.05, boxShadow: '0 0 10px rgba(236, 72, 153, 0.6)' }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleSubscribeClick}
+                style={{
+                  backgroundColor: isSubscribed ? 'rgba(236, 72, 153, 0.3)' : 'rgba(236, 72, 153, 0.2)',
+                  boxShadow: isSubscribed ? '0 0 10px rgba(236, 72, 153, 0.5)' : 'none'
+                }}
+              >
+                <Star className={`h-4 w-4 mr-2 ${isSubscribed ? 'fill-current' : ''}`} />
+                <span>{isSubscribed ? 'SUBSCRIBED' : 'SUBSCRIBE'}</span>
+              </motion.button>
+            </div>
+          )}
         </div>
         
         {/* Tabs with cosmic styling */}

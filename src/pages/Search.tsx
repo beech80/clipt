@@ -22,6 +22,7 @@ interface User {
   isLive?: boolean;
   is_live?: boolean;
   game?: string;
+  bio?: string;
 }
 
 interface Game {
@@ -61,6 +62,52 @@ const SearchPage: React.FC = () => {
   const [searchCategory, setSearchCategory] = useState<'all' | 'users' | 'games'>('all');
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<SearchResults>({ users: [], games: [], gameClips: [] });
+
+  // Mock game clips data for the featured section
+  const mockGameClips: Clip[] = [
+    {
+      id: 'clip1',
+      title: 'Amazing play in Stellar Warfare',
+      thumbnail_url: 'https://images.unsplash.com/photo-1614729638149-e5c1f494e5d6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8Z2FtaW5nJTIwY2xpcHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
+      view_count: 12500,
+      duration: 32,
+      created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+      user: {
+        username: 'cosmicgamer',
+        display_name: 'Cosmic Gamer',
+        avatar_url: 'https://randomuser.me/api/portraits/men/32.jpg'
+      },
+      game: { id: 'game1', name: 'Stellar Warfare', cover_url: 'https://picsum.photos/300/400?random=1', viewers: 15000 }
+    },
+    {
+      id: 'clip2',
+      title: 'Unbelievable headshot in Nebula Assault',
+      thumbnail_url: 'https://images.unsplash.com/photo-1580327344181-c1163234e5a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGdhbWluZyUyMGNsaXB8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60',
+      view_count: 45300,
+      duration: 28,
+      created_at: new Date(Date.now() - 86400000 * 1).toISOString(),
+      user: {
+        username: 'stardust',
+        display_name: 'StarDust',
+        avatar_url: 'https://randomuser.me/api/portraits/women/44.jpg'
+      },
+      game: { id: 'game2', name: 'Nebula Assault', cover_url: 'https://picsum.photos/300/400?random=2', viewers: 22000 }
+    },
+    {
+      id: 'clip3',
+      title: 'Record speedrun in Galactic Raiders',
+      thumbnail_url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGdhbWluZyUyMGNsaXB8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60',
+      view_count: 8900,
+      duration: 45,
+      created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
+      user: {
+        username: 'astronova',
+        display_name: 'AstroNova',
+        avatar_url: 'https://randomuser.me/api/portraits/men/57.jpg'
+      },
+      game: { id: 'game3', name: 'Galactic Raiders', cover_url: 'https://picsum.photos/300/400?random=3', viewers: 12400 }
+    }
+  ];
 
   // Enhanced game search API configuration
   const searchAPI = {
@@ -318,79 +365,125 @@ const SearchPage: React.FC = () => {
     if (newSearchTerm.length < 1) {
       setSearchResults({ 
         users: mockUsers.slice(0, 3), 
-        games: mockGames.slice(0, 8), 
-        gameClips: mockGameClips
+        games: mockGames.slice(0, 8),
+        gameClips: mockGameClips.slice(0, 6)
       });
       return;
     }
     
     // When searching, transform the search experience
     setIsSearching(true);
-    const searchStartTime = performance.now();
     
-    // Filter users with exact matching
-    const filteredUsers = mockUsers.filter(user => {
-      const usernameLower = user.username.toLowerCase();
-      const displayNameLower = user.display_name.toLowerCase();
-      const searchTermLower = newSearchTerm.toLowerCase();
-      
-      // Exact matches get highest priority
-      if (usernameLower === searchTermLower || displayNameLower === searchTermLower) return true;
-      
-      // Next check for contained matches
-      if (usernameLower.includes(searchTermLower) || displayNameLower.includes(searchTermLower)) return true;
-      
-      return false;
-    });
+    // Debounce search to avoid excessive API calls
+    if (window.searchTimeout) {
+      clearTimeout(window.searchTimeout);
+    }
     
-    // Sort users by relevance
-    const rankedUsers = [...filteredUsers].sort((a, b) => {
-      const aUsername = a.username.toLowerCase();
-      const bUsername = b.username.toLowerCase();
-      const aDisplayName = a.display_name.toLowerCase();
-      const bDisplayName = b.display_name.toLowerCase();
-      const searchTermLower = newSearchTerm.toLowerCase();
+    window.searchTimeout = setTimeout(() => {
+      // Filter users by multiple fields with relevance scoring
+      const filteredUsers = mockUsers
+        .map(user => {
+          // Calculate match score based on where the match occurs
+          let score = 0;
+          const query = newSearchTerm.toLowerCase();
+          const username = user.username.toLowerCase();
+          const displayName = user.display_name.toLowerCase();
+          const bio = user.bio?.toLowerCase() || '';
+          
+          // Exact username match gets highest score
+          if (username === query) score += 100;
+          // Exact display name match gets high score
+          else if (displayName === query) score += 90;
+          
+          // Starts with matches
+          if (username.startsWith(query)) score += 70;
+          if (displayName.startsWith(query)) score += 60;
+          
+          // Contains matches
+          if (username.includes(query)) score += 40;
+          if (displayName.includes(query)) score += 30;
+          if (bio && bio.includes(query)) score += 20;
+          
+          // Boost for verified or popular users
+          if (user.isLive || user.is_live) score += 15;
+          if (user.followers > 10000) score += 5;
+          
+          return { ...user, relevanceScore: score };
+        })
+        .filter(user => (user as any).relevanceScore > 0)
+        .sort((a, b) => (b as any).relevanceScore - (a as any).relevanceScore)
+        .slice(0, 10);
       
-      // Exact username match - highest priority
-      if (aUsername === searchTermLower && bUsername !== searchTermLower) return -1;
-      if (bUsername === searchTermLower && aUsername !== searchTermLower) return 1;
+      // Advanced game search with fuzzy matching and relevance scoring
+      const filteredGames = mockGames
+        .map(game => {
+          let score = 0;
+          const query = newSearchTerm.toLowerCase();
+          const gameName = game.name.toLowerCase();
+          
+          // Exact game name match
+          if (gameName === query) score += 100;
+          
+          // Game name starts with query
+          if (gameName.startsWith(query)) score += 80;
+          
+          // Game name contains query
+          if (gameName.includes(query)) score += 60;
+          
+          // Word boundaries (handles matches like "Call" in "Call of Duty")
+          const words = gameName.split(' ');
+          if (words.some(word => word === query)) score += 50;
+          if (words.some(word => word.startsWith(query))) score += 40;
+          
+          // Popular games get a boost
+          if (game.viewers > 50000) score += 10;
+          else if (game.viewers > 10000) score += 5;
+          
+          return { ...game, relevanceScore: score };
+        })
+        .filter(game => (game as any).relevanceScore > 0)
+        .sort((a, b) => (b as any).relevanceScore - (a as any).relevanceScore)
+        .slice(0, 15);
       
-      // Exact display name match - next highest priority
-      if (aDisplayName === searchTermLower && bDisplayName !== searchTermLower) return -1;
-      if (bDisplayName === searchTermLower && aDisplayName !== searchTermLower) return 1;
+      // Filter game clips based on the search term
+      const filteredClips = mockGameClips
+        .filter(clip => {
+          const query = newSearchTerm.toLowerCase();
+          return (
+            clip.title.toLowerCase().includes(query) ||
+            clip.user.display_name.toLowerCase().includes(query) ||
+            clip.user.username.toLowerCase().includes(query) ||
+            clip.game?.name.toLowerCase().includes(query)
+          );
+        })
+        .slice(0, 6);
       
-      // Username starts with search term
-      if (aUsername.startsWith(searchTermLower) && !bUsername.startsWith(searchTermLower)) return -1;
-      if (bUsername.startsWith(searchTermLower) && !aUsername.startsWith(searchTermLower)) return 1;
+      // Return the filtered results with comprehensive coverage
+      setSearchResults({
+        users: filteredUsers,
+        games: filteredGames,
+        gameClips: filteredClips
+      });
       
-      // Display name starts with search term
-      if (aDisplayName.startsWith(searchTermLower) && !bDisplayName.startsWith(searchTermLower)) return -1;
-      if (bDisplayName.startsWith(searchTermLower) && !aDisplayName.startsWith(searchTermLower)) return 1;
-      
-      // Default to username alphabetical order
-      return aUsername.localeCompare(bUsername);
-    });
-    
-    // For games, use the advanced search algorithm with relevance scoring
-    const gameResults = applyAdvancedGameSearch(newSearchTerm, mockGames, 20);
-    
-    // Setting results after search complete
-    Promise.all([
-      Promise.resolve(rankedUsers),
-      Promise.resolve(gameResults)
-    ])
-    .then(([users, games]) => {
-      setSearchResults({ users, games, gameClips: [] });
       setIsSearching(false);
+    }, 300);
+  }
+
+  // Apply search when Enter key is pressed
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim() !== '') {
+      e.preventDefault();
+      setIsSearching(true);
       
-      // Performance tracking
-      const searchEndTime = performance.now();
-      console.log(`Search completed in ${searchEndTime - searchStartTime}ms`);
-    })
-    .catch(error => {
-      console.error('Search error:', error);
-      setIsSearching(false);
-    });
+      if (window.searchTimeout) {
+        clearTimeout(window.searchTimeout);
+      }
+      
+      // Immediate search on Enter
+      handleSearchInputChange({
+        target: { value: searchQuery }
+      } as React.ChangeEvent<HTMLInputElement>);
+    }
   };
 
   // Add console log to debug rendering
@@ -512,95 +605,85 @@ const SearchPage: React.FC = () => {
         {searchQuery.length <= 1 && (
           <div className="mb-8">
             
-            {/* Featured Game Clips Section */}
+
+            
+            {/* Featured Streamers Section */}
             <div className="mt-8">
               <h2 className="text-xl font-bold text-white mb-4 flex items-center">
-                <Rocket className="h-5 w-5 text-orange-500 mr-2" /> Featured Game Clips
+                <Users className="h-5 w-5 text-purple-500 mr-2" /> Featured Streamers
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {searchResults.gameClips.map(clip => (
-                  <div 
-                    key={clip.id}
-                    className="bg-gray-900/70 backdrop-blur-sm border border-indigo-500/20 rounded-lg overflow-hidden hover:border-orange-500/50 transition-all duration-300 cursor-pointer group"
-                    onClick={() => {
-                      navigate(`/clip/${clip.id}`);
-                      toast({
-                        title: "Viewing Clip",
-                        description: `${clip.title}`,
-                        duration: 2000,
-                      });
-                    }}
-                  >
-                    <div className="relative">
-                      <img 
-                        src={clip.thumbnail_url} 
-                        alt={clip.title}
-                        className="w-full h-40 object-cover"
-                      />
-                      <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
-                        {Math.floor(clip.duration / 60)}:{(clip.duration % 60).toString().padStart(2, '0')}
-                      </div>
-                      <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded flex items-center">
-                        <Heart className="h-3 w-3 mr-1" />
-                        {clip.view_count >= 1000 ? `${(clip.view_count/1000).toFixed(1)}K` : clip.view_count}
-                      </div>
-                    </div>
-                    <div className="p-3">
-                      <p className="font-medium text-white text-sm line-clamp-1 group-hover:text-orange-400 transition-colors">{clip.title}</p>
-                      <div className="flex items-center mt-2">
-                        <img 
-                          src={clip.user.avatar_url} 
-                          alt={clip.user.display_name}
-                          className="w-6 h-6 rounded-full mr-2"
-                        />
-                        <span className="text-gray-400 text-xs">{clip.user.display_name}</span>
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {mockUsers
+                  .filter(user => user.featuredScore > 75)
+                  .sort((a, b) => b.featuredScore - a.featuredScore)
+                  .slice(0, 6)
+                  .map(user => (
+                    <motion.div 
+                      key={user.id}
+                      initial={{ opacity: 0.8 }}
+                      whileHover={{ 
+                        scale: 1.03, 
+                        boxShadow: '0 0 15px rgba(147, 51, 234, 0.5)', 
+                        borderColor: 'rgba(255, 152, 0, 0.5)',
+                        transition: { duration: 0.2 }
+                      }} 
+                      className="bg-gray-900/70 backdrop-blur-sm border border-purple-500/20 rounded-lg overflow-hidden cursor-pointer"
+                      onClick={() => {
+                        navigate(`/profile/${user.username}`);
+                        toast({
+                          title: "Featured Creator",
+                          description: `Exploring ${user.display_name}'s cosmic content`,
+                          duration: 2000,
+                        });
+                      }}
+                    >
+                      <div className="relative p-4">
                         <div className="flex items-center">
-                          <Rocket className="h-3 w-3 text-purple-400 mr-1" />
-                          <span className="text-purple-400 text-xs">{clip.game?.name}</span>
+                          <div className="relative">
+                            <img 
+                              src={user.avatar_url} 
+                              alt={user.display_name} 
+                              className="w-14 h-14 rounded-full object-cover border-2 border-purple-500/50" 
+                            />
+                            {user.isLive && (
+                              <div className="absolute -top-1 -right-1 bg-red-500 text-xs text-white px-1.5 py-0.5 rounded-full flex items-center">
+                                <span className="animate-pulse mr-1 h-2 w-2 block rounded-full bg-white"></span>
+                                LIVE
+                              </div>
+                            )}
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-white font-medium">{user.display_name}</p>
+                            <p className="text-gray-400 text-xs">@{user.username}</p>
+                          </div>
                         </div>
-                        <span className="text-gray-500 text-xs">{new Date(clip.created_at).toLocaleDateString()}</span>
+                        
+                        <div className="mt-3 flex justify-between items-center">
+                          <div className="flex items-center">
+                            <Users className="h-3 w-3 text-purple-400 mr-1" />
+                            <span className="text-purple-300 text-xs">{user.followers.toLocaleString()} followers</span>
+                          </div>
+                          {user.primaryGame && (
+                            <div className="flex items-center">
+                              <Rocket className="h-3 w-3 text-orange-400 mr-1" />
+                              <span className="text-orange-300 text-xs">{user.primaryGame}</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {user.isLive && user.currentViewers && (
+                          <div className="mt-2 w-full bg-gray-800 rounded-full h-1.5">
+                            <div 
+                              className="bg-gradient-to-r from-purple-500 to-orange-500 h-1.5 rounded-full" 
+                              style={{ width: `${Math.min(user.currentViewers / 100, 100)}%` }}
+                            ></div>
+                            <p className="text-gray-400 text-xs mt-1">{user.currentViewers.toLocaleString()} viewers</p>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    </motion.div>
+                  ))}
               </div>
-            </div>
-            
-            <h2 className="text-xl font-bold text-white mb-4">Featured Streamers</h2>
-            <div className="space-y-3">
-              {/* Always show some sample streamers */}
-              {mockUsers.slice(0, 5).map(user => (
-                <div 
-                  key={user.id} 
-                  className="flex items-center bg-gray-800 p-3 rounded-md hover:bg-gray-700 cursor-pointer"
-                  onClick={() => {
-                    // Navigate to user profile page
-                    navigate(`/profile/${user.username}`);
-                    toast({
-                      title: "User Profile",
-                      description: `Viewing ${user.display_name}'s content`,
-                      duration: 2000,
-                    });
-                  }}
-                >
-                  <img src={user.avatar_url} alt={user.display_name} className="w-12 h-12 rounded-full mr-3" />
-                  <div>
-                    <p className="text-white font-medium">{user.display_name}</p>
-                    <p className="text-gray-400 text-sm">@{user.username} • {user.followers.toLocaleString()} followers</p>
-                  </div>
-                  <div className="ml-auto flex items-center gap-2">
-                    {user.isLive && (
-                      <span className="bg-red-600 text-white text-xs px-2 py-1 rounded">LIVE</span>
-                    )}
-                    <div className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-700">
-                      <ArrowLeft size={14} className="transform rotate-180 text-gray-300" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {/* Browse all users link removed */}
             </div>
           </div>
         )}
@@ -687,12 +770,12 @@ const SearchPage: React.FC = () => {
                       key={game.id} 
                       className="bg-gray-800 rounded-lg overflow-hidden hover:bg-gray-700 transition-colors cursor-pointer"
                       onClick={() => {
-                        // Main hub for game content showing all streams and clips
+                        // Route to GameDetailsPage with tabs for clips and streamers
                         navigate(`/game/${game.id}`);
                         toast({
-                          title: "Game Content Hub",
-                          description: `All streams and clips for ${game.name}`,
-                          duration: 2000,
+                          title: `${game.name} Clipts`,
+                          description: `Exploring all ${game.name} content in cosmic space`,
+                          duration: 3000,
                         });
                       }}
                     >

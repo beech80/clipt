@@ -1,0 +1,843 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Users, ChevronLeft, Share2, MessageCircle, DollarSign, RefreshCw, Twitter, Facebook, Mail, Clipboard, Star, X, Send, Scissors } from 'lucide-react';
+import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
+import styled from 'styled-components';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+
+// Define the Streamer interface
+interface Streamer {
+  id: string;
+  streamerName: string;
+  gameName: string;
+  viewerCount: number;
+  genres: string[];
+  thumbnailUrl: string;
+  isLive: boolean;
+  avatarSeed: string;
+}
+
+// Styled Components and keyframe animations
+const pulsateKeyframes = `
+  @keyframes pulsate {
+    0% { opacity: 0.8; text-shadow: 0 0 20px rgba(255,85,0,0.3); }
+    50% { opacity: 1; text-shadow: 0 0 30px rgba(255,85,0,0.6), 0 0 60px rgba(255,85,0,0.3); }
+    100% { opacity: 0.8; text-shadow: 0 0 20px rgba(255,85,0,0.3); }
+  }
+
+  @keyframes animateStars {
+    0% { background-position: 0 0; }
+    100% { background-position: 500px 500px; }
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0px) scale(1); opacity: 0.5; }
+    50% { transform: translateY(-20px) scale(1.1); opacity: 0.7; }
+    100% { transform: translateY(0px) scale(1); opacity: 0.5; }
+  }
+`;
+
+const StreamContainer = styled.div`
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(to bottom, #0C0C0C, #151515, #0C0C0C);
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+  display: flex;
+  flex-direction: column;
+  ${pulsateKeyframes}
+`;
+
+const StreamHeader = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  z-index: 10;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+`;
+
+const StreamTitle = styled.h1`
+  font-size: 2rem;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255, 85, 0, 0.7), 0 0 20px rgba(255, 85, 0, 0.5);
+  margin: 0;
+  position: relative;
+  display: inline-block;
+`;
+
+const ActionButtons = styled.div`
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  padding: 15px 20px;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.8);
+  border-top: 1px solid rgba(255, 85, 0, 0.3);
+  margin-top: auto;
+`;
+
+const ActionButton = styled.button`
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid rgba(255, 85, 0, 0.7);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FF5500;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(255, 85, 0, 0.3);
+  
+  &:hover {
+    transform: scale(1.1);
+    background: rgba(255, 85, 0, 0.2);
+    box-shadow: 0 0 20px rgba(255, 85, 0, 0.5);
+  }
+`;
+
+const AllStreamers = () => {
+  const navigate = useNavigate();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [streamers, setStreamers] = useState<Streamer[]>([]);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
+  const [isCliptModalOpen, setIsCliptModalOpen] = useState(false);
+  const [selectedTier, setSelectedTier] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<Array<{user: string; message: string; time: string}>>([]);
+  const [currentMessage, setCurrentMessage] = useState('');
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Sample fallback data to display
+  const fallbackStreamers: Streamer[] = [
+    {
+      id: 'ninja_123',
+      streamerName: 'Ninja',
+      gameName: 'Stellar Odyssey',
+      viewerCount: 45000,
+      genres: ['Space', 'Adventure', 'RPG'],
+      thumbnailUrl: 'https://picsum.photos/800/450?random=1',
+      isLive: true,
+      avatarSeed: 'ninja'
+    },
+    {
+      id: 'pokimane_456',
+      streamerName: 'Pokimane',
+      gameName: 'Galactic Fleet Commander',
+      viewerCount: 32000,
+      genres: ['Strategy', 'Space', 'Simulation'],
+      thumbnailUrl: 'https://picsum.photos/800/450?random=2',
+      isLive: true,
+      avatarSeed: 'pokimane'
+    },
+    {
+      id: 'drdisrespect_789',
+      streamerName: 'DrDisrespect',
+      gameName: 'Event Horizon',
+      viewerCount: 28000,
+      genres: ['Horror', 'Space', 'Survival'],
+      thumbnailUrl: 'https://picsum.photos/800/450?random=3',
+      isLive: true,
+      avatarSeed: 'drdisrespect'
+    },
+    {
+      id: 'shroud_101',
+      streamerName: 'Shroud',
+      gameName: 'Cosmic Explorers',
+      viewerCount: 35000,
+      genres: ['Exploration', 'Space', 'Open World'],
+      thumbnailUrl: 'https://picsum.photos/800/450?random=4',
+      isLive: true,
+      avatarSeed: 'shroud'
+    },
+    {
+      id: 'tfue_202',
+      streamerName: 'Tfue',
+      gameName: 'Space Station Simulator',
+      viewerCount: 25000,
+      genres: ['Simulation', 'Building', 'Space'],
+      thumbnailUrl: 'https://picsum.photos/800/450?random=5',
+      isLive: true,
+      avatarSeed: 'tfue'
+    }
+  ];
+
+  // Navigation functions
+  const handleNextStream = () => {
+    if (currentIndex < streamers.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handlePrevStream = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  // Go back to discovery page
+  const goBack = () => {
+    navigate('/discovery');
+  };
+
+  // Action button handlers
+  const handleChatToggle = () => {
+    setIsChatOpen(!isChatOpen);
+    if (!isChatOpen) {
+      // Add some sample messages when opening chat
+      if (chatMessages.length === 0) {
+        setChatMessages([
+          { user: 'CosmicViewer42', message: 'Awesome stream!', time: '2:30 PM' },
+          { user: 'StarGazer99', message: 'How did you beat that boss?', time: '2:31 PM' },
+          { user: 'NebulaNomad', message: 'What mods are you using?', time: '2:32 PM' },
+          { user: 'GalacticGamer', message: 'Been following you since day one!', time: '2:33 PM' },
+          { user: streamers[currentIndex]?.streamerName, message: 'Thanks for watching everyone! Don\'t forget to subscribe!', time: '2:34 PM' }
+        ]);
+      }
+      
+      // Scroll to bottom of chat when opening
+      setTimeout(() => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+      }, 100);
+    }
+  };
+  
+  const handleSubscribe = () => {
+    if (isSubscribed) {
+      setIsSubscribed(false);
+      setSelectedTier(null);
+      toast.success('Unsubscribed successfully');
+    } else {
+      setIsSubscribeModalOpen(true);
+    }
+  };
+  
+  const confirmSubscription = (tier: string) => {
+    setIsSubscribed(true);
+    setSelectedTier(tier);
+    setIsSubscribeModalOpen(false);
+    toast.success(`Subscribed to ${tier} tier successfully!`);
+  };
+  
+  const sendChatMessage = () => {
+    if (currentMessage.trim()) {
+      const now = new Date();
+      const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+      setChatMessages([...chatMessages, { user: 'You', message: currentMessage, time: timeString }]);
+      setCurrentMessage('');
+      
+      // Scroll to bottom
+      setTimeout(() => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+      }, 100);
+    }
+  };
+  
+  const handleDonate = () => {
+    setIsDonateModalOpen(true);
+  };
+  
+  const handleShareStream = () => {
+    setIsShareModalOpen(true);
+  };
+
+  // Handle creating a clip from the stream
+  const handleCliptStream = () => {
+    if (!streamers[currentIndex]) return;
+    setIsCliptModalOpen(true);
+    toast.success('Ready to create a clip!', {
+      description: 'Select the length and add a title to your clip',
+      position: 'top-center'
+    });
+  };
+
+  // Copy link to clipboard
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Link copied to clipboard!');
+  };
+
+  // Fetch streamers or use fallback
+  const fetchStreamers = () => {
+    setIsLoading(true);
+    setError(null);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setStreamers(fallbackStreamers);
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  // Handle swipe gestures
+  useEffect(() => {
+    const handleTouchStart = (e: TouchEvent) => {
+      const touchDownY = e.touches[0].clientY;
+      const touchDownX = e.touches[0].clientX;
+      document.body.setAttribute('data-touch-start-y', touchDownY.toString());
+      document.body.setAttribute('data-touch-start-x', touchDownX.toString());
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const touchDownY = Number(document.body.getAttribute('data-touch-start-y'));
+      const touchDownX = Number(document.body.getAttribute('data-touch-start-x'));
+      
+      if (touchDownY === 0 && touchDownX === 0) {
+        return;
+      }
+
+      const currentTouchY = e.touches[0].clientY;
+      const currentTouchX = e.touches[0].clientX;
+      
+      const diffY = touchDownY - currentTouchY;
+      const diffX = touchDownX - currentTouchX;
+      
+      // Determine if the swipe is primarily horizontal or vertical
+      if (Math.abs(diffX) > Math.abs(diffY)) {
+        // Horizontal swipe
+        if (diffX > 50) { // Swiped left
+          handleNextStream();
+          document.body.setAttribute('data-touch-start-x', '0');
+          document.body.setAttribute('data-touch-start-y', '0');
+        } else if (diffX < -50) { // Swiped right
+          handlePrevStream();
+          document.body.setAttribute('data-touch-start-x', '0');
+          document.body.setAttribute('data-touch-start-y', '0');
+        }
+      } else {
+        // Vertical swipe
+        if (diffY > 50) { // Swiped up
+          handleNextStream();
+          document.body.setAttribute('data-touch-start-y', '0');
+          document.body.setAttribute('data-touch-start-x', '0');
+        } else if (diffY < -50) { // Swiped down
+          handlePrevStream();
+          document.body.setAttribute('data-touch-start-y', '0');
+          document.body.setAttribute('data-touch-start-x', '0');
+        }
+      }
+    };
+
+    // Handle keyboard navigation for testing on desktop
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        handleNextStream();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        handlePrevStream();
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('keydown', handleKeyDown);
+
+  document.addEventListener('touchstart', handleTouchStart);
+  document.addEventListener('touchmove', handleTouchMove);
+  document.addEventListener('keydown', handleKeyDown);
+
+  return () => {
+    document.removeEventListener('touchstart', handleTouchStart);
+    document.removeEventListener('touchmove', handleTouchMove);
+    document.removeEventListener('keydown', handleKeyDown);
+  };
+}, [currentIndex]);
+
+useEffect(() => {
+  fetchStreamers();
+}, []);
+
+return (
+  <StreamContainer>
+    {/* Main content - Swipeable stream views */}
+    {/* Back button removed */}
+    {/* Main content - Swipeable stream views */}
+    <AnimatePresence>
+      {!isLoading && !error && streamers.length > 0 && (
+        <motion.div
+          key={currentIndex}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            width: '100%' as any,
+            height: '100vh' as any,
+            position: 'relative' as any,
+            background: '#000000',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {/* Stream Header with Streamer Name */}
+          <StreamHeader>
+            <div style={{ flex: 1 }}></div>
+            <StreamTitle>
+              {/* Header title removed as requested */}
+            </StreamTitle>
+            <div style={{ flex: 1 }}></div>
+          </StreamHeader>
+
+          {/* Welcome message with cosmic theme */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: 'calc(100% - 80px)',
+              zIndex: 1,
+              background:
+                'linear-gradient(135deg, #0C0C2C 0%, #151525 50%, #1C1016 100%)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Cosmic background elements */}
+            <div
+              className="stars"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                backgroundImage:
+                  'radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)), radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)), radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)), radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)), radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0))',
+                backgroundSize: '200px 200px',
+                animation: 'animateStars 100s linear infinite',
+                opacity: 0.4,
+                zIndex: -1,
+              }}
+            />
+            <div
+              style={{
+                fontSize: '3.5rem',
+                fontWeight: 'bold',
+                color: 'transparent',
+                backgroundImage: 'linear-gradient(45deg, #FF5500, #FF8C66)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                textShadow: '0 0 20px rgba(255,85,0,0.4)',
+                marginBottom: '1rem',
+                textAlign: 'center',
+                letterSpacing: '3px',
+                animation: 'pulsate 3s infinite ease-in-out',
+              }}
+            >
+              WELCOME TO CLIPT
+            </div>
+
+            <div
+              style={{
+                fontSize: '1.2rem',
+                color: '#CCC',
+                textAlign: 'center',
+                maxWidth: '80%',
+                lineHeight: '1.6',
+                textShadow: '0 0 10px rgba(255,255,255,0.2)',
+                letterSpacing: '1px',
+              }}
+            >
+              Your gateway to cosmic gaming experiences
+            </div>
+
+            <div
+              style={{
+                position: 'absolute',
+                width: '300px',
+                height: '300px',
+                borderRadius: '50%',
+                background:
+                  'radial-gradient(circle at center, rgba(255,85,0,0.1) 0%, rgba(255,85,0,0) 70%)',
+                filter: 'blur(80px)',
+                zIndex: -1,
+                animation: 'float 10s ease-in-out infinite',
+                top: '30%',
+                opacity: 0.6,
+              }}
+            />
+            {/* Stream title overlay - Only shown when displaying actual streamer content */}
+            {/* This welcome screen will hide the title and genres, but they will appear when real streamers load */}
+            {false && (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '20px',
+                  left: '0',
+                  width: '100%',
+                  padding: '20px',
+                  background:
+                    'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%)',
+                  zIndex: 5,
+                }}
+              >
+              
+              <div className="flex items-center justify-between text-sm text-gray-400 px-1">
+                <span>Current viewers: {streamers[currentIndex]?.viewerCount.toLocaleString()}</span>
+                <div className="flex items-center gap-1">
+                  <Scissors size={14} className="text-orange-500" />
+                  <span>{Math.floor(Math.random() * 500) + 100} clips today</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <button 
+              onClick={() => setIsCliptModalOpen(false)}
+              className="flex-1 border border-gray-600 text-gray-300 bg-black/40 hover:bg-black/60 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={() => {
+                setIsCliptModalOpen(false);
+                toast.success('Clip created!', {
+                  description: 'Your clip has been saved and shared with your followers',
+                });
+              }}
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            >
+              <Scissors size={16} />
+              Create Clip
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* Share Modal */}
+    <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
+      <DialogContent className="bg-[#151515] border border-orange-500/30 rounded-lg shadow-[0_0_30px_rgba(255,85,0,0.2)] max-w-md">
+        <div>
+          <div className="p-4">
+            <h2 className="text-xl font-bold text-white mb-4 text-center">Share Stream</h2>
+            
+            <div className="grid grid-cols-4 gap-4 mb-6">
+              <button className="flex flex-col items-center justify-center gap-2">
+                <div className="w-12 h-12 rounded-full bg-[#1DA1F2]/20 flex items-center justify-center hover:bg-[#1DA1F2]/30 transition-colors border border-[#1DA1F2]/30">
+                  <Twitter size={20} className="text-[#1DA1F2]" />
+                </div>
+                <span className="text-xs text-gray-400">Twitter</span>
+              </button>
+              
+              <button className="flex flex-col items-center justify-center gap-2">
+                <div className="w-12 h-12 rounded-full bg-[#4267B2]/20 flex items-center justify-center hover:bg-[#4267B2]/30 transition-colors border border-[#4267B2]/30">
+                  <Facebook size={20} className="text-[#4267B2]" />
+                </div>
+                <span className="text-xs text-gray-400">Facebook</span>
+              </button>
+              
+              <button className="flex flex-col items-center justify-center gap-2">
+                <div className="w-12 h-12 rounded-full bg-[#5865F2]/20 flex items-center justify-center hover:bg-[#5865F2]/30 transition-colors border border-[#5865F2]/30">
+                  <MessageCircle size={20} className="text-[#5865F2]" />
+                </div>
+                <span className="text-xs text-gray-400">Discord</span>
+              </button>
+              
+              <button className="flex flex-col items-center justify-center gap-2" onClick={() => copyToClipboard(`https://clipt.tv/stream/${streamers[currentIndex].id}`)}>
+                <div className="w-12 h-12 rounded-full bg-gray-700/30 flex items-center justify-center hover:bg-gray-700/50 transition-colors border border-gray-600/30">
+                  <Clipboard size={20} className="text-gray-300" />
+                </div>
+                <span className="text-xs text-gray-400">Copy Link</span>
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              <button 
+                className="w-full py-2.5 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 rounded-md transition-colors border border-orange-500/40 flex items-center justify-center gap-2"
+                onClick={() => copyToClipboard(`https://clipt.tv/stream/${streamers[currentIndex].id}`)}
+              >
+                <Clipboard size={16} /> Copy Stream Link
+              </button>
+              
+              <button className="w-full py-2.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-md transition-colors border border-purple-500/40 flex items-center justify-center gap-2">
+                <Mail size={16} /> Share via Email
+              </button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+      
+    {/* Donate Modal */}
+    <Dialog open={isDonateModalOpen} onOpenChange={setIsDonateModalOpen}>
+      <DialogContent className="bg-[#151515] border border-orange-500/30 rounded-lg shadow-[0_0_30px_rgba(255,85,0,0.2)] max-w-md">
+        <div>
+          <div className="p-4">
+            <h2 className="text-xl font-bold text-white mb-4 text-center">Support the Streamer</h2>
+            
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-16 h-16 rounded-full bg-[#2D2D2D] overflow-hidden border-2 border-orange-500/30">
+                <img 
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${streamers[currentIndex]?.avatarSeed || 'default'}`} 
+                  alt="Streamer avatar" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">{streamers[currentIndex]?.streamerName}</h3>
+                <p className="text-sm text-gray-400">Streaming {streamers[currentIndex]?.gameName}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3 mb-6">
+              <button className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors flex items-center justify-center gap-2 font-bold">
+                <DollarSign size={18} /> Donate with PayPal
+              </button>
+              
+              <button className="w-full py-3 bg-[#6F5AFA] hover:bg-[#7C69FF] text-white rounded-md transition-colors flex items-center justify-center gap-2 font-bold">
+                <DollarSign size={18} /> Donate with Clipt Coins
+              </button>
+            </div>
+            
+            {/* Donation amounts */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {['$5.00', '$10.00', '$20.00', '$50.00', '$100.00', 'Custom'].map((amount) => (
+                <button 
+                  key={amount}
+                  className="py-2 bg-black/40 hover:bg-orange-500/20 text-white border border-orange-500/30 rounded-md transition-colors"
+                >
+                  {amount}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+      
+    {/* Subscribe Modal */}
+    <Dialog open={isSubscribeModalOpen} onOpenChange={setIsSubscribeModalOpen}>
+      <DialogContent className="bg-[#151515] border border-orange-500/30 rounded-lg shadow-[0_0_30px_rgba(255,85,0,0.2)] max-w-md">
+        <div>
+          <div className="p-4">
+            <h2 className="text-xl font-bold text-white mb-4 text-center">Subscribe to {streamers[currentIndex]?.streamerName}</h2>
+            
+              <div className="flex items-center gap-3 mb-6">
+              <div className="w-16 h-16 rounded-full bg-[#2D2D2D] overflow-hidden border-2 border-orange-500/30">
+                <img 
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${streamers[currentIndex]?.avatarSeed || 'default'}`} 
+                  alt="Streamer avatar" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">{streamers[currentIndex]?.streamerName}</h3>
+                <p className="text-sm text-gray-400">Streaming {streamers[currentIndex]?.gameName}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Basic Tier */}
+              <div className={`relative p-5 rounded-lg border ${selectedTier === 'Cosmic Supporter' ? 'border-orange-500 bg-orange-500/10' : 'border-gray-700 bg-black/40'} hover:border-orange-500/70 hover:bg-black/60 transition-all cursor-pointer`}
+                onClick={() => confirmSubscription('Cosmic Supporter')}
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-bold text-white text-lg">Cosmic Supporter</h3>
+                  <span className="text-orange-400 font-bold">$5.00/month</span>
+                </div>
+                <p className="text-gray-400 text-sm mb-3">Join the cosmic community with our entry-level subscription plan, perfect for casual viewers who want to support their favorite streamer.</p>
+                <ul className="text-gray-300 text-sm space-y-2">
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span> <strong>Ad-Free Experience:</strong> Enjoy uninterrupted streaming without any ads
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span> <strong>Subscriber Badge:</strong> Stand out in chat with a special supporter badge
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span> <strong>Custom Emotes:</strong> Access to 10 unique space-themed emotes
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span> <strong>Sub-Only Chat:</strong> Participate in subscriber-only chat sessions
+                  </li>
+                </ul>
+              </div>
+              
+              {/* Premium Tier */}
+              <div className={`relative p-5 rounded-lg border ${selectedTier === 'Galactic VIP' ? 'border-orange-500 bg-orange-500/10' : 'border-gradient-cosmos'} hover:border-orange-500/70 hover:bg-black/60 transition-all cursor-pointer`}
+                onClick={() => confirmSubscription('Galactic VIP')}
+                style={selectedTier !== 'Galactic VIP' ? {
+                  background: 'linear-gradient(45deg, rgba(0,0,0,0.8), rgba(55,0,110,0.3))',
+                  borderImage: 'linear-gradient(45deg, #FF5500, #9900FF) 1',
+                  borderStyle: 'solid'
+                } : {}}
+              >
+                <div className="absolute -right-2 -top-2 bg-gradient-to-r from-orange-500 to-purple-600 text-white text-xs font-bold py-1 px-3 rounded-full">PREMIUM</div>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-bold text-white text-lg">Galactic VIP</h3>
+                  <span className="text-orange-400 font-bold">$14.00/month</span>
+                </div>
+                <p className="text-gray-400 text-sm mb-3">For true cosmic enthusiasts! Get VIP treatment with exclusive perks and maximum support for your favorite streamer.</p>
+                <ul className="text-gray-300 text-sm space-y-2">
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span> <strong>Everything in Cosmic Supporter tier</strong>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span> <strong>Priority Chat Highlighting:</strong> Your messages stand out in chat with special colors
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span> <strong>Exclusive Monthly Streams:</strong> Access to VIP-only streams and cosmic events
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span> <strong>Enhanced Emote Package:</strong> Access to 25+ premium animated emotes
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span> <strong>Discord Integration:</strong> Exclusive access to private Discord channels
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span> <strong>Game Priority:</strong> First in line for subscriber games and events
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* Chat Box Panel */}
+    <AnimatePresence>
+      {isChatOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: '50vh', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            position: 'absolute' as any,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: '#0D0D0D',
+            borderTop: '1px solid rgba(255,85,0,0.3)',
+            zIndex: 50,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column' as any
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px 20px',
+            borderBottom: '1px solid rgba(255,85,0,0.2)'
+          }}>
+            <h3 style={{ color: 'white', margin: 0, fontSize: '16px' }}>Live Chat</h3>
+            <button 
+              onClick={handleChatToggle}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#999',
+                cursor: 'pointer',
+                padding: '5px'
+              }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+            
+            <div 
+              ref={chatContainerRef}
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: '10px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
+              }}
+            >
+              {chatMessages.map((msg, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <span style={{
+                      color: msg.user === streamers[currentIndex]?.streamerName ? '#FF5500' : '#6F5AFA',
+                      fontWeight: 'bold',
+                      fontSize: '14px'
+                    }}>{msg.user}</span>
+                    <span style={{ color: '#777', fontSize: '12px' }}>{msg.time}</span>
+                  </div>
+                  <p style={{ color: 'white', margin: '2px 0 0 0', fontSize: '15px' }}>{msg.message}</p>
+                </div>
+              ))}
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              padding: '12px 16px',
+              borderTop: '1px solid rgba(255,85,0,0.2)',
+              background: 'rgba(20,20,20,0.7)'
+            }}>
+              <input
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && sendChatMessage()}
+                placeholder="Send a message..."
+                style={{
+                  flex: 1,
+                  background: 'rgba(30,30,30,0.8)',
+                  border: '1px solid rgba(255,85,0,0.3)',
+                  borderRadius: '20px',
+                  padding: '10px 16px',
+                  color: 'white',
+                  outline: 'none'
+                }}
+              />
+              <button
+                onClick={sendChatMessage}
+                style={{
+                  background: 'rgba(255,85,0,0.2)',
+                  border: '1px solid rgba(255,85,0,0.5)',
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginLeft: '10px',
+                  color: '#FF5500',
+                  cursor: 'pointer'
+                }}
+              >
+                <Send size={18} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </StreamContainer>
+  );
+};
+
+export default AllStreamers;

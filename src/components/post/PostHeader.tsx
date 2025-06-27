@@ -3,6 +3,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Heart, MessageCircle, Trophy } from "lucide-react";
 import { PostHeaderProps } from "@/types/post";
 import PostMenu from "./PostMenu";
+import UserWithTitle from "../common/UserWithTitle";
 
 export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
   // Safely extract username and check if post and profiles exist
@@ -63,12 +64,15 @@ export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
         
         <div className="space-y-1">
           <div className="flex flex-col space-y-2">
-            <span 
-              className="font-semibold text-lg text-gaming-400 cursor-pointer hover:text-gaming-300"
-              onClick={(e) => post?.user_id ? handleProfileClick(e, post.user_id) : null}
-            >
-              {username}
-            </span>
+            <UserWithTitle 
+              userId={post?.user_id || ''}
+              username={post?.profiles?.username}
+              displayName={username}
+              verified={post?.profiles?.verified}
+              className="font-semibold text-lg text-gaming-400 hover:text-gaming-300"
+              asLink={true}
+              showTitle={true}
+            />
             <div className="flex items-center space-x-4 text-sm">
               <div className="flex items-center space-x-1">
                 <Heart className="w-4 h-4 text-red-500" />

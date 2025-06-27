@@ -1,21 +1,583 @@
 import { supabase } from '@/lib/supabase';
-import { BoostType } from '@/components/boost/BoostTracker';
+import { toast } from 'sonner';
+import type { Database } from '@/lib/database.types';
 
-// Interface matching our application's notification structure
+// Type augmentation for Supabase tables
+type Tables = Database['public']['Tables'];
+type PushSubscriptionTable = Tables['push_subscriptions']['Row'];
+type UserPreferencesTable = Tables['user_preferences']['Row'];
+type NotificationTable = Tables['notifications']['Row'];
+
+// URL for our service worker
+const SERVICE_WORKER_URL = '/push-service-worker.js';
+
+/**
+ * Notification and Push API Types
+ */
+export interface NotificationPermissionStatus {
+  supported: boolean;
+  permission: NotificationPermission;
+  pushSupported: boolean;
+  subscribed: boolean;
+}
+
+export interface PushSubscriptionInfo {
+  endpoint: string;
+  expirationTime: number | null;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}
+
+export interface NotificationPayload {
+  title: string;
+  body: string;
+  icon?: string;
+  image?: string;
+  badge?: string;
+  url?: string;
+  tag?: string;
+  requireInteraction?: boolean;
+  topic?: string;
+  actions?: Array<{
+    action: string;
+    title: string;
+    icon?: string;
+  }>;
+  data?: Record<string, any>;
+}
+
+// Database types for push subscriptions
+export interface PushSubscriptionRecord {
+  id?: string;
+  user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  created_at?: string;
+  updated_at?: string;
+  browser_info?: Record<string, any>;
+}
+
+/**
+ * Helper functions for Web Push
+ */
+const pushHelpers = {
+  // Convert URL base64 to Uint8Array (for applicationServerKey)
+  urlBase64ToUint8Array(base64String: string): Uint8Array {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    
+    return outputArray;
+  },
+
+  // Convert ArrayBuffer to base64
+  arrayBufferToBase64(buffer: ArrayBuffer | null): string {
+    if (!buffer) return '';
+    
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+  },
+
+  // Gets browser information for telemetry
+  getBrowserInfo(): Record<string, any> {
+    const { userAgent } = navigator;
+    return {
+      userAgent,
+      language: navigator.language,
+      platform: navigator.platform,
+      timestamp: new Date().toISOString()
+    };
+  }
+};
+
+/**
+ * Production-ready Push Notification Service
+ */
+export const pushNotificationService = {
+  // Check if push notifications are supported
+  isSupported(): boolean {
+    return 'serviceWorker' in navigator && 'PushManager' in window;
+  },
+
+  // Check if notifications are allowed
+  async areNotificationsAllowed(): Promise<boolean> {
+    if (!this.isSupported()) return false;
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  },
+
+  // Get current permission status with detailed info
+  async getPermissionStatus(): Promise<NotificationPermissionStatus> {
+    const pushSupported = this.isSupported();
+    const permission = pushSupported ? Notification.permission : 'denied';
+    
+    // Check if already subscribed
+    let subscribed = false;
+    if (pushSupported) {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      subscribed = !!subscription;
+    }
+
+    return {
+      supported: 'Notification' in window,
+      permission,
+      pushSupported,
+      subscribed
+    };
+  },
+  
+  // Register the service worker
+  async registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
+    try {
+      if (!this.isSupported()) return null;
+      
+      const registration = await navigator.serviceWorker.register(SERVICE_WORKER_URL, {
+        scope: '/'
+      });
+      console.log('Service Worker registered successfully:', registration);
+      
+      // Send auth token to service worker if available
+      const session = await supabase.auth.getSession();
+      const token = session?.data?.session?.access_token;
+      if (token && registration.active) {
+        registration.active.postMessage({
+          type: 'STORE_AUTH_TOKEN',
+          token
+        });
+      }
+      
+      return registration;
+    } catch (error) {
+      console.error('Service Worker registration failed:', error);
+      toast.error('Failed to register notification service worker');
+      return null;
+    }
+  },
+
+  // Request permission for notifications
+  async requestPermission(): Promise<NotificationPermission> {
+    try {
+      return await Notification.requestPermission();
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+      return 'denied';
+    }
+  },
+
+  // Subscribe to push notifications
+  async subscribe(): Promise<PushSubscriptionInfo | null> {
+    try {
+      // Check if push is supported
+      if (!this.isSupported()) {
+        toast.error('Push notifications are not supported in your browser');
+        return null;
+      }
+
+      // Request permission
+      const permission = await this.requestPermission();
+      if (permission !== 'granted') {
+        toast.error('Notification permission was denied');
+        return null;
+      }
+
+      // Register service worker if not already registered
+      let swRegistration = await navigator.serviceWorker.ready
+        .catch(() => null);
+        
+      if (!swRegistration) {
+        swRegistration = await this.registerServiceWorker();
+        if (!swRegistration) {
+          toast.error('Failed to register service worker');
+          return null;
+        }
+      }
+
+      // Get VAPID public key from environment
+      const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      if (!vapidPublicKey) {
+        console.error('VAPID public key is not configured');
+        toast.error('Push notification configuration is missing');
+        return null;
+      }
+
+      // Convert VAPID key to Uint8Array
+      const convertedVapidKey = pushHelpers.urlBase64ToUint8Array(vapidPublicKey);
+
+      // Get push subscription
+      let subscription = await swRegistration.pushManager.getSubscription();
+      
+      // If no subscription exists, create one
+      if (!subscription) {
+        try {
+          subscription = await swRegistration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: convertedVapidKey
+          });
+        } catch (subscribeError) {
+          console.error('Failed to subscribe to push:', subscribeError);
+          toast.error('Failed to enable push notifications');
+          return null;
+        }
+      }
+
+      // Format subscription for our API
+      const formattedSubscription: PushSubscriptionInfo = {
+        endpoint: subscription.endpoint,
+        expirationTime: subscription.expirationTime,
+        keys: {
+          p256dh: pushHelpers.arrayBufferToBase64(subscription.getKey('p256dh')),
+          auth: pushHelpers.arrayBufferToBase64(subscription.getKey('auth'))
+        }
+      };
+
+      // Save subscription to database
+      const saved = await this.saveSubscriptionToDatabase(formattedSubscription);
+      if (!saved) {
+        toast.error('Failed to save notification settings');
+        return null;
+      }
+
+      toast.success('Push notifications enabled');
+      return formattedSubscription;
+    } catch (error) {
+      console.error('Error subscribing to push notifications:', error);
+      toast.error('Something went wrong enabling notifications');
+      return null;
+    }
+  },
+
+  // Save the subscription to our database
+  async saveSubscriptionToDatabase(subscription: PushSubscriptionInfo): Promise<boolean> {
+    try {
+      const user = await supabase.auth.getUser();
+      const userId = user.data.user?.id;
+      
+      if (!userId) {
+        console.error('User not logged in');
+        return false;
+      }
+      
+      // Get browser info for telemetry
+      const browserInfo = pushHelpers.getBrowserInfo();
+
+      // Save to push_subscriptions table with proper types
+      const { error } = await supabase
+        .from<PushSubscriptionRecord>('push_subscriptions')
+        .upsert({
+          user_id: userId,
+          endpoint: subscription.endpoint,
+          p256dh: subscription.keys.p256dh,
+          auth: subscription.keys.auth,
+          browser_info: browserInfo,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id, endpoint'
+        });
+
+      if (error) {
+        console.error('Error saving push subscription:', error);
+        return false;
+      }
+
+      // Also update user preferences to enable push notifications globally
+      const { error: prefError } = await supabase
+        .from<UserPreferencesTable>('user_preferences')
+        .upsert({
+          user_id: userId,
+          push_notifications_enabled: true,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (prefError) {
+        console.error('Error updating notification preferences:', prefError);
+        // Continue anyway as the subscription was saved
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error saving push subscription:', error);
+      return false;
+    }
+  },
+
+  // Unsubscribe from push notifications
+  async unsubscribe(): Promise<boolean> {
+    try {
+      if (!this.isSupported()) {
+        toast.error('Push notifications are not supported');
+        return false;
+      }
+
+      // Get service worker registration
+      const swRegistration = await navigator.serviceWorker.ready
+        .catch(() => null);
+      
+      if (!swRegistration) {
+        console.warn('Service worker not ready');
+        return false;
+      }
+      
+      // Get current subscription
+      const subscription = await swRegistration.pushManager.getSubscription();
+      
+      if (!subscription) {
+        // Already unsubscribed from browser
+        // But still update preferences in database
+        await this.updateNotificationPreferences(false);
+        return true; 
+      }
+
+      try {
+        // Delete from database first
+        await this.deleteSubscriptionFromDatabase(subscription.endpoint);
+        
+        // Then unsubscribe from the browser
+        await subscription.unsubscribe();
+        toast.success('Push notifications disabled');
+        
+        // Update user preferences
+        await this.updateNotificationPreferences(false);
+        
+        return true;
+      } catch (unsubError) {
+        console.error('Error unsubscribing:', unsubError);
+        toast.error('Failed to disable push notifications');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error unsubscribing from push notifications:', error);
+      toast.error('Something went wrong');
+      return false;
+    }
+  },
+  
+  // Update user notification preferences
+  async updateNotificationPreferences(
+    enabled: boolean,
+    topics?: Record<string, boolean>
+  ): Promise<boolean> {
+    try {
+      const user = await supabase.auth.getUser();
+      const userId = user.data.user?.id;
+      
+      if (!userId) {
+        console.error('User not logged in');
+        return false;
+      }
+      
+      // Get current preferences
+      const { data: currentPrefs } = await supabase
+        .from<UserPreferencesTable>('user_preferences')
+        .select('notification_topics')
+        .eq('user_id', userId)
+        .single();
+        
+      // Merge with new topics if provided
+      const notification_topics = topics 
+        ? { ...(currentPrefs?.notification_topics || {}), ...topics }
+        : (currentPrefs?.notification_topics || {});
+      
+      // Update preferences
+      const { error } = await supabase
+        .from<UserPreferencesTable>('user_preferences')
+        .upsert({
+          user_id: userId,
+          push_notifications_enabled: enabled,
+          notification_topics: notification_topics || {},
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) {
+        console.error('Error updating notification preferences:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error updating notification preferences:', error);
+      return false;
+    }
+  },
+
+  // Delete subscription from database
+  async deleteSubscriptionFromDatabase(endpoint: string): Promise<boolean> {
+    try {
+      const user = await supabase.auth.getUser();
+      const userId = user.data.user?.id;
+      if (!userId) {
+        console.error('User not logged in');
+        return false;
+      }
+
+      const { error } = await supabase
+        .from<PushSubscriptionRecord>('push_subscriptions')
+        .delete()
+        .eq('user_id', userId)
+        .eq('endpoint', endpoint);
+
+      if (error) {
+        console.error('Error deleting subscription from database:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting subscription from database:', error);
+      return false;
+    }
+  },
+  
+  // Send a notification via the Edge Function
+  async sendNotification(
+    userIds: string | string[],
+    payload: NotificationPayload
+  ): Promise<{ success: boolean, results?: any }> {
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session?.data?.session?.access_token;
+      
+      if (!token) {
+        console.error('No auth token available');
+        return { success: false };
+      }
+      
+      // Convert single ID to array
+      const recipients = Array.isArray(userIds) ? userIds : [userIds];
+      
+      // Call the Edge Function to send notifications
+      try {
+        const { data, error } = await supabase.functions.invoke('push-notifications', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: {
+            userIds: recipients,
+            title: payload.title,
+            body: payload.body,
+            icon: payload.icon,
+            image: payload.image,
+            badge: payload.badge,
+            url: payload.url,
+            tag: payload.tag,
+            topic: payload.topic,
+            requireInteraction: payload.requireInteraction,
+            actions: payload.actions,
+            data: payload.data
+          }
+        });
+        
+        if (error) {
+          console.error('Error sending notification:', error);
+          toast.error('Failed to send notification');
+          return { success: false };
+        }
+      
+        return { success: true, results: data };
+      } catch (error) {
+        console.error('Error sending notification:', error);
+        toast.error('Notification service error');
+        return { success: false };
+      }
+    } catch (error) {
+      console.error('Error preparing notification:', error);
+      toast.error('Failed to prepare notification');
+      return { success: false };
+    }
+  },
+  
+  // Initialize push notifications system (call on app startup)
+  async initialize(): Promise<void> {
+    try {
+      // Only initialize if supported
+      if (!this.isSupported()) return;
+      
+      // Register service worker in background
+      const registration = await navigator.serviceWorker.register(SERVICE_WORKER_URL, {
+        scope: '/'
+      }).catch(() => null);
+      
+      if (registration) {
+        // Send auth token to service worker if available
+        const session = await supabase.auth.getSession();
+        const token = session?.data?.session?.access_token;
+        
+        if (token && registration.active) {
+          registration.active.postMessage({
+            type: 'STORE_AUTH_TOKEN',
+            token
+          });
+        }
+      }
+      
+      // Setup auth state change listener
+      supabase.auth.onAuthStateChange((event, session) => {
+        const token = session?.access_token;
+        const serviceWorker = navigator.serviceWorker.controller;
+        
+        if (token && serviceWorker) {
+          // Update token in service worker
+          serviceWorker.postMessage({
+            type: 'STORE_AUTH_TOKEN',
+            token
+          });
+        } else if (!token && serviceWorker) {
+          // Clear token on signout
+          serviceWorker.postMessage({
+            type: 'CLEAR_AUTH_TOKEN'
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Error initializing push notifications:', error);
+    }
+  }
+}
+
+/**
+ * Application notification interface
+ * This represents notifications stored in the database
+ */
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'boost_result' | 'comment' | 'like' | 'follow' | 'share' | 'system' | 'mention' | 'stream_live' | 'reply';
+  type: 'comment' | 'like' | 'follow' | 'share' | 'system' | 'mention' | 'stream_live' | 'reply';
   title: string;
   message: string;
-  reference_id?: string; // ID of post, boost, or user this relates to
-  reference_type?: 'post' | 'boost' | 'user' | 'system';
-  data?: any; // Additional structured data
+  reference_id?: string; // ID of post or user this relates to
+  reference_type?: 'post' | 'user' | 'system';
+  data?: Record<string, any>; // Additional structured data
   read: boolean;
   created_at: string;
 }
 
-// Interface matching Supabase database structure
+/**
+ * Core notification service to handle application notifications
+ * (different from push notifications)
+ */
+
+// Interface for database notification schema
 interface DbNotification {
   id: string;
   user_id: string;
@@ -27,6 +589,9 @@ interface DbNotification {
   read: boolean;
   created_at: string;
 }
+
+// Define boost type for notifications
+export type BoostType = 'squad_blast' | 'chain_reaction' | 'king' | 'stream_surge' | 'generic';
 
 export interface BoostResultData {
   boostType: BoostType;
@@ -118,9 +683,9 @@ export const createBoostResultNotification = async (
     };
     
     // Map our notification format to DB format
-    const dbNotification = {
+    const dbNotification: DbNotification = {
       user_id: notificationData.user_id,
-      type: notificationData.type as any, // Type assertion to handle custom types
+      type: notificationData.type,
       content: notificationData.message,
       resource_id: notificationData.reference_id,
       resource_type: notificationData.reference_type,
@@ -130,7 +695,7 @@ export const createBoostResultNotification = async (
     
     // Insert the notification into the database
     const { data, error } = await supabase
-      .from('notifications')
+      .from<NotificationTable>('notifications')
       .insert([dbNotification])
       .select()
       .single();
@@ -144,11 +709,11 @@ export const createBoostResultNotification = async (
     return {
       id: data.id,
       user_id: data.user_id,
-      type: data.type as any,
+      type: data.type,
       title: notificationData.title,
       message: data.content || '',
       reference_id: data.resource_id,
-      reference_type: data.resource_type as any,
+      reference_type: data.resource_type,
       data: notificationData.data,
       read: data.read,
       created_at: data.created_at
@@ -222,7 +787,7 @@ export const createSocialNotification = async (
     };
     
     // Map our notification format to DB format
-    const dbNotification = {
+    const dbNotification: DbNotification = {
       user_id: notificationData.user_id,
       type: notificationData.type,
       content: notificationData.message,
@@ -235,7 +800,7 @@ export const createSocialNotification = async (
     
     // Insert notification
     const { data, error } = await supabase
-      .from('notifications')
+      .from<NotificationTable>('notifications')
       .insert([dbNotification])
       .select()
       .single();
@@ -249,11 +814,11 @@ export const createSocialNotification = async (
     return {
       id: data.id,
       user_id: data.user_id,
-      type: data.type as any,
+      type: data.type,
       title: notificationData.title,
       message: notificationData.message,
       reference_id: data.resource_id,
-      reference_type: data.resource_type as any,
+      reference_type: data.resource_type,
       data: notificationData.data,
       read: data.read,
       created_at: data.created_at
@@ -268,7 +833,7 @@ export const createSocialNotification = async (
 export const getUserNotifications = async (userId: string, limit: number = 50, offset: number = 0): Promise<Notification[]> => {
   try {
     const { data, error } = await supabase
-      .from('notifications')
+      .from<NotificationTable>('notifications')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
@@ -283,11 +848,11 @@ export const getUserNotifications = async (userId: string, limit: number = 50, o
     return data.map((dbNotification: DbNotification) => ({
       id: dbNotification.id,
       user_id: dbNotification.user_id,
-      type: dbNotification.type as any,
+      type: dbNotification.type,
       title: generateNotificationTitle(dbNotification),
       message: dbNotification.content || generateNotificationMessage(dbNotification),
       reference_id: dbNotification.resource_id,
-      reference_type: dbNotification.resource_type as any,
+      reference_type: dbNotification.resource_type,
       data: {}, // In a real app, we'd fetch this from a JSON field
       read: dbNotification.read,
       created_at: dbNotification.created_at
@@ -333,7 +898,7 @@ const generateNotificationMessage = (notification: DbNotification): string => {
 export const getUnreadNotificationCount = async (userId: string): Promise<number> => {
   try {
     const { data, error, count } = await supabase
-      .from('notifications')
+      .from<NotificationTable>('notifications')
       .select('id', { count: 'exact' })
       .eq('user_id', userId)
       .eq('read', false);
@@ -356,7 +921,7 @@ export const markNotificationsAsRead = async (notificationIds: string[]): Promis
     if (notificationIds.length === 0) return true;
     
     const { error } = await supabase
-      .from('notifications')
+      .from<NotificationTable>('notifications')
       .update({ read: true })
       .in('id', notificationIds);
       
@@ -381,7 +946,7 @@ export const markNotificationAsRead = async (notificationId: string): Promise<bo
 export const markAllNotificationsAsRead = async (userId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('notifications')
+      .from<NotificationTable>('notifications')
       .update({ read: true })
       .eq('user_id', userId)
       .eq('read', false);

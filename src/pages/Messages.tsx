@@ -144,6 +144,37 @@ const RetroInput = styled.input`
 // Other styled components remain the same
 
 const Messages = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { userId } = useParams();
+  const location = useLocation();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [groupName, setGroupName] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [availableClips, setAvailableClips] = useState([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState(null);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [userToReport, setUserToReport] = useState(null);
+  const [blockedUsers, setBlockedUsers] = useState([]);
+  const [directMessageUser, setDirectMessageUser] = useState(null);
+  const [activeChats, setActiveChats] = useState<ChatPreview[]>([]);
+  const [selectedChat, setSelectedChat] = useState<SelectedChat | null>(null);
+  const [message, setMessage] = useState("");
+  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+  const [showCreateGroupChat, setShowCreateGroupChat] = useState(false);
+  const [sharedPostId, setSharedPostId] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [showControllerHints, setShowControllerHints] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [loadingChats, setLoadingChats] = useState(false);
+  const [errorState, setErrorState] = useState<string | null>(null);
+
   useGlobalScrollLock();
   
   // Apply background color to body when component mounts
@@ -160,6 +191,74 @@ const Messages = () => {
     };
   }, []);
   
+  // Load active chats on component mount
+  useEffect(() => {
+    const loadActiveChats = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setLoadingChats(true);
+        
+        // Fetch all conversations where the user is either sender or recipient
+        const { data: conversations, error } = await supabase
+          .from('messages')
+          .select('*')
+          .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          console.error("Error loading conversations:", error);
+          setErrorState("Failed to load conversations");
+          return;
+        }
+        
+        if (conversations && conversations.length > 0) {
+          // Group messages by conversation
+          const chatMap = new Map();
+          
+          for (const msg of conversations) {
+            const otherUserId = msg.sender_id === user.id ? msg.recipient_id : msg.sender_id;
+            
+            if (!chatMap.has(otherUserId)) {
+              // Fetch user profile for this conversation
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('id, username, avatar_url')
+                .eq('id', otherUserId)
+                .single();
+                
+              chatMap.set(otherUserId, {
+                id: `chat-${otherUserId}`,
+                recipient_id: otherUserId,
+                recipient_username: profile?.username || 'Unknown User',
+                recipient_avatar: profile?.avatar_url || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${otherUserId}`,
+                last_message: msg.message || msg.content || '',
+                last_message_time: msg.created_at,
+                messages: []
+              });
+            } else {
+              // Update last message if this one is more recent
+              const chat = chatMap.get(otherUserId);
+              if (new Date(msg.created_at) > new Date(chat.last_message_time)) {
+                chat.last_message = msg.message || msg.content || '';
+                chat.last_message_time = msg.created_at;
+              }
+            }
+          }
+          
+          setActiveChats(Array.from(chatMap.values()));
+        }
+      } catch (error) {
+        console.error("Error in loadActiveChats:", error);
+        setErrorState("Failed to load conversations");
+      } finally {
+        setLoadingChats(false);
+      }
+    };
+    
+    loadActiveChats();
+  }, [user]);
+
   // Check for direct message user in localStorage
   useEffect(() => {
     const checkForDirectMessage = () => {
@@ -261,37 +360,6 @@ const Messages = () => {
       initDirectMessage();
     }
   }, [userId, user, activeChats]);
-  
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const { userId } = useParams();
-  const location = useLocation();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [groupName, setGroupName] = useState("");
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [availableClips, setAvailableClips] = useState([]);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [messageToDelete, setMessageToDelete] = useState(null);
-  const [showReportDialog, setShowReportDialog] = useState(false);
-  const [reportReason, setReportReason] = useState('');
-  const [userToReport, setUserToReport] = useState(null);
-  const [blockedUsers, setBlockedUsers] = useState([]);
-  const [directMessageUser, setDirectMessageUser] = useState(null);
-  const [activeChats, setActiveChats] = useState<ChatPreview[]>([]);
-  const [selectedChat, setSelectedChat] = useState<SelectedChat | null>(null);
-  const [message, setMessage] = useState("");
-  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
-  const [showCreateGroupChat, setShowCreateGroupChat] = useState(false);
-  const [sharedPostId, setSharedPostId] = useState<string | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
-  const [showControllerHints, setShowControllerHints] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [loadingChats, setLoadingChats] = useState(false);
-  const [errorState, setErrorState] = useState<string | null>(null);
   
   // Function to handle group chat creation
   const handleCreateGroup = async () => {
@@ -499,44 +567,16 @@ const Messages = () => {
   };
 
   // This function starts or continues a chat with a user
-  const startOrContinueChat = async (userId: string) => {
-    try {
-      // Close the search dialog
-      setShowNewChatDialog(false);
+  const startOrContinueChat = (userId: string) => {
+    navigate(`/direct-chat/${userId}`);
+  };
 
-      // Find the user from search results
-      const targetUser = searchResults.find(user => user.id === userId);
-      if (!targetUser) {
-        console.error("User not found in search results");
-        return;
-      }
+  const handleSendDirectMessage = async (recipientId: string, message: string, recipientUsername?: string) => {
+    navigate(`/direct-chat/${recipientId}`);
+  };
 
-      // Check if we already have a chat with this user
-      const existingChat = activeChats.find(chat => chat.recipient_id === userId);
-
-      if (existingChat) {
-        // Select the existing chat
-        setSelectedChat(existingChat);
-        return;
-      }
-
-      // Create a new chat with this user
-      const newChat = {
-        id: `chat-${Date.now()}`,
-        recipient_id: targetUser.id,
-        recipient_username: targetUser.username || 'User',
-        recipient_avatar: targetUser.avatar_url,
-        last_message: '',
-        last_message_time: new Date().toISOString(),
-        messages: []
-      };
-
-      setActiveChats(prev => [newChat, ...prev]);
-      setSelectedChat(newChat);
-    } catch (error) {
-      console.error("Error starting or continuing chat:", error);
-      toast.error("Failed to start conversation");
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // ... rest of the code remains the same ...
   };
 
   // Function to handle sending messages
@@ -654,7 +694,87 @@ const Messages = () => {
           {/* Main Content Area */}
           <div className="flex flex-1 pt-[100px] h-[calc(100vh-120px)] relative">
             {/* Messages list */}
-            {/* Chat area content */}
+            <div className="w-full px-4 py-6 overflow-y-auto">
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-orange-400" />
+                  <input
+                    type="text"
+                    placeholder="Search conversations..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-gaming-900/60 border-2 border-orange-500/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-orange-400 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Conversation List */}
+              {loadingChats ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="text-orange-400 animate-pulse">Loading conversations...</div>
+                </div>
+              ) : activeChats.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                  <MessageSquare className="h-16 w-16 text-orange-400/50" />
+                  <p className="text-gray-400 text-lg">No conversations yet</p>
+                  <RetroButton
+                    as={motion.button}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowNewChatDialog(true)}
+                    className="cyber-sm"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Start New Chat
+                  </RetroButton>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {activeChats
+                    .filter(chat => 
+                      chat.recipient_username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      chat.last_message?.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .map((chat) => (
+                      <motion.div
+                        key={chat.id}
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => navigate(`/direct-chat/${chat.recipient_id}`)}
+                        className="bg-gaming-900/60 border-2 border-orange-500/30 rounded-lg p-4 cursor-pointer hover:border-orange-400/50 transition-all"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <Avatar className="h-14 w-14 border-2 border-orange-500/50">
+                            <AvatarImage src={chat.recipient_avatar} />
+                            <AvatarFallback className="bg-gaming-800 text-orange-400">
+                              {chat.recipient_username?.charAt(0).toUpperCase() || '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-white font-semibold text-lg truncate">
+                                {chat.recipient_username || 'Unknown User'}
+                              </h3>
+                              <span className="text-orange-400/70 text-sm">
+                                {new Date(chat.last_message_time).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                            <p className="text-gray-400 text-sm truncate mt-1">
+                              {chat.last_message || 'Start a conversation'}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                </div>
+              )}
+            </div>
           </div>
         </RetroMessagesContainer>
       </CrtScreen>

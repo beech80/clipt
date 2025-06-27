@@ -3,22 +3,30 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { useAuth } from "@/contexts/AuthContext"
 import { supabase } from "@/lib/supabase"
-import { toast } from "sonner"
+import { toast } from 'sonner'
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Camera, AlertCircle } from "lucide-react"
+import UserTitle from "../common/UserTitle"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import type { Profile } from "@/types/profile"
 
 // Form validation schema
 const profileFormSchema = z.object({
-  username: z.string().min(3).max(50),
+  username: z.string().min(3).max(15),
   displayName: z.string().min(2).max(50),
-  bioDescription: z.string().max(500).optional(),
-  website: z.string().url().optional().or(z.literal("")),
+  bioDescription: z.string().max(160).optional(),
+  website: z.string().url().optional().or(z.literal('')),
+  selectedTitle: z.string().optional(),
 })
 
-type ProfileFormValues = z.infer<typeof profileFormSchema>
+type FormValues = {
+  username: string;
+  displayName: string;
+  bioDescription?: string;
+  website?: string;
+  selectedTitle?: string;
+};
 
 export function ProfileEditForm({ userId }: { userId?: string }) {
   const { user } = useAuth()
@@ -41,7 +49,7 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
       console.log('Fetching profile for user:', user.id);
       
       // First check if profile exists
-      const { data, error } = await supabase
+      const { data: profileData, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
@@ -92,28 +100,31 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
         throw new Error('Could not load profile data');
       }
 
-      if (!data) {
+      if (!profileData) {
         console.error('Profile not found for user:', user.id);
         throw new Error('Profile not found');
       }
       
       // Check username change date if it exists
-      if (data.last_username_change) {
-        const changeDate = new Date(data.last_username_change);
+      const lastUsernameChange = profileData && 'last_username_change' in profileData && profileData.last_username_change 
+        ? new Date(profileData.last_username_change as string) 
+        : undefined;
+        
+      if (lastUsernameChange) {
         const today = new Date();
-        const diffTime = today.getTime() - changeDate.getTime();
+        const diffTime = today.getTime() - lastUsernameChange.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
         // Can only change username once every 60 days
         if (diffDays < 60) {
           setCanChangeUsername(false);
-          setLastUsernameChange(changeDate);
+          setLastUsernameChange(lastUsernameChange);
           setDaysUntilNextChange(60 - diffDays);
         }
       }
       
-      console.log('Profile data loaded:', data);
-      return data as Profile;
+      console.log('Profile data loaded:', profileData);
+      return profileData as Profile;
     },
     refetchOnMount: true,
     refetchOnWindowFocus: false,
@@ -121,13 +132,14 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
   });
 
   // Setup form with values from profile
-  const form = useForm<ProfileFormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       username: "",
       displayName: "",
       bioDescription: "",
       website: "",
+      selectedTitle: "",
     },
   })
 
@@ -137,14 +149,15 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
       form.reset({
         username: profile.username || "",
         displayName: profile.display_name || "",
-        bioDescription: profile.bio || "",
+        bioDescription: profile.bio_description || "",
         website: profile.website || "",
+        selectedTitle: profile.selected_title || "",
       })
     }
   }, [profile, form])
 
   // Form submission handler
-  const onSubmit = async (values: ProfileFormValues) => {
+  const onSubmit: SubmitHandler<FormValues> = async (values) => {
     if (!user?.id || submitting) return;
     
     try {
@@ -163,8 +176,9 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
         id: user.id,
         username: values.username,
         display_name: values.displayName,
-        bio: values.bioDescription,
+        bio_description: values.bioDescription,
         website: values.website,
+        selected_title: values.selectedTitle,
         updated_at: new Date().toISOString(),
       };
       
@@ -294,6 +308,8 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
     if (uploading) return;
     handleAvatarUpload(e);
   };
+  
+
 
   if (profileLoading) {
     return (
@@ -527,6 +543,97 @@ export function ProfileEditForm({ userId }: { userId?: string }) {
             <p style={{ color: '#f43f5e', fontSize: '0.75rem', marginTop: '4px' }}>
               {form.formState.errors.website.message}
             </p>
+          )}
+        </div>
+      </div>
+
+      {/* Title Selection - Only for level 30+ players */}
+      <div style={{ 
+        marginTop: '24px',
+        marginBottom: '24px',
+        padding: '16px',
+        backgroundColor: '#121212', 
+        borderRadius: '8px',
+        border: '1px solid #333'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '12px'
+        }}>
+          <div>
+            <h3 style={{ fontWeight: 500, fontSize: '1.125rem', marginBottom: '4px', color: 'white' }}>
+              <Trophy size={16} style={{ display: 'inline', marginRight: '8px' }} />
+              Special Titles
+            </h3>
+            <p style={{ color: '#9e9e9e', fontSize: '0.875rem' }}>
+              {profile?.level >= 30 ?
+                "Select a title to display on your profile" :
+                "Unlock at level 30 - Keep playing to level up!"}
+            </p>
+          </div>
+          
+          <div style={{
+            backgroundColor: '#FF5500',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '0.75rem',
+            fontWeight: 'bold'
+          }}>
+            LVL 30+ UNLOCK
+          </div>
+        </div>
+        
+        <div style={{ opacity: profile?.level >= 30 ? 1 : 0.5 }}>
+          {/* Title Options as Dropdown */}
+          <div style={{ marginBottom: '16px' }}>
+            <select 
+              {...form.register('selectedTitle')}
+              disabled={profile?.level < 30}
+              style={{
+                width: '100%',
+                padding: '12px',
+                backgroundColor: '#1A1A1A',
+                color: 'white',
+                border: '1px solid #333',
+                borderRadius: '4px',
+                fontWeight: 'bold',
+                fontSize: '1rem',
+                cursor: profile?.level >= 30 ? 'pointer' : 'not-allowed'
+              }}
+            >
+              <option value="">-- No Title --</option>
+              <option value="clipt-legend" style={{ color: '#FFD700' }}>🏆 Clipt Legend - OG status</option>
+              <option value="timeline-terror" style={{ color: '#FF4500' }}>🔥 Timeline Terror - Viral beast</option>
+              <option value="the-architect" style={{ color: '#00BFFF' }}>🌐 The Architect - Culture creator</option>
+              <option value="meta-maker" style={{ color: '#9C27B0' }}>⚗️ Meta Maker - Trend experimenter</option>
+              <option value="shadow-mode" style={{ color: '#4caf50' }}>👁️ Shadow Mode - Silent killer</option>
+            </select>
+            
+            {/* Title Preview */}
+            {form.watch('selectedTitle') && (
+              <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#121212', borderRadius: '4px', border: '1px solid #333' }}>
+                <div style={{ marginBottom: '8px', color: '#9e9e9e', fontSize: '0.85rem' }}>Title Preview:</div>
+                <UserTitle titleId={form.watch('selectedTitle')} size="large" />
+              </div>
+            )}
+          </div>
+          
+          {profile?.level < 30 && (
+            <div style={{
+              marginTop: '16px',
+              backgroundColor: '#1A0F08',
+              padding: '10px',
+              borderRadius: '4px',
+              fontSize: '0.85rem',
+              color: '#FFD700'
+            }}>
+              <AlertCircle size={14} style={{ display: 'inline', marginRight: '6px' }} />
+              You need to reach Level 30 to select a special title for your profile.
+              Currently at Level {profile?.level || 1}.
+            </div>
           )}
         </div>
       </div>

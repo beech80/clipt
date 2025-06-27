@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Zap, VideoIcon, User, Heart, Bookmark, UserPlus, ArrowLeft, Gamepad, Award, Star, Shield, Music, Rocket, Crown, ThumbsUp, MessageSquare, Share2, Eye } from 'lucide-react';
+import { Trophy, Zap, VideoIcon, User, Heart, Bookmark, UserPlus, ArrowLeft, Gamepad, Award, Star, Shield, Music, Rocket, Crown, ThumbsUp, MessageSquare, Share2, Eye, Settings, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import '../../styles/profile-retro-arcade.css';
+import { toast } from 'sonner';
+import '@/styles/profile-retro-arcade.css';
+import '@/styles/cosmic-buttons.css';
+import '@/styles/post-modal-fix.css'; // Fix for post modal action buttons
+import '@/styles/post-action-buttons.css'; // Space-themed post action buttons
+import '@/styles/profile-retro-arcade-smaller.css'; // Smaller profile CSS
+import '@/styles/post-modal.css'; // Post modal styling
 
 interface ProfileProps {
   profile?: any;
@@ -10,6 +16,12 @@ interface ProfileProps {
   achievements?: any[];
   isOwnProfile?: boolean;
   savedItems?: any[];
+  followersCount?: number;
+  followingCount?: number;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
+  onBoostClick?: () => void;
+  onSquadChatClick?: () => void;
 }
 
 const RetroArcadeProfile: React.FC<ProfileProps> = ({ 
@@ -17,67 +29,201 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
   posts = [], 
   achievements = [],
   isOwnProfile = false,
-  savedItems = [] 
+  savedItems = [],
+  followersCount = 0,
+  followingCount = 0,
+  activeTab = 'trophies',
+  onTabChange = () => {},
+  onBoostClick = () => {}
 }) => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'trophies' | 'posts' | 'clips' | 'saved'>('trophies');
-  const [loading, setLoading] = useState(false);
+  const [localActiveTab, setLocalActiveTab] = useState<'trophies' | 'clipts' | 'streams'>(activeTab as any || 'trophies');
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const [showCommentInput, setShowCommentInput] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [showRankingSuccess, setShowRankingSuccess] = useState(false);
 
-  // Sample data for the profile display
-  const sampleAchievements = [
-    { id: 1, name: 'FIRST VICTORY', description: 'Win your first game', icon: Trophy, points: 50, date: '05.12.2023' },
-    { id: 2, name: 'CONTENT CREATOR', description: 'Post your first clip', icon: VideoIcon, points: 25, date: '06.18.2023' },
-    { id: 3, name: 'POPULAR PLAYER', description: 'Reach 10 followers', icon: UserPlus, points: 100, date: '07.03.2023' },
-    { id: 4, name: 'LIKE MACHINE', description: 'Get 50 likes on your content', icon: Heart, points: 75, date: '08.22.2023' },
-    { id: 5, name: 'COLLECTOR', description: 'Save 20 clips from others', icon: Bookmark, points: 40, date: '09.15.2023' },
-  ];
-  
-  // Sample data for rankings
-  const sampleRankings = [
-    { rank: 1, points: 325, game: 'Space Invaders' },
-    { rank: 2, points: 275, game: 'Pac-Man' },
-    { rank: 3, points: 240, game: 'Galaga' },
-    { rank: 5, points: 185, game: 'Donkey Kong' },
-  ];
+  useEffect(() => {
+    if (activeTab) {
+      setLocalActiveTab(activeTab as any);
+    }
+  }, [activeTab]);
+
+  const handleTabChange = (tab: 'trophies' | 'clipts' | 'streams') => {
+    setLocalActiveTab(tab);
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
 
   const handleBack = () => {
     navigate(-1);
+  };
+  
+  const handleViewPost = (post: any) => {
+    setSelectedPost(post);
+    setShowPostModal(true);
+  };
+  
+  const closePostModal = () => {
+    setShowPostModal(false);
+    setShowCommentInput(false);
+    setShowComments(false);
+    setCommentText('');
+    // Give time for animation to complete before clearing selected post
+    setTimeout(() => setSelectedPost(null), 300);
+  };
+  
+  const handleLikePost = (postId: string) => {
+    // Check if post is already liked
+    if (likedPosts.includes(postId)) {
+      // Unlike post
+      setLikedPosts(prev => prev.filter(id => id !== postId));
+      // Update the post's like count in selectedPost state
+      if (selectedPost && selectedPost.id === postId) {
+        setSelectedPost(prev => ({
+          ...prev,
+          likes_count: (prev.likes_count || 0) - 1,
+          isLiked: false
+        }));
+      }
+    } else {
+      // Like post
+      setLikedPosts(prev => [...prev, postId]);
+      // Update the post's like count in selectedPost state
+      if (selectedPost && selectedPost.id === postId) {
+        setSelectedPost(prev => ({
+          ...prev,
+          likes_count: (prev.likes_count || 0) + 1,
+          isLiked: true
+        }));
+      }
+    }
+  };
+  
+  const handleCommentToggle = () => {
+    // Always show comments when comment button is clicked
+    setShowComments(true);
+    // Toggle comment input
+    setShowCommentInput(prev => !prev);
+    if (!showCommentInput) {
+      // Focus on comment input after it appears
+      setTimeout(() => {
+        const commentInput = document.getElementById('comment-input');
+        if (commentInput) commentInput.focus();
+      }, 100);
+    }
+  };
+  
+  const handleCommentSubmit = (postId: string) => {
+    if (!commentText.trim()) return;
+    
+    // In a real app, you would send this to your backend
+    console.log(`Commenting on post ${postId}: ${commentText}`);
+    
+    // Create a new comment object
+    const newComment = {
+      id: `temp-${Date.now()}`,
+      content: commentText,
+      created_at: new Date().toISOString(),
+      user: {
+        id: profile.id,
+        display_name: profile.display_name || 'You',
+        avatar_url: profile.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=you'
+      }
+    };
+    
+    // Update the post's comment count in selectedPost state
+    if (selectedPost && selectedPost.id === postId) {
+      setSelectedPost(prev => ({
+        ...prev,
+        comments_count: (prev.comments_count || 0) + 1,
+        // Add the new comment to the beginning of the comments array
+        comments: [newComment, ...(prev.comments || [])]
+      }));
+      
+      // Update the post in the posts array
+      setPosts(currentPosts => 
+        currentPosts.map(post => 
+          post.id === postId ? {
+            ...post,
+            comments_count: (post.comments_count || 0) + 1,
+            comments: [newComment, ...(post.comments || [])]
+          } : post
+        )
+      );
+    }
+    
+    // Reset comment input but keep comment section visible
+    setCommentText('');
+    // Keep comments visible after posting
+    setShowComments(true);
+    
+    // Show success toast
+    toast.success('Comment posted!');
+  };
+  
+  const handleSharePost = (postId: string, title: string) => {
+    // In a real app, you would implement social sharing
+    // For this demo, we'll simulate a clipboard copy
+    const shareUrl = `https://clipt.space/post/${postId}`;
+    
+    // Try to use clipboard API if available
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => {
+          alert(`Link to "${title}" copied to clipboard!`);
+        })
+        .catch(() => {
+          // Fallback for clipboard API failure
+          prompt('Copy this link to share:', shareUrl);
+        });
+    } else {
+      // Fallback for browsers without clipboard API
+      prompt('Copy this link to share:', shareUrl);
+    }
+    
+    // Update share count in the UI
+    if (selectedPost && selectedPost.id === postId) {
+      setSelectedPost(prev => ({
+        ...prev,
+        shares_count: (prev.shares_count || 0) + 1
+      }));
+    }
+  };
+  
+  const handleRankForTop10 = (postId: string) => {
+    // Simulate ranking the post for Top 10
+    setShowRankingSuccess(true);
+    
+    // Update the post with a ranked property
+    if (selectedPost && selectedPost.id === postId) {
+      setSelectedPost(prev => ({
+        ...prev,
+        ranked_for_top10: true
+      }));
+    }
+    
+    // Hide success message after a delay
+    setTimeout(() => {
+      setShowRankingSuccess(false);
+    }, 3000);
   };
 
   return (
     <div className="profile-retro-arcade">
       {/* Enhanced screen effects */}
-      <div className="retro-screen-overlay"></div>
-      <div className="retro-scanlines"></div>
-      <div className="retro-vignette"></div>
-      <div className="retro-noise"></div>
       
       {/* Arcade cabinet frame */}
       <div className="arcade-cabinet-frame">
-        <div className="arcade-cabinet-top"></div>
         <div className="arcade-cabinet-screen">
-          
-          {/* Glowing back button */}
-          <motion.button 
-            onClick={handleBack} 
-            className="arcade-back-button"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <ArrowLeft className="h-5 w-5 mr-1" />
-            <span>BACK</span>
-          </motion.button>
           
           {/* Arcade marquee header */}
           <div className="arcade-marquee">
-            <div className="marquee-light"></div>
-            <div className="marquee-light"></div>
-            <div className="marquee-light"></div>
             <h1 className="arcade-title glow-text">PLAYER PROFILE</h1>
-            <div className="marquee-light"></div>
-            <div className="marquee-light"></div>
-            <div className="marquee-light"></div>
-          </div>
           
           {/* Player card with glowing effects */}
           <motion.div 
@@ -90,126 +236,154 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
               <div className="player-card-inner">
                 <div className="player-avatar-container">
                   <div className="avatar-frame">
-                    <div className="avatar-glow"></div>
                     <img 
                       src={profile.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=default'} 
                       alt="Profile" 
                       className="player-avatar"
                     />
-                  </div>
                   <div className="player-level">
                     <span>LVL</span>
-                    <div className="level-number">{profile.level || 99}</div>
-                  </div>
-                </div>
                 
                 <div className="player-info">
                   <h2 className="player-name glow-text">{profile.display_name || 'PLAYER ONE'}</h2>
-                  <div className="player-username">@{profile.username || 'player1'}</div>
-                  <div className="player-bio">"{profile.bio || 'Level 99 arcade enthusiast. Collector of rare pixels and hunter of high scores. Currently on a quest to become the ultimate gaming legend.'}"</div>
                   
-                  <div className="player-stats">
-                    <div className="stat-item">
-                      <Trophy className="stat-icon gold" />
-                      <div className="stat-value">{profile.trophy_count || 42}</div>
-                      <div className="stat-label">TROPHIES</div>
-                    </div>
-                    <div className="stat-item">
-                      <User className="stat-icon cyan" />
-                      <div className="stat-value">{profile.follower_count || 128}</div>
-                      <div className="stat-label">FOLLOWERS</div>
-                    </div>
-                    <div className="stat-item">
-                      <Crown className="stat-icon purple" />
-                      <div className="stat-value">#{profile.rank || 5}</div>
-                      <div className="stat-label">RANK</div>
-                    </div>
-                  </div>
-                </div>
-                
-                {!isOwnProfile && (
-                  <motion.button 
-                    className="follow-button"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    <span>FOLLOW</span>
-                  </motion.button>
-                )}
-              </div>
-            </div>
+                  <div className="horizontal-stats">
+                    <div className="player-stat">
+                      <Trophy className="stat-icon trophy" />
+                    <div className="player-stat">
+                      <VideoIcon className="stat-icon clip" />
+                    <div className="player-stat">
+                      <User className="stat-icon followers" />
+                    <div className="player-stat">
+                      <Star className="stat-icon rank" />
+                    
+                    {!isOwnProfile && (
+                      <motion.button 
+                        className="message-button"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          // Directly navigate to messages with userId in URL params
+                          navigate(`/messages?userId=${profile.id}&username=${encodeURIComponent(profile.username || 'User')}&displayName=${encodeURIComponent(profile.display_name || profile.username)}`);
+                        }}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-1" />
+                        <span>MESSAGE</span>
+                      </motion.button>
+                    )}
+                    
+                    {isOwnProfile && (
+                      <div className="profile-buttons flex gap-3">
+                        <motion.button 
+                          className="edit-profile-button"
+                          onClick={() => navigate('/edit-profile')}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Settings className="h-4 w-4 mr-1" />
+                          <span>EDIT PROFILE</span>
+                        </motion.button>
+                    )}
           </motion.div>
           
           {/* Enhanced arcade control panel tabs */}
           <div className="arcade-control-panel">
-            <div className="control-panel-decoration left"></div>
             <div className="arcade-tabs">
               <motion.button 
-                className={`arcade-tab ${activeTab === 'trophies' ? 'active' : ''}`}
-                onClick={() => setActiveTab('trophies')}
+                className={`arcade-tab ${localActiveTab === 'trophies' ? 'active' : ''}`}
+                onClick={() => handleTabChange('trophies')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Trophy className="tab-icon gold" />
+                <Trophy className="tab-icon yellow" />
                 <span>TROPHIES</span>
-                {activeTab === 'trophies' && <div className="tab-active-indicator"></div>}
               </motion.button>
+              
               <motion.button 
-                className={`arcade-tab ${activeTab === 'posts' ? 'active' : ''}`}
-                onClick={() => setActiveTab('posts')}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Zap className="tab-icon purple" />
-                <span>POSTS</span>
-                {activeTab === 'posts' && <div className="tab-active-indicator"></div>}
-              </motion.button>
-              <motion.button 
-                className={`arcade-tab ${activeTab === 'clips' ? 'active' : ''}`}
-                onClick={() => setActiveTab('clips')}
+                className={`arcade-tab ${localActiveTab === 'clipts' ? 'active' : ''}`}
+                onClick={() => handleTabChange('clipts')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <VideoIcon className="tab-icon cyan" />
                 <span>CLIPTS</span>
-                {activeTab === 'clips' && <div className="tab-active-indicator"></div>}
               </motion.button>
+              
               <motion.button 
-                className={`arcade-tab ${activeTab === 'saved' ? 'active' : ''}`}
-                onClick={() => setActiveTab('saved')}
+                className={`arcade-tab ${localActiveTab === 'streams' ? 'active' : ''}`}
+                onClick={() => handleTabChange('streams')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Bookmark className="tab-icon green" />
-                <span>SAVED</span>
-                {activeTab === 'saved' && <div className="tab-active-indicator"></div>}
+                <VideoIcon className="tab-icon green" />
+                <span>STREAMS</span>
               </motion.button>
-            </div>
-            <div className="control-panel-decoration right"></div>
-            <div className="control-panel-joystick"></div>
-          </div>
+              
+              <motion.button 
+                className="arcade-tab boost-tab"
+                onClick={() => {
+                  // Track analytics for boost button click
+                  console.log('Boost button clicked');
+                  // Call the parent component's onBoostClick handler
+                  onBoostClick();
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ scale: 0.9, opacity: 0.9 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ 
+                  type: 'spring',
+                  stiffness: 400,
+                  damping: 17
+                }}
+              >
+                <Rocket className="tab-icon orange" />
+                <span>BOOSTS</span>
+              </motion.button>
+              
+              {/* Squad Chat Button */}
+              <motion.button 
+                className="arcade-tab squad-chat-tab"
+                onClick={() => {
+                  // Check if user is subscribed
+                  const isSubscribed = profile.is_subscribed;
+                  if (isSubscribed) {
+                    console.log('Opening Squad Chat');
+                    // Navigate to squad chat or open squad chat modal
+                    navigate(`/squad-chat/${profile.id}`);
+                  } else {
+                    // Show subscription modal
+                    toast.info('Subscribe to unlock Squad Chat!', {
+                      description: 'Join the squad for $4.99/month to access exclusive chat.',
+                      action: {
+                        label: 'Subscribe',
+                        onClick: () => navigate(`/subscribe/${profile.id}`)
+                      }
+                    });
+                  }
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ scale: 0.9, opacity: 0.9 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ 
+                  type: 'spring',
+                  stiffness: 400,
+                  damping: 17
+                }}
+              >
+                <MessageSquare className="tab-icon purple" />
+                <span>SQUAD CHAT</span>
+                {!profile.is_subscribed && (
+                  <div className="locked-indicator">
+                    <Star className="star-icon" size={12} />
+                )}
+              </motion.button>
           
-          {/* Content area with game screen effect */}
-          <div className="game-screen-container">
+          {/* Content area with dynamic content based on active tab */}
+          <div className="arcade-content">
             <AnimatePresence mode="wait">
-              {loading ? (
-                <motion.div 
-                  key="loading"
-                  className="arcade-loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <div className="loading-scanline"></div>
-                  <div className="loading-glitch"></div>
-                  <div className="loading-text blink">LOADING GAME DATA...</div>
-                  <div className="loading-progress">
-                    <div className="progress-bar"></div>
-                  </div>
-                  <div className="loading-press-start">PRESS START</div>
-                </motion.div>
-              ) : activeTab === 'trophies' ? (
+              {localActiveTab === 'trophies' ? (
                 <motion.div
                   key="trophies"
                   className="content-section"
@@ -220,164 +394,37 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                 >
                   <div className="section-header">
                     <div className="section-title-container">
-                      <Trophy className="section-icon gold" />
-                      <h2 className="section-title glow-text">TROPHY CABINET</h2>
-                    </div>
-                    <div className="section-subtitle">ACHIEVEMENTS EARNED IN BATTLE</div>
-                  </div>
-                  <div className="trophy-display">
-                    {sampleAchievements.map((achievement, index) => (
+                      <Trophy className="section-icon yellow" />
+                      <h2 className="section-title glow-text">ACHIEVEMENTS</h2>
+                  
+                  <div className="achievements-grid">
+                    {achievements.map((achievement, index) => (
                       <motion.div 
-                        key={achievement.id} 
-                        className="trophy-item"
+                        key={achievement.id}
+                        className="achievement-card"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        whileHover={{ 
-                          y: -5, 
-                          boxShadow: '0 10px 25px rgba(0,0,0,0.6)', 
-                          borderColor: 'var(--neon-blue)' 
-                        }}
+                        transition={{ delay: 0.1 * index }}
+                        whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(255, 215, 0, 0.6)' }}
                       >
-                        <achievement.icon 
-                          className={`trophy-icon trophy-rank-${Math.min(index + 1, 4)}`} 
-                          size={60} 
-                        />
-                        <div className="trophy-name">{achievement.name}</div>
-                        <div className="trophy-desc">{achievement.description}</div>
-                        <div className="trophy-date">UNLOCKED ON {achievement.date}</div>
-                        <div className="trophy-points">
-                          <span>{achievement.points}</span>
-                          <Trophy className="points-icon" size={12} />
-                        </div>
+                        <div className="achievement-icon">
+                          {achievement.icon === 'Trophy' && <Trophy className="icon-trophy" />}
+                          {achievement.icon === 'VideoIcon' && <VideoIcon className="icon-video" />}
+                          {achievement.icon === 'UserPlus' && <UserPlus className="icon-user-plus" />}
+                          {achievement.icon === 'Heart' && <Heart className="icon-heart" />}
+                          {achievement.icon === 'Bookmark' && <Bookmark className="icon-bookmark" />}
+                        <div className="achievement-details">
+                          <h3 className="achievement-name">{achievement.name}</h3>
+                          <p className="achievement-description">{achievement.description}</p>
+                          <div className="achievement-points">
+                            <Star className="points-icon" />
+                            <span>{achievement.points} PTS</span>
                       </motion.div>
                     ))}
-                  </div>
-                  
-                  {/* Trophy rankings/leaderboard */}
-                  <h3 className="arcade-title glow-text mt-10 mb-5">LEGENDARY RANKINGS</h3>
-                  <div className="trophy-ranks">
-                    {sampleRankings.map((item, index) => (
-                      <motion.div 
-                        key={index}
-                        className={`rank-item rank-${Math.min(item.rank, 4)}`}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        <div className="rank-number">{item.rank}</div>
-                        <Trophy className="rank-trophy" />
-                        <div className="rank-info">
-                          <div className="rank-game">{item.game}</div>
-                          <div className="rank-points">
-                            {item.points} <Trophy className="mini-trophy" size={12} />
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
                 </motion.div>
-              ) : activeTab === 'posts' ? (
+              ) : localActiveTab === 'clipts' ? (
                 <motion.div
-                  key="posts"
-                  className="content-section"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="section-header">
-                    <div className="section-title-container">
-                      <Zap className="section-icon purple" />
-                      <h2 className="section-title glow-text">BATTLE LOGS</h2>
-                    </div>
-                    <div className="section-subtitle">YOUR GAMING CHRONICLES</div>
-                  </div>
-                  
-                  {posts && posts.length > 0 ? (
-                    <div className="posts-grid">
-                      {posts.map((post, index) => (
-                        <motion.div 
-                          key={post.id || index} 
-                          className="arcade-post-card"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          whileHover={{ scale: 1.02 }}
-                        >
-                          <div className="post-header">
-                            <img 
-                              src={post.authorAvatar || profile.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=default'} 
-                              alt="Author" 
-                              className="post-avatar"
-                            />
-                            <div className="post-author-info">
-                              <div className="post-author">{post.author || profile.display_name || 'PLAYER ONE'}</div>
-                              <div className="post-date">{post.created_at ? new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '09.21.2023'}</div>
-                            </div>
-                            {post.game && <div className="post-game-tag">{post.game}</div>}
-                          </div>
-                          
-                          <div className="post-content">
-                            <h3 className="post-title">{post.title}</h3>
-                            <p className="post-text">{post.content}</p>
-                            
-                            {post.image_url && (
-                              <div className="post-image-container">
-                                <img 
-                                  src={post.image_url} 
-                                  alt={post.title} 
-                                  className="post-image"
-                                />
-                                <div className="post-image-overlay"></div>
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className="post-footer">
-                            <div className="post-actions">
-                              <div className={`post-action ${post.liked ? 'liked' : ''}`}>
-                                <Heart className="action-icon" size={16} />
-                                <span className="action-count">{post.likes_count || 0}</span>
-                              </div>
-                              <div className="post-action">
-                                <MessageSquare className="action-icon" size={16} />
-                                <span className="action-count">{post.comments_count || 0}</span>
-                              </div>
-                            </div>
-                            <div className="post-action">
-                              <Share2 className="action-icon" size={16} />
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  ) : (
-                    <motion.div 
-                      className="retro-empty-state"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      <Zap className="empty-state-icon" size={48} />
-                      <h3 className="empty-title">NO BATTLE LOGS FOUND</h3>
-                      <p className="empty-text">Share your epic gaming moments!</p>
-                      {isOwnProfile && (
-                        <motion.button 
-                          className="create-button"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <span>CREATE NEW POST</span>
-                        </motion.button>
-                      )}
-                    </motion.div>
-                  )}
-                </motion.div>
-              ) : activeTab === 'clips' ? (
-                <motion.div
-                  key="clips"
+                  key="clipts"
                   className="content-section"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -388,54 +435,89 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                     <div className="section-title-container">
                       <VideoIcon className="section-icon cyan" />
                       <h2 className="section-title glow-text">GAME CLIPTS</h2>
-                    </div>
-                    <div className="section-subtitle">YOUR LEGENDARY MOMENTS</div>
-                  </div>
                   
                   {posts && posts.length > 0 ? (
-                    <div className="clips-grid">
-                      {posts.slice(0, 6).map((post, index) => (
+                    <div className="clipts-grid">
+                      {posts.map((post, index) => (
                         <motion.div 
-                          key={post.id || index} 
-                          className="clip-card"
+                          key={post.id}
+                          className="clipt-card"
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          whileHover={{ scale: 1.05, y: -5 }}
+                          transition={{ delay: 0.1 * index }}
+                          whileHover={{ scale: 1.03, boxShadow: '0 0 15px rgba(0, 195, 255, 0.6)' }}
+                          onClick={() => handleViewPost(post)}
+                          role="button"
+                          aria-label={`View post: ${post.title}`}
                         >
-                          <div className="clip-thumbnail">
-                            <img src={post.image_url || 'https://placehold.co/600x400/121212/4169E1?text=Game+Clip'} alt={post.title} />
-                            <div className="clip-play-button">
-                              <div className="play-icon"></div>
-                            </div>
-                            <div className="clip-duration">00:{Math.floor(Math.random() * 60) + 10}</div>
-                          </div>
-                          <div className="clip-info">
-                            <h3 className="clip-title">{post.title}</h3>
-                            <div className="clip-meta">
-                              <div className="clip-views">
+                          <div className="clipt-thumbnail">
+                            <img src={post.image_url || 'https://placehold.co/600x400/121212/00C3FF?text=Game+Clipt'} alt="Clipt thumbnail" />
+                            <div className="clipt-overlay">
+                              <div className="clipt-play-icon">
+                                <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="2" fill="none">
+                                  <polygon points="5 3 19 12 5 21 5 3" fill="white" />
+                                </svg>
+                          <div className="clipt-details">
+                            <h3 className="clipt-title">{post.title}</h3>
+                            <div className="clipt-meta">
+                              <div className="clipt-views">
                                 <Eye className="view-icon" />
-                                <span>{Math.floor(Math.random() * 1000) + 100}</span>
-                              </div>
-                              <div className="clip-likes">
+                                <span>{post.views_count || Math.floor(Math.random() * 1000) + 100}</span>
+                              <div className="clipt-likes">
                                 <ThumbsUp className="like-icon" />
                                 <span>{post.likes_count || 0}</span>
-                              </div>
-                            </div>
-                          </div>
+                            <div className="post-actions-compact">
+                              <button 
+                                className={`action-button-compact like-button ${likedPosts.includes(post.id) ? 'active' : ''}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleLikePost(post.id);
+                                }}
+                              >
+                                <ThumbsUp className="action-icon-compact" />
+                              </button>
+                              <button 
+                                className="action-button-compact comment-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewPost(post);
+                                  setTimeout(() => handleCommentToggle(), 300);
+                                }}
+                              >
+                                <MessageSquare className="action-icon-compact" />
+                              </button>
+                              <button 
+                                className="action-button-compact share-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSharePost(post.id, post.title || 'Clipt Post');
+                                }}
+                              >
+                                <Share2 className="action-icon-compact" />
+                              </button>
+                              {(post.video_url || post.type === 'video') && !post.ranked_for_top10 && (
+                                <button 
+                                  className="action-button-compact rank-button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRankForTop10(post.id);
+                                  }}
+                                >
+                                  <Trophy className="action-icon-compact" />
+                                </button>
+                              )}
                         </motion.div>
                       ))}
-                    </div>
                   ) : (
                     <motion.div 
-                      className="retro-empty-state"
+                      className="empty-state"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2 }}
                     >
-                      <VideoIcon className="empty-state-icon" size={48} />
+                      <VideoIcon className="empty-icon" />
                       <h3 className="empty-title">NO GAME CLIPTS FOUND</h3>
-                      <p className="empty-text">Capture and share your best plays!</p>
+                      <p className="empty-text">Capture and share your best gaming moments!</p>
                       {isOwnProfile && (
                         <motion.button 
                           className="create-button"
@@ -447,6 +529,99 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                       )}
                     </motion.div>
                   )}
+                </motion.div>
+              ) : localActiveTab === 'streams' ? (
+                <motion.div
+                  key="streams"
+                  className="arcade-content-inner"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="section-header">
+                    <div className="section-title-container">
+                      <VideoIcon className="section-icon green" />
+                      <h2 className="section-title glow-text">PAST STREAMS</h2>
+                  
+                  <div className="clipts-grid streams-grid">
+                    {/* Past Stream 1 */}
+                    <motion.div 
+                      key="stream-1"
+                      className="stream-card"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      whileHover={{ scale: 1.03, boxShadow: '0 0 15px rgba(0, 157, 255, 0.6)' }}
+                      onClick={() => navigate('/streamplayback/s12345')}
+                    >
+                      <div className="stream-thumbnail cosmic-gradient">
+                        <img src="https://placehold.co/600x400/121212/00BFFF?text=Space+Stream" alt="Stream thumbnail" />
+                        <div className="stream-overlay">
+                          <div className="stream-play-icon">
+                            <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="2" fill="none">
+                              <polygon points="5 3 19 12 5 21 5 3" fill="white" />
+                            </svg>
+                      <div className="stream-details">
+                        <div className="stream-title-row">
+                          <h3 className="stream-title">Cosmic Exploration</h3>
+                        <div className="stream-meta">
+                          <div className="stream-views">
+                            <Eye className="view-icon" />
+                            <span>2.4K views</span>
+                    </motion.div>
+                    
+                    {/* Past Stream 2 */}
+                    <motion.div 
+                      key="stream-2"
+                      className="stream-card"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      whileHover={{ scale: 1.03, boxShadow: '0 0 15px rgba(0, 157, 255, 0.6)' }}
+                      onClick={() => navigate('/streamplayback/s67890')}
+                    >
+                      <div className="stream-thumbnail cosmic-gradient">
+                        <img src="https://placehold.co/600x400/121212/FF4500?text=Dual+Stream" alt="Stream thumbnail" />
+                        <div className="stream-overlay">
+                          <div className="stream-play-icon">
+                            <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="2" fill="none">
+                              <polygon points="5 3 19 12 5 21 5 3" fill="white" />
+                            </svg>
+                      <div className="stream-details">
+                        <div className="stream-title-row">
+                          <h3 className="stream-title">Galaxy Conquest</h3>
+                        <div className="stream-meta">
+                          <div className="stream-views">
+                            <Eye className="view-icon" />
+                            <span>3.8K views</span>
+                    </motion.div>
+                    
+                    {/* Past Stream 3 */}
+                    <motion.div 
+                      key="stream-3"
+                      className="stream-card"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      whileHover={{ scale: 1.03, boxShadow: '0 0 15px rgba(0, 157, 255, 0.6)' }}
+                      onClick={() => navigate('/streamplayback/s24680')}
+                    >
+                      <div className="stream-thumbnail cosmic-gradient">
+                        <img src="https://placehold.co/600x400/121212/9932CC?text=Mobile+Stream" alt="Stream thumbnail" />
+                        <div className="stream-overlay">
+                          <div className="stream-play-icon">
+                            <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="2" fill="none">
+                              <polygon points="5 3 19 12 5 21 5 3" fill="white" />
+                            </svg>
+                      <div className="stream-details">
+                        <div className="stream-title-row">
+                          <h3 className="stream-title">Space Station Tour</h3>
+                        <div className="stream-meta">
+                          <div className="stream-views">
+                            <Eye className="view-icon" />
+                            <span>1.2K views</span>
+                    </motion.div>
                 </motion.div>
               ) : (
                 <motion.div
@@ -461,49 +636,337 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                     <div className="section-title-container">
                       <Bookmark className="section-icon green" />
                       <h2 className="section-title glow-text">COLLECTION</h2>
-                    </div>
-                    <div className="section-subtitle">YOUR SAVED TREASURES</div>
-                  </div>
                   
-                  <motion.div 
-                    className="empty-state"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <Bookmark className="empty-icon" />
-                    <h3 className="empty-title">YOUR COLLECTION IS EMPTY</h3>
-                    <p className="empty-text">Save content from other players to view it here!</p>
-                    <motion.button 
-                      className="explore-button"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                  {savedItems && savedItems.length > 0 ? (
+                    <div className="clipts-grid">
+                      {savedItems.map((item, index) => (
+                        <motion.div 
+                          key={`saved-${index}`}
+                          className="saved-clipt-card"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 * index }}
+                          whileHover={{ scale: 1.03, boxShadow: '0 0 15px rgba(157, 0, 255, 0.6)' }}
+                        >
+                          <div className="saved-clipt-thumbnail">
+                            <img src={item.thumbnail_url || item.image_url || 'https://placehold.co/600x600/121212/8A2BE2?text=Saved+Clipt'} alt="Clipt thumbnail" style={{ borderRadius: '0.75rem' }} />
+                            <div className="clipt-overlay">
+                              <div className="clipt-play-icon">
+                                <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="2" fill="none">
+                                  <polygon points="5 3 19 12 5 21 5 3" fill="white" />
+                                </svg>
+                          <div className="saved-clipt-details">
+                            <h3 className="saved-clipt-title">{item.title || 'Awesome Gaming Moment'}</h3>
+                            <div className="saved-clipt-meta">
+                              <div className="saved-clipt-views">
+                                <Eye className="view-icon" />
+                                <span>{item.views_count || Math.floor(Math.random() * 1000) + 100}</span>
+                              <div className="saved-clipt-likes">
+                                <Heart className="like-icon" />
+                                <span>{item.likes_count || Math.floor(Math.random() * 100) + 10}</span>
+                        </motion.div>
+                      ))}
+                  ) : (
+                    <motion.div 
+                      className="empty-state"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
                     >
-                      <span>EXPLORE CONTENT</span>
-                    </motion.button>
-                  </motion.div>
+                      <Bookmark className="empty-icon" />
+                      <h3 className="empty-title">YOUR COLLECTION IS EMPTY</h3>
+                      <p className="empty-text">Save clipts from other players to view them here!</p>
+                      <motion.button 
+                        className="message-button"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          const targetUser = {
+                            id: profile.id,
+                            username: profile.username || 'User',
+                            displayName: profile.display_name || profile.username
+                          };
+                          // Store in sessionStorage for more reliability
+                          sessionStorage.setItem('directMessageTarget', JSON.stringify(targetUser));
+                          navigate('/messages');
+                        }}
+                      ></motion.button>
+                    </motion.div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
             
             {/* Game screen effects */}
-            <div className="screen-glitch"></div>
-            <div className="screen-glow"></div>
             <div className="screen-corners">
-              <div className="corner top-left"></div>
-              <div className="corner top-right"></div>
-              <div className="corner bottom-left"></div>
-              <div className="corner bottom-right"></div>
-            </div>
-          </div>
           
           {/* Arcade cabinet bottom */}
           <div className="arcade-cabinet-bottom">
-            <div className="cabinet-controls"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+      
+      {/* Post viewing modal */}
+      <AnimatePresence>
+        {showPostModal && selectedPost && (
+          <motion.div 
+            className="post-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closePostModal}
+          >
+            <motion.div 
+              className="post-modal"
+              initial={{ scale: 0.9, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 20, opacity: 0 }}
+              transition={{ type: 'spring', bounce: 0.3 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="post-modal-header">
+                <h2 className="post-title">{selectedPost.title || 'Untitled Clipt'}</h2>
+                <button className="close-modal-button" onClick={closePostModal}>
+                  <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              
+              <div className="post-modal-content">
+                <div className="post-video-container">
+                  {selectedPost.video_url ? (
+                    <video 
+                      controls 
+                      autoPlay 
+                      className="post-video"
+                      src={selectedPost.video_url}
+                      poster={selectedPost.image_url || 'https://placehold.co/1280x720/121212/00C3FF?text=Game+Clipt'}
+                    />
+                  ) : (
+                    <div className="post-image-container">
+                      <img 
+                        src={selectedPost.image_url || 'https://placehold.co/1280x720/121212/00C3FF?text=Game+Clipt'} 
+                        alt={selectedPost.title || 'Clipt'} 
+                        className="post-image"
+                      />
+                      <div className="post-demo-play">
+                        <p>Demo Mode - Video would play here</p>
+                  )}
+                
+                <div className="post-details">
+                  <div className="post-creator">
+                    <img 
+                      src={selectedPost.creator_avatar || profile.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=player'} 
+                      alt="Creator" 
+                      className="creator-avatar"
+                    />
+                    <div className="creator-info">
+                      <p className="creator-name">{selectedPost.creator_name || profile.display_name || 'Gamer'}</p>
+                      <p className="post-date">{new Date(selectedPost.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                  
+                  <div className="post-description">
+                    {selectedPost.description || 'An amazing gaming moment captured and shared with the Clipt community!'}
+                  
+                  <div className="post-stats">
+                    <div className="stat">
+                      <ThumbsUp className={`stat-icon ${likedPosts.includes(selectedPost.id) ? 'liked' : ''}`} />
+                      <span>{selectedPost.likes_count || Math.floor(Math.random() * 100) + 5}</span>
+                    <div className="stat">
+                      <MessageSquare className="stat-icon" />
+                      <span>{selectedPost.comments_count || Math.floor(Math.random() * 20) + 1}</span>
+                    <div className="stat">
+                      <Eye className="stat-icon" />
+                      <span>{selectedPost.views_count || Math.floor(Math.random() * 1000) + 100}</span>
+                    <div className="stat">
+                      <Share2 className="stat-icon" />
+                      <span>{selectedPost.shares_count || Math.floor(Math.random() * 10) + 1}</span>
+                    {selectedPost.ranked_for_top10 && (
+                      <div className="stat trophy-stat">
+                        <Trophy className="stat-icon trophy-icon" />
+                        <span>Ranked</span>
+                    )}
+                  
+                  {/* Success message for ranking */}
+                  {showRankingSuccess && (
+                    <div className="ranking-success">
+                      <Trophy className="ranking-icon" />
+                      <span>Successfully ranked for Top 10!</span>
+                  )}
+                  
+                  {/* Comments Section */}
+                  {showComments && (
+                    <div className="comments-section">
+                      <h3 className="comments-header">
+                        <MessageSquare className="comments-icon" /> 
+                        Comments ({selectedPost.comments?.length || selectedPost.comments_count || 0})
+                      </h3>
+                      
+                      {/* Existing comments */}
+                      <div className="comments-list">
+                        {selectedPost.comments && selectedPost.comments.length > 0 ? (
+                          selectedPost.comments.map((comment: any, index: number) => (
+                            <motion.div 
+                              key={comment.id || index}
+                              className="comment-item"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                            >
+                              <div className="comment-author">
+                                <img 
+                                  src={comment.user?.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=comment'} 
+                                  alt="User" 
+                                  className="comment-avatar"
+                                />
+                                <div className="comment-meta">
+                                  <span className="comment-username">{comment.user?.display_name || 'Cosmic Gamer'}</span>
+                                  <span className="comment-time">
+                                    {new Date(comment.created_at || Date.now()).toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                              <p className="comment-content">{comment.content || comment.text || 'Great clip!'}</p>
+                            </motion.div>
+                          ))
+                        ) : (
+                          // Sample comments if no real comments exist
+                          [
+                            {
+                              id: 'sample-1',
+                              content: 'This is amazing gameplay! How did you pull off that move?',
+                              created_at: new Date(Date.now() - 3600000).toISOString(),
+                              user: {
+                                display_name: 'CosmicGamer42',
+                                avatar_url: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=cosmic'
+                              }
+                            },
+                            {
+                              id: 'sample-2',
+                              content: 'The graphics in this game are incredible! What settings are you using?',
+                              created_at: new Date(Date.now() - 7200000).toISOString(),
+                              user: {
+                                display_name: 'NebulaPlayer',
+                                avatar_url: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=nebula'
+                              }
+                            },
+                            {
+                              id: 'sample-3',
+                              content: 'LOL that was so clutch! 🚀',
+                              created_at: new Date(Date.now() - 10800000).toISOString(),
+                              user: {
+                                display_name: 'StarDust99',
+                                avatar_url: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=stardust'
+                              }
+                            }
+                          ].map((comment, index) => (
+                            <motion.div 
+                              key={comment.id}
+                              className="comment-item"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                            >
+                              <div className="comment-author">
+                                <img 
+                                  src={comment.user.avatar_url} 
+                                  alt="User" 
+                                  className="comment-avatar"
+                                />
+                                <div className="comment-meta">
+                                  <span className="comment-username">{comment.user.display_name}</span>
+                                  <span className="comment-time">
+                                    {new Date(comment.created_at).toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                              <p className="comment-content">{comment.content}</p>
+                            </motion.div>
+                          ))
+                        )}
+                  )}
+                  
+                  {/* Comment input area */}
+                  {showCommentInput && (
+                    <div className="comment-input-container">
+                      <textarea
+                        id="comment-input"
+                        className="comment-input"
+                        placeholder="Add your comment..."
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        rows={3}
+                      />
+                      <div className="comment-actions">
+                        <button 
+                          className="cancel-comment-button"
+                          onClick={() => {
+                            setShowCommentInput(false);
+                            setCommentText('');
+                          }}
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          className="submit-comment-button"
+                          onClick={() => handleCommentSubmit(selectedPost.id)}
+                          disabled={!commentText.trim()}
+                        >
+                          Post Comment
+                        </button>
+                  )}
+                  
+                  <div className="post-actions-container">
+                    <div className="post-actions">
+                      <button 
+                        className={`action-button like-button ${likedPosts.includes(selectedPost.id) ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLikePost(selectedPost.id);
+                        }}
+                      >
+                        <ThumbsUp className="action-icon" />
+                        <span>Like</span>
+                      </button>
+                      <button 
+                        className={`action-button comment-button ${showCommentInput ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCommentToggle();
+                        }}
+                      >
+                        <MessageSquare className="action-icon" />
+                        <span>Comment</span>
+                      </button>
+                      <button 
+                        className="action-button share-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSharePost(selectedPost.id, selectedPost.title || 'Clipt Post');
+                        }}
+                      >
+                        <Share2 className="action-icon" />
+                        <span>Share</span>
+                      </button>
+                      {(selectedPost.video_url || selectedPost.type === 'video') && !selectedPost.ranked_for_top10 && (
+                        <button 
+                          className="action-button rank-button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRankForTop10(selectedPost.id);
+                          }}
+                        >
+                          <Trophy className="action-icon" />
+                          <span>Rank</span>
+                        </button>
+                      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
   );
 };
 

@@ -4,10 +4,13 @@ import { Avatar } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { Send } from 'lucide-react';
+import { Send, Bell, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import '../styles/direct-chat.css';
 import '../styles/retro-game.css';
+import PushNotificationTest from '@/components/PushNotificationTest';
+import { Button } from '@/components/ui/button';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer';
 
 interface Message {
   id?: string;
@@ -48,6 +51,8 @@ const DirectChat = () => {
   
   const [messageText, setMessageText] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
 
   // Fetch recipient data and existing messages
   useEffect(() => {
@@ -358,6 +363,14 @@ const DirectChat = () => {
           <span className="retro-glow">{recipient?.username || 'COSMIC USER'}</span>
         </div>
         <div className="retro-header-spacer"></div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="ml-auto mr-2" 
+          onClick={() => setNotificationDrawerOpen(true)}
+        >
+          <Bell className="h-5 w-5" />
+        </Button>
       </div>
       
       {/* Messages */}
@@ -475,6 +488,25 @@ const DirectChat = () => {
           </motion.div>
         </motion.button>
       </div>
+      
+      {/* Notification Drawer */}
+      <Drawer open={notificationDrawerOpen} onOpenChange={setNotificationDrawerOpen}>
+        <DrawerContent className="max-h-[85vh] overflow-y-auto">
+          <DrawerHeader>
+            <DrawerTitle className="flex items-center justify-between">
+              <span>Message Notifications</span>
+              <DrawerClose asChild>
+                <Button variant="ghost" size="sm">
+                  <X className="h-5 w-5" />
+                </Button>
+              </DrawerClose>
+            </DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4">
+            <PushNotificationTest />
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };

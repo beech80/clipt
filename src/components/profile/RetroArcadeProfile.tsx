@@ -1,15 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Trophy, Zap, VideoIcon, User, Heart, Bookmark, UserPlus, ArrowLeft, Gamepad, Award, Star, Shield, Music, Rocket, Crown, ThumbsUp, MessageSquare, Share2, Eye, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Trophy, Zap, VideoIcon, User, Heart, Bookmark, UserPlus, ArrowLeft, Gamepad, Award, Star, Shield, Music, Rocket, Crown, ThumbsUp, MessageSquare, Share2, Eye, Settings, Lock, Bell, Clock, Calendar, Users, CircleDollarSign as Coin, Check, X, Medal, ChevronRight, AlertCircle } from 'lucide-react';
+import UserTitle from '../common/UserTitle';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import levelingService from '@/services/levelingService';
+// ConnectStripeButton now only used on Stream Setup page
+import TokenCounter from '../tokens/TokenCounter';
 import '@/styles/profile-retro-arcade.css';
+import '@/styles/cosmic-buttons.css';
+import '@/styles/post-modal-fix.css'; // Fix for post modal action buttons
+import '@/styles/post-action-buttons.css'; // Space-themed post action buttons
 import '@/styles/profile-retro-arcade-smaller.css'; // Smaller profile CSS
 import '@/styles/post-modal.css'; // Post modal styling
+import '@/styles/cosmic-post-preview.css'; // Enhanced cosmic styling for post previews
+
+// Removed ReactDOM since we're not using portals anymore
 
 interface ProfileProps {
   profile?: any;
   posts?: any[];
+  previousStreams?: any[];
   achievements?: any[];
   isOwnProfile?: boolean;
   savedItems?: any[];
@@ -17,36 +28,134 @@ interface ProfileProps {
   followingCount?: number;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
+  onBoostClick?: () => void;
+  onSquadChatClick?: () => void;
 }
 
 const RetroArcadeProfile: React.FC<ProfileProps> = ({ 
   profile = {}, 
   posts = [], 
+  previousStreams = [], 
   achievements = [],
   isOwnProfile = false,
   savedItems = [],
   followersCount = 0,
   followingCount = 0,
   activeTab = 'trophies',
-  onTabChange = () => {}
-}) => {
+  onTabChange = () => {},
+  onBoostClick = () => {},
+  onSquadChatClick = () => {}
+}): JSX.Element => {
   const navigate = useNavigate();
-  const [localActiveTab, setLocalActiveTab] = useState<'trophies' | 'clipts' | 'saved'>(activeTab as any || 'trophies');
+  const [localActiveTab, setLocalActiveTab] = useState<'trophies' | 'clipts' | 'streams'>(activeTab);
   const [selectedPost, setSelectedPost] = useState<any>(null);
-  const [showPostModal, setShowPostModal] = useState(false);
+  const [selectedStream, setSelectedStream] = useState<any>(null);
+  const [isPostModalOpen, setIsPostModalOpen] = useState<boolean>(false);
+  const [showStreamModal, setShowStreamModal] = useState<boolean>(false);
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
-  const [showCommentInput, setShowCommentInput] = useState(false);
+  const [likedStreams, setLikedStreams] = useState<string[]>([]);
   const [showComments, setShowComments] = useState(false);
+  const [showCommentInput, setShowCommentInput] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [userLevel, setUserLevel] = useState(0);
+  const [userAchievements, setUserAchievements] = useState({
+    streamsWatched: 0,
+    gamesPlayed: 0,
+    videosUploaded: 0,
+    commentsPosted: 0,
+    tokensEarned: 0
+  });
+  const [showLevelUp, setShowLevelUp] = useState(false);
   const [showRankingSuccess, setShowRankingSuccess] = useState(false);
+  const [xpProgress, setXpProgress] = useState({
+    level: 0,
+    progress: 0,
+    totalXpForCurrentLevel: 0,
+    xpToNextLevel: 100
+  });
+
+  // Mock data for previous streams
+  const [mockPreviousStreams, setMockPreviousStreams] = useState([
+    {
+      id: 's1',
+      title: 'Late Night Elden Ring',
+      thumbnail_url: 'https://i.imgur.com/ZN5EvMj.jpg',
+      duration: '2:45:30',
+      viewers_count: 142,
+      stream_date: '2025-05-25T22:00:00',
+      game: 'Elden Ring',
+      type: 'stream'
+    },
+    {
+      id: 's2',
+      title: 'Warzone 3 Tournament',
+      thumbnail_url: 'https://i.imgur.com/MXb0Krm.jpg',
+      duration: '3:22:15',
+      viewers_count: 258,
+      stream_date: '2025-05-20T19:30:00',
+      game: 'Call of Duty: Warzone 3',
+      type: 'stream'
+    },
+    {
+      id: 's3',
+      title: 'Speedrunning Metroid Prime 4',
+      thumbnail_url: 'https://i.imgur.com/HZX9PcL.jpg',
+      duration: '1:48:22',
+      viewers_count: 87,
+      stream_date: '2025-05-15T20:15:00',
+      game: 'Metroid Prime 4',
+      type: 'stream'
+    },
+    {
+      id: 's4',
+      title: 'Minecraft Hardcore Mode Day 100',
+      thumbnail_url: 'https://i.imgur.com/t7Xr5ZP.jpg',
+      duration: '4:12:45',
+      viewers_count: 195,
+      stream_date: '2025-05-10T18:00:00',
+      game: 'Minecraft',
+      type: 'stream'
+    }
+  ]);
+
+  const [tokens, setTokens] = useState(2500); // Current token balance
+  const [maxTokens, setMaxTokens] = useState(isSubscribed ? 800 : 200); // Token wallet cap based on subscription tier
 
   useEffect(() => {
     if (activeTab) {
-      setLocalActiveTab(activeTab as any);
+      setLocalActiveTab(activeTab);
     }
   }, [activeTab]);
+  
+  // Update XP progress based on achievements whenever they change
+  useEffect(() => {
+    const updateXpProgress = () => {
+      // Calculate total points from all achievements
+      const totalPoints = 
+        userAchievements.streamsWatched * 10 + 
+        userAchievements.gamesPlayed * 15 + 
+        userAchievements.videosUploaded * 20 + 
+        userAchievements.commentsPosted * 5 + 
+        userAchievements.tokensEarned * 0.5;
+      
+      // Get level info based on totalPoints
+      const levelInfo = getLevelInfo(totalPoints);
+      
+      // Update XP progress state
+      setXpProgress({
+        level: levelInfo.level,
+        progress: levelInfo.progress,
+        totalXpForCurrentLevel: levelInfo.currentLevelXp,
+        xpToNextLevel: levelInfo.xpForNextLevel
+      });
+    };
+    
+    updateXpProgress();
+  }, [userAchievements]);
 
-  const handleTabChange = (tab: 'trophies' | 'clipts' | 'saved') => {
+  const handleTabChange = (tab: 'trophies' | 'clipts' | 'streams') => {
     setLocalActiveTab(tab);
     if (onTabChange) {
       onTabChange(tab);
@@ -59,16 +168,27 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
   
   const handleViewPost = (post: any) => {
     setSelectedPost(post);
-    setShowPostModal(true);
+    setIsPostModalOpen(true);
   };
   
   const closePostModal = () => {
-    setShowPostModal(false);
+    setIsPostModalOpen(false);
     setShowCommentInput(false);
-    setShowComments(false);
     setCommentText('');
-    // Give time for animation to complete before clearing selected post
-    setTimeout(() => setSelectedPost(null), 300);
+    // Small delay to allow animation to complete
+    setTimeout(() => {
+      setSelectedPost(null);
+    }, 300);
+  };
+
+  const closeStreamModal = () => {
+    setShowStreamModal(false);
+    setShowCommentInput(false);
+    setCommentText('');
+    // Small delay to allow animation to complete
+    setTimeout(() => {
+      setSelectedStream(null);
+    }, 300);
   };
   
   const handleLikePost = (postId: string) => {
@@ -87,6 +207,8 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
     } else {
       // Like post
       setLikedPosts(prev => [...prev, postId]);
+      // Track social interaction achievement when liking a post
+      trackAchievement('socialInteraction', 2);
       // Update the post's like count in selectedPost state
       if (selectedPost && selectedPost.id === postId) {
         setSelectedPost(prev => ({
@@ -125,7 +247,7 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
       created_at: new Date().toISOString(),
       user: {
         id: profile.id,
-        display_name: profile.display_name || 'You',
+        display_name: profile.display_name || profile.username || (profile.name ? profile.name.toUpperCase() : 'You'),
         avatar_url: profile.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=you'
       }
     };
@@ -138,17 +260,6 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
         // Add the new comment to the beginning of the comments array
         comments: [newComment, ...(prev.comments || [])]
       }));
-      
-      // Update the post in the posts array
-      setPosts(currentPosts => 
-        currentPosts.map(post => 
-          post.id === postId ? {
-            ...post,
-            comments_count: (post.comments_count || 0) + 1,
-            comments: [newComment, ...(post.comments || [])]
-          } : post
-        )
-      );
     }
     
     // Reset comment input but keep comment section visible
@@ -167,9 +278,9 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
     
     // Try to use clipboard API if available
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareUrl)
+      navigator.clipboard.writeText(`Check out this post: ${window.location.origin}/post/${postId}`)
         .then(() => {
-          alert(`Link to "${title}" copied to clipboard!`);
+          toast.success(`Link to "${title}" copied to clipboard!`);
         })
         .catch(() => {
           // Fallback for clipboard API failure
@@ -179,14 +290,216 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
       // Fallback for browsers without clipboard API
       prompt('Copy this link to share:', shareUrl);
     }
+  };
+  
+  // Stream handling functions
+  const openStreamModal = (stream: any) => {
+    setSelectedStream(stream);
+    setShowStreamModal(true);
     
-    // Update share count in the UI
-    if (selectedPost && selectedPost.id === postId) {
-      setSelectedPost(prev => ({
-        ...prev,
-        shares_count: (prev.shares_count || 0) + 1
-      }));
+    // Track achievement for watching a stream
+    trackAchievement('streamsWatched', 1);
+    
+    // Random chance to earn tokens when watching a stream
+    if (Math.random() > 0.7) {
+      const tokensEarned = Math.floor(Math.random() * 20) + 5;
+      trackAchievement('tokensEarned', tokensEarned);
+      
+      setTimeout(() => {
+        toast.success(`You earned ${tokensEarned} tokens for watching this stream!`, {
+          duration: 3000,
+          icon: '🪙',
+        });
+      }, 2000);
     }
+  };
+
+  const handleLikeStream = (streamId: string) => {
+    // Toggle like for the stream
+    if (likedStreams.includes(streamId)) {
+      setLikedStreams(likedStreams.filter(id => id !== streamId));
+      toast.success('Stream unliked!');
+    } else {
+      setLikedStreams([...likedStreams, streamId]);
+      toast.success('Stream liked!');
+    }
+  };
+
+  const handleShareStream = (streamId: string, title: string = 'Stream') => {
+    // Make sure we have valid parameters
+    if (!streamId) {
+      console.error('Cannot share stream: Invalid stream ID');
+      return;
+    }
+    
+    // In a real app, you would implement social sharing
+    // For this demo, we'll simulate a clipboard copy
+    const shareUrl = `https://clipt.space/stream/${streamId}`;
+    const shareTitle = title || 'Stream'; // Ensure title has a fallback
+    
+    // Try to use clipboard API if available
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(`Check out this stream: ${window.location.origin}/stream/${streamId}`)
+        .then(() => {
+          toast.success(`Link to "${shareTitle}" copied to clipboard!`);
+        })
+        .catch(() => {
+          // Fallback for clipboard API failure
+          prompt('Copy this link to share:', shareUrl);
+        });
+    } else {
+      // Fallback for browsers without clipboard API
+      prompt('Copy this link to share:', shareUrl);
+    }
+  };
+
+  const formatStreamTime = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  // Function to toggle follow state
+  const toggleFollow = () => {
+    setIsFollowing(!isFollowing);
+    
+    toast(isFollowing ? 'Unfollowed user' : 'Following user', {
+      position: 'bottom-center',
+      duration: 2000,
+    });
+
+    if (!isFollowing) {
+      trackAchievement('socialInteraction', 5);
+    }
+  };
+
+  // Track achievements and update level accordingly
+  const trackAchievement = (type: string, value: number) => {
+    let updatedAchievements = {...userAchievements};
+    
+    switch(type) {
+      case 'streamsWatched':
+        updatedAchievements.streamsWatched += value;
+        break;
+      case 'gamesPlayed':
+        updatedAchievements.gamesPlayed += value;
+        break;
+      case 'videosUploaded':
+        updatedAchievements.videosUploaded += value;
+        break;
+      case 'commentsPosted':
+        updatedAchievements.commentsPosted += value;
+        break;
+      case 'tokensEarned':
+        updatedAchievements.tokensEarned += value;
+        // Also update the actual token count, ensuring it doesn't exceed the max cap
+        const newTokenCount = Math.min(tokens + value, maxTokens);
+        setTokens(newTokenCount);
+        
+        // Show token earned notification if tokens were earned
+        if (newTokenCount > tokens) {
+          const actualTokensEarned = newTokenCount - tokens;
+          if (actualTokensEarned > 0) {
+            toast.success(`Earned ${actualTokensEarned} tokens!`, {
+              description: `${maxTokens - newTokenCount} more until wallet cap`,
+              icon: '🪙',
+              duration: 3000
+            });
+          } else if (newTokenCount === maxTokens && tokens < maxTokens) {
+            toast.info(`Token wallet full! (${maxTokens} tokens)`, {
+              description: `Subscribe to increase your token wallet capacity`,
+              icon: '🪙',
+              duration: 3000
+            });
+          }
+        }
+        break;
+      case 'socialInteraction':
+        // Social interactions contribute to overall level progress
+        break;
+    }
+    
+    setUserAchievements(updatedAchievements);
+    calculateLevel(updatedAchievements);
+  };
+
+  // Helper function to calculate level info based on XP points
+  const getLevelInfo = (totalPoints: number) => {
+    // Level calculation formula (more sophisticated than linear)
+    // First 5 levels are easier to achieve, then it gets progressively harder
+    const level = totalPoints < 500 ? 
+      Math.floor(1 + totalPoints / 100) : 
+      Math.floor(5 + Math.sqrt((totalPoints - 500) / 50));
+    
+    // Calculate XP required for current level
+    const currentLevelXp = level <= 5 ? 
+      (level - 1) * 100 : 
+      500 + Math.pow(level - 5, 2) * 50;
+    
+    // Calculate XP required for next level
+    const nextLevelXp = level <= 4 ? 
+      level * 100 : 
+      (level === 5 ? 500 + 50 : 500 + Math.pow(level - 4, 2) * 50);
+    
+    // XP needed to reach next level
+    const xpForNextLevel = nextLevelXp - currentLevelXp;
+    
+    // Current progress within the level (0-100%)
+    const progress = Math.min(((totalPoints - currentLevelXp) / xpForNextLevel) * 100, 100);
+    
+    return {
+      level,
+      progress,
+      currentLevelXp,
+      xpForNextLevel
+    };
+  };
+
+  // Calculate user level based on achievements
+  const calculateLevel = (achievementData: any) => {
+    // Calculate total points from all achievements
+    const totalPoints = 
+      achievementData.streamsWatched * 10 + 
+      achievementData.gamesPlayed * 15 + 
+      achievementData.videosUploaded * 20 + 
+      achievementData.commentsPosted * 5 + 
+      achievementData.tokensEarned * 0.5;
+    
+    // Level calculation formula (more sophisticated than linear)
+    // First 5 levels are easier to achieve, then it gets progressively harder
+    const newLevel = totalPoints < 500 ? 
+      Math.floor(1 + totalPoints / 100) : 
+      Math.floor(5 + Math.sqrt((totalPoints - 500) / 50));
+    
+    // Check if level up occurred
+    if (newLevel > userLevel) {
+      setUserLevel(newLevel);
+      showLevelUpNotification();
+      
+      // Special rewards for milestone levels
+      if (newLevel % 5 === 0) {
+        toast.success(`Reached Level ${newLevel}! You've earned special cosmic rewards!`, {
+          duration: 5000,
+          icon: '🏆',
+        });
+      }
+    }
+  };
+
+  // Show level up notification
+  const showLevelUpNotification = () => {
+    setShowLevelUp(true);
+    setTimeout(() => setShowLevelUp(false), 3000);
+  };
+
+  const formatStreamDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
   
   const handleRankForTop10 = (postId: string) => {
@@ -207,28 +520,24 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
     }, 3000);
   };
 
+
+  // Subscription is now handled via the dedicated subscription page, no modal needed
+
+
+
   return (
     <div className="profile-retro-arcade">
+      {/* No longer need the inline modal as we're using a dedicated page */}
+      
       {/* Enhanced screen effects */}
-      <div className="retro-screen-overlay"></div>
-      <div className="retro-scanlines"></div>
-      <div className="retro-vignette"></div>
-      <div className="retro-noise"></div>
       
       {/* Arcade cabinet frame */}
       <div className="arcade-cabinet-frame">
-        <div className="arcade-cabinet-top"></div>
         <div className="arcade-cabinet-screen">
           
           {/* Arcade marquee header */}
           <div className="arcade-marquee">
-            <div className="marquee-light"></div>
-            <div className="marquee-light"></div>
-            <div className="marquee-light"></div>
             <h1 className="arcade-title glow-text">PLAYER PROFILE</h1>
-            <div className="marquee-light"></div>
-            <div className="marquee-light"></div>
-            <div className="marquee-light"></div>
           </div>
           
           {/* Player card with glowing effects */}
@@ -240,51 +549,125 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
           >
             <div className="player-card">
               <div className="player-card-inner">
-                <div className="player-avatar-container">
-                  <div className="avatar-frame">
-                    <div className="avatar-glow"></div>
-                    <img 
-                      src={profile.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=default'} 
-                      alt="Profile" 
-                      className="player-avatar"
-                    />
+                <div className="player-avatar-section">
+                  <div className="player-avatar-container">
+                    <div className="avatar-frame">
+                      <img 
+                        src={profile.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=default'} 
+                        alt="Profile" 
+                        className="player-avatar"
+                      />
+                    </div>
                   </div>
-                  <div className="player-level">
-                    <span>LVL</span>
-                    <div className="level-number">{profile.level || 99}</div>
+                  
+                  <div className="player-level-container">
+                    <div className="player-level">
+                      <div className="level-display">
+                        <span>LVL</span>
+                        <span className="level-number">{userLevel}</span>
+                      </div>
+                      
+                      {/* XP Progress Bar integrated in the level badge */}
+                      <div className="xp-progress-container">
+                        <div className="xp-progress-bar">
+                          <div 
+                            className="xp-progress-fill" 
+                            style={{ width: `${xpProgress.progress}%` }}
+                          ></div>
+                        </div>
+                        <div className="xp-progress-text">
+                          <span>XP: {xpProgress.totalXpForCurrentLevel} / {xpProgress.totalXpForCurrentLevel + xpProgress.xpToNextLevel}</span>
+                        </div>
+                      </div>
+                      
+                      {showLevelUp && (
+                        <div className="level-up-notification">
+                          <Zap className="level-up-icon" />
+                          <span>LEVEL UP!</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
                 <div className="player-info">
-                  <h2 className="player-name glow-text">{profile.display_name || 'PLAYER ONE'}</h2>
-                  <div className="player-username">@{profile.username || 'player1'}</div>
-                  <div className="player-bio">{profile.bio || 'Gaming enthusiast and clip creator'}</div>
+                  <div className="player-header">
+                    <h2 className="player-name glow-text">
+                      {profile.display_name || profile.username || (profile.name ? profile.name.toUpperCase() : 'PLAYER ONE')}
+                      {profile.verified && <span className="verified-badge ml-1">✓</span>}
+                    </h2>
+                    
+                    {profile?.selected_title && (
+                      <div className="retro-arcade-user-title">
+                        <UserTitle titleId={profile.selected_title} size="large" />
+                      </div>
+                    )}
+                  </div>
                   
                   <div className="horizontal-stats">
                     <div className="player-stat">
                       <Trophy className="stat-icon trophy" />
-                      <div className="stat-value">{achievements.length}</div>
-                      <div className="stat-label">TROPHIES</div>
+                      <span className="stat-value">{achievements.length}</span>
                     </div>
                     <div className="player-stat">
                       <VideoIcon className="stat-icon clip" />
-                      <div className="stat-value">{posts.length}</div>
-                      <div className="stat-label">CLIPTS</div>
+                      <span className="stat-value">{posts.length}</span>
                     </div>
                     <div className="player-stat">
                       <User className="stat-icon followers" />
-                      <div className="stat-value">{followersCount}</div>
-                      <div className="stat-label">FOLLOWERS</div>
+                      <span className="stat-value">{followersCount}</span>
                     </div>
                     <div className="player-stat">
                       <Star className="stat-icon rank" />
-                      <div className="stat-value">{followingCount}</div>
-                      <div className="stat-label">FOLLOWING</div>
+                      <span className="stat-value">{profile.ranking || 0}</span>
+                    </div>
+                    <div className="player-stat tokens">
+                      <Coin className="stat-icon token" />
+                      <span className="stat-value">
+                        <TokenCounter 
+                          count={tokens} 
+                          maxCount={maxTokens} 
+                          showMax={true}
+                          className="inline-flex items-center" 
+                        />
+                      </span>
                     </div>
                   </div>
-                  
-                  <div className="profile-buttons">
-                    {isOwnProfile && (
+                    
+                  {!isOwnProfile && (
+                    <div className="profile-buttons flex gap-2 flex-wrap">
+                      <motion.button 
+                        className="message-button"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          // Directly navigate to messages with userId in URL params
+                          navigate(`/messages?userId=${profile.id}&username=${encodeURIComponent(profile.username || 'User')}&displayName=${encodeURIComponent(profile.display_name || profile.username || (profile.name ? profile.name : 'User'))}`);
+                        }}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-1" />
+                        <span>MESSAGE</span>
+                      </motion.button>
+                      
+                      <motion.button 
+                        className="subscribe-button cosmic-button"
+                        whileHover={{ scale: 1.05, boxShadow: '0 0 8px rgba(236, 72, 153, 0.6)' }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('Subscribe button clicked - navigating to subscription page');
+                          navigate(`/subscribe/${profile.username}`);
+                        }}
+                      >
+                        <Star className={`h-4 w-4 mr-1 ${isSubscribed ? 'fill-current' : ''}`} />
+                        <span>{isSubscribed ? 'SUBSCRIBED' : 'SUBSCRIBE'}</span>
+                      </motion.button>
+                    </div>
+                  )}
+                    
+                  {isOwnProfile && (
+                    <div className="profile-buttons flex gap-3 flex-wrap">
                       <motion.button 
                         className="edit-profile-button"
                         onClick={() => navigate('/edit-profile')}
@@ -294,30 +677,10 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                         <Settings className="h-4 w-4 mr-1" />
                         <span>EDIT PROFILE</span>
                       </motion.button>
-                    )}
-                    
-                    {!isOwnProfile && (
-                      <button className="follow-button">
-                        <UserPlus className="h-4 w-4 mr-1" />
-                        <span>FOLLOW</span>
-                      </button>
-                    )}
-                    
-                    {!isOwnProfile && (
-                      <motion.button 
-                        className="message-button"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          // Directly navigate to messages with userId in URL params
-                          navigate(`/messages?userId=${profile.id}&username=${encodeURIComponent(profile.username || 'User')}&displayName=${encodeURIComponent(profile.display_name || profile.username)}`);
-                        }}
-                      >
-                        <MessageSquare className="h-4 w-4 mr-1" />
-                        <span>MESSAGE</span>
-                      </motion.button>
-                    )}
-                  </div>
+                      
+                      {/* Stripe Connect Button has been moved to the Stream Setup page */}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -325,7 +688,6 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
           
           {/* Enhanced arcade control panel tabs */}
           <div className="arcade-control-panel">
-            <div className="control-panel-decoration left"></div>
             <div className="arcade-tabs">
               <motion.button 
                 className={`arcade-tab ${localActiveTab === 'trophies' ? 'active' : ''}`}
@@ -335,7 +697,6 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
               >
                 <Trophy className="tab-icon yellow" />
                 <span>TROPHIES</span>
-                {localActiveTab === 'trophies' && <div className="tab-active-indicator"></div>}
               </motion.button>
               
               <motion.button 
@@ -346,21 +707,79 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
               >
                 <VideoIcon className="tab-icon cyan" />
                 <span>CLIPTS</span>
-                {localActiveTab === 'clipts' && <div className="tab-active-indicator"></div>}
               </motion.button>
               
               <motion.button 
-                className={`arcade-tab ${localActiveTab === 'saved' ? 'active' : ''}`}
-                onClick={() => handleTabChange('saved')}
+                className={`arcade-tab ${localActiveTab === 'streams' ? 'active' : ''}`}
+                onClick={() => handleTabChange('streams')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Bookmark className="tab-icon green" />
-                <span>SAVED</span>
-                {localActiveTab === 'saved' && <div className="tab-active-indicator"></div>}
+                <VideoIcon className="tab-icon green" />
+                <span>STREAMS</span>
+              </motion.button>
+              
+              <motion.button 
+                className="arcade-tab boost-tab"
+                onClick={() => {
+                  // Track analytics for boost button click
+                  console.log('Boost button clicked');
+                  // Call the parent component's onBoostClick handler
+                  onBoostClick();
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ scale: 0.9, opacity: 0.9 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ 
+                  type: 'spring',
+                  stiffness: 400,
+                  damping: 17
+                }}
+              >
+                <Rocket className="tab-icon orange" />
+                <span>BOOSTS</span>
+              </motion.button>
+              
+              {/* Squad Chat Button */}
+              <motion.button 
+                className="arcade-tab squad-chat-tab"
+                onClick={() => {
+                  // Allow access if it's the user's own profile OR if they're subscribed to this creator
+                  if (isOwnProfile || profile.is_subscribed) {
+                    console.log('Opening Squad Chat');
+                    // Navigate to squad chat or open squad chat modal
+                    navigate(`/squad-chat/${profile.id}`);
+                  } else {
+                    // Show subscription modal only for other users' squad chats
+                    toast.info('Subscribe to unlock Squad Chat!', {
+                      description: 'Join the squad for $4.99/month to access exclusive chat.',
+                      action: {
+                        label: 'Subscribe',
+                        onClick: () => navigate(`/subscribe/${profile.id}`)
+                      }
+                    });
+                  }
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ scale: 0.9, opacity: 0.9 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ 
+                  type: 'spring',
+                  stiffness: 400,
+                  damping: 17
+                }}
+              >
+                <MessageSquare className="tab-icon purple" />
+                <span>SQUAD CHAT</span>
+                {!isOwnProfile && !profile.is_subscribed && (
+                  <div className="locked-indicator">
+                    <Star className="star-icon" size={12} />
+                  </div>
+                )}
               </motion.button>
             </div>
-            <div className="control-panel-decoration right"></div>
           </div>
           
           {/* Content area with dynamic content based on active tab */}
@@ -380,7 +799,6 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                       <Trophy className="section-icon yellow" />
                       <h2 className="section-title glow-text">ACHIEVEMENTS</h2>
                     </div>
-                    <div className="section-subtitle">PLAYER TROPHIES AND BADGES</div>
                   </div>
                   
                   <div className="achievements-grid">
@@ -426,74 +844,17 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                       <VideoIcon className="section-icon cyan" />
                       <h2 className="section-title glow-text">GAME CLIPTS</h2>
                     </div>
-                    <div className="section-subtitle">CAPTURED GAMING MOMENTS</div>
                   </div>
                   
-                  {posts && posts.length > 0 ? (
-                    <div className="clipts-grid">
-                      {posts.map((post, index) => (
-                        <motion.div 
-                          key={post.id}
-                          className="clipt-card"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.1 * index }}
-                          whileHover={{ scale: 1.03, boxShadow: '0 0 15px rgba(0, 195, 255, 0.6)' }}
-                          onClick={() => handleViewPost(post)}
-                          role="button"
-                          aria-label={`View post: ${post.title}`}
-                        >
-                          <div className="clipt-thumbnail">
-                            <img src={post.image_url || 'https://placehold.co/600x400/121212/00C3FF?text=Game+Clipt'} alt="Clipt thumbnail" />
-                            <div className="clipt-overlay">
-                              <div className="clipt-play-icon">
-                                <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="2" fill="none">
-                                  <polygon points="5 3 19 12 5 21 5 3" fill="white" />
-                                </svg>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="clipt-details">
-                            <h3 className="clipt-title">{post.title}</h3>
-                            <div className="clipt-meta">
-                              <div className="clipt-views">
-                                <Eye className="view-icon" />
-                                <span>{post.views_count || Math.floor(Math.random() * 1000) + 100}</span>
-                              </div>
-                              <div className="clipt-likes">
-                                <ThumbsUp className="like-icon" />
-                                <span>{post.likes_count || 0}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  ) : (
-                    <motion.div 
-                      className="empty-state"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      <VideoIcon className="empty-icon" />
-                      <h3 className="empty-title">NO GAME CLIPTS FOUND</h3>
-                      <p className="empty-text">Capture and share your best gaming moments!</p>
-                      {isOwnProfile && (
-                        <motion.button 
-                          className="create-button"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <span>UPLOAD GAME CLIPT</span>
-                        </motion.button>
-                      )}
-                    </motion.div>
-                  )}
+                  <div className="empty-state">
+                    <VideoIcon size={60} className="empty-icon" />
+                    <h3>Ready for Your Gaming Moments</h3>
+                    <p>Upload your best gaming highlights and share them with the universe!</p>
+                  </div>
                 </motion.div>
               ) : (
                 <motion.div
-                  key="saved"
+                  key="streams"
                   className="content-section"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -502,301 +863,177 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                 >
                   <div className="section-header">
                     <div className="section-title-container">
-                      <Bookmark className="section-icon green" />
-                      <h2 className="section-title glow-text">COLLECTION</h2>
+                      <VideoIcon className="section-icon green" />
+                      <h2 className="section-title glow-text">PREVIOUS STREAMS</h2>
                     </div>
-                    <div className="section-subtitle">YOUR SAVED TREASURES</div>
                   </div>
                   
-                  {savedItems && savedItems.length > 0 ? (
-                    <div className="clipts-grid">
-                      {savedItems.map((item, index) => (
-                        <motion.div 
-                          key={`saved-${index}`}
-                          className="saved-clipt-card"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.1 * index }}
-                          whileHover={{ scale: 1.03, boxShadow: '0 0 15px rgba(157, 0, 255, 0.6)' }}
-                        >
-                          <div className="saved-clipt-thumbnail">
-                            <img src={item.thumbnail_url || item.image_url || 'https://placehold.co/600x600/121212/8A2BE2?text=Saved+Clipt'} alt="Clipt thumbnail" style={{ borderRadius: '0.75rem' }} />
-                            <div className="clipt-overlay">
-                              <div className="clipt-play-icon">
-                                <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" strokeWidth="2" fill="none">
-                                  <polygon points="5 3 19 12 5 21 5 3" fill="white" />
-                                </svg>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="saved-clipt-details">
-                            <h3 className="saved-clipt-title">{item.title || 'Awesome Gaming Moment'}</h3>
-                            <div className="saved-clipt-meta">
-                              <div className="saved-clipt-views">
-                                <Eye className="view-icon" />
-                                <span>{item.views_count || Math.floor(Math.random() * 1000) + 100}</span>
-                              </div>
-                              <div className="saved-clipt-likes">
-                                <Heart className="like-icon" />
-                                <span>{item.likes_count || Math.floor(Math.random() * 100) + 10}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  ) : (
-                    <motion.div 
-                      className="empty-state"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      <Bookmark className="empty-icon" />
-                      <h3 className="empty-title">YOUR COLLECTION IS EMPTY</h3>
-                      <p className="empty-text">Save clipts from other players to view them here!</p>
-                      <motion.button 
-                        className="message-button"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          const targetUser = {
-                            id: profile.id,
-                            username: profile.username || 'User',
-                            displayName: profile.display_name || profile.username
-                          };
-                          // Store in sessionStorage for more reliability
-                          sessionStorage.setItem('directMessageTarget', JSON.stringify(targetUser));
-                          navigate('/messages');
-                        }}
-                      ></motion.button>
-                    </motion.div>
-                  )}
+                  <div className="empty-state">
+                    <VideoIcon size={60} className="empty-icon" />
+                    <h3>Your Cosmic Streams Await</h3>
+                    <p>Start streaming your gameplay to the galaxy and grow your audience!</p>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
-            
-            {/* Game screen effects */}
-            <div className="screen-glitch"></div>
-            <div className="screen-glow"></div>
-            <div className="screen-corners">
-              <div className="corner top-left"></div>
-              <div className="corner top-right"></div>
-              <div className="corner bottom-left"></div>
-              <div className="corner bottom-right"></div>
-            </div>
-          </div>
-          
-          {/* Arcade cabinet bottom */}
-          <div className="arcade-cabinet-bottom">
-            <div className="cabinet-controls"></div>
           </div>
         </div>
       </div>
       
-      {/* Post viewing modal */}
+      {/* Post Modal */}
       <AnimatePresence>
-        {showPostModal && selectedPost && (
+        {isPostModalOpen && selectedPost && (
           <motion.div 
-            className="post-modal-overlay"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closePostModal}
           >
             <motion.div 
-              className="post-modal"
-              initial={{ scale: 0.9, y: 20, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
+              className="cosmic-modal bg-gradient-to-br from-indigo-950 to-purple-900 border-2 border-purple-500/50 rounded-xl p-6 max-w-md w-full mx-4 shadow-xl"
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20, opacity: 0 }}
-              transition={{ type: 'spring', bounce: 0.3 }}
-              onClick={e => e.stopPropagation()}
+              transition={{ type: 'spring', damping: 25 }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="post-modal-header">
-                <h2 className="post-title">{selectedPost.title || 'Untitled Clipt'}</h2>
-                <button className="close-modal-button" onClick={closePostModal}>
-                  <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
+              <div className="modal-header">
+                <h2 className="modal-title cosmic-title">{selectedPost.title || 'Clipt Post'}</h2>
+                <button 
+                  className="close-modal-button cosmic-close-button" 
+                  onClick={closePostModal}
+                >
+                  <ArrowLeft size={24} />
                 </button>
               </div>
               
-              <div className="post-modal-content">
-                <div className="post-video-container">
-                  {selectedPost.video_url ? (
-                    <video 
-                      controls 
-                      autoPlay 
-                      className="post-video"
-                      src={selectedPost.video_url}
-                      poster={selectedPost.image_url || 'https://placehold.co/1280x720/121212/00C3FF?text=Game+Clipt'}
-                    />
-                  ) : (
-                    <div className="post-image-container">
-                      <img 
-                        src={selectedPost.image_url || 'https://placehold.co/1280x720/121212/00C3FF?text=Game+Clipt'} 
-                        alt={selectedPost.title || 'Clipt'} 
-                        className="post-image"
+              <div className="modal-content">
+                <div className="post-content">
+                  {/* Video content */}
+                  {(selectedPost.video_url || selectedPost.type === 'video') && (
+                    <div className="cosmic-video-container">
+                      <video 
+                        src={selectedPost.video_url} 
+                        controls 
+                        poster={selectedPost.thumbnail_url}
+                        className="post-video"
                       />
-                      <div className="post-demo-play">
-                        <p>Demo Mode - Video would play here</p>
-                      </div>
                     </div>
                   )}
-                </div>
-                
-                <div className="post-details">
-                  <div className="post-creator">
-                    <img 
-                      src={selectedPost.creator_avatar || profile.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=player'} 
-                      alt="Creator" 
-                      className="creator-avatar"
-                    />
-                    <div className="creator-info">
-                      <p className="creator-name">{selectedPost.creator_name || profile.display_name || 'Gamer'}</p>
-                      <p className="post-date">{new Date(selectedPost.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                  
+                  {/* Image content */}
+                  {selectedPost.image_url && !selectedPost.video_url && (
+                    <div className="image-container">
+                      <img 
+                        src={selectedPost.image_url} 
+                        alt={selectedPost.title || 'Post image'} 
+                        className="post-image"
+                      />
                     </div>
+                  )}
+                  
+                  {/* Post text */}
+                  <div className="post-text cosmic-caption">
+                    <p className="caption-text">{selectedPost.content || 'No description provided.'}</p>
                   </div>
                   
-                  <div className="post-description">
-                    {selectedPost.description || 'An amazing gaming moment captured and shared with the Clipt community!'}
-                  </div>
-                  
-                  <div className="post-stats">
-                    <div className="stat">
-                      <ThumbsUp className={`stat-icon ${likedPosts.includes(selectedPost.id) ? 'liked' : ''}`} />
-                      <span>{selectedPost.likes_count || Math.floor(Math.random() * 100) + 5}</span>
+                  {/* Upper stats & profile actions */}
+                  <div className="arcade-stats">
+                    <div className="arcade-stats-item">
+                      <div className="stat-label"><Users size={14} className="stat-icon" /> Followers</div>
+                      <div className="stat-value">{followersCount.toLocaleString()}</div>
                     </div>
-                    <div className="stat">
-                      <MessageSquare className="stat-icon" />
-                      <span>{selectedPost.comments_count || Math.floor(Math.random() * 20) + 1}</span>
+                    <div className="arcade-stats-item">
+                      <div className="stat-label"><User size={14} className="stat-icon" /> Following</div>
+                      <div className="stat-value">{followingCount.toLocaleString()}</div>
                     </div>
-                    <div className="stat">
-                      <Eye className="stat-icon" />
-                      <span>{selectedPost.views_count || Math.floor(Math.random() * 1000) + 100}</span>
+                    <div className="arcade-stats-item">
+                      <div className="stat-label"><Trophy size={14} className="stat-icon" /> Trophies</div>
+                      <div className="stat-value">{(achievements || []).length}</div>
                     </div>
-                    <div className="stat">
-                      <Share2 className="stat-icon" />
-                      <span>{selectedPost.shares_count || Math.floor(Math.random() * 10) + 1}</span>
-                    </div>
-                    {selectedPost.ranked_for_top10 && (
-                      <div className="stat trophy-stat">
-                        <Trophy className="stat-icon trophy-icon" />
-                        <span>Ranked</span>
+                    
+                    {!isOwnProfile && (
+                      <div className="profile-actions">
+                        <button 
+                          className="cosmic-button follow-button"
+                          onClick={() => toggleFollow()}
+                        >
+                          {isFollowing ? (
+                            <><Check className="button-icon" /> Following</>
+                          ) : (
+                            <><UserPlus className="button-icon" /> Follow</>
+                          )}
+                        </button>
+                        <button 
+                          className="cosmic-button boost-button"
+                          onClick={() => onBoostClick()}
+                        >
+                          <Rocket className="button-icon" /> Boost
+                        </button>
+                        <button 
+                          className="cosmic-button squad-chat-button"
+                          onClick={() => onSquadChatClick()}
+                        >
+                          <MessageSquare className="button-icon" /> Squad Chat
+                        </button>
                       </div>
                     )}
                   </div>
                   
-                  {/* Success message for ranking */}
-                  {showRankingSuccess && (
-                    <div className="ranking-success">
-                      <Trophy className="ranking-icon" />
-                      <span>Successfully ranked for Top 10!</span>
+                  {/* Post stats */}
+                  <div className="post-stats">
+                    <div className="stat">
+                      <ThumbsUp className="stat-icon" />
+                      <span>{selectedPost.likes_count || 0} Likes</span>
                     </div>
-                  )}
+                    <div className="stat">
+                      <MessageSquare className="stat-icon" />
+                      <span>{selectedPost.comments_count || 0} Comments</span>
+                    </div>
+                    <div className="stat">
+                      <Eye className="stat-icon" />
+                      <span>{selectedPost.views_count || 0} Views</span>
+                    </div>
+                  </div>
                   
-                  {/* Comments Section */}
+                  {/* Comments section */}
                   {showComments && (
                     <div className="comments-section">
-                      <h3 className="comments-header">
-                        <MessageSquare className="comments-icon" /> 
-                        Comments ({selectedPost.comments?.length || selectedPost.comments_count || 0})
-                      </h3>
+                      <h3 className="comments-title">Comments</h3>
                       
-                      {/* Existing comments */}
-                      <div className="comments-list">
-                        {selectedPost.comments && selectedPost.comments.length > 0 ? (
-                          selectedPost.comments.map((comment: any, index: number) => (
-                            <motion.div 
-                              key={comment.id || index}
-                              className="comment-item"
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: index * 0.1 }}
-                            >
-                              <div className="comment-author">
-                                <img 
-                                  src={comment.user?.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=comment'} 
-                                  alt="User" 
-                                  className="comment-avatar"
-                                />
-                                <div className="comment-meta">
-                                  <span className="comment-username">{comment.user?.display_name || 'Cosmic Gamer'}</span>
-                                  <span className="comment-time">
-                                    {new Date(comment.created_at || Date.now()).toLocaleDateString('en-US', { 
-                                      month: 'short', 
-                                      day: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit'
-                                    })}
-                                  </span>
-                                </div>
-                              </div>
-                              <p className="comment-content">{comment.content || comment.text || 'Great clip!'}</p>
-                            </motion.div>
-                          ))
-                        ) : (
-                          // Sample comments if no real comments exist
-                          [
-                            {
-                              id: 'sample-1',
-                              content: 'This is amazing gameplay! How did you pull off that move?',
-                              created_at: new Date(Date.now() - 3600000).toISOString(),
-                              user: {
-                                display_name: 'CosmicGamer42',
-                                avatar_url: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=cosmic'
-                              }
-                            },
-                            {
-                              id: 'sample-2',
-                              content: 'The graphics in this game are incredible! What settings are you using?',
-                              created_at: new Date(Date.now() - 7200000).toISOString(),
-                              user: {
-                                display_name: 'NebulaPlayer',
-                                avatar_url: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=nebula'
-                              }
-                            },
-                            {
-                              id: 'sample-3',
-                              content: 'LOL that was so clutch! 🚀',
-                              created_at: new Date(Date.now() - 10800000).toISOString(),
-                              user: {
-                                display_name: 'StarDust99',
-                                avatar_url: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=stardust'
-                              }
-                            }
-                          ].map((comment, index) => (
-                            <motion.div 
-                              key={comment.id}
-                              className="comment-item"
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: index * 0.1 }}
-                            >
-                              <div className="comment-author">
-                                <img 
-                                  src={comment.user.avatar_url} 
-                                  alt="User" 
-                                  className="comment-avatar"
-                                />
-                                <div className="comment-meta">
-                                  <span className="comment-username">{comment.user.display_name}</span>
-                                  <span className="comment-time">
-                                    {new Date(comment.created_at).toLocaleDateString('en-US', { 
-                                      month: 'short', 
-                                      day: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit'
-                                    })}
-                                  </span>
-                                </div>
-                              </div>
+                      {selectedPost.comments && selectedPost.comments.length > 0 ? (
+                        selectedPost.comments.map((comment: any) => (
+                          <motion.div 
+                            key={comment.id}
+                            className="comment-item"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                          >
+                            <img 
+                              src={comment.user.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=default'} 
+                              alt="User" 
+                              className="comment-avatar"
+                            />
+                            <div className="comment-meta">
+                              <span className="comment-username">{comment.user.display_name || comment.user.username || 'Gamer'}</span>
+                              <span className="comment-time">
+                                {new Date(comment.created_at).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
                               <p className="comment-content">{comment.content}</p>
-                            </motion.div>
-                          ))
-                        )}
-                      </div>
+                            </div>
+                          </motion.div>
+                        ))
+                      ) : (
+                        <div className="no-comments">
+                          <p>No comments yet. Be the first to comment!</p>
+                        </div>
+                      )}
                     </div>
                   )}
                   
@@ -832,33 +1069,57 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
                     </div>
                   )}
                   
-                  <div className="post-actions">
+                  <div className="post-actions cosmic-button-container" onClick={(e) => e.stopPropagation()}>
                     <button 
-                      className={`action-button like-button ${likedPosts.includes(selectedPost.id) ? 'active' : ''}`}
-                      onClick={() => handleLikePost(selectedPost.id)}
+                      className={`cosmic-action-button like-button ${likedPosts.includes(selectedPost.id) ? 'active' : ''}`}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        e.preventDefault();
+                        handleLikePost(selectedPost.id); 
+                        toast.success('Post liked!'); 
+                      }}
+                      aria-label="Like post"
                     >
-                      <ThumbsUp className="action-icon" />
-                      {likedPosts.includes(selectedPost.id) ? 'Liked' : 'Like'}
+                      <ThumbsUp className="cosmic-action-icon" />
+                      <span>Like</span>
                     </button>
                     <button 
-                      className={`action-button comment-button ${showCommentInput ? 'active' : ''}`}
-                      onClick={handleCommentToggle}
+                      className={`cosmic-action-button comment-button ${showCommentInput ? 'active' : ''}`}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        e.preventDefault();
+                        handleCommentToggle(); 
+                      }}
+                      aria-label="Comment on post"
                     >
-                      <MessageSquare className="action-icon" /> Comment
+                      <MessageSquare className="cosmic-action-icon" />
+                      <span>Comment</span>
                     </button>
                     <button 
-                      className="action-button share-button"
-                      onClick={() => handleSharePost(selectedPost.id, selectedPost.title || 'Clipt Post')}
+                      className="cosmic-action-button share-button"
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        e.preventDefault();
+                        handleSharePost(selectedPost.id, selectedPost.title || 'Clipt Post'); 
+                      }}
+                      aria-label="Share post"
                     >
-                      <Share2 className="action-icon" /> Share
+                      <Share2 className="cosmic-action-icon" />
+                      <span>Share</span>
                     </button>
-                    {/* Add Rank for Top 10 button for videos */}
                     {(selectedPost.video_url || selectedPost.type === 'video') && !selectedPost.ranked_for_top10 && (
                       <button 
-                        className="action-button rank-button"
-                        onClick={() => handleRankForTop10(selectedPost.id)}
+                        className="cosmic-action-button rank-button"
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          e.preventDefault();
+                          handleRankForTop10(selectedPost.id); 
+                          toast.success('Post ranked for Top 10!'); 
+                        }}
+                        aria-label="Rank post for Top 10"
                       >
-                        <Trophy className="action-icon" /> Rank for Top 10
+                        <Trophy className="cosmic-action-icon" />
+                        <span>Rank</span>
                       </button>
                     )}
                   </div>
@@ -868,6 +1129,200 @@ const RetroArcadeProfile: React.FC<ProfileProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* We're using the renderSubscriptionModal function instead of this duplicate */}
+      
+      {/* Stream modal section - properly restructured */}
+      <AnimatePresence>
+        {selectedStream && (
+          <motion.div 
+            className="stream-modal-backdrop cosmic-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedStream(null)}
+          >
+            <motion.div 
+              className="stream-modal-content cosmic-modal-content"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                className="close-modal-button cosmic-close-button" 
+                onClick={() => setSelectedStream(null)}
+              >
+                <ArrowLeft size={24} />
+                <span>Back</span>
+              </button>
+              
+              <div className="stream-content-wrapper cosmic-stream-container">
+                {/* Stream content section */}
+                <div className="post-media stream-media cosmic-media-container">
+                  {selectedStream.video_url ? (
+                    <div className="video-container stream-video-container cosmic-video-container">
+                      <video 
+                        controls 
+                        className="stream-video cosmic-video"
+                        src={selectedStream.video_url}
+                        poster={selectedStream.thumbnail_url || 'https://i.imgur.com/ZN5EvMj.jpg'}
+                        autoPlay
+                        controlsList="nodownload"
+                        playsInline
+                      >
+                        <source src={selectedStream.video_url} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                      
+                      {/* Token earning overlay */}
+                      <div className="token-earning-overlay">
+                        <div className="token-counter">
+                          <Coin className="token-icon pulse-glow" />
+                          <span className="earned-tokens">+45</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : selectedStream.thumbnail_url ? (
+                    <img 
+                      src={selectedStream.thumbnail_url} 
+                      alt={selectedStream.title || 'Stream thumbnail'} 
+                      className="stream-thumbnail cosmic-glow-image" 
+                    />
+                  ) : (
+                    <div className="video-placeholder stream-placeholder cosmic-video-placeholder">
+                      <VideoIcon size={64} className="cosmic-video-icon" />
+                      <span>Loading Stream Preview...</span>
+                    </div>
+                  )}
+                  
+                  {/* Stream duration badge */}
+                  <div className="stream-duration-badge">
+                    <Clock className="duration-icon pulse-glow" />
+                    <span>{selectedStream.duration || '2:45:30'}</span>
+                  </div>
+                </div>
+                
+                {/* Stream description */}
+                <div className="post-text stream-description cosmic-description">
+                  <p>{selectedStream?.description || 'Live stream gameplay of Elden Ring with cosmic commentary!'}</p>
+                </div>
+                
+                {/* Stream stats */}
+                <div className="stream-stats cosmic-stats">
+                </div>
+                
+
+                
+                {/* Comments section */}
+                {showComments && (
+                  <div className="comments-section cosmic-comments">
+                    <h3 className="comments-title">Comments</h3>
+                    
+                    {selectedStream?.comments && selectedStream?.comments.length > 0 ? (
+                      selectedStream?.comments?.map((comment: any) => (
+                        <motion.div 
+                          key={comment.id}
+                          className="comment-item cosmic-comment"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                        >
+                          <img 
+                            src={comment.user.avatar_url || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=default'} 
+                            alt="User" 
+                            className="comment-avatar"
+                          />
+                          <div className="comment-meta">
+                            <span className="comment-username">{comment.user.display_name || comment.user.username || 'Gamer'}</span>
+                            <span className="comment-time">
+                              {new Date(comment.created_at).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                            <p className="comment-content">{comment.content}</p>
+                          </div>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="no-comments">
+                        <p>No comments yet. Be the first to comment on this stream!</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Comment input area */}
+                {showCommentInput && (
+                  <div className="comment-input-container">
+                    <textarea
+                      id="comment-input"
+                      className="comment-input"
+                      placeholder="Add your comment to this stream..."
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      rows={3}
+                    />
+                    <div className="comment-actions">
+                      <button 
+                        className="cancel-comment-button"
+                        onClick={() => {
+                          setShowCommentInput(false);
+                          setCommentText('');
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        className="submit-comment-button"
+                        onClick={() => handleCommentSubmit(selectedStream.id)}
+                        disabled={!commentText.trim()}
+                      >
+                        Post Comment
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="post-actions cosmic-button-container">
+                  <button 
+                    className={`cosmic-action-button like-button ${likedStreams.includes(selectedStream.id) ? 'active' : ''}`}
+                    onClick={(e) => { e.stopPropagation(); handleLikeStream(selectedStream.id); }}
+                  >
+                    <ThumbsUp className="cosmic-action-icon" />
+                    <span>Like</span>
+                  </button>
+                  <button 
+                    className={`cosmic-action-button comment-button ${showCommentInput ? 'active' : ''}`}
+                    onClick={(e) => { e.stopPropagation(); handleCommentToggle(); }}
+                  >
+                    <MessageSquare className="cosmic-action-icon" />
+                    <span>Comment</span>
+                  </button>
+                  <button
+                    className="cosmic-action-button share-button"
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      if (selectedStream && selectedStream.id) {
+                        // Safely access the title property with optional chaining
+                        const streamTitle = selectedStream?.title || 'Stream';
+                        handleShareStream(selectedStream.id, streamTitle); 
+                      }
+                    }}
+                  >
+                    <Share2 className="cosmic-action-icon" />
+                    <span>Share</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* We've removed the subscription modal since we now use a separate subscription page */}
     </div>
   );
 };

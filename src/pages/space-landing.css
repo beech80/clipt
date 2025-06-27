@@ -1,0 +1,87 @@
+/* Space Landing CSS */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.space-logo {
+  color: white;
+  font-size: 3.75rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 10px rgba(255,255,255,0.8);
+}
+
+.space-bg {
+  background-color: #1A0544;
+  overflow: hidden;
+}
+
+.space-planet-blue {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  left: 10%;
+  top: 15%;
+  background-color: #3B82F6;
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+.space-planet-orange {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  right: 10%;
+  top: 20%;
+  background-color: #F97316;
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.5);
+}
+
+.orange-button {
+  background-color: #F97316;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  font-weight: 600;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.orange-button:hover {
+  background-color: #EA580C;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(249, 115, 22, 0.4);
+}
+
+.purple-button {
+  background-color: #9333EA;
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.purple-button:hover {
+  background-color: #7E22CE;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(147, 51, 234, 0.4);
+}
+
+.brown-button {
+  background-color: #92400E;
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  border: 1px solid #78350F;
+  transition: all 0.2s ease;
+}
+
+.brown-button:hover {
+  background-color: #78350F;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(146, 64, 14, 0.4);
+}

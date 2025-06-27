@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { PostInteractions } from "./interactions/PostInteractions";
 import { Post } from "@/types/post";
-import { Heart, MessageSquare, Trophy, ChevronDown, ChevronUp, MoreVertical, Gamepad2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Heart, MessageSquare, Trophy, ChevronDown, ChevronUp, MoreVertical, Gamepad2, Rocket } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import CommentModal from "../comments/CommentModal";
@@ -34,6 +35,9 @@ const PostItem = ({ post }: PostItemProps) => {
   const [loadingComments, setLoadingComments] = useState(false);
   const [editingComment, setEditingComment] = useState(null);
   const [editContent, setEditContent] = useState('');
+  const [likeCount, setLikeCount] = useState(post.like_count || 0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isLikeAnimating, setIsLikeAnimating] = useState(false);
 
   const { data: commentsCount = 0, refetch: refetchCommentCount } = useQuery({
     queryKey: ['comments-count', post.id],
@@ -61,7 +65,31 @@ const PostItem = ({ post }: PostItemProps) => {
 
   useEffect(() => {
     setIsLoading(false);
+    checkIfPostLiked();
   }, []);
+
+  // Check if the current user has liked this post
+  const checkIfPostLiked = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('post_likes')
+        .select('id')
+        .eq('post_id', post.id)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking post like status:', error);
+        return;
+      }
+      
+      setIsLiked(!!data);
+    } catch (error) {
+      console.error('Exception checking post like status:', error);
+    }
+  };
 
   const fetchComments = async () => {
     if (!showComments) return;
@@ -281,7 +309,108 @@ const PostItem = ({ post }: PostItemProps) => {
         </div>
         
         {/* Added a more prominent comment button */}
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center space-x-3">
+          {/* Like Button with cosmic animation */}
+          <motion.button
+            onClick={async (e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              if (!user) {
+                toast.error('Please log in to like posts');
+                return;
+              }
+
+              setIsLikeAnimating(true);
+              
+              try {
+                if (isLiked) {
+                  // Unlike post
+                  const { error } = await supabase
+                    .from('post_likes')
+                    .delete()
+                    .eq('post_id', post.id)
+                    .eq('user_id', user.id);
+                  
+                  if (error) throw error;
+                  
+                  setLikeCount(prev => Math.max(0, prev - 1));
+                  setIsLiked(false);
+                  toast({
+                    title: "Cosmic Interaction",
+                    description: "Like removed from post",
+                    icon: <Rocket className="h-4 w-4 text-orange-400" />
+                  });
+                } else {
+                  // Like post
+                  const { error } = await supabase
+                    .from('post_likes')
+                    .insert({
+                      post_id: post.id,
+                      user_id: user.id
+                    });
+                  
+                  if (error) throw error;
+                  
+                  setLikeCount(prev => prev + 1);
+                  setIsLiked(true);
+                  toast({
+                    title: "Cosmic Boost",
+                    description: "You've boosted this post!",
+                    icon: <Rocket className="h-4 w-4 text-orange-400" />
+                  });
+                }
+
+                // Update the post like count in the posts table
+                await supabase
+                  .from('posts')
+                  .update({ like_count: isLiked ? likeCount - 1 : likeCount + 1 })
+                  .eq('id', post.id);
+                  
+              } catch (error) {
+                console.error('Error toggling like:', error);
+                toast.error('Failed to update like');
+              } finally {
+                setTimeout(() => setIsLikeAnimating(false), 1000);
+              }
+            }}
+            className={`relative group flex items-center space-x-1 ${isLiked ? 'text-orange-500' : 'text-gaming-300'} hover:text-orange-500 transition-colors`}
+            initial={{ scale: 1 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <AnimatePresence>
+              {isLikeAnimating && (
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  initial={{ scale: 0.8, opacity: 1 }}
+                  animate={{
+                    scale: 2,
+                    opacity: 0,
+                    boxShadow: [
+                      '0 0 0 0 rgba(255, 125, 0, 0)',
+                      '0 0 0 8px rgba(255, 125, 0, 0.3)',
+                      '0 0 0 16px rgba(255, 125, 0, 0)'
+                    ]
+                  }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.8 }}
+                />
+              )}
+            </AnimatePresence>
+            <motion.span
+              animate={isLikeAnimating ? {
+                scale: [1, 1.35, 1],
+                rotate: [0, 15, -15, 0],
+                transition: { duration: 0.5 }
+              } : {}}
+            >
+              <Heart 
+                className={`h-5 w-5 ${isLiked ? 'fill-orange-500' : ''} transition-all duration-300`}
+              />
+            </motion.span>
+            <span className="text-xs font-semibold">{likeCount || 0}</span>
+          </motion.button>
+          
           <Button 
             onClick={handleViewAllComments} 
             className="h-8 px-4 text-sm bg-gaming-700 hover:bg-gaming-600 text-white flex items-center space-x-1"

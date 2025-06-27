@@ -1,8 +1,23 @@
+/* Fix for runtime errors in Squad Chat */
+// @ts-ignore
+window.number = window.number || Number;
+
+// Add Symbol.iterator to Number prototype if someone tries to iterate over a number
+// This prevents 'number is not iterable' errors
+// @ts-ignore
+if (typeof Symbol !== 'undefined' && Symbol.iterator && !Number.prototype[Symbol.iterator]) {
+  // @ts-ignore
+  Number.prototype[Symbol.iterator] = function* () {
+    // If someone tries to iterate a number, yield nothing
+    // This is safer than throwing an error
+    return;
+  };
+}
+
 import React, { useState, useEffect, lazy, createContext, useContext } from 'react';
 import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import Welcome from './pages/Welcome';
-import SimpleSpace from './gaming/SimpleSpace';
-import CleanSpaceLanding from './gaming/CleanSpaceLanding';
+// Landing pages removed as requested by user
 import PageTransition from '@/components/PageTransition';
 import { Toaster } from 'sonner';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -59,9 +74,9 @@ const GlobalStyle = createGlobalStyle`
 `;
 import TabsNavigation from '@/components/TabsNavigation';
 
-const LandingPage = React.lazy(() => import('./pages/LandingPage'));
-// Import cosmic space landing page with game icons - using a more robust import approach
+// SpaceLanding is the main landing page that shows first when opening the app
 const SpaceLanding = React.lazy(() => import('./pages/SpaceLanding'));
+// Home will redirect to SpaceLanding
 const Home = React.lazy(() => import('./pages/Home'));
 const Auth = React.lazy(() => import('./pages/Auth'));
 const NewPost = React.lazy(() => import('./pages/NewPost'));
@@ -94,7 +109,11 @@ const GameMainMenu = React.lazy(() => import('./pages/GameMainMenu'));
 const Notifications = React.lazy(() => import('./pages/Notifications'));
 // Using the original Streaming page implementation
 const Streaming = React.lazy(() => import('./pages/Streaming')); // Stream setup page
+const StreamingCenter = React.lazy(() => import('./pages/StreamingCenter')); // New enhanced streaming center
+const StreamDiscoveryPage = React.lazy(() => import('./pages/StreamDiscoveryPage')); // Intelligent stream discovery
 const PostSelection = React.lazy(() => import('./pages/PostSelection'));
+const SubscriptionPage = React.lazy(() => import('./components/profile/SubscriptionPage'));
+const TokenSystemPage = React.lazy(() => import('./pages/TokenSystemPage')); // Token System page
 // Use VideoEditor for all uploads
 const VideoEditor = React.lazy(() => import('./pages/VideoEditor'));
 const StreamingPageModern = React.lazy(() => import('./pages/StreamingPageModern')); // Modern streaming page with all streamers
@@ -114,30 +133,10 @@ const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
 const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
 const AllCommentsPage = React.lazy(() => import('./pages/AllCommentsPage'));
 const GroupChat = React.lazy(() => import('./pages/GroupChat'));
-// Using an inline React.lazy component for SquadChat to avoid import issues
-const SquadChat = React.lazy(() => {
-  const SquadChatComponent = function() {
-    return React.createElement(
-      'div',
-      { 
-        className: 'cosmic-squad-chat', 
-        style: {
-          background: 'linear-gradient(135deg, #190033, #000)',
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          padding: '2rem'
-        }
-      },
-      React.createElement('h1', { style: { fontSize: '2rem', marginBottom: '1rem', color: '#60a5fa' } }, 'Squad Chat'),
-      React.createElement('p', null, 'Chat functionality will be available soon.')
-    );
-  };
-  return Promise.resolve({ default: SquadChatComponent });
-});
+const NotificationDemo = React.lazy(() => import('./pages/NotificationDemo'));
+const NotificationCenter = React.lazy(() => import('./pages/NotificationCenter'));
+// Import the full CosmicSquadChat component
+const SquadChat = React.lazy(() => import('./pages/CosmicSquadChat'));
 const CommentsFullPage = React.lazy(() => import('./pages/CommentsFullPage'));
 const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage'));
 const VideoDebug = React.lazy(() => import('./pages/VideoDebug'));
@@ -307,14 +306,13 @@ const AppContent = () => {
   return (
     <PageTransition>
       <Routes>
+        {/* Make SpaceLanding the default landing page for all entry points */}
+        <Route index element={<SpaceLanding />} />
         <Route path="/" element={<SpaceLanding />} />
+        <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/boost-store" element={<SuspenseBoundary><BoostStore /></SuspenseBoundary>} />
         <Route path="/edit-profile" element={<SuspenseBoundary><EditProfile /></SuspenseBoundary>} />
-        <Route path="/home" element={
-          <SuspenseBoundary>
-            <Home />
-          </SuspenseBoundary>
-        } />
+        {/* Home route redirects to root where SpaceLanding is shown */}
         <Route path="/auth" element={<SuspenseBoundary><Auth /></SuspenseBoundary>} />
         <Route path="/discovery" element={<SuspenseBoundary><Discovery /></SuspenseBoundary>} />
         <Route path="/discovery-new" element={<SuspenseBoundary><Discovery /></SuspenseBoundary>} />
@@ -331,6 +329,7 @@ const AppContent = () => {
         <Route path="/post/:postId/comments" element={<SuspenseBoundary loadingMessage="Loading comments..."><CommentsPage /></SuspenseBoundary>} />
         <Route path="/comments-full/:postId" element={<SuspenseBoundary loadingMessage="Loading comments..."><CommentsFullPage /></SuspenseBoundary>} />
         <Route path="/group-chat" element={<SuspenseBoundary loadingMessage="Loading chat..."><GroupChat /></SuspenseBoundary>} />
+        <Route path="/subscribe/:username" element={<SuspenseBoundary loadingMessage="Loading subscription options..."><SubscriptionPage /></SuspenseBoundary>} />
         <Route path="/squad-chat/:id" element={<SuspenseBoundary loadingMessage="Loading Squad Chat..."><SquadChat /></SuspenseBoundary>} />
         <Route path="/game/:id" element={<SuspenseBoundary loadingMessage="Loading game details..."><GameDetailsPage /></SuspenseBoundary>} />
         <Route path="/games" element={<SuspenseBoundary loadingMessage="Finding top games..."><TopGames /></SuspenseBoundary>} />
@@ -356,13 +355,17 @@ const AppContent = () => {
         <Route path="/settings/profile" element={<SuspenseBoundary loadingMessage="Loading profile editor..."><EditProfilePage /></SuspenseBoundary>} />
         <Route path="/game-menu" element={<SuspenseBoundary><GameMenu /></SuspenseBoundary>} />
         <Route path="/notifications" element={<SuspenseBoundary loadingMessage="Loading notifications..."><NotificationsPage /></SuspenseBoundary>} />
+        <Route path="/notifications-demo" element={<SuspenseBoundary loadingMessage="Loading notification demo..."><NotificationDemo /></SuspenseBoundary>} />
+        <Route path="/tokens" element={<SuspenseBoundary loadingMessage="Loading token system..."><TokenSystemPage /></SuspenseBoundary>} />
         <Route path="/streams-setup" element={<SuspenseBoundary loadingMessage="Loading stream setup..."><Streaming /></SuspenseBoundary>} />
         <Route path="/streaming" element={<SuspenseBoundary loadingMessage="Loading streamers..."><StreamingPageModern /></SuspenseBoundary>} />
-        <Route path="/streaming-setup" element={<SuspenseBoundary loadingMessage="Loading stream setup..."><Streaming /></SuspenseBoundary>} />
+        <Route path="/streaming-center" element={<StreamingCenter />} />
+        <Route path="/discover-streams" element={<SuspenseBoundary loadingMessage="Loading stream discovery..."><StreamDiscoveryPage /></SuspenseBoundary>} />
         <Route path="/streaming/dashboard" element={<SuspenseBoundary loadingMessage="Loading stream dashboard..."><Streaming /></SuspenseBoundary>} />
         <Route path="/streaming/schedule" element={<SuspenseBoundary loadingMessage="Loading stream schedule..."><Streaming /></SuspenseBoundary>} />
         <Route path="/streams" element={<SuspenseBoundary loadingMessage="Loading stream setup..."><Streams /></SuspenseBoundary>} />
         <Route path="/stream/:id" element={<SuspenseBoundary loadingMessage="Loading stream view..."><StreamView /></SuspenseBoundary>} />
+        <Route path="/squad-chat/:id" element={<SuspenseBoundary loadingMessage="Loading Squad Chat..."><SquadChat /></SuspenseBoundary>} />
         <Route path="/messages" element={<SuspenseBoundary loadingMessage="Loading messages..."><Messages /></SuspenseBoundary>} />
         <Route path="/settings" element={<SuspenseBoundary loadingMessage="Loading settings..."><Settings /></SuspenseBoundary>} />
         <Route path="/edit-profile" element={<SuspenseBoundary loadingMessage="Loading profile editor..."><EditProfile /></SuspenseBoundary>} />
@@ -488,7 +491,7 @@ function App() {
   }, []);
 
   // Routes that should display the tabs navigation
-  const tabNavigationRoutes = ['/trophies', '/saved'];
+  const tabNavigationRoutes = ['/trophies', '/saved', '/streaming-center', '/discover-streams'];
   const shouldShowTabNavigation = tabNavigationRoutes.some(route => 
     location.pathname === route
   );

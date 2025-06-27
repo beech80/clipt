@@ -5,6 +5,7 @@ import { useToast } from "../components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { loadStripe } from '@stripe/stripe-js';
 
 interface DonationModalProps {
   isOpen: boolean;
@@ -29,22 +30,47 @@ const DonationModal = ({ isOpen, onClose, streamerName = 'this streamer' }: Dona
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Donation Successful!",
-        description: `You donated $${amount} to ${streamerName}`,
+      // Create a Stripe checkout session for donation
+      const response = await fetch('/api/create-donation-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: parseFloat(amount),
+          streamerName,
+          message
+        })
       });
       
-      onClose();
+      if (!response.ok) {
+        throw new Error('Failed to create donation session');
+      }
+      
+      const { sessionId } = await response.json();
+      
+      // Load Stripe and redirect to checkout
+      const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUB);
+      if (!stripe) {
+        throw new Error('Failed to load Stripe');
+      }
+      
+      // Redirect to Stripe checkout
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+      if (error) {
+        throw error;
+      }
+      
+      // This will only execute if the redirect fails
+      toast({
+        title: "Redirecting to payment...",
+        description: `Preparing your $${amount} donation to ${streamerName}`,
+      });
     } catch (error) {
+      console.error('Donation error:', error);
       toast({
         variant: "destructive",
         title: "Donation Failed",
-        description: "There was an error processing your donation",
+        description: error.message || "There was an error processing your donation",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };

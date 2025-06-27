@@ -1,0 +1,474 @@
+/* Enhanced Cosmic Post Preview Styling */
+
+/* Gaming Highlight Post Preview */
+.gaming-highlight-preview {
+  background: linear-gradient(135deg, rgba(3, 7, 30, 0.85) 0%, rgba(7, 20, 60, 0.85) 100%);
+  border: 2px solid rgba(0, 195, 255, 0.6);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 
+    0 0 20px rgba(0, 195, 255, 0.3),
+    0 0 40px rgba(0, 101, 255, 0.2),
+    inset 0 0 15px rgba(0, 195, 255, 0.2);
+  margin: 15px 0;
+  transition: all 0.3s ease;
+}
+
+.stream-preview {
+  background: linear-gradient(135deg, rgba(5, 10, 40, 0.9) 0%, rgba(10, 25, 70, 0.9) 100%);
+  border: 2px solid rgba(0, 255, 230, 0.7);
+  box-shadow: 
+    0 0 25px rgba(0, 255, 230, 0.35),
+    0 0 50px rgba(0, 150, 255, 0.25),
+    inset 0 0 20px rgba(0, 255, 230, 0.25);
+  transition: all 0.4s ease-out;
+}
+
+.stream-preview:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 0 30px rgba(0, 255, 230, 0.5),
+    0 0 60px rgba(0, 150, 255, 0.35),
+    inset 0 0 25px rgba(0, 255, 230, 0.3);
+  border: 2px solid rgba(0, 255, 230, 0.9);
+}
+
+.gaming-highlight-preview:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 0 25px rgba(0, 195, 255, 0.4),
+    0 0 50px rgba(0, 101, 255, 0.3),
+    inset 0 0 20px rgba(0, 195, 255, 0.3);
+}
+
+/* Cosmic glow effect on borders */
+.gaming-highlight-preview::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, 
+    rgba(0, 195, 255, 0) 0%, 
+    rgba(0, 195, 255, 0.3) 25%, 
+    rgba(0, 101, 255, 0.3) 50%, 
+    rgba(128, 0, 255, 0.3) 75%, 
+    rgba(0, 195, 255, 0) 100%);
+  z-index: -1;
+  border-radius: 10px;
+  animation: borderGlow 8s linear infinite;
+}
+
+@keyframes borderGlow {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 200%; }
+}
+
+/* Post Header */
+.post-header {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 195, 255, 0.3);
+  background: rgba(2, 5, 20, 0.7);
+}
+
+.stream-preview .post-header {
+  background: linear-gradient(90deg, rgba(5, 15, 40, 0.9), rgba(10, 30, 70, 0.9));
+  border-bottom: 1px solid rgba(0, 255, 230, 0.4);
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stream-preview .post-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 230, 0.8), transparent);
+  animation: streamHeaderGlow 4s linear infinite;
+}
+
+@keyframes streamHeaderGlow {
+  0% { left: -150%; }
+  100% { left: 150%; }
+}
+
+.post-title {
+  color: #00c3ff;
+  font-size: 1.25rem;
+  margin: 0;
+  text-shadow: 0 0 10px rgba(0, 195, 255, 0.7);
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.stream-preview .post-title {
+  color: #00ffe9;
+  text-shadow: 0 0 12px rgba(0, 255, 230, 0.8);
+  font-size: 1.3rem;
+  margin: 0;
+  background: linear-gradient(90deg, #00ffe9, #00c3ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 5px rgba(0, 255, 230, 0.6));
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #00c3ff;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background: rgba(0, 195, 255, 0.2);
+  transform: translateX(-3px);
+}
+
+/* Post Content */
+.post-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.post-media {
+  position: relative;
+  width: 100%;
+  background: #000;
+  overflow: hidden;
+  aspect-ratio: 16/9;
+  border-bottom: 2px solid rgba(0, 195, 255, 0.5);
+  box-shadow: inset 0 0 20px rgba(0, 101, 255, 0.3);
+}
+
+.post-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+  border-radius: 0;
+}
+
+.post-thumbnail:hover {
+  transform: scale(1.02);
+}
+
+/* Stream indicator overlay */
+.stream-indicator {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #00ffea;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(0, 255, 230, 0.7);
+  box-shadow: 0 0 15px rgba(0, 255, 230, 0.5);
+  backdrop-filter: blur(2px);
+  text-shadow: 0 0 5px rgba(0, 255, 230, 0.7);
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+/* Video indicator overlay */
+.video-indicator {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #00c3ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(0, 195, 255, 0.5);
+  box-shadow: 0 0 10px rgba(0, 195, 255, 0.3);
+}
+
+/* Neon stats display */
+.post-stats {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 15px;
+  background: rgba(3, 7, 25, 0.6);
+  border-top: 1px solid rgba(0, 255, 230, 0.3);
+}
+
+.stream-preview .post-stats {
+  background: rgba(5, 15, 40, 0.7);
+  border-top: 1px solid rgba(0, 255, 230, 0.4);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ffffff;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.stream-preview .stat-item {
+  color: #e0fffd;
+  text-shadow: 0 0 8px rgba(0, 255, 230, 0.7);
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(0, 255, 230, 0.1);
+  border: 1px solid rgba(0, 255, 230, 0.3);
+}
+
+.stream-preview .stat-item svg {
+  color: #00ffe9;
+  filter: drop-shadow(0 0 3px rgba(0, 255, 230, 0.8));
+}
+
+.stat-value {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+/* Post caption styling */
+.post-caption {
+  padding: 10px 15px;
+  background: rgba(3, 7, 25, 0.7);
+  border-bottom: 1px solid rgba(0, 195, 255, 0.3);
+}
+
+.caption-text {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #e0f5ff;
+  line-height: 1.5;
+  text-shadow: 0 0 5px rgba(0, 195, 255, 0.5);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+  padding: 2px 0;
+}
+
+.stream-preview .post-caption {
+  background: rgba(5, 15, 40, 0.75);
+  border-bottom: 1px solid rgba(0, 255, 230, 0.4);
+}
+
+.stream-preview .caption-text {
+  color: #e0fffd;
+  text-shadow: 0 0 5px rgba(0, 255, 230, 0.6);
+}
+
+.like-stat {
+  color: #ff66a3;
+  text-shadow: 0 0 5px rgba(255, 50, 150, 0.5);
+}
+
+.views-stat {
+  color: #33d6ff;
+  text-shadow: 0 0 5px rgba(0, 210, 255, 0.5);
+}
+
+.rank-stat {
+  color: #ffcc00;
+  text-shadow: 0 0 8px rgba(255, 204, 0, 0.7);
+  background: rgba(255, 204, 0, 0.1);
+  border-radius: 4px;
+  padding: 3px 8px;
+  border: 1px solid rgba(255, 204, 0, 0.3);
+}
+
+.rank-stat svg {
+  filter: drop-shadow(0 0 3px rgba(255, 204, 0, 0.8));
+}
+
+/* Enhanced cosmic action buttons */
+.cosmic-button-container {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  background: linear-gradient(to bottom, 
+    rgba(3, 7, 25, 0.8), 
+    rgba(10, 20, 50, 0.8));
+  border-top: 1px solid rgba(0, 195, 255, 0.2);
+}
+
+.cosmic-action-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border: none;
+  background: linear-gradient(135deg, 
+    rgba(10, 20, 40, 0.6), 
+    rgba(20, 30, 60, 0.6));
+  color: #ffffff;
+  font-weight: bold;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cosmic-action-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(var(--button-glow-color), 0.7), 
+    transparent);
+  transition: all 0.3s ease;
+}
+
+.cosmic-action-button::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(var(--button-glow-color), 0.7), 
+    transparent);
+  transition: all 0.3s ease;
+}
+
+.cosmic-action-button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, 
+    rgba(20, 30, 60, 0.7), 
+    rgba(30, 40, 80, 0.7));
+  box-shadow: 0 0 15px rgba(var(--button-glow-color), 0.5);
+}
+
+.cosmic-action-button:hover::before,
+.cosmic-action-button:hover::after {
+  opacity: 1;
+}
+
+.cosmic-action-icon {
+  width: 18px;
+  height: 18px;
+  filter: drop-shadow(0 0 3px rgba(var(--button-glow-color), 0.6));
+}
+
+/* Button glow colors */
+.like-button {
+  --button-glow-color: 255, 50, 150;
+  border-left: 2px solid rgba(255, 50, 150, 0.5);
+  border-right: 2px solid rgba(255, 50, 150, 0.5);
+}
+
+.like-button.active,
+.like-button:hover {
+  color: #ff66a3;
+}
+
+.comment-button {
+  --button-glow-color: 0, 210, 255;
+  border-left: 2px solid rgba(0, 210, 255, 0.5);
+  border-right: 2px solid rgba(0, 210, 255, 0.5);
+}
+
+.comment-button.active,
+.comment-button:hover {
+  color: #33d6ff;
+}
+
+.share-button {
+  --button-glow-color: 50, 255, 100;
+  border-left: 2px solid rgba(50, 255, 100, 0.5);
+  border-right: 2px solid rgba(50, 255, 100, 0.5);
+}
+
+.share-button:hover {
+  color: #66ffaa;
+}
+
+.rank-button {
+  --button-glow-color: 255, 215, 0;
+  border-left: 2px solid rgba(255, 215, 0, 0.5);
+  border-right: 2px solid rgba(255, 215, 0, 0.5);
+}
+
+.rank-button:hover {
+  color: #ffd700;
+}
+
+/* Button animation on hover */
+@keyframes buttonPulse {
+  0%, 100% { 
+    box-shadow: 0 0 10px rgba(var(--button-glow-color), 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(var(--button-glow-color), 0.6);
+  }
+}
+
+.cosmic-action-button:hover {
+  animation: buttonPulse 2s infinite;
+}
+
+/* CRT scanline effect */
+.gaming-highlight-preview::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 10, 0) 50%,
+    rgba(0, 0, 0, 0.1) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cosmic-button-container {
+    flex-wrap: wrap;
+  }
+  
+  .cosmic-action-button {
+    min-width: 45%;
+  }
+}
