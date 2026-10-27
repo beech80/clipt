@@ -103,3 +103,15 @@ References:
 - https://docs.github.com/en/actions/concepts/billing-and-usage
 - https://docs.github.com/en/actions/concepts/workflows-and-actions/notifications-for-workflow-runs
 - https://vercel.com/docs/project-configuration/git-configuration
+
+## Automatic execution verified — October 27
+
+GitHub run https://github.com/beech80/clipt/actions/runs/40468721763 was triggered
+by `schedule`, completed successfully, passed 12 monitor behavior tests and all
+six live probes, and recorded delivery `unchanged`. No duplicate alert was created
+after the owner-confirmed verification issue was closed. This closes the earlier
+lack of observed automatic execution, not a guarantee of exact timer cadence.
+The observed overnight run predates the later schedule-registration refresh; it
+must not be described as caused by that refresh. Current cron is
+`3,13,23,33,43,53 * * * *` (UTC), every ten minutes as configured. GitHub scheduling
+remains best-effort and can be delayed.
