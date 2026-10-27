@@ -20,3 +20,11 @@ Payments remain disabled. Domain work is deferred. This is bounded release evide
 4. Remaining signed-in production, Realtime, email/recovery redirects and live workflows need acceptance. Native/App Store release is outside this web-beta phase.
 
 Automatic Git deployments and both old deploy workflows remain held. The independent monitor is preserved. This reconciliation applies no database migration, media permission, payment or production deployment change. Exact source provenance is recorded in SOURCE-RECONCILIATION-2026-10-27.md and RELEASE-SOURCE-PROVENANCE-2026-10-27.json.
+
+## Main-branch closure
+
+PR #6 merged as 7ee76ba6be0ccfa97aeef953f2983156a8606369. Main validation
+https://github.com/beech80/clipt/actions/runs/40512033055 passed the release and
+Chromium jobs, closing the original missing-module build failure. The live Vercel
+deployment is unchanged. This documentation-only closure does not rerun or replace
+the tested app source.

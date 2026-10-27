@@ -82,3 +82,18 @@ hashes and records beta gates; application code is unchanged. CI reruns before m
 
 Automatic monitor run 40468721763 also passed all live probes and sent no duplicate
 notification. Current owner-submitted Pro request SU-526512 is acknowledged, not repaired.
+
+## Merged and verified on main
+
+PR #6 merged as 7ee76ba6be0ccfa97aeef953f2983156a8606369. The merged tree
+matched all 895 planned files and preserved the current deployment/monitor files.
+Main-branch validation https://github.com/beech80/clipt/actions/runs/40512033055
+passed release checks and all three Chromium fixtures. The original missing-module
+GitHub build failure is closed. Production remains on
+dpl_FJTC4fhNeUrPSrwfHfYtHTig4a8c, independently checked after merge.
+
+A separate clean local worktree was created at work/clipt-beta-source-20261027
+on the verified merge. The original work/clipt folder and its unrelated edits
+were preserved. No dependencies were installed or app server started in that
+checkout. Remaining beta gates are unchanged: provider repair SU-526512, verified
+backup/private-media cutover, remaining live acceptance and physical-device checks.

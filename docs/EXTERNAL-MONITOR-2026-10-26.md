@@ -115,3 +115,11 @@ The observed overnight run predates the later schedule-registration refresh; it
 must not be described as caused by that refresh. Current cron is
 `3,13,23,33,43,53 * * * *` (UTC), every ten minutes as configured. GitHub scheduling
 remains best-effort and can be delayed.
+
+## GitHub source-build failure closed — October 27
+
+The earlier missing src/lib/api/posts note is historical. PR #6 restored the
+reviewed release source and main-branch validation run 40512033055 passed the
+release checks and all three browser fixtures. Merge commit:
+7ee76ba6be0ccfa97aeef953f2983156a8606369. The live app and independent monitor
+were preserved; no production deployment was triggered.

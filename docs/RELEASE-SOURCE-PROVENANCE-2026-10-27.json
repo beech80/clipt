@@ -5361,7 +5361,7 @@
     },
     {
       "path": "docs/SOURCE-RECONCILIATION-2026-10-27.md",
-      "gitBlobSha": "e37c8d6e04288219cc5b52215ffa5e9d26e22273"
+      "gitBlobSha": "9fb5a8cca1ccaa220ea2d4eeb8148b5d16faf75d"
     },
     {
       "path": "tests/create-clip.spec.ts",
@@ -5375,7 +5375,7 @@
     },
     {
       "path": "docs/BETA-STATUS-2026-10-27.md",
-      "gitBlobSha": "94398d132863dfb7904458c6a99afd263146ce1f",
+      "gitBlobSha": "6e9446b019a7591c5f9073fee9d05bb1e2de5f53",
       "reason": "Current verified beta gates and remaining provider/media/device work."
     }
   ]
