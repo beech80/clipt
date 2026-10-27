@@ -1,0 +1,85 @@
+/* Atmospheric console lighting. Decorative only: no controller, layout or media transforms. */
+.app-container.app-container {
+  background:
+    radial-gradient(ellipse at 8% 12%,#7e22ce42,transparent 46%),
+    radial-gradient(ellipse at 92% 42%,#86198f28,transparent 44%),
+    radial-gradient(ellipse at 52% 95%,#5b21b62b,transparent 54%),
+    linear-gradient(145deg,#17101f,#05040c 42%,#11091d 75%,#05040c);
+}
+.app-container.app-container::before {
+  background:
+    radial-gradient(circle,#f5eaff88 .6px,transparent 1px) 0 0/113px 137px,
+    radial-gradient(circle,#c4b5fd55 .6px,transparent 1px) 41px 27px/179px 191px,
+    repeating-linear-gradient(115deg,#ffffff03 0 1px,transparent 1px 6px),
+    linear-gradient(125deg,transparent 28%,#c084fc09 29%,transparent 41%);
+}
+.app-container .page-content.page-content :is(.gaming-card,.glass-card),
+.clipt-create-layout.clipt-create-layout > section {
+  background:
+    linear-gradient(90deg,#d8b4fe80,#a855f700) left top/72px 1px no-repeat,
+    linear-gradient(180deg,#d8b4fe66,#a855f700) left top/1px 48px no-repeat,
+    radial-gradient(ellipse at 0% 0%,#6d28d922,transparent 55%),
+    linear-gradient(155deg,#24192ff5,#100b1bfa 38%,#07050ffa);
+}
+.clipt-masthead.clipt-masthead, .clipt-fyp-header.clipt-fyp-header {
+  box-shadow: inset 0 -1px 0 #c084fc33,0 8px 24px #02030d66;
+}
+.clipt-fyp-header { background: linear-gradient(90deg,#07050ee6,#29113d55,#07050ee6); }
+.clipt-fyp-slide > article[data-active-clip="true"] {
+  border-color: #c4b5fd;
+  box-shadow: inset 0 1px 0 #ffffff26,0 0 8px #c084fc44,0 0 28px #7c3aed44;
+}
+.clipt-fyp-slide > article[data-active-clip="false"] {
+  border-color: #79549d80; box-shadow: 0 0 12px #6d28d91c;
+}
+.clipt-cinematic-header, .clipt-cinematic-caption {
+  background: linear-gradient(130deg,#21132de8,#090610f5);
+}
+.clipt-auth nav[aria-label="Global Clipt menu"] > a {
+  background: linear-gradient(145deg,#35214480,#100a1bc9);
+  box-shadow: inset 0 1px 0 #e9d5ff1c,0 5px 12px #0003;
+  transition: border-color 140ms ease,background-color 140ms ease;
+}
+.clipt-auth nav[aria-label="Global Clipt menu"] > a svg {
+  color: #d8b4fe; filter: drop-shadow(0 0 5px #9333ea55);
+}
+.clipt-profile-tile { box-shadow: inset 0 1px 0 #ffffff14,0 5px 16px #0004; }
+.clipt-dm-heading { box-shadow: inset 0 1px 0 #e9d5ff24,0 5px 14px #0004; }
+.clipt-feed-state {
+  border: 1px solid #a78bfa55; border-radius: 14px;
+  background: radial-gradient(ellipse at top,#6d28d92b,transparent 65%),#0d0815eb;
+  box-shadow: inset 0 1px 0 #e9d5ff18,0 10px 24px #0004;
+  color: #e9def7; line-height: 1.65;
+}
+/* Restrict feedback to actual page actions, never the persistent controller. */
+.app-container .page-content .gaming-button {
+  transition: border-color 140ms ease,background-color 140ms ease,box-shadow 140ms ease;
+}
+.app-container .page-content .gaming-button:not(:disabled):active,
+.clipt-auth nav[aria-label="Global Clipt menu"] > a:active {
+  box-shadow: inset 0 2px 7px #0008,0 0 8px #a855f733;
+}
+@media(hover:hover) and (pointer:fine) {
+  .clipt-auth nav[aria-label="Global Clipt menu"] > a:hover,
+  .app-container .page-content .gaming-button:not(:disabled):hover {
+    border-color: #d8b4fe; box-shadow: inset 0 1px 0 #ffffff24,0 0 16px #9333ea33;
+  }
+}
+html.high-contrast .app-container.app-container,
+html.high-contrast .app-container .page-content.page-content :is(.gaming-card,.glass-card),
+html.high-contrast .clipt-create-layout.clipt-create-layout > section,
+html.high-contrast .clipt-fyp-header,
+html.high-contrast .clipt-cinematic-header,
+html.high-contrast .clipt-cinematic-caption,
+html.high-contrast .clipt-feed-state,
+html.high-contrast .clipt-auth nav[aria-label="Global Clipt menu"] > a {
+  background: #000; color: #fff; border-color: #fff; box-shadow: none;
+}
+html.high-contrast .clipt-fyp-slide > article[data-active-clip] { border-color: #fff; box-shadow: none; }
+html.high-contrast .clipt-auth nav[aria-label="Global Clipt menu"] > a svg { color: #fff; filter: none; }
+@media(prefers-reduced-motion:reduce) {
+  .app-container .page-content .gaming-button,
+  .clipt-auth nav[aria-label="Global Clipt menu"] > a { transition: none; }
+}
+html.reduce-motion .app-container .page-content .gaming-button,
+html.reduce-motion .clipt-auth nav[aria-label="Global Clipt menu"] > a { transition: none; }

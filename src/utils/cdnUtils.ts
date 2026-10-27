@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 
 interface StreamingConfig {
   cdn_provider: string;
-  cdn_config: any;
+  cdn_config: unknown;
   cdn_edge_rules: {
     geo_routing: boolean;
     failover_threshold: number;

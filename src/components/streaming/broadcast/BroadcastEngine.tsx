@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { Tables } from '@/integrations/supabase/types';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -18,6 +19,7 @@ interface BroadcastEngineProps {
 export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
   const [engineStatus, setEngineStatus] = useState<'idle' | 'starting' | 'active' | 'error'>('idle');
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [encodingSession, setEncodingSession] = useState<Tables<'stream_encoding_sessions'> | null>(null);
 
   const { data: engineConfig } = useEngineConfig(userId);
 
@@ -44,6 +46,7 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
     },
     onSuccess: (data) => {
       setCurrentSessionId(data.id);
+      setEncodingSession(data);
       setEngineStatus('active');
       toast.success('Broadcast engine initialized');
     },
@@ -74,6 +77,7 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
         toast.error('Failed to stop broadcast engine');
       } else {
         setCurrentSessionId(null);
+        setEncodingSession(null);
         setEngineStatus('idle');
         toast.success('Broadcast engine stopped');
       }
@@ -97,12 +101,12 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
             <QualityPresetManager
               streamId={streamId}
               engineConfig={engineConfig}
-              encodingSession={currentSessionId}
+              encodingSession={encodingSession}
             />
             <BroadcastQualityManager
               streamId={streamId}
               engineConfig={engineConfig}
-              encodingSession={currentSessionId}
+              encodingSession={encodingSession}
               currentSessionId={currentSessionId}
             />
             <BroadcastHealthMonitor

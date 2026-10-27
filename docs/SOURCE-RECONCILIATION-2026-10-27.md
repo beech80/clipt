@@ -1,0 +1,84 @@
+# Reviewed release source reconciliation — October 27, 2026
+
+GitHub main's legacy CommentsPage imported missing src/lib/api/posts. Production
+was built from a separately reviewed archive containing the completed CommentsPage
+and related application changes. An isolated source reconciliation now restores
+that reviewed snapshot instead of inventing a replacement API for stale code.
+
+Base main commit: c6c40f9ce70785d6888bb2908704a5fa88ab495f.
+Reviewed archive SHA1: 26cbcb67577c66ea590b295c6709901b215d9c9b (4,078,731 bytes).
+Archive: outputs/production-rollout-reviewed.tgz, previously built with 701 passing
+unit tests, typechecks, dependency audit, CSS and Vite validation. That historical
+evidence is provenance, not a substitute for the new branch's CI results.
+
+Only archive files and explicitly recorded post-release overlays are included.
+UTF-8 CRLF line endings are normalized to LF; binary bytes are unchanged. The
+existing working directory's unrelated edits, credentials, environment files,
+outputs, browser state and node_modules are not copied. The archive was checked
+for forbidden paths, service-role JWTs and private-key/secret patterns; no finding.
+The companion JSON manifest records source hashes and overlay provenance.
+
+Post-release overlays: the deployed Data API admission guard and its existing
+focused unit test; existing local-only Playwright config; safe development env
+example and ignore rules; and the reviewed-source CI workflow. Current main's
+monitor, manual deployment holds and vercel.json protections are retained. No
+app behavior is redesigned, database migration applied, or production deployment
+performed by this source reconciliation.
+
+CI runs locked installation, both typechecks, unit and monitoring tests, dependency
+audit, CSS checks and Vite build. A separate Chromium job runs the three archived
+posting/message fixtures against localhost mocks, with all other origins blocked
+by those fixtures. It cannot use a customer's account or hosted project. No
+production secret is supplied. Physical-device and live signed-in acceptance
+remain separate gates. The full unrelated browser suite is not claimed here.
+
+Initial checkpoint: validation was pending. Verified candidate results below
+supersede that state; earlier failed attempts remain recorded.
+
+Supabase's current Pro support acknowledgment is SU-526512 (owner supplied). It
+confirms receipt only; pg_net repair guidance remains pending. Backup/private-media
+cutover and real-device acceptance remain open. Domain work remains deferred and
+payments remain disabled.
+
+First CI run 40504070133: release checks passed. Chromium installed and the 403
+posting case passed. The 503 case stopped on a strict selector matching two
+legitimate safety alerts; message-history did not run due to max-failures=1. The
+fixture now selects publishing/duplicate alerts by message and retains all original
+content, cleanup, request-count and duplicate-prevention checks. A new run is
+required before claiming browser acceptance. No application code was changed.
+
+Second CI run 40505206645: all release checks passed again. The 403 posting
+case passed. The 503 fixture reached the expected safety state but tried to use
+a collapsed controller. Its captured accessibility snapshot exposes Show controls.
+The fixture now uses that public recovery action before navigation, retains the
+duplicate-blocking assertion and additionally verifies no second post/upload or
+cleanup occurred. No timeouts or application behavior were changed.
+
+Third CI run 40507142194: release checks passed; 403 posting passed. The 503
+fixture successfully restored controls, opened navigation and verified the duplicate
+warning. Its final assertion still searched the earlier Post Clipt label, but the
+submit is correctly disabled with its busy label while blocked. It now asserts
+exactly one native form submit and that it is disabled, retaining network/cleanup
+checks. Browser CI now runs all three independent fixtures even if one fails;
+assertion timeouts and checks are unchanged. No app code was changed.
+
+Fourth CI run 40508743570: all release checks passed and both posting cases
+passed. Message-history error/retry, pagination, read-state and first-width layout
+assertions passed before a strict selector matched both the conversation header
+and page-controller Back actions. The test now scopes the header control to its
+conversation region and separately verifies the controller action, preserving all
+existing data/layout assertions. A complete three-case rerun is required.
+
+## Verified candidate results
+
+Candidate 0c773af497242b4cc25d98e0cae8eddf75a00dc1 passed GitHub run
+https://github.com/beech80/clipt/actions/runs/40509688736 : 702 unit tests and
+12 monitor tests (zero failures/skips/cancellations), both typechecks, zero audit
+vulnerabilities, CSS verification and Vite build. All three Chromium fixtures
+passed in 7.6 seconds, including message layouts at 320/390/1440 CSS pixels.
+These use local mocked services, not real phones or owner sessions. All 894
+planned files matched the passing tree. A metadata-only update refreshes overlay
+hashes and records beta gates; application code is unchanged. CI reruns before merge.
+
+Automatic monitor run 40468721763 also passed all live probes and sent no duplicate
+notification. Current owner-submitted Pro request SU-526512 is acknowledged, not repaired.

@@ -1,62 +1,23 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import path from "path";
-import { componentTagger } from "lovable-tagger";
+import { defineConfig, loadEnv } from 'vite';
+import { readPublicEnvironment } from './src/lib/environment';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
+import tailwindcss from '@tailwindcss/vite';
 
-// https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode, command }) => {
+  // A successful build must not silently ship the inert configuration-error UI.
+  if (command === 'build') readPublicEnvironment(loadEnv(mode, process.cwd(), 'VITE_'));
+  return ({
   base: '/',
-  plugins: [
-    react(),
-    componentTagger(),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
+  plugins: [react(), tailwindcss()],
+  resolve: { alias: { '@': path.resolve(__dirname, './src') } },
   build: {
     outDir: 'dist',
     assetsInlineLimit: 4096,
-    chunkSizeWarningLimit: 2500,
-    rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          // More granular chunking strategy
-          if (id.includes('node_modules')) {
-            if (id.includes('react') && !id.includes('react-dom') && !id.includes('react-router')) {
-              return 'vendor-react';
-            }
-            if (id.includes('react-dom')) {
-              return 'vendor-react-dom';
-            }
-            if (id.includes('react-router')) {
-              return 'vendor-router';
-            }
-            if (id.includes('@supabase')) {
-              return 'vendor-supabase';
-            }
-            if (id.includes('@radix-ui') || id.includes('@tanstack')) {
-              return 'vendor-ui';
-            }
-            if (id.includes('framer-motion') || id.includes('motion')) {
-              return 'vendor-animation';
-            }
-            return 'vendor-other'; // All other node_modules
-          }
-          
-          // Split app code by directory
-          if (id.includes('/src/pages/')) {
-            return 'app-pages';
-          }
-          if (id.includes('/src/components/')) {
-            return 'app-components';
-          }
-          if (id.includes('/src/services/')) {
-            return 'app-services';
-          }
-        }
-      }
-    }
-  }
+    // Let Rollup follow dependency boundaries. Splitting React, ReactDOM and
+    // every library containing "react" into separate forced chunks created
+    // an initialization cycle that crashed the production bundle.
+    chunkSizeWarningLimit: 1000,
+  },
+});
 });

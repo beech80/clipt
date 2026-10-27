@@ -8,25 +8,11 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { chatSettingsSchema, type ChatSettingsData } from '@/lib/chat-data';
 
 interface ChatSettingsProps {
   streamId: string;
-  settings?: {
-    slow_mode: boolean;
-    slow_mode_interval: number;
-    subscriber_only: boolean;
-    follower_only: boolean;
-    follower_time_required: number;
-    emote_only: boolean;
-    auto_mod_settings: {
-      enabled: boolean;
-      spam_detection: boolean;
-      link_protection: boolean;
-      caps_limit_percent: number;
-      max_emotes: number;
-      blocked_terms: string[];
-    };
-  };
+  settings?: ChatSettingsData;
 }
 
 export const ChatSettings = ({ streamId, settings }: ChatSettingsProps) => {
@@ -51,23 +37,21 @@ export const ChatSettings = ({ streamId, settings }: ChatSettingsProps) => {
   });
 
   const handleSettingChange = (
-    key: string,
-    value: any,
-    subKey?: string
+    key: keyof ChatSettingsData,
+    value: boolean | number,
+    subKey?: keyof ChatSettingsData['auto_mod_settings']
   ) => {
     if (!settings) return;
 
-    const newSettings = { ...settings };
-    if (subKey) {
-      newSettings.auto_mod_settings = {
-        ...newSettings.auto_mod_settings,
-        [subKey]: value
-      };
-    } else {
-      newSettings[key as keyof typeof settings] = value;
+    const candidate = subKey
+      ? { ...settings, auto_mod_settings: { ...settings.auto_mod_settings, [subKey]: value } }
+      : { ...settings, [key]: value };
+    const parsed = chatSettingsSchema.safeParse(candidate);
+    if (!parsed.success) {
+      toast.error('Invalid chat setting');
+      return;
     }
-
-    updateSettings.mutate(newSettings);
+    updateSettings.mutate(parsed.data);
   };
 
   if (!settings) return null;

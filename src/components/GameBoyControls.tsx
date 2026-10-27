@@ -1,1244 +1,382 @@
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-// Import directly from our custom svg-icons implementation
-import {
-  Menu,
-  Camera,
-  MessageCircle,
-  UserPlus,
-  X,
-  Home as HomeIcon,
-  Search,
-  Bell,
-  User as UserIcon,
-  Settings,
-  Video,
-  Award,
-  Monitor,
-  TrendingUp,
-  Bookmark,
-  Upload
-} from '@/components/ui/standalone-icons';
-import {
-  Heart,
-  MessageSquare as MessageSquareIcon,
-  Trophy
-} from '@/components/ui/standalone-icons';
-import ActivityIcon from '@/components/ui/activity-icon';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
-import './joystick-animations.css'; // Import joystick animations
-import CommentModal from './comments/CommentModal';
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Heart, MessageSquare, Trophy, UserPlus, Menu, Camera, DollarSign, SlidersHorizontal, X, Settings, MoreHorizontal, Clapperboard, UsersRound, Search, Gamepad2, Pencil, History, BarChart3, Coins, HelpCircle, Shield, Eye, Bell, Check, Radio } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ControllerSettings } from './ControllerSettings';
+import { useControllerPreferences } from '@/hooks/useControllerPreferences';
+import { useImmersiveController } from '@/hooks/useImmersiveController';
+import './GameBoyControls.css';
+import { useMobileControlsPreferences } from '@/hooks/useMobileControlsPreferences';
+import { HandPreferenceSettings } from './accessibility/HandPreferenceSettings';
+import { AdjustablePanel } from './AdjustablePanel';
+import NavigationMenu from '@/pages/Menu';
+import { pageControllerLayout, pageControllerContext, pageActionTarget, activatePageControl, type PageControllerAction, type PageControllerLayout } from '@/lib/page-controller';
 
-// Import non-critical icons from lucide-react
-import {
-  Share,
-  Plus,
-  ArrowRight
-} from 'lucide-react';
+const pageIcons = { search: Search, games: Gamepad2, clips: Clapperboard, users: UsersRound, edit: Pencil, settings: Settings, message: MessageSquare, history: History, chart: BarChart3, coins: Coins, help: HelpCircle, shield: Shield, eye: Eye, camera: Camera, bell: Bell, check: Check, radio: Radio };
 
-interface GameBoyControlsProps {
-  currentPostId?: string;
-}
-
-const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCurrentPostId }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const queryClient = useQueryClient();
-  const [currentPath, setCurrentPath] = useState(location.pathname);
-  const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [navigationOptions] = useState([
-    { name: 'Home', icon: <HomeIcon className="mr-2 h-4 w-4" />, path: '/' },
-    { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
-    { name: 'Clipts', icon: <ActivityIcon className="mr-2 h-4 w-4" />, path: '/clipts' },
-    { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
-    { name: 'Profile', icon: <UserIcon className="mr-2 h-4 w-4" />, path: '/profile' },
-    { name: 'Settings', icon: <Settings className="mr-2 h-4 w-4" />, path: '/settings' },
-    { name: 'Streaming', icon: <Video className="mr-2 h-4 w-4" />, path: '/streaming' },
-    { name: 'Top Clipts', icon: <Award className="mr-2 h-4 w-4" />, path: '/top-clipts' }
-  ]);
-  const [commentModalOpen, setCommentModalOpen] = useState(false);
-  const [activeCommentPostId, setActiveCommentPostId] = useState<string | undefined>(undefined);
-  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
-  
-  // Joystick states
-  const [joystickPosition, setJoystickPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [isScrolling, setIsScrolling] = useState(false); // Track if currently scrolling
-  const joystickRef = useRef<HTMLDivElement>(null);
-  const baseRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const scrollAnimationRef = useRef<number | null>(null); // For animation frame
-  
-  // Helper function to log to debug (console only)
-  const logToDebug = (message: string) => {
-    console.log(message);
-  };
-  
-  // Effect to close the menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuOpen && menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [menuOpen]);
-  
-  // Add post detection on mount and page changes
-  useEffect(() => {
-    logToDebug('Setting up post detection');
-    
-    // Function to ensure all posts have data-post-id attributes
-    const addDataAttributes = () => {
-      logToDebug('Adding data-post-id attributes to posts...');
-      
-      // Add data-post-id to all post-container divs
-      const postContainers = document.querySelectorAll('.post-container, .post-card, .post-item, [id*="post"]');
-      let attributesAdded = 0;
-      
-      postContainers.forEach((post, index) => {
-        if (!post.hasAttribute('data-post-id')) {
-          // Check if the post has an ID we can use
-          let postId = '';
-          
-          // Try to find ID from various sources
-          if (post.hasAttribute('id') && post.getAttribute('id')?.includes('post')) {
-            postId = post.getAttribute('id')?.replace(/post-?/i, '') || '';
-          } else {
-            // Look for ID in child elements
-            const postIdElement = post.querySelector('[data-post-id]');
-            if (postIdElement) {
-              postId = postIdElement.getAttribute('data-post-id') || '';
-            } else {
-              // Try to find in href if there's a link to post
-              const postLink = post.querySelector('a[href*="/post/"]');
-              if (postLink) {
-                const href = postLink.getAttribute('href') || '';
-                const match = href.match(/\/post\/([^\/]+)/);
-                if (match && match[1]) {
-                  postId = match[1];
-                }
-              } else {
-                // Generate a temporary ID
-                postId = `temp-post-${index}-${Date.now()}`;
-              }
-            }
-          }
-          
-          // Set the attribute
-          post.setAttribute('data-post-id', postId);
-          attributesAdded++;
-        }
-      });
-      
-      logToDebug(`Added data-post-id to ${attributesAdded} posts`);
-    };
-    
-    // Function to detect and select the most visible post
-    const detectAndSelectCurrentPost = () => {
-      // First ensure all posts have data-post-id
-      addDataAttributes();
-      
-      // Find all posts on the page with multiple selectors to work across different pages
-      const allPosts = Array.from(document.querySelectorAll(
-        '[data-post-id], .post-container, .post-card, .post-item, [id*="post"]'
-      ));
-      
-      if (allPosts.length === 0) {
-        logToDebug('No posts found on current page');
-        return;
-      }
-      
-      logToDebug(`Found ${allPosts.length} posts on the page`);
-      
-      // Find the post most visible in the viewport
-      let mostVisiblePost: Element | null = null;
-      let maxVisibility = 0;
-      
-      allPosts.forEach(post => {
-        const rect = post.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
-        
-        // Skip posts that are not in the viewport at all
-        if (rect.bottom < 0 || rect.top > windowHeight) {
-          return;
-        }
-        
-        // Skip very small elements (likely not actual posts)
-        if (rect.height < 50) {
-          return;
-        }
-        
-        // Calculate how much of the post is visible
-        const visibleTop = Math.max(0, rect.top);
-        const visibleBottom = Math.min(windowHeight, rect.bottom);
-        const visibleHeight = Math.max(0, visibleBottom - visibleTop);
-        const percentVisible = visibleHeight / rect.height;
-        
-        if (percentVisible > maxVisibility) {
-          maxVisibility = percentVisible;
-          mostVisiblePost = post;
-        }
-      });
-      
-      if (mostVisiblePost) {
-        // Get the post ID - try multiple attributes
-        const postId = mostVisiblePost.getAttribute('data-post-id') || 
-                       mostVisiblePost.getAttribute('id')?.replace(/post-?/i, '') ||
-                       mostVisiblePost.getAttribute('data-id');
-        
-        if (postId) {
-          logToDebug(`Selected post: ${postId} (${(maxVisibility * 100).toFixed(1)}% visible)`);
-          setCurrentPostId(postId);
-          
-          // Add a subtle indicator to the selected post
-          allPosts.forEach(post => post.classList.remove('gameboy-selected-post'));
-          mostVisiblePost.classList.add('gameboy-selected-post');
-        }
-      } else {
-        logToDebug('No visible posts found');
-      }
-    };
-
-    // Debounce function to prevent too many calls
-    function debounce(func: Function, wait: number) {
-      let timeout: any = null;
-      return function(...args: any) {
-        const context = this;
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          func.apply(context, args);
-        }, wait);
-      };
-    }
-
-    // Create debounced handler
-    const debouncedDetectPost = debounce(detectAndSelectCurrentPost, 200);
-    
-    // Set up scroll listener
-    window.addEventListener('scroll', debouncedDetectPost);
-    
-    // Initial detection with a delay to allow page to render
-    setTimeout(detectAndSelectCurrentPost, 500);
-    
-    // Set up mutation observer to detect when new posts are added
-    const observer = new MutationObserver((mutations) => {
-      let shouldDetect = false;
-      
-      mutations.forEach(mutation => {
-        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-          Array.from(mutation.addedNodes).forEach(node => {
-            if (node instanceof HTMLElement && 
-                (node.hasAttribute('data-post-id') || 
-                 node.classList.contains('post-container') ||
-                 node.classList.contains('post-card') ||
-                 node.classList.contains('post-item') ||
-                 (node.id && node.id.includes('post')))) {
-              shouldDetect = true;
-            }
-          });
-        }
-      });
-      
-      if (shouldDetect) {
-        setTimeout(detectAndSelectCurrentPost, 300);
-      }
-    });
-    
-    observer.observe(document.body, { childList: true, subtree: true });
-    
-    // Add subtle styling for selected posts (more subdued than before)
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .gameboy-selected-post {
-        position: relative;
-        box-shadow: 0 0 0 2px rgba(108, 77, 196, 0.3) !important;
-      }
-      
-      .button-press {
-        transform: scale(0.9) !important;
-        opacity: 0.8 !important;
-        transition: transform 0.15s, opacity 0.15s !important;
-      }
-    `;
-    document.head.appendChild(style);
-    
-    // Detect page changes
-    const handlePathChange = () => {
-      if (location.pathname !== currentPath) {
-        setCurrentPath(location.pathname);
-        // Re-detect posts after path change
-        setTimeout(detectAndSelectCurrentPost, 1000);
-      }
-    };
-    
-    // Check location periodically
-    const intervalId = setInterval(handlePathChange, 500);
-    
-    // Clean up
-    return () => {
-      window.removeEventListener('scroll', debouncedDetectPost);
-      observer.disconnect();
-      document.head.removeChild(style);
-      clearInterval(intervalId);
-    };
-  }, [currentPath]);
-  
-  // Joystick movement handlers
-  const handleJoystickMouseDown = (e: React.MouseEvent) => {
-    // Prevent default actions and bubbling
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Actively set the joystick as being dragged
-    setIsDragging(true);
-    
-    // Initial joystick movement when first clicked
-    if (joystickRef.current && baseRef.current) {
-      const baseRect = baseRef.current.getBoundingClientRect();
-      const baseCenterX = baseRect.left + baseRect.width / 2;
-      const baseCenterY = baseRect.top + baseRect.height / 2;
-      
-      // Calculate relative position
-      let dx = e.clientX - baseCenterX;
-      let dy = e.clientY - baseCenterY;
-      
-      // Limit movement
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const maxDistance = baseRect.width / 3;
-      if (distance > maxDistance) {
-        dx = (dx / distance) * maxDistance;
-        dy = (dy / distance) * maxDistance;
-      }
-      
-      // Immediate movement on click
-      joystickRef.current.style.transition = 'none';
-      joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
-      setJoystickPosition({ x: dx, y: dy });
-      
-      // Immediately handle scrolling
-      handleScrollFromJoystick(dy);
-      updateDirectionIndicators(dy);
-    }
-    
-    // Ensure we have clean event listeners by removing any existing ones first
-    window.removeEventListener('mousemove', handleJoystickMouseMove);
-    window.removeEventListener('mouseup', handleJoystickMouseUp);
-    
-    // Add event listeners to window for mouse movement and release
-    window.addEventListener('mousemove', handleJoystickMouseMove);
-    window.addEventListener('mouseup', handleJoystickMouseUp);
-    
-    // Start the scroll animation loop
-    startScrollAnimation();
-  };
-  
-  const handleJoystickMouseMove = (e: MouseEvent) => {
-    if (!isDragging || !joystickRef.current || !baseRef.current) return;
-    
-    // Prevent default browser behavior
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Get joystick base position and dimensions
-    const baseRect = baseRef.current.getBoundingClientRect();
-    const baseCenterX = baseRect.left + baseRect.width / 2;
-    const baseCenterY = baseRect.top + baseRect.height / 2;
-    
-    // Calculate relative position
-    let dx = e.clientX - baseCenterX;
-    let dy = e.clientY - baseCenterY;
-    
-    // Limit joystick movement to a circle with improved physical response
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const maxDistance = baseRect.width / 3; // Limit to 1/3 of base width
-    
-    if (distance > maxDistance) {
-      // Scale the position to stay within the max distance
-      dx = (dx / distance) * maxDistance;
-      dy = (dy / distance) * maxDistance;
-    }
-    
-    // Directly update DOM for immediate response
-    if (joystickRef.current) {
-      // Set CSS variables for animation
-      joystickRef.current.style.setProperty('--last-x', `${joystickPosition.x}px`);
-      joystickRef.current.style.setProperty('--last-y', `${joystickPosition.y}px`);
-      
-      // Add the spring animation class
-      joystickRef.current.classList.add('joystick-spring-return');
-      
-      // Directly set transform for immediate visual feedback
-      joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
-      
-      // Remove the animation class after it completes
-      setTimeout(() => {
-        if (joystickRef.current) {
-          joystickRef.current.classList.remove('joystick-spring-return');
-        }
-      }, 550); // Match the animation duration
-    }
-    
-    // Update state for React components (but DOM is already updated)
-    setJoystickPosition({ x: dx, y: dy });
-    
-    // Immediately trigger scroll for responsive feel
-    handleScrollFromJoystick(dy);
-    
-    // Update visual indicators for feedback
-    updateDirectionIndicators(dy);
-  };
-  // Enhanced direction indicators with smoother transitions and variable intensity
-  const updateDirectionIndicators = (yPosition: number) => {
-    const joystickHandle = joystickRef.current;
-    const upIndicator = document.querySelector('.joystick-up-indicator') as HTMLElement;
-    const downIndicator = document.querySelector('.joystick-down-indicator') as HTMLElement;
-    
-    if (joystickHandle && upIndicator && downIndicator) {
-      // Normalize the position to calculate intensity (0-100%)
-      const maxYPosition = 40; // Maximum expected joystick movement
-      const intensity = Math.min(Math.abs(yPosition) / maxYPosition * 100, 100);
-      
-      // Apply intensity as a CSS variable for smoother visual feedback
-      const direction = yPosition < 0 ? 'up' : yPosition > 0 ? 'down' : 'neutral';
-      
-      // Reset all states first
-      upIndicator.classList.remove('active');
-      downIndicator.classList.remove('active');
-      joystickHandle.classList.remove('joystick-handle-up', 'joystick-handle-down');
-      
-      // Preserve the current transform in the style attribute
-      const joystickHandleElement = joystickHandle as HTMLElement;
-      const currentTransform = joystickHandleElement.style.transform || `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`;
-      
-      if (direction === 'up' && Math.abs(yPosition) > 2) { // Smaller deadzone for visual feedback
-        // Moving up with variable intensity
-        upIndicator.classList.add('active');
-        joystickHandle.classList.add('joystick-handle-up');
-        
-        // Apply intensity as a CSS variable while preserving transform
-        upIndicator.style.setProperty('--intensity', `${intensity}`);
-        joystickHandleElement.style.setProperty('--move-intensity', `${intensity}`);
-      } else if (direction === 'down' && Math.abs(yPosition) > 2) {
-        // Moving down with variable intensity
-        downIndicator.classList.add('active');
-        joystickHandle.classList.add('joystick-handle-down');
-        
-        // Apply intensity as a CSS variable while preserving transform
-        downIndicator.style.setProperty('--intensity', `${intensity}`);
-        joystickHandleElement.style.setProperty('--move-intensity', `${intensity}`);
-      } else {
-        // Neutral position - reset intensity but keep transform
-        joystickHandleElement.style.setProperty('--move-intensity', '0');
-        upIndicator.style.setProperty('--intensity', '0');
-        downIndicator.style.setProperty('--intensity', '0');
-      }
-    }
-  };
-  
-  const handleJoystickMouseUp = () => {
-    // Stop dragging
-    setIsDragging(false);
-    
-    // Remove event listeners
-    window.removeEventListener('mousemove', handleJoystickMouseMove);
-    window.removeEventListener('mouseup', handleJoystickMouseUp);
-    
-    // Stop the scrolling animation
-    stopScrollAnimation();
-    
-    // Store the last position for spring animation
-    const lastPosition = { ...joystickPosition };
-    
-    // Apply spring return animation
-    if (joystickRef.current) {
-      // Set CSS variables for animation
-      joystickRef.current.style.setProperty('--last-x', `${lastPosition.x}px`);
-      joystickRef.current.style.setProperty('--last-y', `${lastPosition.y}px`);
-      
-      // Add the spring animation class
-      joystickRef.current.classList.add('joystick-spring-return');
-      
-      // Directly set transform for immediate visual feedback
-      joystickRef.current.style.transform = 'translate(0px, 0px)';
-      
-      // Remove the animation class after it completes
-      setTimeout(() => {
-        if (joystickRef.current) {
-          joystickRef.current.classList.remove('joystick-spring-return');
-        }
-      }, 550); // Match the animation duration
-    }
-    
-    // Return joystick to center in state
-    setJoystickPosition({ x: 0, y: 0 });
-    
-    // Reset indicatorswith all classes for visual cleanup
-    if (joystickRef.current) {
-      joystickRef.current.classList.remove(
-        'joystick-handle-up', 
-        'joystick-handle-down',
-        'low-intensity',
-        'medium-intensity',
-        'high-intensity'
-      );
-    }
-    
-    const upIndicator = document.querySelector('.joystick-up-indicator') as HTMLElement;
-    const downIndicator = document.querySelector('.joystick-down-indicator') as HTMLElement;
-    
-    if (upIndicator) {
-      upIndicator.classList.remove('active');
-      upIndicator.setAttribute('style', '--intensity: 0%');
-    }
-    
-    if (downIndicator) {
-      downIndicator.classList.remove('active');
-      downIndicator.setAttribute('style', '--intensity: 0%');
-    }
-    
-    // Remove event listeners
-    window.removeEventListener('mousemove', handleJoystickMouseMove);
-    window.removeEventListener('mouseup', handleJoystickMouseUp);
-  };
-  
-  const handleJoystickTouchStart = (e: React.TouchEvent) => {
-    // CRITICAL: These prevent statements were blocking touch events from registering properly
-    // Allow default behavior but still stop propagation to prevent other elements from capturing the event
-    // e.preventDefault(); - REMOVED
-    e.stopPropagation();
-    
-    console.log('Touch start detected');
-    setIsDragging(true);
-    
-    // Initial joystick movement on first touch - ENHANCED
-    if (joystickRef.current && baseRef.current && e.touches[0]) {
-      const baseRect = baseRef.current.getBoundingClientRect();
-      const baseCenterX = baseRect.left + baseRect.width / 2;
-      const baseCenterY = baseRect.top + baseRect.height / 2;
-      
-      // Calculate relative position
-      let dx = e.touches[0].clientX - baseCenterX;
-      let dy = e.touches[0].clientY - baseCenterY;
-      
-      // Log touch position for debugging
-      console.log(`Touch position: dx=${dx}, dy=${dy}`);
-      
-      // Limit movement
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const maxDistance = baseRect.width / 3;
-      if (distance > maxDistance) {
-        dx = (dx / distance) * maxDistance;
-        dy = (dy / distance) * maxDistance;
-      }
-      
-      // FORCEFULLY move the joystick with no transition delay
-      if (joystickRef.current) {
-        joystickRef.current.style.transition = 'none';
-        joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
-        
-        // Force a reflow to ensure the style changes take effect immediately
-        void joystickRef.current.offsetWidth;
-        
-        console.log('Applied transform:', `translate(${dx}px, ${dy}px)`);
-        
-        // Add visible highlight to ensure user sees movement
-        joystickRef.current.style.boxShadow = '0 0 15px rgba(135, 106, 245, 0.8)';
-      }
-      
-      // Update state after DOM change for consistency
-      setJoystickPosition({ x: dx, y: dy });
-      
-      // Immediately handle scrolling
-      handleScrollFromJoystick(dy);
-      updateDirectionIndicators(dy);
-    }
-    
-    // Clean up any existing event listeners first
-    window.removeEventListener('touchmove', handleJoystickTouchMove);
-    window.removeEventListener('touchend', handleJoystickTouchEnd);
-    
-    // Add event listeners to window for touch movement and release
-    // CRITICAL: passive:false allows preventDefault() in the move handler
-    window.addEventListener('touchmove', handleJoystickTouchMove, { passive: false });
-    window.addEventListener('touchend', handleJoystickTouchEnd);
-    
-    // Start the scroll animation loop
-    startScrollAnimation();
-  };
-  
-  const handleJoystickTouchMove = (e: TouchEvent) => {
-    // Prevent default to stop scrolling of the page
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Early return if conditions aren't met
-    if (!isDragging || !joystickRef.current || !baseRef.current || !e.touches[0]) {
-      console.log('Touch move conditions not met');
-      return;
-    }
-    
-    console.log('Touch move detected');
-    
-    // Get joystick base position and dimensions
-    const baseRect = baseRef.current.getBoundingClientRect();
-    const baseCenterX = baseRect.left + baseRect.width / 2;
-    const baseCenterY = baseRect.top + baseRect.height / 2;
-    
-    // Calculate relative position
-    let dx = e.touches[0].clientX - baseCenterX;
-    let dy = e.touches[0].clientY - baseCenterY;
-    
-    console.log(`Touch move: dx=${dx}, dy=${dy}`);
-    
-    // Limit joystick movement to a circle with better physics feel
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const maxDistance = baseRect.width / 3; // Limit to 1/3 of base width
-    
-    if (distance > maxDistance) {
-      // Scale the position to stay within the max distance
-      dx = (dx / distance) * maxDistance;
-      dy = (dy / distance) * maxDistance;
-    }
-    
-    // FORCEFULLY update DOM for immediate response
-    if (joystickRef.current) {
-      // Remove any transition for immediate movement
-      joystickRef.current.style.transition = 'none';
-      joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
-      
-      // Force a reflow to ensure the style is applied immediately
-      void joystickRef.current.offsetWidth;
-      
-      // Add visible highlight
-      joystickRef.current.style.boxShadow = '0 0 15px rgba(135, 106, 245, 0.8)';
-      
-      console.log('Applied touch move transform:', `translate(${dx}px, ${dy}px)`);
-    }
-    
-    // Update joystick position in state
-    setJoystickPosition({ x: dx, y: dy });
-    
-    // Immediately trigger scroll for responsive feel
-    handleScrollFromJoystick(dy);
-    
-    // Update visual indicators
-    updateDirectionIndicators(dy);
-  };
-  
-  const handleJoystickTouchEnd = () => {
-    console.log('Touch end detected');
-    
-    // Store last position before resetting for spring animation
-    if (joystickRef.current) {
-      const lastPosition = { ...joystickPosition };
-      
-      // Set CSS variables for spring animation
-      joystickRef.current.style.setProperty('--last-x', `${lastPosition.x}px`);
-      joystickRef.current.style.setProperty('--last-y', `${lastPosition.y}px`);
-      
-      // Add spring return animation class
-      joystickRef.current.classList.add('joystick-spring-return');
-      
-      // Remove highlight
-      joystickRef.current.style.boxShadow = '';
-    }
-    
-    // Stop dragging
-    setIsDragging(false);
-    
-    // Reset joystick position in state
-    setJoystickPosition({ x: 0, y: 0 });
-    
-    // Remove event listeners
-    window.removeEventListener('touchmove', handleJoystickTouchMove);
-    window.removeEventListener('touchend', handleJoystickTouchEnd);
-    
-    // Stop the scrolling animation
-    stopScrollAnimation();
-    
-    // Store the last position for spring animation
-    const lastPosition = { ...joystickPosition };
-    
-    // Apply spring return animation for touch too
-    if (joystickRef.current) {
-      // Set CSS variables for animation
-      joystickRef.current.style.setProperty('--last-x', `${lastPosition.x}px`);
-      joystickRef.current.style.setProperty('--last-y', `${lastPosition.y}px`);
-      
-      // Add the spring animation class
-      joystickRef.current.classList.add('joystick-spring-return');
-      
-      // Directly set transform for immediate visual feedback
-      joystickRef.current.style.transform = 'translate(0px, 0px)';
-      
-      // Remove the animation class after it completes
-      setTimeout(() => {
-        if (joystickRef.current) {
-          joystickRef.current.classList.remove('joystick-spring-return');
-        }
-      }, 550); // Match the animation duration
-    }
-    
-    // Return joystick to center in state
-    setJoystickPosition({ x: 0, y: 0 });
-    
-    // Reset visual indicators
-    if (joystickRef.current) {
-      joystickRef.current.classList.remove(
-        'joystick-handle-up', 
-        'joystick-handle-down',
-        'low-intensity',
-        'medium-intensity',
-        'high-intensity'
-      );
-    }
-    
-    const upIndicator = document.querySelector('.joystick-up-indicator') as HTMLElement;
-    const downIndicator = document.querySelector('.joystick-down-indicator') as HTMLElement;
-    
-    if (upIndicator) {
-      upIndicator.classList.remove('active');
-      upIndicator.setAttribute('style', '--intensity: 0%');
-    }
-    
-    if (downIndicator) {
-      downIndicator.classList.remove('active');
-      downIndicator.setAttribute('style', '--intensity: 0%');
-    }
-    
-    // Remove event listeners
-    window.removeEventListener('touchmove', handleJoystickTouchMove);
-    window.removeEventListener('touchend', handleJoystickTouchEnd);
-  };
-  
-  // Animation loop for smooth scrolling
-  const startScrollAnimation = () => {
-    setIsScrolling(true);
-    
-    // Cancel any existing animation frame
-    if (scrollAnimationRef.current !== null) {
-      cancelAnimationFrame(scrollAnimationRef.current);
-    }
-    
-    // Get timestamp for smooth animation
-    let lastTimestamp: number | null = null;
-    
-    // Start the scrolling animation loop with timing control for smoother movement
-    const animateScroll = (timestamp: number) => {
-      // Calculate delta time for smoother animation
-      if (!lastTimestamp) lastTimestamp = timestamp;
-      const deltaTime = (timestamp - lastTimestamp) / 16.67; // Normalize to 60fps
-      lastTimestamp = timestamp;
-      
-      // Get current joystick Y position directly from the DOM for most up-to-date value
-      let yPosition = joystickPosition.y;
-      
-      // If the joystick ref exists, try to get the transform directly
-      if (joystickRef.current) {
-        const transform = joystickRef.current.style.transform;
-        if (transform) {
-          const match = transform.match(/translate\((.+?)px,\s*(.+?)px\)/);
-          if (match && match[2]) {
-            yPosition = parseFloat(match[2]);
-          }
-        }
-      }
-      
-      // Perform scrolling if needed with deltaTime for smooth consistent speed
-      if (isDragging && Math.abs(yPosition) > 0) {
-        // Apply deltaTime to normalize speed across different frame rates
-        const normalizedYPosition = yPosition * (deltaTime || 1);
-        handleScrollFromJoystick(normalizedYPosition);
-      }
-      
-      // Continue the animation loop if still dragging
-      if (isDragging) {
-        scrollAnimationRef.current = requestAnimationFrame(animateScroll);
-      }
-    };
-    
-    // Start the animation loop
-    scrollAnimationRef.current = requestAnimationFrame(animateScroll);
-  };
-  
-  // Stop the scrolling animation
-  const stopScrollAnimation = () => {
-    setIsScrolling(false);
-    
-    // Cancel the animation frame
-    if (scrollAnimationRef.current !== null) {
-      cancelAnimationFrame(scrollAnimationRef.current);
-      scrollAnimationRef.current = null;
-    }
-  };
-  
-  const handleScrollFromJoystick = (yPosition: number) => {
-    // Enhanced physics-based scroll with non-linear acceleration for more realistic feel
-    // Use exponential curve for better control at smaller movements and faster scrolling at extremes
-    const deadzone = 0.5; // Smaller deadzone for better responsiveness
-    const maxYPosition = 40; // Maximum expected joystick movement
-    
-    // Normalize y-position and apply deadzone
-    if (Math.abs(yPosition) < deadzone) {
-      return; // Within deadzone - no scrolling
-    }
-    
-    // Apply non-linear curve for more precision - use a cubic curve for smoother acceleration
-    const normalizedPosition = yPosition / maxYPosition; // Normalize to -1 to 1 range
-    const curveIntensity = 1.1; // More responsive curve (lower = more linear and smooth)
-    const direction = Math.sign(normalizedPosition);
-    const magnitude = Math.pow(Math.abs(normalizedPosition), curveIntensity);
-    
-    // Calculate scroll speed with improved physics feel
-    // Significantly increased base speed for very noticeable movement
-    const baseScrollSpeed = 120; // Much higher speed for faster scrolling
-    const scrollSpeed = direction * magnitude * baseScrollSpeed;
-    
-    // Always use auto scrolling for more responsive feel
-    console.log(`Scrolling: direction=${direction}, speed=${scrollSpeed.toFixed(2)}px`);
-    
-    // Perform immediate scrolling
-    window.scrollBy({
-      top: scrollSpeed,
-      behavior: 'auto' // Always use auto for responsiveness
-    });
-    
-    // Make sure the joystick visually stays in the correct position with smoother movement
-    if (joystickRef.current) {
-      const currentTransform = joystickRef.current.style.transform;
-      if (!currentTransform || !currentTransform.includes(`${yPosition}px`)) {
-        const xPos = joystickPosition.x;
-        joystickRef.current.style.transform = `translate(${xPos}px, ${yPosition}px)`;
-      }
-    }
-    
-    // Update visual feedback for better user experience
-    updateJoystickFeedback(yPosition);
-  };
-  
-  // Additional function for enhanced visual feedback
-  const updateJoystickFeedback = (yPosition: number) => {
-    const joystickHandle = joystickRef.current;
-    if (!joystickHandle) return;
-    
-    // Add intensity classes based on how far the joystick is pushed
-    const intensity = Math.abs(yPosition) / 40; // 0 to 1 range
-    
-    // Remove all existing intensity classes
-    joystickHandle.classList.remove('low-intensity', 'medium-intensity', 'high-intensity');
-    
-    // Add appropriate intensity class
-    if (intensity > 0.7) {
-      joystickHandle.classList.add('high-intensity');
-    } else if (intensity > 0.3) {
-      joystickHandle.classList.add('medium-intensity');
-    } else if (intensity > 0.1) {
-      joystickHandle.classList.add('low-intensity');
-    }
-  };
-  
-  // Enhanced continuous scrolling with adaptive frame rate for smoother experience
-  useEffect(() => {
-    let lastTimestamp = 0;
-    let animationFrameId: number;
-    
-    const scrollAnimation = (timestamp: number) => {
-      if (!isDragging) return;
-      
-      // Calculate delta time for consistent scrolling regardless of frame rate
-      const deltaTime = timestamp - lastTimestamp;
-      
-      // Only update on appropriate intervals (targeting ~60fps)
-      if (deltaTime > 16) {
-        lastTimestamp = timestamp;
-        
-        // Apply the joystick scrolling with frame-rate independent speed
-        if (joystickPosition.y !== 0) {
-          handleScrollFromJoystick(joystickPosition.y);
-        }
-      }
-      
-      // Continue the animation loop
-      animationFrameId = requestAnimationFrame(scrollAnimation);
-    };
-    
-    if (isDragging) {
-      // Start the animation frame loop for smoother performance
-      animationFrameId = requestAnimationFrame(scrollAnimation);
-    }
-    
-    return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-    };
-  }, [isDragging, joystickPosition]);
-  
-  // Universal action handler
-  const handlePostAction = (actionType: 'like' | 'comment' | 'follow' | 'trophy') => {
-    // Visual feedback on controller button
-    const controllerButton = document.querySelector(`[data-action="${actionType}"]`);
-    if (controllerButton) {
-      controllerButton.classList.add('button-press');
-      setTimeout(() => {
-        controllerButton.classList.remove('button-press');
-      }, 300);
-    }
-    
-    if (!currentPostId) {
-      logToDebug(`No post selected for ${actionType} action`);
-      toast.error('No post selected. Try scrolling to a post first.');
-      return;
-    }
-    
-    logToDebug(`Handling ${actionType} action for post: ${currentPostId}`);
-    
-    // Try multiple selectors to find the target post
-    const postSelectors = [
-      `[data-post-id="${currentPostId}"]`,
-      `#post-${currentPostId}`,
-      `.post-container[data-id="${currentPostId}"]`,
-      `[id="${currentPostId}"]`,
-      `.post-${currentPostId}`
-    ];
-    
-    let targetPost: Element | null = null;
-    
-    // Try each selector until we find a match
-    for (const selector of postSelectors) {
-      try {
-        const post = document.querySelector(selector);
-        if (post) {
-          targetPost = post;
-          logToDebug(`Found target post with selector: ${selector}`);
-          break;
-        }
-      } catch (error) {
-        console.error(`Error finding target post with selector:`, selector, error);
-      }
-    }
-    
-    if (!targetPost) {
-      logToDebug('Target post not found, looking at all posts...');
-      
-      // Try to find post among all posts with data-post-id
-      const allPosts = document.querySelectorAll('[data-post-id]');
-      let foundPost = false;
-      
-      allPosts.forEach(post => {
-        const postId = post.getAttribute('data-post-id');
-        if (postId === currentPostId) {
-          targetPost = post;
-          foundPost = true;
-          logToDebug('Found post by iterating through all posts');
-        }
-      });
-      
-      if (!foundPost) {
-        logToDebug('Post not found with any method');
-        toast.error('Post not found. Try scrolling to make it visible.');
-        return;
-      }
-    }
-    
-    if (targetPost) {
-      // Determine button selectors based on action type
-      let buttonSelectors: string[] = [];
-      
-      switch (actionType) {
-        case 'like':
-          buttonSelectors = [
-            '.like-button', 
-            'button:has(svg[data-feather="heart"])',
-            'button:has(.heart-icon)',
-            'button:has(.lucide-heart)',
-            'button[aria-label*="like" i]',
-            'button[title*="like" i]',
-            '[data-action="like"]'
-          ];
-          break;
-        case 'comment':
-          buttonSelectors = [
-            '.comment-button', 
-            'button:has(svg[data-feather="message-circle"])',
-            'button:has(.comment-icon)',
-            'button:has(.lucide-message-circle)',
-            'button[aria-label*="comment" i]',
-            'button[title*="comment" i]',
-            '[data-action="comment"]'
-          ];
-          break;
-        case 'follow':
-          buttonSelectors = [
-            '.follow-button', 
-            'button:has(svg[data-feather="user-plus"])',
-            'button:has(.follow-icon)',
-            'button:has(.lucide-user-plus)',
-            'button[aria-label*="follow" i]',
-            'button[title*="follow" i]',
-            '[data-action="follow"]'
-          ];
-          break;
-        case 'trophy':
-          buttonSelectors = [
-            '.trophy-button', 
-            'button:has(svg[data-feather="trophy"])',
-            'button:has(.trophy-icon)',
-            'button:has(.lucide-trophy)',
-            'button[aria-label*="trophy" i]',
-            'button[title*="trophy" i]',
-            '[data-action="trophy"]'
-          ];
-          break;
-      }
-      
-      let actionButton: Element | null = null;
-      
-      // Try each selector within the post first
-      for (const selector of buttonSelectors) {
-        try {
-          const buttons = targetPost.querySelectorAll(selector);
-          if (buttons.length > 0) {
-            actionButton = buttons[0];
-            logToDebug(`Found ${actionType} button within post using selector: ${selector}`);
-            break;
-          }
-        } catch (err) {
-          console.error(`Error finding ${actionType} button with selector:`, selector, err);
-        }
-      }
-      
-      // If we couldn't find in the target post, look globally with proximity check
-      if (!actionButton) {
-        logToDebug('Button not found in post, looking globally...');
-        
-        for (const selector of buttonSelectors) {
-          try {
-            // Find all buttons of this type in the document
-            const allButtons = document.querySelectorAll(selector);
-            
-            allButtons.forEach(button => {
-              // Check if this button is in or near our target post
-              let closestPost = button.closest('[data-post-id]');
-              if (!closestPost) {
-                // Try to find post by proximity if it's not a direct parent
-                const buttonRect = button.getBoundingClientRect();
-                const postRect = targetPost!.getBoundingClientRect();
-                
-                // Check if button is near our target post
-                const horizontalOverlap = 
-                  (buttonRect.left <= postRect.right && buttonRect.right >= postRect.left);
-                const verticalOverlap = 
-                  (buttonRect.top <= postRect.bottom && buttonRect.bottom >= postRect.top);
-                
-                if (horizontalOverlap && verticalOverlap) {
-                  actionButton = button;
-                  logToDebug(`Found ${actionType} button by proximity`);
-                }
-              } else if (closestPost.getAttribute('data-post-id') === currentPostId) {
-                actionButton = button;
-                logToDebug(`Found ${actionType} button via closest post`);
-              }
-            });
-            
-            if (actionButton) break;
-          } catch (err) {
-            console.error(`Error finding global ${actionType} button:`, err);
-          }
-        }
-      }
-      
-      if (actionButton) {
-        logToDebug(`Clicking ${actionType} button`);
-        
-        // Actually trigger the button's click event
-        actionButton.dispatchEvent(new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: true
-        }));
-        
-        toast.success(`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} action triggered`);
-        return;
-      } else {
-        logToDebug(`${actionType} button not found on post`);
-        
-        // Fallback for different actions
-        if (actionType === 'comment') {
-          logToDebug('Falling back to comment page');
-          // Navigate directly to comments page instead of opening the modal
-          if (currentPostId) {
-            setActiveCommentPostId(currentPostId);
-            setCommentModalOpen(true);
-            console.log(`Opening comment modal for post ID: ${currentPostId}`);
-          } else {
-            toast.error('No post selected');
-          }
-          return;
-        } else if (actionType === 'like') {
-          // Try direct API like
-          handleDirectLike(currentPostId);
-          return;
-        } else {
-          toast.error(`Could not find ${actionType} button. Try another post.`);
-        }
-      }
-    }
-  };
-  
-  // Direct API like when button click fails
-  const handleDirectLike = async (postId: string) => {
-    try {
-      logToDebug('Attempting direct API like for post: ' + postId);
-      
-      const { data: currentUser } = await supabase.auth.getUser();
-      const userId = currentUser?.user?.id;
-      
-      if (!userId) {
-        toast.error('You need to be logged in to like posts');
-        return;
-      }
-      
-      // Check if already liked
-      const { data: existingLike, error: likeError } = await supabase
-        .from('likes')
-        .select('*')
-        .eq('post_id', postId)
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      if (likeError) {
-        console.error('Error checking like status:', likeError);
-      }
-      
-      if (existingLike) {
-        // Unlike
-        await supabase
-          .from('likes')
-          .delete()
-          .eq('post_id', postId)
-          .eq('user_id', userId);
-          
-        toast.success('Removed like from post');
-      } else {
-        // Like
-        await supabase
-          .from('likes')
-          .insert({
-            post_id: postId,
-            user_id: userId,
-            created_at: new Date().toISOString()
-          });
-          
-        toast.success('Liked post');
-      }
-      
-      // Trigger a refresh for the post's like count
-      document.dispatchEvent(new CustomEvent('refresh-post', {
-        detail: { postId }
-      }));
-      
-      // Invalidate any React Query caches for this post
-      queryClient.invalidateQueries({ queryKey: ['likes', postId] });
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-    } catch (error) {
-      console.error('Error liking post:', error);
-      toast.error('Failed to like post');
-    }
-  };
-  
-  // Individual action handlers that use the universal handler
-  const handleLike = () => handlePostAction('like');
-  const handleComment = () => handlePostAction('comment');
-  const handleFollow = () => handlePostAction('follow');
-  const handleTrophy = () => handlePostAction('trophy');
-
-  // Your return JSX - the UI for the GameBoy controller
-  return (
-    <div className="gameboy-controls bg-gray-900/95 backdrop-blur-sm border-t border-indigo-900 py-3 px-6">
-      {/* Left Side - Joystick */}
-      <div className="joystick-container">
-        <div 
-          ref={baseRef}
-          className="joystick-base w-16 h-16 bg-gray-800 rounded-full border border-gray-700 relative"
-        >
-          <div 
-            ref={joystickRef}
-            className="joystick-stick absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-gray-700 rounded-full cursor-grab active:cursor-grabbing"
-          ></div>
-        </div>
-      </div>
-
-      {/* Center - CLIPT Button */}
-      <div className="flex flex-col items-center">
-        <button 
-          onClick={() => navigate('/')}
-          className="clipt-button pulse-glow text-white font-bold py-2 px-8 rounded-full mb-3"
-        >
-          CLIPT
-        </button>
-        
-        <div className="flex space-x-2">
-          <button 
-            onClick={() => navigate('/new-post')}
-            className="post-button bg-gray-800 hover:bg-gray-700 text-white text-xs px-4 py-1 rounded"
-          >
-            POST
-          </button>
-          <button 
-            onClick={() => navigate('/menu')}
-            className="menu-button bg-gray-800 hover:bg-gray-700 text-white p-1 rounded"
-          >
-            <Menu className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Right Side - Action Buttons in Diamond Formation */}
-      <div className="action-buttons">
-        <div className="relative w-20 h-20">
-          {/* Top Button - Heart/Like */}
-          <button 
-            onClick={handleLike}
-            className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full flex items-center justify-center bg-transparent border border-red-500 text-red-500 hover:bg-red-500/20 action-button action-button-heart"
-          >
-            <Heart className="h-4 w-4" />
-          </button>
-          
-          {/* Right Button - Comment */}
-          <button 
-            onClick={handleComment}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center bg-transparent border border-blue-500 text-blue-500 hover:bg-blue-500/20 action-button action-button-comment"
-          >
-            <MessageSquareIcon className="h-4 w-4" />
-          </button>
-          
-          {/* Bottom Button - Follow */}
-          <button 
-            onClick={handleFollow}
-            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full flex items-center justify-center bg-transparent border border-green-500 text-green-500 hover:bg-green-500/20 action-button action-button-follow"
-          >
-            <UserPlus className="h-4 w-4" />
-          </button>
-          
-          {/* Left Button - Trophy */}
-          <button 
-            onClick={() => navigate('/profile')}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center bg-transparent border border-yellow-500 text-yellow-500 hover:bg-yellow-500/20 action-button action-button-trophy"
-          >
-            <Trophy className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
+type Action = 'like' | 'comment' | 'trophy' | 'follow';
+const actions: Action[] = ['trophy', 'comment', 'like', 'follow'];
+const selectors: Record<Action, string> = {
+  like: 'button[data-action="like"],button.like-button',
+  comment: 'button[data-action="comment"],button.comment-button',
+  trophy: 'button[data-action="trophy"],button.trophy-button',
+  follow: 'button[data-action="follow"],button.follow-button',
 };
 
-export default GameBoyControls;
+// Only real post containers are eligible. No IDs are inferred or fabricated.
+function visiblePost(preferredId?: string | null): HTMLElement | null {
+  const controller = document.querySelector<HTMLElement>('.clipt-controller');
+  const bottom = controller?.dataset.layout === 'immersive' || controller?.dataset.mobileV2 === 'true' ? innerHeight : controller?.getBoundingClientRect().top ?? innerHeight;
+  const candidates = Array.from(document.querySelectorAll<HTMLElement>('[data-post-id]'))
+    .filter(element => {
+      if (element.dataset.activeClip === 'false') return false;
+      const rect = element.getBoundingClientRect();
+      return Boolean(element.dataset.postId) && rect.width > 0 && rect.height > 0
+        && rect.top < bottom && rect.bottom > 0 && rect.right > 0 && rect.left < innerWidth
+        && getComputedStyle(element).visibility !== 'hidden';
+    });
+  const preferred = candidates.find(element => element.dataset.postId === preferredId);
+  if (preferred) return preferred;
+  const middle = bottom / 2;
+  return candidates.sort((a, b) => {
+    const distance = (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+      return Math.abs((Math.max(0, rect.top) + Math.min(bottom, rect.bottom)) / 2 - middle);
+    };
+    return distance(a) - distance(b);
+  })[0] ?? null;
+}
+
+function postButton(post: HTMLElement | null, action: Action) {
+  return post?.querySelector<HTMLButtonElement>(selectors[action]) ?? null;
+}
+
+function liveButton(action: Action) {
+  return document.querySelector<HTMLButtonElement>(`[data-active-stream="true"] button[data-live-action="${action}"]`) ?? null;
+}
+
+function scrollContent(amount: number) {
+  // Prefer the focused page region (e.g. a conversation log), not a form or
+  // an unrelated background feed. Joystick input never submits a form.
+  const page = document.querySelector<HTMLElement>('.page-content');
+  let target: HTMLElement | null = page?.contains(document.activeElement) ? document.activeElement as HTMLElement : visiblePost();
+  if (!target) target = page?.querySelector<HTMLElement>('.clipt-dm-history, .clipt-inbox') ?? page;
+  while (target && target !== document.body) {
+    const style = getComputedStyle(target);
+    if (/(auto|scroll)/.test(style.overflowY) && target.scrollHeight > target.clientHeight) {
+      target.scrollBy({ top: amount, behavior: 'instant' });
+      return;
+    }
+    target = target.parentElement;
+  }
+  window.scrollBy({ top: amount, behavior: 'instant' });
+}
+
+function FeedFlipButton({ feed, onToggle }: { feed: string; onToggle: () => void }) {
+  const squad = feed === 'squad';
+  return <button type="button" role="switch" aria-label="Squad feed" aria-checked={squad}
+    title={`Showing ${squad ? 'Squad' : 'Clipts'}. Switch to ${squad ? 'Clipts' : 'Squad'}`}
+    className="clipt-feed-flip" onClick={onToggle}>
+    <span key={feed} className="clipt-feed-flip-face" aria-hidden="true">{squad ? <UsersRound size={22} /> : <Clapperboard size={22} />}</span>
+    <span className="sr-only">{squad ? 'Squad' : 'Clipts'}</span>
+  </button>;
+}
+
+export function PortraitFeedToggle({ feed, onToggle }: { feed: string; onToggle: () => void }) {
+  return <div className="clipt-portrait-feed-toggle" role="group" aria-label="Choose feed">
+    {['clipts', 'squad'].map(value => <button key={value} type="button" aria-pressed={feed === value}
+      onClick={() => { if (feed !== value) onToggle(); }}>{value === 'clipts' ? 'CLIPT' : 'SQUAD'}</button>)}
+  </div>;
+}
+
+export default function GameBoyControls({ currentPostId }: { currentPostId?: string | null }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const activePathRef = useRef(location.pathname);
+  activePathRef.current = location.pathname;
+  const horizontal = location.pathname === '/' || location.pathname === '/clipts';
+  const [controlsExpanded, setControlsExpanded] = useState(horizontal);
+  const controlsToggleRef = useRef<HTMLButtonElement>(null);
+  const liveContext = location.pathname.startsWith('/streaming/');
+  const mediaContext = horizontal || liveContext || /^\/post\/[^/]+$/.test(location.pathname);
+  const [pageState, setPageState] = useState<{path: string; layout: PageControllerLayout; enabled: string[]; pressed?: Record<string, boolean>}>({path: location.pathname, layout: pageControllerLayout(location.pathname), enabled: []});
+  const { preferences } = useControllerPreferences();
+  const { preferences: mobilePreferences } = useMobileControlsPreferences();
+  // The floating/immersive presentation belongs only to the video feed.
+  // Other routes retain the classic joystick + diamond + central CLIPT shell,
+  // independently of whether their actions operate a post or a livestream.
+  const immersive = useImmersiveController(horizontal, preferences, location.pathname, horizontal);
+  const portraitZoom = horizontal && immersive.immersive && !immersive.viewport.landscape;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const homeButtonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+  const handoffFocus = useRef(false);
+  const navigationHandoffFocus = useRef(false);
+  const compact = immersive.immersive && (immersive.viewport.height < (portraitZoom ? 420 : 300) || immersive.viewport.width < (portraitZoom ? 240 : 320) || (immersive.viewport.landscape && immersive.viewport.width < 420));
+  const emergency = immersive.immersive && (immersive.viewport.width < (portraitZoom ? 220 : 320) || immersive.viewport.height < 180);
+  const lastStep = useRef(0);
+  const [enabled, setEnabled] = useState<Record<Action, boolean>>({ like: false, comment: false, trophy: false, follow: false });
+  const [likeLabel, setLikeLabel] = useState('Like');
+  const [selectedFeed, setSelectedFeed] = useState('clipts');
+  const [counts, setCounts] = useState<Partial<Record<Action,string>>>({});
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const velocity = useRef(0);
+  const frame = useRef<number>();
+  const pointer = useRef<number | null>(null);
+  const refreshFrame = useRef<number>();
+
+  const refresh = useCallback(() => {
+    if (!mediaContext) {
+      const root = document.querySelector('.page-content');
+      const layout = pageControllerLayout(location.pathname, root ? pageControllerContext(root) : {});
+      const pressed: Record<string, boolean> = {};
+      const enabled: string[] = [];
+      const panelBackground = menuOpen && Boolean(document.querySelector('.clipt-navigation-panel[data-panel-size="full"]'));
+      for (const action of layout.actions) {
+        const target = root && pageActionTarget(root, action, panelBackground);
+        if (action.kind === 'navigate' || target) enabled.push(action.id);
+        const state = target?.getAttribute('aria-pressed') ?? target?.getAttribute('aria-selected');
+        if (state === 'true' || state === 'false') pressed[action.id] = state === 'true';
+        if (action.id === 'follow' && target?.textContent?.trim()) action.label = `${target.textContent.trim()} creator`;
+      }
+      const next = {path: location.pathname, layout, enabled, pressed};
+      setPageState(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : next);
+      return;
+    }
+    const actualFeed = document.querySelector<HTMLElement>('.clipt-fyp')?.dataset.feed === 'squad' ? 'squad' : 'clipts';
+    setSelectedFeed(previous => previous === actualFeed ? previous : actualFeed);
+    const post = visiblePost(currentPostId);
+    const state = Object.fromEntries(actions.map(action => {
+      const button = liveContext ? liveButton(action) : postButton(post, action);
+      return [action, Boolean(button && !button.disabled && button.getAttribute('aria-disabled') !== 'true')];
+    })) as Record<Action, boolean>;
+    setEnabled(previous => actions.every(action => previous[action] === state[action]) ? previous : state);
+    const confirmedLikeLabel = (liveContext ? liveButton('like') : postButton(post, 'like'))?.getAttribute('aria-label') || 'Like';
+    setLikeLabel(previous => previous === confirmedLikeLabel ? previous : confirmedLikeLabel);
+    const nextCounts = Object.fromEntries(actions.map(action => {
+      const text = (liveContext ? liveButton(action) : postButton(post,action))?.textContent?.trim() || '';
+      return [action, /^\d[\d,.]*[kKmM]?$/.test(text) ? text : ''];
+    }));
+    setCounts(previous => actions.every(action => previous[action] === nextCounts[action]) ? previous : nextCounts);
+  }, [currentPostId, liveContext, mediaContext, location.pathname, menuOpen]);
+
+  const stop = useCallback(() => {
+    if (frame.current !== undefined) cancelAnimationFrame(frame.current);
+    frame.current = undefined;
+    pointer.current = null;
+    velocity.current = 0;
+    setPosition({ x: 0, y: 0 });
+  }, []);
+
+  useEffect(() => {
+    const scheduleRefresh = () => {
+      if (refreshFrame.current !== undefined) return;
+      refreshFrame.current = requestAnimationFrame(() => {
+        refreshFrame.current = undefined;
+        refresh();
+      });
+    };
+    const observer = new MutationObserver(scheduleRefresh);
+    observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['disabled', 'hidden', 'inert', 'class', 'data-state', 'aria-pressed', 'data-post-id', 'data-active-clip', 'data-feed', 'aria-disabled', 'aria-label'] });
+    document.addEventListener('scroll', scheduleRefresh, true);
+    window.addEventListener('resize', scheduleRefresh);
+    window.addEventListener('blur', stop);
+    scheduleRefresh();
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('scroll', scheduleRefresh, true);
+      window.removeEventListener('resize', scheduleRefresh);
+      window.removeEventListener('blur', stop);
+      if (refreshFrame.current !== undefined) cancelAnimationFrame(refreshFrame.current);
+      refreshFrame.current = undefined;
+      stop();
+    };
+  }, [location.pathname, refresh, stop]);
+
+  const move = (event: PointerEvent<HTMLDivElement>) => {
+    if (pointer.current !== event.pointerId) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left - rect.width / 2;
+    const y = event.clientY - rect.top - rect.height / 2;
+    const scale = Math.min(1, 22 / Math.max(1, Math.hypot(x, y)));
+    const displacement = { x: x * scale, y: y * scale };
+    const axis = horizontal ? displacement.x : displacement.y;
+    velocity.current = Math.abs(axis) < 4 ? 0 : axis * 32;
+    setPosition(displacement);
+  };
+
+  const start = (event: PointerEvent<HTMLDivElement>) => {
+    if (pointer.current !== null || event.button !== 0) return;
+    event.preventDefault();
+    pointer.current = event.pointerId;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    move(event);
+    let last = performance.now();
+    const tick = (now: number) => {
+      const delta = Math.min(40, now - last) / 1000;
+      last = now;
+      if (velocity.current && horizontal && now - lastStep.current > 500) {
+        window.dispatchEvent(new CustomEvent('clipt:navigate', { detail: { direction: Math.sign(velocity.current) } }));
+        lastStep.current = now;
+      } else if (velocity.current && !horizontal) scrollContent(velocity.current * delta);
+      frame.current = requestAnimationFrame(tick);
+    };
+    frame.current = requestAnimationFrame(tick);
+  };
+
+  const act = (action: Action) => {
+    if (typeof window !== 'undefined' && window.location && window.location.pathname !== location.pathname) return;
+    // Re-resolve at the instant of activation to avoid acting on stale content.
+    const button = liveContext ? liveButton(action) : postButton(visiblePost(currentPostId), action);
+    if (button && !button.disabled && button.getAttribute('aria-disabled') !== 'true') button.click();
+    refresh();
+  };
+  const actOnPage = (id: string, focusTarget = false) => {
+    if (activePathRef.current !== location.pathname) return;
+    if (typeof window !== 'undefined' && window.location && window.location.pathname !== location.pathname) return;
+    const root = document.querySelector('.page-content');
+    // Recompute route context and permission-controlled target at click time.
+    const action = pageControllerLayout(location.pathname, root ? pageControllerContext(root) : {}).actions.find(item => item.id === id);
+    if (!action) return;
+    if (action.kind === 'navigate' && action.to) { navigate(action.to); return; }
+    const target = root && pageActionTarget(root, action);
+    if (!target) return;
+    if (action.kind === 'click') {
+      if (focusTarget) target.focus({preventScroll: true});
+      activatePageControl(target);
+    }
+    else {
+      target.scrollIntoView({block: 'center', behavior: 'instant'});
+      if (!target.matches('button, input, textarea, select, a[href], [tabindex]')) target.tabIndex = -1;
+      target.focus({preventScroll: true});
+    }
+    refresh();
+  };
+  const stepFromOverflow = (direction: number) => {
+    setMoreOpen(false);
+    requestAnimationFrame(() => horizontal ? window.dispatchEvent(new CustomEvent('clipt:navigate',{detail:{direction}})) : scrollContent(direction * 90));
+  };
+  const toggleFeed = () => {
+    window.dispatchEvent(new Event('clipt:toggle-feed'));
+  };
+
+  const mediaDefinitions = [
+    { action: 'trophy' as const, label: liveContext ? 'Donate — Live donation review' : 'Trophy — Rank this Clipt', Icon: liveContext ? DollarSign : Trophy },
+    { action: 'comment' as const, label: liveContext ? 'Live Chat' : 'Comment — Open engagement', Icon: MessageSquare },
+    { action: 'like' as const, label: likeLabel, Icon: Heart },
+    { action: 'follow' as const, label: 'Follow creator', Icon: UserPlus },
+  ];
+  const currentPage = pageState.path === location.pathname ? pageState.layout : pageControllerLayout(location.pathname);
+  const definitions = mediaContext ? mediaDefinitions : currentPage.actions.map(action => ({action: action.slot, label: action.label, Icon: pageIcons[action.icon]}));
+  const pageAction = (slot: Action): PageControllerAction | undefined => currentPage.actions.find(action => action.slot === slot);
+  const actionEnabled = (slot: Action) => mediaContext ? enabled[slot] : pageState.path === location.pathname && pageState.enabled.includes(pageAction(slot)?.id ?? '');
+  const activate = (slot: Action) => mediaContext ? act(slot) : actOnPage(pageAction(slot)?.id ?? '');
+
+  const landscapeFeed = horizontal && !portraitZoom;
+  const postControl = <button type="button" className="clipt-controller-post" aria-label="POST" title="Create a post" onClick={() => navigate('/new-post')}><Camera size={16} aria-hidden="true" /><span className="clipt-post-label">POST</span></button>;
+  return <><nav ref={immersive.rootRef} aria-label="Clipt game controls" data-expanded={controlsExpanded}
+    data-mobile-v2={horizontal} data-portrait-viewing={portraitZoom} data-hand={mobilePreferences.hand} data-page-controller={!horizontal ? (mediaContext ? liveContext ? 'live-viewer' : 'post-viewer' : currentPage.pageId) : undefined} data-page-media={mediaContext}
+    data-layout={immersive.immersive ? 'immersive' : 'classic'} data-portrait-zoom={portraitZoom} data-hidden={immersive.hidden} data-compact={compact} data-emergency={emergency}
+    style={immersive.immersive ? {left:immersive.viewport.left,top:immersive.viewport.top,width:immersive.viewport.width,height:immersive.viewport.height} : undefined}
+    onKeyDown={event => { if (horizontal && event.key === 'Escape' && (immersive.immersive ? !immersive.hidden : controlsExpanded)) { event.preventDefault(); if (immersive.immersive) immersive.hide(); else setControlsExpanded(false); requestAnimationFrame(() => controlsToggleRef.current?.focus()); } }}
+    className={'gameboy-controls clipt-controller' + (horizontal ? ' clipt-controller-feed' : '')}>
+    {(horizontal || immersive.immersive) && <button ref={controlsToggleRef} type="button" className="clipt-controller-toggle" aria-expanded={immersive.immersive ? !immersive.hidden : controlsExpanded}
+      aria-label={(immersive.immersive ? !immersive.hidden : controlsExpanded) ? 'Hide controls' : 'Show controls'} title={(immersive.immersive ? !immersive.hidden : controlsExpanded) ? 'Hide controls' : 'Show controls'}
+      aria-controls="clipt-feed-extra-controls" onClick={() => { if (immersive.immersive) { if (immersive.hidden) immersive.wake(); else immersive.hide(); } else setControlsExpanded(value => !value); }}>
+      {(immersive.immersive ? !immersive.hidden : controlsExpanded) ? <X size={22} aria-hidden="true" /> : <SlidersHorizontal size={22} aria-hidden="true" />}
+    </button>}
+    <div className="clipt-controller-body" id={horizontal || immersive.immersive ? 'clipt-feed-extra-controls' : undefined}>
+    <button ref={settingsButtonRef} type="button" className="clipt-controller-settings" aria-label="Controller settings" onClick={() => setSettingsOpen(true)}><Settings size={20} aria-hidden="true" /></button>
+    {compact && <button ref={moreButtonRef} type="button" className="clipt-controller-more" aria-haspopup="dialog" aria-label="All controller actions" onClick={() => setMoreOpen(true)}><MoreHorizontal size={22} aria-hidden="true" /></button>}
+    <div className="clipt-controller-joystick" role="slider" tabIndex={0}
+      aria-label={horizontal ? 'Scroll feed joystick' : 'Scroll page joystick'} aria-orientation={horizontal ? 'horizontal' : 'vertical'} aria-valuemin={-100} aria-valuemax={100}
+      aria-valuenow={Math.round((horizontal ? position.x : position.y) / 22 * 100)}
+      aria-valuetext={horizontal ? (position.x < -4 ? 'Previous Clipt' : position.x > 4 ? 'Next Clipt' : 'Stopped') : (position.y < -4 ? 'Scrolling up' : position.y > 4 ? 'Scrolling down' : 'Stopped')}
+      onPointerDown={start} onPointerMove={move} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}
+      onKeyDown={event => {
+        if (horizontal) {
+          if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+            event.preventDefault();
+            window.dispatchEvent(new CustomEvent('clipt:navigate', { detail: { direction: event.key === 'ArrowRight' ? 1 : -1 } }));
+          }
+          return;
+        }
+        if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(event.key)) {
+          event.preventDefault();
+          const amount = event.key === 'Home' ? -document.body.scrollHeight : event.key === 'End' ? document.body.scrollHeight
+            : (event.key.includes('Up') ? -1 : 1) * (event.key.startsWith('Page') ? innerHeight * 0.7 : 90);
+          scrollContent(amount);
+        }
+      }}>
+      <div className="clipt-controller-stick" style={{ transform: 'translate(' + position.x + 'px,' + position.y + 'px)' }} />
+    </div>
+    <div className="clipt-controller-center">
+      <button ref={homeButtonRef} type="button" className="clipt-controller-home" aria-label="CLIPT — Open navigation" onClick={() => setMenuOpen(true)} onPointerDown={event => {
+        // Keep the typing layout stable through pointer-up. Otherwise the
+        // input blurs on pointer-down and the home button moves before click.
+        if (!horizontal && immersive.viewport.height < 500 && document.activeElement?.matches('input, textarea, [contenteditable="true"]')) event.preventDefault();
+      }}>CLIPT</button>
+      {!horizontal && <span className="clipt-page-controls-guide">Page actions<br/>Press CLIPT for guide</span>}
+      {horizontal && <div className="clipt-controller-secondary">
+        <button type="button" aria-label="Open menu" onClick={() => navigate('/menu')}><Menu size={16} /> MENU</button>
+        {!landscapeFeed && postControl}
+      </div>}
+    </div>
+    <div className="clipt-controller-actions">
+      {(immersive.immersive ? [...definitions].sort((a,b)=>(portraitZoom ? ['like','comment','follow','trophy'] : ['like','comment','trophy','follow']).indexOf(a.action)-(portraitZoom ? ['like','comment','follow','trophy'] : ['like','comment','trophy','follow']).indexOf(b.action)) : definitions).map(({ action, label, Icon }) => <button key={action} type="button"
+        data-controller-action={mediaContext ? action : pageAction(action)?.id}
+        className={'clipt-controller-action clipt-controller-' + action} aria-label={label}
+        title={label} aria-pressed={mediaContext ? action === 'like' ? /^unlike\b/i.test(likeLabel) : undefined : pageState.path === location.pathname ? pageState.pressed?.[pageAction(action)?.id ?? ''] : undefined}
+        aria-describedby={mediaContext && immersive.immersive && counts[action] ? `clipt-controller-count-${action}` : undefined}
+        disabled={!actionEnabled(action)} onClick={() => activate(action)}><Icon key={mediaContext ? action : pageAction(action)?.id} size={18} aria-hidden="true" />{!mediaContext && <span className="clipt-controller-action-label">{label}</span>}{mediaContext && immersive.immersive && counts[action] && <span id={`clipt-controller-count-${action}`} className="clipt-controller-count">{counts[action]}</span>}</button>)}
+      {horizontal && immersive.immersive && (portraitZoom ? <PortraitFeedToggle feed={selectedFeed} onToggle={toggleFeed} /> : <FeedFlipButton feed={selectedFeed} onToggle={toggleFeed} />)}
+      {landscapeFeed && postControl}
+    </div>
+    </div>
+  </nav>
+  <Dialog open={menuOpen} onOpenChange={setMenuOpen} modal={false}>
+    <AdjustablePanel className="clipt-navigation-panel" constrained={!horizontal && immersive.viewport.height > 0 && immersive.viewport.height < 320} onInteractOutside={event => event.preventDefault()} onCloseAutoFocus={event => {
+      if (navigationHandoffFocus.current) { event.preventDefault(); navigationHandoffFocus.current = false; return; }
+      if (homeButtonRef.current?.isConnected && homeButtonRef.current.getClientRects().length) { event.preventDefault(); immersive.wake(); homeButtonRef.current.focus(); }
+    }}>
+      <DialogTitle>CLIPT navigation</DialogTitle>
+      <DialogDescription>Navigation and viewing preferences. Video continues playing.</DialogDescription>
+      {mediaContext && !liveContext && <p>Trophy rankings accept published public videos, not photos, drafts or Squad posts. Like remains available for photos. Disabled actions can also require sign-in.</p>}
+      {!mediaContext && <section aria-label="Current page controller actions" className="clipt-overflow-actions">
+        <h2>{currentPage.pageId.replace(/-/g, ' ')} controls</h2>
+        <p>The colored buttons match the actions below. The joystick scrolls this page or its open conversation. Disabled actions are not available in the current context.</p>
+        {currentPage.actions.map(action => <button key={action.id} type="button" aria-label={action.label} disabled={!actionEnabled(action.slot)} onClick={() => { navigationHandoffFocus.current = true; setMenuOpen(false); requestAnimationFrame(() => actOnPage(action.id, true)); }}><span aria-hidden="true">{{like:'Top · pink',comment:'Right · cyan',follow:'Bottom · teal',trophy:'Left · gold'}[action.slot]} — </span>{action.label}</button>)}
+      </section>}
+      {!horizontal && mediaContext && <section aria-label="Current video controller actions" className="clipt-overflow-actions">{definitions.map(({action,label}) => <button key={action} type="button" disabled={!actionEnabled(action)} onClick={() => { navigationHandoffFocus.current = action === 'comment' || action === 'trophy'; setMenuOpen(false); requestAnimationFrame(() => activate(action)); }}>{label}</button>)}</section>}
+      <div onClick={event => { if (event.target instanceof Element && event.target.closest('a[href]')) setMenuOpen(false); }}><NavigationMenu embedded /></div>
+      {horizontal && <div className="clipt-overflow-actions">
+        <button type="button" onClick={() => { toggleFeed(); setMenuOpen(false); }}>Switch to {selectedFeed === 'squad' ? 'Clipts' : 'Squad'}</button>
+        <button type="button" onClick={() => { setMenuOpen(false); stepFromOverflow(-1); }}>Previous Clipt</button><button type="button" onClick={() => { setMenuOpen(false); stepFromOverflow(1); }}>Next Clipt</button>
+      </div>}
+      <HandPreferenceSettings />
+      <ControllerSettings />
+    </AdjustablePanel>
+  </Dialog>
+  <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}><DialogContent className="clipt-controller-dialog" onCloseAutoFocus={event=>{
+    const target=settingsButtonRef.current?.getClientRects().length ? settingsButtonRef.current : controlsToggleRef.current;
+    if(target?.isConnected && getComputedStyle(target).visibility==='visible'){event.preventDefault();target.focus();}
+  }}><DialogTitle>Controller settings</DialogTitle><DialogDescription>Layout and visibility preferences for this browser.</DialogDescription><ControllerSettings /><HandPreferenceSettings /></DialogContent></Dialog>
+  <Dialog open={moreOpen} onOpenChange={setMoreOpen}><DialogContent className="clipt-controller-dialog" onCloseAutoFocus={event=>{
+    if(handoffFocus.current){event.preventDefault();handoffFocus.current=false;return;}
+    const target=moreButtonRef.current?.getClientRects().length ? moreButtonRef.current : controlsToggleRef.current;
+    if(target?.isConnected && getComputedStyle(target).visibility==='visible'){event.preventDefault();target.focus();}
+  }}><DialogTitle>Controller actions</DialogTitle><DialogDescription>All actions remain available when screen space is limited.</DialogDescription>
+    <div className="clipt-overflow-actions">{definitions.map(({action,label,Icon})=><button type="button" key={action} disabled={!actionEnabled(action)} onClick={()=>{handoffFocus.current=action==='comment'||action==='trophy';setMoreOpen(false);activate(action);}}><Icon size={22} aria-hidden="true" />{label}{mediaContext && counts[action] && <span>{counts[action]}</span>}</button>)}
+      {horizontal && (portraitZoom ? <PortraitFeedToggle feed={selectedFeed} onToggle={toggleFeed} /> : <FeedFlipButton feed={selectedFeed} onToggle={toggleFeed} />)}
+    </div>
+    {emergency && <div className="clipt-overflow-actions"><p>Compact navigation replaces the joystick when there is too little room for separate controls.</p>
+      <button onClick={()=>stepFromOverflow(-1)}>Previous Clipt</button>
+      <button onClick={()=>stepFromOverflow(1)}>Next Clipt</button>
+      <button onClick={()=>navigate('/menu')}>Menu</button><button onClick={()=>navigate('/clipts')}>CLIPT home</button><button onClick={()=>navigate('/new-post')}>Post</button>
+    </div>}
+  </DialogContent></Dialog></>;
+}

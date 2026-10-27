@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { StreamChatMessage } from '@/types/stream-chat';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,7 @@ interface StreamChatProps {
 }
 
 export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<StreamChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isModerator, setIsModerator] = useState(false);
   const { user } = useAuth();
@@ -24,7 +25,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   useEffect(() => {
     // Check if user is moderator
     const checkModStatus = async () => {
-      if (!user) return;
+      if (!user) { setIsModerator(false); return; }
       
       const { data } = await supabase
         .from('stream_moderators')
@@ -44,7 +45,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
         .from('stream_chat')
         .select(`
           *,
-          profiles(username, avatar_url)
+          profiles:profiles!stream_chat_user_id_fkey(username, avatar_url)
         `)
         .eq('stream_id', streamId)
         .order('created_at', { ascending: true });
@@ -78,12 +79,13 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   }, [streamId, user]);
 
   const sendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !user || !isLive) return;
 
     const { error } = await supabase
       .from('stream_chat')
       .insert({
         stream_id: streamId,
+        user_id: user.id,
         message: newMessage,
       });
 
@@ -157,12 +159,13 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            disabled={!isLive}
+            disabled={!isLive || !user}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
           />
           <Button 
             onClick={sendMessage}
-            disabled={!isLive}
+            disabled={!isLive || !user}
+            aria-label="Send message"
             size="icon"
           >
             <Send className="h-4 w-4" />

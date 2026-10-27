@@ -1,97 +1,51 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import {useQuery,useQueryClient} from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { validateAuthenticatorCode } from '@/lib/mfa';
 
 export const useAuthSecurity = () => {
-  const [isRateLimited, setIsRateLimited] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false);
-  const [is2FAEnabled, setIs2FAEnabled] = useState(false);
+  const { user } = useAuth();
+  const queryClient=useQueryClient();
+  const [enrollment, setEnrollment] = useState<{ id: string; qrCode: string; secret: string } | null>(null);
+  const factorsQuery=useQuery({queryKey:['auth-factors',user?.id],enabled:Boolean(user),retry:false,staleTime:0,
+    queryFn:async()=>{const {data,error}=await supabase.auth.mfa.listFactors();if(error)throw error;return data.totp;}});
+  // MFA verification refreshes the session and can remount the Settings page.
+  // Invalidate shared state after each mutation, including from an old mount.
+  const refresh=()=>queryClient.invalidateQueries({queryKey:['auth-factors',user?.id]});
+  useEffect(()=>{setEnrollment(null);},[user?.id]);
 
-  const checkIPStatus = async (ip: string) => {
-    const { data: isBlocked, error: blockError } = await supabase
-      .rpc('is_ip_blocked', { check_ip: ip });
-    
-    if (blockError) {
-      console.error('Error checking IP block status:', blockError);
-      return false;
-    }
-    
-    const { data: isRateLimited, error: rateError } = await supabase
-      .rpc('check_auth_rate_limit', { check_ip: ip });
-    
-    if (rateError) {
-      console.error('Error checking rate limit:', rateError);
-      return false;
-    }
-
-    setIsBlocked(isBlocked);
-    setIsRateLimited(isRateLimited);
-    return isBlocked || isRateLimited;
+  const enroll = async () => {
+    const { data, error: enrollError } = await supabase.auth.mfa.enroll({
+      factorType: 'totp', friendlyName: 'Clipt authenticator',
+    });
+    if (enrollError) throw enrollError;
+    if (data.type !== 'totp') throw new Error('Authenticator enrollment was not returned.');
+    setEnrollment({ id: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret });
   };
-
-  const recordAuthAttempt = async (ip: string, email: string, isSuccessful: boolean) => {
-    const { error } = await supabase
-      .from('auth_attempts')
-      .insert([{ ip_address: ip, email, is_successful: isSuccessful }]);
-
-    if (error) {
-      console.error('Error recording auth attempt:', error);
-    }
+  const verifyEnrollment = async (code: string) => {
+    if (!enrollment) throw new Error('Start authenticator setup first.');
+    const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify({
+      factorId: enrollment.id, code: validateAuthenticatorCode(code),
+    });
+    if (verifyError) throw verifyError;
+    setEnrollment(null);
+    await refresh();
   };
-
-  const toggle2FA = async (enabled: boolean) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('two_factor_auth')
-      .upsert({ 
-        user_id: user.id,
-        is_enabled: enabled,
-        backup_codes: enabled ? generateBackupCodes() : []
-      });
-
-    if (error) {
-      toast.error('Failed to update 2FA settings');
-      return false;
-    }
-
-    setIs2FAEnabled(enabled);
-    toast.success(`Two-factor authentication ${enabled ? 'enabled' : 'disabled'}`);
-    return true;
+  const cancelEnrollment = async () => {
+    if (!enrollment) return;
+    const { error: cancelError } = await supabase.auth.mfa.unenroll({ factorId: enrollment.id });
+    if (cancelError) throw cancelError;
+    setEnrollment(null);
   };
-
-  const generateBackupCodes = () => {
-    return Array.from({ length: 10 }, () => 
-      Math.random().toString(36).substring(2, 8).toUpperCase()
-    );
+  const removeFactor = async (factorId: string, code: string) => {
+    const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify({
+      factorId, code: validateAuthenticatorCode(code),
+    });
+    if (verifyError) throw verifyError;
+    const { error: removeError } = await supabase.auth.mfa.unenroll({ factorId });
+    if (removeError) throw removeError;
+    await refresh();
   };
-
-  const check2FAStatus = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('two_factor_auth')
-      .select('is_enabled')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!error && data) {
-      setIs2FAEnabled(data.is_enabled);
-    }
-  };
-
-  useEffect(() => {
-    check2FAStatus();
-  }, []);
-
-  return {
-    isRateLimited,
-    isBlocked,
-    is2FAEnabled,
-    checkIPStatus,
-    recordAuthAttempt,
-    toggle2FA
-  };
+  return { factors:factorsQuery.data??[], enrollment, error:factorsQuery.isError?'Could not load authenticator settings.':'', loading:Boolean(user)&&factorsQuery.isPending, enroll, verifyEnrollment, cancelEnrollment, removeFactor };
 };

@@ -99,7 +99,7 @@ export const TrendingGamesSection = () => {
         const transformedData = (supabaseGames || []).map(game => ({
           ...game,
           post_count: typeof game.post_count === 'object' && game.post_count !== null 
-            ? Number(game.post_count.count || 0) 
+            ? Number(game.post_count[0]?.count || 0)
             : (typeof game.post_count === 'number' ? game.post_count : 0)
         }));
         

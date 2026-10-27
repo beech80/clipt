@@ -6,14 +6,22 @@ import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { MessageCircle, Heart, Share2, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
+import type { Tables } from '@/integrations/supabase/types';
+type Activity = Tables<'gaming_history'> & { profiles: Pick<Tables<'profiles'>, 'username' | 'avatar_url' | 'display_name'> | null };
+
+const detailText = (details: unknown, key: string) => {
+  if (!details || typeof details !== 'object' || Array.isArray(details)) return '';
+  const value = (details as Record<string, unknown>)[key];
+  return typeof value === 'string' ? value : '';
+};
 
 export function EnhancedFeed() {
-  const [activities, setActivities] = useState<any[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadActivities();
-    subscribeToActivities();
+    return subscribeToActivities();
   }, []);
 
   const loadActivities = async () => {
@@ -141,11 +149,11 @@ export function EnhancedFeed() {
                 </Button>
               </div>
               
-              <p className="text-sm">{activity.details?.description}</p>
+              <p className="text-sm">{detailText(activity.details, 'description')}</p>
               
-              {activity.details?.image_url && (
+              {detailText(activity.details, 'image_url') && (
                 <img 
-                  src={activity.details.image_url} 
+                  src={detailText(activity.details, 'image_url')} 
                   alt="Activity content"
                   className="rounded-lg max-h-96 object-cover w-full"
                 />

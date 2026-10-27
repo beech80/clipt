@@ -46,7 +46,7 @@ export function TopWeeklyClips() {
         .from('posts')
         .select(`
           id,
-          title,
+          title:content,
           image_url,
           video_url,
           user_id,
@@ -88,7 +88,7 @@ export function TopWeeklyClips() {
       }
       
       // Create a map of post_id to vote count
-      const voteCountMap = {};
+      const voteCountMap: Record<string, number> = {};
       
       voteData?.forEach(vote => {
         if (!voteCountMap[vote.post_id]) {

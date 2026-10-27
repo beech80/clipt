@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import type { EngineConfig, QualityPreset } from '@/types/broadcast';
+import type { Tables } from '@/integrations/supabase/types';
+import { readQualitySettings } from '@/lib/broadcast-data';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -9,8 +12,8 @@ import { Slider } from '@/components/ui/slider';
 
 interface BroadcastQualityManagerProps {
   streamId: string;
-  engineConfig: any;
-  encodingSession: any;
+  engineConfig: EngineConfig | null;
+  encodingSession: Tables<'stream_encoding_sessions'> | null;
   currentSessionId: string;
 }
 
@@ -20,13 +23,13 @@ export const BroadcastQualityManager = ({
   encodingSession,
   currentSessionId,
 }: BroadcastQualityManagerProps) => {
-  const [quality, setQuality] = useState(encodingSession?.current_settings || engineConfig?.quality_presets.medium);
+  const [quality, setQuality] = useState(() => readQualitySettings(encodingSession?.current_settings ?? engineConfig?.quality_presets.medium));
 
   const updateQualityMutation = useMutation({
-    mutationFn: async (newSettings: any) => {
+    mutationFn: async (newSettings: Partial<QualityPreset>) => {
       const { error } = await supabase.rpc('update_stream_quality', {
         stream_id: streamId,
-        new_settings: newSettings,
+        new_settings: { ...newSettings },
       });
 
       if (error) throw error;
@@ -41,6 +44,7 @@ export const BroadcastQualityManager = ({
   });
 
   const handleQualityPresetChange = (preset: string) => {
+    if (!engineConfig || (preset !== 'low' && preset !== 'medium' && preset !== 'high')) return;
     const newSettings = engineConfig.quality_presets[preset];
     setQuality(newSettings);
     updateQualityMutation.mutate(newSettings);

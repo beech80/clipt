@@ -1,127 +1,65 @@
-# Comprehensive User Guide
+# Clipt development preview guide
 
-## Getting Started
+This preview is still under verification. It is not a production launch or a promise that every feature is available. Do not upload confidential media.
 
-### Account Setup
-1. Create an account
-2. Complete profile setup
-3. Set preferences
-4. Follow interests
-5. Enable notifications
+## Find your way around
 
-### Navigation
-- Home: Your personalized feed
-- Discover: Find new content
-- Streaming: Watch and create streams
-- Messages: Connect with others
-- Profile: Manage your presence
+- Clipts is the public discovery feed on Home. Squad shows eligible posts from creators you follow. Browse horizontally using swipe, keyboard navigation or the analog joystick.
+- The center CLIPT button returns Home. Menu and Post sit beneath it.
+- Like, Comment, Trophy and Follow use their own icons. Comment opens the engagement screen.
+- Discovery searches Clipt's game catalog, creators and public Clipts. Search results are not Trophy rankings.
 
-## Features
+## Publish a Clipt
 
-### Content Creation
+Open Post and choose Photo, Video or Live. For a photo or video, choose your media, add a caption and optional hashtags/game, then select a destination: Clipts for public discovery, Squad for your eligible followers, or Draft to keep it unpublished. Submit once and wait for confirmed publication or draft saving. Live opens stream setup; setup alone does not mean you are broadcasting.
 
-#### Posts
-- Upload images/videos
-- Add descriptions
-- Use hashtags
-- Tag users
-- Set visibility
+The current video upload limit is 50 MB. H.264 MP4 is recommended; WebM is accepted. Automatic conversion of new HEVC uploads is not available. Photo files have their own type/size checks; follow the upload form's validation message. A failed upload is not a saved draft. Squad posting depends on server-confirmed privacy support and must not fall back to public posting when unavailable. Scheduled publishing is not enabled. Private-media verification remains a beta gate; downloaded copies and previously issued links may outlive a visibility change.
 
-#### Streaming
-- Start a stream
-- Set up stream details
-- Manage chat
-- Create highlights
-- Save VODs
+A network or reward error is not proof that publication failed. Check your profile before uploading the same video again.
 
-### Social Features
+## Trophy, Tokens and Boosts
 
-#### Following
-- Follow users
-- Create collections
-- Share content
-- Engage with posts
-- Join communities
+The current backend accepts Trophies on published public video Clipts only. Photos can receive Likes; photo Trophy rankings are not currently enabled. Earlier wording saying photo Trophies were supported was incorrect. You never buy a Trophy with money or Tokens. They are not donations, virtual gifts or paid placement. Live replaces the Trophy controller action with Donate, a separate payment flow.
 
-#### Messaging
-- Direct messages
-- Group chats
-- Share media
-- React to messages
+Tokens are a separate development economy. A qualifying public H.264 upload can earn up to 3 Tokens after server checks. Ten distinct non-author likes on verified content can earn up to 3 more once per Clipt. Daily and storage limits apply. Repeated verification and identical re-uploads do not earn again. Other earning actions are still being completed.
 
-### Gaming Features
+Token Store shows confirmed balance/history and lets you retry an unconfirmed publication reward. Token purchases are unavailable until sandbox payment verification is complete.
 
-#### Achievements
-- Complete challenges
-- Earn badges
-- Track progress
-- Unlock rewards
+Boosts increase eligible discovery opportunities, not guaranteed views or engagement:
 
-#### Tournaments
-- Join competitions
-- Create tournaments
-- Track standings
-- Win prizes
+- Squad Blast: 40 Tokens, 24 hours.
+- Chain Reaction: 60 Tokens, 6 hours.
+- I'm the King Now: 80 Tokens, 2 hours; a separate labeled game spotlight, never purchased Trophy ranking.
+- Stream Surge: 50 Tokens, 30 minutes; unavailable until actual live ingestion can be verified.
 
-## Privacy & Security
+Eligible Premium and Maxed memberships receive server-calculated discounts. Weekly free-Boost/Mega redemption rules are not fully implemented. Review the displayed final price and wait for authoritative activation before treating a Boost as active.
 
-### Settings
-- Privacy options
-- Blocking users
-- Content filters
-- Two-factor authentication
+## Connect and report problems
 
-### Safety Tips
-- Password security
-- Safe sharing
-- Report system
-- Account recovery
+Open a creator profile to follow or message them. Direct messages and notification receipts use the signed-in account. Group chats and media-message features are not promised by this guide.
 
-## Technical Support
+Report inappropriate content from its report control. Moderation actions require an authorized moderator account. Do not use reports to harass other people.
 
-### Common Issues
-- Connection problems
-- Upload errors
-- Stream issues
-- Payment concerns
+## Account security
 
-### Getting Help
-- Contact support
-- FAQ section
-- Community help
-- Bug reporting
+Settings contains authenticator enrollment. Scan the QR code privately, enter a current six-digit code and wait for verified status. Cancelling incomplete setup removes the pending factor. Removing a verified authenticator requires a current code.
 
-## Platform Rules
+Never share your password, QR code, setup key or recovery credentials. This interface does not issue recovery codes. Keep access to your authenticator.
 
-### Content Guidelines
-- Acceptable content
-- Prohibited material
-- Age restrictions
-- Copyright rules
+High Contrast and Reduced Motion preferences apply across pages after server confirmation. Device reduced-motion preferences are also respected. A device screen reader does not require an in-app switch. Video caption generation and caption sizing remain unavailable.
 
-### Behavior Standards
-- Respect others
-- Follow rules
-- Report violations
-- Be constructive
+### Delete your account
 
-## Updates & Changes
+Open the Data & Privacy controls in Settings and choose Delete Account. Read the explanation, type DELETE and wait for server confirmation. Profile/content/account-linked messages and nonessential data are erased; owned media and sign-in access must be removed before success is shown. If cleanup is interrupted, keep the tab open and use Retry deletion completion.
 
-- Feature announcements
-- Platform updates
-- Maintenance notices
-- Community feedback
+Only minimized financial/accounting records (7 years by default) and security/abuse records (2 years by default) are retained privately. These periods are configurable; active disputes, fraud investigations or legal holds may extend them. Active subscriptions, shared resources or provider media may require review first. Deleting origin media cannot recall another person's downloaded copies or guarantee immediate deletion from provider backups.
 
-## Mobile Usage
+## Live and payments
 
-### App Features
-- Mobile streaming
-- Quick posts
-- Chat on-the-go
-- Push notifications
+An offline stream setup is not evidence of a live broadcast. Ingestion, playback and archive verification remain in progress. Never share stream keys.
 
-### Optimization
-- Data usage
-- Battery saving
-- Storage management
-- Offline access
+Real-money live donations, subscriptions and Token purchases must stay unavailable until the provider/server confirms the corresponding sandbox flows. Do not make real charges in this preview. Virtual gifts, Boost spending, Trophy votes and real-money donations remain separate systems.
+
+## When something fails
+
+Use the page's retry control where available. Keep drafts when a request fails, and do not assume success from a spinner or button click. Tell the owner the screen, action and approximate time of the problem. Do not send passwords, tokens, authenticator keys or private message contents in a bug report.

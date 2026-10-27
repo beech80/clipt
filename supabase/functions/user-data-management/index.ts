@@ -1,66 +1,30 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { assertOwnUser, authenticatedUser, errorResponse, HttpError, jsonResponse, requestBody, requestMethod, serviceClient } from '../_shared/request.ts'
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
+  const method = requestMethod(req)
+  if (method) return method
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    const { action, userId } = await req.json()
-
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: 'User ID is required' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
-    }
-
-    if (action === 'export') {
-      const { data, error } = await supabase.rpc('get_user_data_export', {
-        user_id_param: userId
-      })
-
-      if (error) throw error
-
-      return new Response(
-        JSON.stringify({ data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    if (action === 'delete') {
-      const { data, error } = await supabase.rpc('delete_user_account', {
-        user_id_param: userId
-      })
-
-      if (error) throw error
-
-      return new Response(
-        JSON.stringify({ success: true }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    return new Response(
-      JSON.stringify({ error: 'Invalid action' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    )
-
+    const user = await authenticatedUser(req, { accountManagement: true })
+    const body = await requestBody(req)
+    assertOwnUser(body.userId, user.id)
+    if (body.action !== 'export' && body.action !== 'delete') throw new HttpError(400, 'Invalid action')
+    if (body.action === 'delete') throw new HttpError(409, 'Use the account deletion confirmation flow')
+    const supabase = serviceClient()
+    const { data, error } = await supabase.rpc('get_user_data_export', { user_id_param: user.id })
+    if (error) throw error
+    if (data === null || data === undefined) throw new HttpError(409, 'Account export was not returned')
+    // Allow-list stream fields: the legacy RPC includes credentials and provider
+    // settings. Never include those in a downloadable account-data artifact.
+    const streamFields = ['id', 'user_id', 'title', 'description', 'is_live',
+      'started_at', 'ended_at', 'created_at', 'chat_enabled', 'scheduled_start_time',
+      'scheduled_duration', 'schedule_status', 'vod_enabled', 'vod_processing_status']
+    const safeData = { ...data, streams: Array.isArray(data.streams)
+      ? data.streams.map((stream: Record<string, unknown>) => Object.fromEntries(
+        streamFields.filter(key => Object.hasOwn(stream, key)).map(key => [key, stream[key]]),
+      )) : [] }
+    return jsonResponse({ data: safeData })
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+    return errorResponse(error)
   }
 })

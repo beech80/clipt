@@ -30,26 +30,6 @@ export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
     }
   };
 
-  // Make sure game name is clickable and navigates to game page
-  const GameLink = ({ game, className }: { game: any, className: string }) => {
-    if (!game) return null;
-    
-    const handleClick = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      console.log("Navigating to game:", game.id);
-      window.location.href = `/game/${game.id}`;
-    };
-    
-    return (
-      <span 
-        className={`${className} cursor-pointer hover:text-gaming-100 transition-colors duration-200`}
-        onClick={handleClick}
-      >
-        {game.name}
-      </span>
-    );
-  };
-
   return (
     <div>
       <div className="flex items-center space-x-4">
@@ -90,7 +70,9 @@ export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
         </div>
         <div>
           {post.games && (
-            <GameLink game={post.games} className="text-sm text-gaming-300 mr-2" />
+            <a href={`/game/${post.games.id}`} onClick={event => event.stopPropagation()} className="text-sm text-gaming-300 mr-2 hover:text-gaming-100">
+              {post.games.name}
+            </a>
           )}
         </div>
       </div>

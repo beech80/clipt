@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,14 @@ const ResetPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submitting = useRef(false);
   const { resetPassword } = useAuth();
   const navigate = useNavigate();
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setLoading(true);
     setError(null);
 
@@ -24,13 +27,14 @@ const ResetPassword = () => {
     } catch (error) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   };
 
   return (
-    <div className="pb-[180px] sm:pb-[200px]">
-      <div className="mx-auto max-w-md space-y-6 pt-12">
+    <main className="clipt-auth clipt-auth-form px-4 py-6">
+      <div className="gaming-card mx-auto max-w-md space-y-6 p-6">
         <div className="text-center space-y-2">
           <div className="flex justify-center mb-4">
             <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center">
@@ -53,6 +57,9 @@ const ResetPassword = () => {
           <div>
             <Input
               type="email"
+              aria-label="Email for password reset"
+              autoComplete="email"
+              disabled={loading}
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -76,7 +83,7 @@ const ResetPassword = () => {
           </Button>
         </form>
       </div>
-    </div>
+    </main>
   );
 };
 

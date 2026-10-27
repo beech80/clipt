@@ -1,17 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { authenticatedUser, errorResponse, requestMethod, jsonResponse } from '../_shared/request.ts'
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
+  const method = requestMethod(req)
+  if (method) return method
 
   try {
+    await authenticatedUser(req)
     // Simulate Cloudflare check (in a real implementation, you would make actual checks)
     const startTime = performance.now();
     
@@ -37,32 +32,8 @@ serve(async (req) => {
       }
     };
 
-    console.log('Cloudflare check completed:', result);
-
-    return new Response(
-      JSON.stringify(result),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      }
-    );
+    return jsonResponse(result);
   } catch (error) {
-    console.error('Error performing Cloudflare check:', error);
-    
-    return new Response(
-      JSON.stringify({ 
-        error: 'Failed to perform Cloudflare system check',
-        details: error.message 
-      }),
-      { 
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    return errorResponse(error);
   }
 })

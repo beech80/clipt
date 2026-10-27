@@ -59,8 +59,8 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
   const isCompleted = currentValue >= targetValue;
 
   return (
-    <div className="flex w-full overflow-hidden mb-3">
-      <div className="h-24 w-24 flex-shrink-0 relative">
+    <div className="flex w-full overflow-hidden mb-3" aria-label={`${achievement.name}: ${currentValue} of ${targetValue}`}>
+      <div className="h-20 w-16 sm:h-24 sm:w-24 flex-shrink-0 relative">
         <div className={`absolute inset-0 ${isCompleted ? 'bg-[#1e6b13]' : 'bg-[#012e14]'}`}>
           <div className="w-full h-full flex items-center justify-center">
             {getAchievementIcon(achievement.name)}
@@ -75,17 +75,18 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
           </div>
         )}
       </div>
-      <div className="flex-1 p-3 bg-[#222222]">
-        <h3 className="text-white font-semibold text-lg">{achievement.name}</h3>
+      <div className="min-w-0 flex-1 p-3 bg-purple-950/20">
+        <h3 className="text-white font-semibold text-lg [overflow-wrap:anywhere]">{achievement.name}</h3>
         <p className="text-gray-400 text-sm mb-2">
           {achievement.description} - {currentValue}/{targetValue}
         </p>
-        <div className="flex justify-between text-sm mb-1">
-          <div>
+        <div className="flex items-center gap-3 text-sm mb-1">
+          <div className="min-w-0 flex-1">
             <Progress 
               value={percentComplete} 
-              className="h-2 w-[200px] bg-gray-700" 
-              indicatorClassName={`${isCompleted ? 'bg-green-500' : 'bg-[#0078d7]'}`}
+              aria-label={`${achievement.name} progress`}
+              className="h-2 w-full bg-gray-700"
+              indicatorClassName={`${isCompleted ? 'bg-green-500' : 'bg-purple-500'}`}
             />
           </div>
           <span className="text-white font-medium">{percentComplete}%</span>

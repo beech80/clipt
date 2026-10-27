@@ -1,44 +1,28 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts'
 import Stripe from 'https://esm.sh/stripe@14.21.0'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { authenticatedUser, errorResponse, HttpError, jsonResponse, requestBody, requestMethod, requiredString, serverEnv } from '../_shared/request.ts'
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
+  const method = requestMethod(req)
+  if (method) return method
   try {
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-      apiVersion: '2023-10-16',
-    })
-
-    const body = await req.json()
-    const session = await stripe.checkout.sessions.retrieve(body.sessionId)
-
-    if (session.payment_status === 'paid') {
-      // Here you could update the user's subscription status in your database
-      return new Response(
-        JSON.stringify({ success: true, session }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    } else {
-      return new Response(
-        JSON.stringify({ success: false, message: 'Payment not completed' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    const user = await authenticatedUser(req)
+    const body = await requestBody(req)
+    const sessionId = requiredString(body.sessionId, 'session ID')
+    if (!/^cs_(?:test_|live_)?[A-Za-z0-9]+$/.test(sessionId)) throw new HttpError(400, 'Invalid session ID')
+    const stripe = new Stripe(serverEnv('STRIPE_SECRET_KEY'), { apiVersion: '2023-10-16' })
+    const session = await stripe.checkout.sessions.retrieve(sessionId)
+    // Written by create-checkout, never accepted from the browser. Older unbound
+    // sessions need reconciliation through a trusted support workflow.
+    if (session.client_reference_id !== user.id || session.metadata?.clipt_user_id !== user.id) {
+      throw new HttpError(403, 'This payment session is not linked to your account')
     }
+    return jsonResponse({
+      success: session.payment_status === 'paid',
+      paymentStatus: session.payment_status,
+      fulfillmentStatus: 'unverified',
+    })
   } catch (error) {
-    console.error('Payment verification error:', error)
-    return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
-      }
-    )
+    return errorResponse(error)
   }
 })

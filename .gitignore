@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Private development/runtime outputs
+.env
+.env.*
+!.env.example
+outputs/
+playwright-report/
+test-results/
+.playwright/
+.supabase/
+supabase/.temp/
+*.tsbuildinfo

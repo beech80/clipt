@@ -40,7 +40,24 @@ export const AdvancedChatSettings = ({ userId }: AdvancedChatSettingsProps) => {
     }
   });
 
-  const updateSettings = async (updates: any) => {
+  const { data: chatbot, refetch: refetchChatbot } = useQuery({
+    queryKey: ['chatbot-configuration', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('chatbot_configurations')
+        .select('id, is_active').eq('user_id', userId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+  const toggleChatbot = async (enabled: boolean) => {
+    const { error } = await supabase.from('chatbot_configurations').upsert({
+      id: chatbot?.id, user_id: userId, name: 'Clipt chat assistant', is_active: enabled,
+    });
+    if (error) { toast.error('Unable to save chatbot configuration'); return; }
+    await refetchChatbot();
+  };
+  const updateSettings = async (updates: { chat_moderation_enabled?: boolean; chat_word_filter_enabled?: boolean }) => {
     const { error } = await supabase
       .from('stream_settings')
       .upsert({
@@ -100,8 +117,8 @@ export const AdvancedChatSettings = ({ userId }: AdvancedChatSettingsProps) => {
               <p className="text-sm text-muted-foreground">Enable automated chat responses</p>
             </div>
             <Switch
-              checked={settings?.chatbot_enabled ?? false}
-              onCheckedChange={(checked) => updateSettings({ chatbot_enabled: checked })}
+              checked={chatbot?.is_active ?? false}
+              onCheckedChange={toggleChatbot}
             />
           </div>
         </div>

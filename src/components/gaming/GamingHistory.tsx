@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -7,7 +8,7 @@ import { History, Trophy, Flag, Calendar } from "lucide-react";
 
 export function GamingHistory() {
   const { user } = useAuth();
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<Tables<'gaming_history'>[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -49,7 +50,7 @@ export function GamingHistory() {
             <div className="flex items-start gap-4">
               {getActivityIcon(item.activity_type)}
               <div>
-                <p className="font-medium">{item.details.description}</p>
+                <p className="font-medium">{item.details && typeof item.details === 'object' && !Array.isArray(item.details) && typeof item.details.description === 'string' ? item.details.description : item.activity_type}</p>
                 <span className="text-sm text-muted-foreground">
                   {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
                 </span>
@@ -60,3 +61,4 @@ export function GamingHistory() {
       </div>
     </div>
   );
+}

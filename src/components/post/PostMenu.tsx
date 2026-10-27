@@ -49,7 +49,7 @@ const PostMenu = ({ postId, userId, content, imageUrl, videoUrl }: PostMenuProps
       if (selectedImage) {
         const fileExt = selectedImage.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
+        const filePath = `${user.id}/${fileName}`;
 
         const { error: uploadError, data } = await supabase.storage
           .from('posts')
@@ -68,7 +68,7 @@ const PostMenu = ({ postId, userId, content, imageUrl, videoUrl }: PostMenuProps
       if (selectedVideo) {
         const fileExt = selectedVideo.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
+        const filePath = `${user.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('videos')

@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 interface Scene {
   id: string;
   name: string;
-  layout: any;
+  layout: unknown;
   sort_order: number;
   is_active: boolean;
 }

@@ -11,6 +11,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import type { StreamChatMessage } from "@/types/chat";
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ChatMessageProps {
   message: StreamChatMessage;
@@ -19,6 +20,7 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ message, onDelete, isModeratorView }: ChatMessageProps) {
+  const { user } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -47,16 +49,16 @@ export function ChatMessage({ message, onDelete, isModeratorView }: ChatMessageP
   return (
     <div className="group px-4 py-2 hover:bg-muted/50 flex items-start gap-2">
       <Avatar className="h-8 w-8">
-        <AvatarImage src={message.profiles.avatar_url} />
+        <AvatarImage src={message.profiles?.avatar_url} />
         <AvatarFallback>
-          {message.profiles.username.charAt(0).toUpperCase()}
+          {message.profiles?.username?.charAt(0).toUpperCase() || '?'}
         </AvatarFallback>
       </Avatar>
       
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-sm">
-            {message.profiles.username}
+            {message.profiles?.username || 'Unavailable user'}
           </span>
           <span className="text-xs text-muted-foreground">
             {format(new Date(message.created_at), 'HH:mm')}
@@ -68,7 +70,7 @@ export function ChatMessage({ message, onDelete, isModeratorView }: ChatMessageP
         </p>
       </div>
 
-      {(onDelete && (isModeratorView || message.user_id === message.user_id)) && (
+      {(onDelete && (isModeratorView || message.user_id === user?.id)) && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 

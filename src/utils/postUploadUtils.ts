@@ -46,7 +46,7 @@ export const uploadImage = async (
       // If configured to fallback, try Supabase Storage
       if (!FALLBACK_TO_STORAGE) throw cloudinaryError;
       
-      return await uploadToSupabaseStorage(file, 'images', setProgress);
+      return await uploadToSupabaseStorage(file, 'posts', setProgress);
     }
   } catch (error) {
     console.error('Error uploading image:', error);
@@ -75,7 +75,9 @@ export const uploadVideo = async (
     // Create a unique filename
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-    const filePath = `videos/${fileName}`;
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) throw new Error('Sign in to upload media');
+    const filePath = `${user.id}/videos/${fileName}`;
     
     console.log('Uploading to path: ', filePath);
     setProgress(20);
@@ -125,7 +127,9 @@ async function uploadToSupabaseStorage(
   try {
     const timestamp = Date.now();
     const fileExt = file.name.split('.').pop();
-    const filePath = `${timestamp}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) throw new Error('Sign in to upload media');
+    const filePath = `${user.id}/${timestamp}_${crypto.randomUUID()}.${fileExt}`;
     
     setProgress(40);
     console.log(`Uploading to Supabase Storage (${bucket})...`);

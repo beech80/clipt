@@ -14,10 +14,11 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
+import { notificationLink } from '@/lib/notification-link';
 
 interface Notification {
   id: string;
-  type: 'follow' | 'like' | 'comment' | 'mention' | 'stream_live' | 'reply';
+  type: 'follow' | 'like' | 'comment' | 'mention' | 'stream_live' | 'reply' | 'system_alert';
   content: string;
   created_at: string;
   read: boolean;
@@ -110,19 +111,8 @@ const NotificationsPopover = () => {
   const handleNotificationClick = (notification: Notification) => {
     markAsRead.mutate(notification.id);
     
-    if (notification.resource_type && notification.resource_id) {
-      switch (notification.resource_type) {
-        case 'post':
-          navigate(`/post/${notification.resource_id}`);
-          break;
-        case 'profile':
-          navigate(`/profile/${notification.resource_id}`);
-          break;
-        case 'stream':
-          navigate(`/stream/${notification.resource_id}`);
-          break;
-      }
-    }
+    const href = notificationLink(notification.resource_type, notification.resource_id);
+    if (href) navigate(href);
   };
 
   const getNotificationContent = (notification: Notification) => {

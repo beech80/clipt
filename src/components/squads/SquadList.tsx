@@ -6,10 +6,12 @@ import { Card } from "@/components/ui/card";
 import { Users, UserPlus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import type { Tables } from '@/integrations/supabase/types';
+type Squad = Tables<'squads'> & { members: { user: Pick<Tables<'profiles'>, 'id' | 'username' | 'avatar_url'> | null }[] };
 
 export function SquadList() {
   const { user } = useAuth();
-  const [squads, setSquads] = useState<any[]>([]);
+  const [squads, setSquads] = useState<Squad[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -24,7 +26,7 @@ export function SquadList() {
         *,
         leader:profiles!squads_leader_id_fkey(username, avatar_url),
         members:squad_members(
-          user:profiles(username, avatar_url)
+          user:profiles(id, username, avatar_url)
         )
       `)
       .order('created_at', { ascending: false });
@@ -61,10 +63,10 @@ export function SquadList() {
             </div>
             
             <div className="flex -space-x-2">
-              {squad.members.map((member: any) => (
-                <Avatar key={member.user.username} className="border-2 border-background">
-                  <AvatarImage src={member.user.avatar_url} />
-                  <AvatarFallback>{member.user.username[0]}</AvatarFallback>
+              {squad.members.filter(member => member.user).map((member) => (
+                <Avatar key={member.user.id} className="border-2 border-background">
+                  <AvatarImage src={member.user.avatar_url ?? undefined} />
+                  <AvatarFallback>{member.user.username?.[0] ?? '?'}</AvatarFallback>
                 </Avatar>
               ))}
             </div>

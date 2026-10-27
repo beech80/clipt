@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 
 interface StreamAlertsProps {
   userId: string;
@@ -26,12 +27,16 @@ export const StreamAlerts = ({ userId }: StreamAlertsProps) => {
     }
   });
 
-  const updateAlert = async (alertType: string, updates: any) => {
+  const updateAlert = async (alertType: string, updates: Pick<TablesUpdate<'stream_alerts'>, 'enabled'>) => {
+    if (!alerts) return;
+    const existing = alerts.find(alert => alert.alert_type === alertType);
     const { error } = await supabase
       .from('stream_alerts')
       .upsert({
+        ...(existing ? { id: existing.id } : {}),
         user_id: userId,
         alert_type: alertType,
+        message_template: existing?.message_template ?? `New ${alertType}!`,
         ...updates
       });
 
@@ -57,7 +62,7 @@ export const StreamAlerts = ({ userId }: StreamAlertsProps) => {
               <p className="text-sm text-muted-foreground">Show alerts when someone follows</p>
             </div>
             <Switch
-              checked={alerts?.some(a => a.alert_type === 'follow')?.enabled ?? true}
+              checked={alerts?.find(a => a.alert_type === 'follow')?.enabled ?? true}
               onCheckedChange={(checked) => updateAlert('follow', { enabled: checked })}
             />
           </div>
@@ -71,7 +76,7 @@ export const StreamAlerts = ({ userId }: StreamAlertsProps) => {
               <p className="text-sm text-muted-foreground">Show alerts for virtual gifts</p>
             </div>
             <Switch
-              checked={alerts?.some(a => a.alert_type === 'gift')?.enabled ?? true}
+              checked={alerts?.find(a => a.alert_type === 'gift')?.enabled ?? true}
               onCheckedChange={(checked) => updateAlert('gift', { enabled: checked })}
             />
           </div>
@@ -85,7 +90,7 @@ export const StreamAlerts = ({ userId }: StreamAlertsProps) => {
               <p className="text-sm text-muted-foreground">Show alerts for new subscribers</p>
             </div>
             <Switch
-              checked={alerts?.some(a => a.alert_type === 'subscription')?.enabled ?? true}
+              checked={alerts?.find(a => a.alert_type === 'subscription')?.enabled ?? true}
               onCheckedChange={(checked) => updateAlert('subscription', { enabled: checked })}
             />
           </div>

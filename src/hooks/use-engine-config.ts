@@ -25,7 +25,7 @@ export const useEngineConfig = (userId: string) => {
           ...data,
           quality_presets: qualityPresets,
           encoder_settings: data.encoder_settings as EngineConfig['encoder_settings'],
-          ingest_endpoints: data.ingest_endpoints as any[]
+          ingest_endpoints: Array.isArray(data.ingest_endpoints) ? data.ingest_endpoints : []
         } as EngineConfig;
       }
       return null;

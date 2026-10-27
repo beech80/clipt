@@ -18,10 +18,6 @@ export function FeaturedCarousel() {
     queryFn: () => igdbService.searchGames(searchTerm),
     enabled: searchTerm.length > 2,
     retry: 1,
-    onError: (error) => {
-      console.error('Search error:', error);
-      toast.error("Failed to search games. Please try again.");
-    }
   });
 
   const handleGameClick = (gameId: number) => {
@@ -85,7 +81,7 @@ export function FeaturedCarousel() {
                       )}
                       {game.first_release_date && (
                         <div className="text-xs text-gaming-500">
-                          Released: {new Date(game.first_release_date * 1000).getFullYear()}
+                          Released: {new Date(Number(game.first_release_date) * 1000).getFullYear()}
                         </div>
                       )}
                     </div>

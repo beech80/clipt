@@ -7,20 +7,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-interface BlockedIP {
-  id: string;
-  ip_address: string;
-  reason: string;
-  blocked_at: string;
-  expires_at: string | null;
-}
 
 export const BlockedIPs = () => {
   const queryClient = useQueryClient();
   const [newIP, setNewIP] = useState('');
   const [reason, setReason] = useState('');
 
-  const { data: blockedIPs, isLoading } = useQuery<BlockedIP[]>({
+  const { data: blockedIPs, isLoading, error } = useQuery({
     queryKey: ['blocked-ips'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -61,7 +54,7 @@ export const BlockedIPs = () => {
       const { error } = await supabase
         .from('blocked_ips')
         .delete()
-        .eq('id', id);
+        .eq('ip_address', id);
 
       if (error) throw error;
     },
@@ -103,14 +96,14 @@ export const BlockedIPs = () => {
 
       <Card className="p-6">
         <h3 className="text-xl font-semibold mb-4">Blocked IPs</h3>
-        {isLoading ? (
+        {error ? <p role="alert">Unable to load blocked IPs.</p> : isLoading ? (
           <div className="flex justify-center p-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
           </div>
         ) : (
           <div className="space-y-4">
             {blockedIPs?.map((block) => (
-              <div key={block.id} className="flex items-center justify-between p-4 bg-card-secondary rounded-lg">
+              <div key={block.ip_address} className="flex items-center justify-between p-4 bg-card-secondary rounded-lg">
                 <div>
                   <p className="font-medium">{block.ip_address}</p>
                   <p className="text-sm text-muted-foreground">
@@ -120,7 +113,7 @@ export const BlockedIPs = () => {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => unblockIPMutation.mutate(block.id)}
+                  onClick={() => unblockIPMutation.mutate(block.ip_address)}
                 >
                   Unblock
                 </Button>

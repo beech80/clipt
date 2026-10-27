@@ -8,7 +8,7 @@ interface DVRSegment {
   created_at: string;
   stream_id: string;
   cdn_edge_location: string | null;
-  cdn_performance_metrics: Record<string, any>;
+  cdn_performance_metrics: Record<string, unknown>;
   storage_status: string;
 }
 

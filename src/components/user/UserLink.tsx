@@ -19,7 +19,7 @@ export const UserLink: React.FC<UserLinkProps> = ({
   
   if (!username) return null;
   
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.preventDefault();
     e.stopPropagation();
     navigateToUserProfile(navigate, username);
@@ -28,6 +28,9 @@ export const UserLink: React.FC<UserLinkProps> = ({
   return (
     <span 
       onClick={handleClick} 
+      onKeyDown={event=>{
+        if(event.key==='Enter'||event.key===' ')handleClick(event);
+      }}
       className={className}
       role="button"
       tabIndex={0}

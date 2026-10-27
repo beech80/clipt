@@ -9,6 +9,7 @@ import { ChatAnalytics } from './ChatAnalytics';
 import { ChatSettings } from './ChatSettings';
 import { BannedUsers } from './BannedUsers';
 import { EmoteManager } from './EmoteManager';
+import { chatSettingsSchema } from '@/lib/chat-data';
 
 interface ChatModerationDashboardProps {
   streamId: string;
@@ -25,7 +26,7 @@ export const ChatModerationDashboard = ({ streamId }: ChatModerationDashboardPro
         .single();
       
       if (error) throw error;
-      return data;
+      return { ...data, chat_settings: chatSettingsSchema.parse(data.chat_settings ?? {}) };
     }
   });
 

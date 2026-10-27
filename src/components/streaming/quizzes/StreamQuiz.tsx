@@ -53,12 +53,12 @@ export const StreamQuiz = ({ streamId }: StreamQuizProps) => {
       const formattedQuiz: Quiz = {
         id: data.id,
         title: data.title,
-        questions: (data.questions as any[]).map(q => ({
-          id: q.id,
-          question: q.question,
-          options: q.options,
-          correct_answer: q.correct_answer
-        }))
+        questions: Array.isArray(data.questions) ? data.questions.flatMap(q => {
+          if (!q || typeof q !== 'object' || Array.isArray(q) || typeof q.id !== 'string' ||
+            typeof q.question !== 'string' || typeof q.correct_answer !== 'string' || !Array.isArray(q.options)) return [];
+          return [{ id: q.id, question: q.question, correct_answer: q.correct_answer,
+            options: q.options.filter((option): option is string => typeof option === 'string') }];
+        }) : []
       };
       setQuiz(formattedQuiz);
     }

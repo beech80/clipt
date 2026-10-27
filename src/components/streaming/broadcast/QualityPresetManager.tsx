@@ -7,11 +7,14 @@ import { PresetSelector } from './components/PresetSelector';
 import { BitrateControl } from './components/BitrateControl';
 import { FPSSelector } from './components/FPSSelector';
 import { EncoderPreset } from '@/types/broadcast';
+import type { EngineConfig, QualityPreset } from '@/types/broadcast';
+import type { Tables } from '@/integrations/supabase/types';
+import { readQualitySettings } from '@/lib/broadcast-data';
 
 interface QualityPresetManagerProps {
   streamId: string;
-  engineConfig: any;
-  encodingSession: any;
+  engineConfig: EngineConfig | null;
+  encodingSession: Tables<'stream_encoding_sessions'> | null;
 }
 
 export const QualityPresetManager = ({
@@ -19,7 +22,7 @@ export const QualityPresetManager = ({
   engineConfig,
   encodingSession,
 }: QualityPresetManagerProps) => {
-  const [quality, setQuality] = useState(encodingSession?.current_settings || engineConfig?.quality_presets.medium);
+  const [quality, setQuality] = useState(() => readQualitySettings(encodingSession?.current_settings ?? engineConfig?.quality_presets.medium));
 
   const { data: presets } = useQuery({
     queryKey: ['broadcast-presets', streamId],
@@ -60,10 +63,10 @@ export const QualityPresetManager = ({
   });
 
   const updateQualityMutation = useMutation({
-    mutationFn: async (newSettings: any) => {
+    mutationFn: async (newSettings: Partial<QualityPreset>) => {
       const { error } = await supabase.rpc('update_stream_quality', {
         stream_id: streamId,
-        new_settings: newSettings,
+        new_settings: { ...newSettings },
       });
 
       if (error) throw error;
@@ -78,6 +81,7 @@ export const QualityPresetManager = ({
   });
 
   const handleQualityPresetChange = (preset: string) => {
+    if (!engineConfig || (preset !== 'low' && preset !== 'medium' && preset !== 'high')) return;
     const newSettings = engineConfig.quality_presets[preset];
     setQuality(newSettings);
     updateQualityMutation.mutate(newSettings);

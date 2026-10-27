@@ -1,313 +1,36 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import AchievementItem from './AchievementItem';
 import { Trophy } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import AchievementItem from './AchievementItem';
 import { achievementService } from '@/services/achievementService';
+import { useAuth } from '@/contexts/AuthContext';
 
-type AchievementListProps = {
-  userId: string;
-  gameId?: number;
-};
+type AchievementListProps = { userId: string; gameId?: number };
+const categories = ['daily', 'streaming', 'social', 'general'] as const;
 
-// Specific order for achievements to match Xbox image
-const achievementOrder = [
-  'Complete 4 Daily Quests',
-  'Earn Your Way',
-  'Trophy Collector',
-  'Growing Community',
-  'Content Creator'
-];
-
-const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  
-  const categories = [
-    { id: 'daily', label: 'Daily' },
-    { id: 'streaming', label: 'Streaming' },
-    { id: 'social', label: 'Social' },
-    { id: 'general', label: 'General' }
-  ];
-
-  // Fetch achievements based on whether this is for a game or a user
-  const { data: achievements, isLoading, error } = useQuery({
-    queryKey: gameId ? ['game-achievements', gameId] : ['user-achievements', userId],
-    queryFn: async () => {
-      if (gameId) {
-        // Make sure gameId is a number
-        const numericGameId = typeof gameId === 'string' ? parseInt(gameId, 10) : gameId;
-        return await achievementService.getGameAchievements(numericGameId);
-      } else {
-        return await achievementService.getUserAchievements(userId);
-      }
-    },
-    enabled: !!userId || !!gameId
+export default function AchievementList({ userId, gameId }: AchievementListProps) {
+  const { user } = useAuth();
+  const [category, setCategory] = useState<string | null>(null);
+  const result = useQuery({
+    queryKey: ['user-achievements', user?.id, userId],
+    queryFn: () => achievementService.getUserAchievements(userId),
+    enabled: Boolean(userId) && user?.id === userId && gameId === undefined,
+    retry: false,
   });
-
-  // Filter achievements by category
-  const filteredAchievements = React.useMemo(() => {
-    if (!achievements) return [];
-    
-    // For game achievements
-    if (gameId) {
-      return selectedCategory ? achievements.filter(a => a.category === selectedCategory) : achievements;
-    }
-    
-    // For user achievements
-    return selectedCategory
-      ? achievements.filter(a => a.achievement.category === selectedCategory)
-      : achievements;
-  }, [achievements, selectedCategory, gameId]);
-
-  // Sort achievements according to the specific order
-  const sortedAchievements = React.useMemo(() => {
-    if (!filteredAchievements.length) return [];
-    
-    return [...filteredAchievements].sort((a, b) => {
-      const nameA = gameId ? a.name : a.achievement.name;
-      const nameB = gameId ? b.name : b.achievement.name;
-      
-      const indexA = achievementOrder.findIndex(name => name === nameA);
-      const indexB = achievementOrder.findIndex(name => name === nameB);
-      
-      // If both are in the order array, sort by their positions
-      if (indexA !== -1 && indexB !== -1) {
-        return indexA - indexB;
-      }
-      
-      // If only one is in the order array, prioritize it
-      if (indexA !== -1) return -1;
-      if (indexB !== -1) return 1;
-      
-      // Otherwise, sort by name
-      return nameA.localeCompare(nameB);
-    });
-  }, [filteredAchievements, gameId]);
-
-  if (isLoading) {
-    return <div className="p-4 text-center">Loading achievements...</div>;
-  }
-  
-  if (error) {
-    console.error('Achievement error:', error);
-    return <div className="p-4 text-center text-red-500">Error loading achievements</div>;
-  }
-
-  // Show sample Xbox-style achievements if no achievements are returned or if we want to demo them
-  const showXboxStyleAchievements = !achievements || achievements.length === 0 || true;
-  
-  if (showXboxStyleAchievements) {
-    return (
-      <div className="space-y-4">
-        <div className="flex w-full overflow-hidden">
-          <AchievementItem 
-            achievement={{
-              id: '1',
-              name: 'Complete 4 Daily Quests',
-              description: 'Complete 4 daily quests this week',
-              target_value: 4,
-              points: 10,
-              category: 'daily',
-              progress_type: 'count',
-              reward_type: 'points'
-            }}
-            progress={{
-              id: '1p',
-              achievementId: '1',
-              userId: userId,
-              currentValue: 2,
-              completed: false,
-              achievement: {
-                id: '1',
-                name: 'Complete 4 Daily Quests',
-                description: 'Complete 4 daily quests this week',
-                target_value: 4,
-                points: 10,
-                category: 'daily',
-                progress_type: 'count',
-                reward_type: 'points'
-              }
-            }}
-          />
-        </div>
-
-        <div className="flex w-full overflow-hidden">
-          <AchievementItem 
-            achievement={{
-              id: '2',
-              name: 'Earn Your Way',
-              description: 'Upload 3 clips or earn 3 trophies',
-              target_value: 3,
-              points: 10,
-              category: 'daily',
-              progress_type: 'count',
-              reward_type: 'points'
-            }}
-            progress={{
-              id: '2p',
-              achievementId: '2',
-              userId: userId,
-              currentValue: 1,
-              completed: false,
-              achievement: {
-                id: '2',
-                name: 'Earn Your Way',
-                description: 'Upload 3 clips or earn 3 trophies',
-                target_value: 3,
-                points: 10,
-                category: 'daily',
-                progress_type: 'count',
-                reward_type: 'points'
-              }
-            }}
-          />
-        </div>
-
-        <div className="flex w-full overflow-hidden">
-          <AchievementItem 
-            achievement={{
-              id: '3',
-              name: 'Trophy Collector',
-              description: 'Earn your first trophy by getting into the weekly top 10',
-              target_value: 1,
-              points: 25,
-              category: 'streaming',
-              progress_type: 'count',
-              reward_type: 'points'
-            }}
-            progress={{
-              id: '3p',
-              achievementId: '3',
-              userId: userId,
-              currentValue: 0,
-              completed: false,
-              achievement: {
-                id: '3',
-                name: 'Trophy Collector',
-                description: 'Earn your first trophy by getting into the weekly top 10',
-                target_value: 1,
-                points: 25,
-                category: 'streaming',
-                progress_type: 'count',
-                reward_type: 'points'
-              }
-            }}
-          />
-        </div>
-
-        <div className="flex w-full overflow-hidden">
-          <AchievementItem 
-            achievement={{
-              id: '4',
-              name: 'Growing Community',
-              description: 'Reach 10 followers on your profile',
-              target_value: 10,
-              points: 50,
-              category: 'social',
-              progress_type: 'count',
-              reward_type: 'points'
-            }}
-            progress={{
-              id: '4p',
-              achievementId: '4',
-              userId: userId,
-              currentValue: 4,
-              completed: false,
-              achievement: {
-                id: '4',
-                name: 'Growing Community',
-                description: 'Reach 10 followers on your profile',
-                target_value: 10,
-                points: 50,
-                category: 'social',
-                progress_type: 'count',
-                reward_type: 'points'
-              }
-            }}
-          />
-        </div>
-
-        <div className="flex w-full overflow-hidden">
-          <AchievementItem 
-            achievement={{
-              id: '5',
-              name: 'Content Creator',
-              description: 'Upload 5 clips to your profile',
-              target_value: 5,
-              points: 10,
-              category: 'streaming',
-              progress_type: 'count',
-              reward_type: 'points'
-            }}
-            progress={{
-              id: '5p',
-              achievementId: '5',
-              userId: userId,
-              currentValue: 3,
-              completed: false,
-              achievement: {
-                id: '5',
-                name: 'Content Creator',
-                description: 'Upload 5 clips to your profile',
-                target_value: 5,
-                points: 10,
-                category: 'streaming',
-                progress_type: 'count',
-                reward_type: 'points'
-              }
-            }}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Original achievement display logic below
-  return (
-    <div className="space-y-4">
-      {/* Category filter tabs */}
-      <div className="flex space-x-2 overflow-x-auto pb-2 categories-scroll">
-        <button
-          onClick={() => setSelectedCategory(null)}
-          className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium ${
-            selectedCategory === null
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-          }`}
-        >
-          All
-        </button>
-        
-        {categories.map((category) => (
-          <button
-            key={category.id}
-            onClick={() => setSelectedCategory(category.id)}
-            className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium ${
-              selectedCategory === category.id
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            {category.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Achievements List */}
-      <div className="space-y-3">
-        {gameId
-          ? sortedAchievements.map((achievement, index) => (
-              <AchievementItem key={index} gameAchievement={achievement} />
-            ))
-          : sortedAchievements.map((achievementProgress, index) => (
-              <AchievementItem
-                key={index}
-                progress={achievementProgress}
-                achievement={achievementProgress.achievement}
-              />
-            ))}
-      </div>
+  // The legacy game service returns demo counts, not provider evidence.
+  if (gameId !== undefined) return <p role="status">Verified game achievements are not connected yet.</p>;
+  if (!userId) return <p role="status">Choose a profile to view achievements.</p>;
+  if (user?.id !== userId) return <p role="status">Achievement progress is private. Only the account owner can view it.</p>;
+  if (result.isPending) return <p role="status">Loading achievements…</p>;
+  if (result.isError) return <div role="alert" className="space-y-3"><p>Achievements could not be loaded.</p><Button onClick={() => void result.refetch()}>Retry achievements</Button></div>;
+  const achievements = (result.data ?? []).filter(row => !category || row.achievement.category === category);
+  return <section className="space-y-4" aria-label="Real achievement progress">
+    <div className="clipt-profile-tabs" aria-label="Achievement categories">
+      <Button variant="outline" aria-pressed={category === null} onClick={() => setCategory(null)}>All</Button>
+      {categories.map(value => <Button key={value} variant="outline" aria-pressed={category === value} onClick={() => setCategory(value)} className="capitalize">{value}</Button>)}
     </div>
-  );
-};
-
-export default AchievementList;
+    {achievements.length ? <div className="clipt-achievements-grid">{achievements.map(row => <AchievementItem key={row.id} achievement={row.achievement} progress={row} />)}</div> :
+      <div className="gaming-card p-8 text-center"><Trophy className="mx-auto mb-3 text-purple-400" aria-hidden="true" /><p>No recorded achievements{category ? ' in this category' : ''} yet.</p></div>}
+  </section>;
+}

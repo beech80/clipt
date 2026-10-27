@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Calendar, Clock, Tag, Info, Gamepad, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { 
@@ -11,6 +11,7 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
   DialogFooter,
   DialogClose
@@ -41,11 +42,11 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 
 // Schema validation
 const scheduleFormSchema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters').max(100),
+  title: z.string().trim().min(3, 'Title must be at least 3 characters').max(100),
   description: z.string().max(500, 'Description cannot exceed 500 characters'),
   game_id: z.string().optional(),
-  scheduled_for: z.date(),
-  duration_minutes: z.coerce.number().min(15, 'Minimum duration is 15 minutes').max(720, 'Maximum duration is 12 hours'),
+  scheduled_for: z.date().refine(date => date.getTime() > Date.now() && date.getTime() <= Date.now() + 366 * 86400000, 'Choose a future date within one year'),
+  duration_minutes: z.coerce.number<number>().int().min(15, 'Minimum duration is 15 minutes').max(720, 'Maximum duration is 12 hours'),
   tags: z.string().max(100),
   is_public: z.boolean().default(true),
 });
@@ -77,9 +78,11 @@ export function ScheduleStream({
   const [games, setGames] = useState<Game[]>([]);
   const [isLoadingGames, setIsLoadingGames] = useState(false);
   const queryClient = useQueryClient();
+  const submitting = useRef(false);
   
   // Initialize form
-  const form = useForm<ScheduleFormValues>({
+  // Zod 4 distinguishes form inputs (defaults may be omitted) from parsed output.
+  const form = useForm<z.input<typeof scheduleFormSchema>, unknown, ScheduleFormValues>({
     resolver: zodResolver(scheduleFormSchema),
     defaultValues: {
       title: '',
@@ -88,7 +91,7 @@ export function ScheduleStream({
       scheduled_for: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
       duration_minutes: 60,
       tags: '',
-      is_public: true,
+      is_public: false,
     },
   });
 
@@ -126,11 +129,10 @@ export function ScheduleStream({
           title: values.title,
           description: values.description,
           game_id: values.game_id || null,
-          scheduled_for: values.scheduled_for.toISOString(),
+          scheduled_start: values.scheduled_for.toISOString(),
           duration_minutes: values.duration_minutes,
-          tags: values.tags ? values.tags.split(',').map(tag => tag.trim()) : [],
-          is_public: values.is_public,
-          created_at: new Date().toISOString(),
+          is_private: !values.is_public,
+          tags: values.tags,
         })
         .select()
         .single();
@@ -141,16 +143,19 @@ export function ScheduleStream({
     onSuccess: () => {
       toast.success('Stream scheduled successfully!');
       setOpen(false);
+      form.reset();
       queryClient.invalidateQueries({ queryKey: ['scheduled-streams'] });
       if (onSuccess) onSuccess();
     },
-    onError: (error) => {
-      console.error('Error scheduling stream:', error);
-      toast.error('Failed to schedule stream');
+    onError: (error: {code?: string}) => {
+      toast.error(error.code === '23505' ? 'A stream is already scheduled at this time.' : error.code === '42501' ? 'Sign in and complete MFA before scheduling.' : error.code === '54000' ? 'You have reached the upcoming schedule limit.' : 'Could not save the schedule. Check the date and retry.');
     },
+    onSettled: () => { submitting.current = false; },
   });
 
   const onSubmit = (values: ScheduleFormValues) => {
+    if (submitting.current) return;
+    submitting.current = true;
     scheduleMutation.mutate(values);
   };
 
@@ -167,9 +172,10 @@ export function ScheduleStream({
           {buttonText}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Schedule a Stream</DialogTitle>
+          <DialogDescription>Save an announcement. This does not start OBS, reserve provider capacity, or mark you LIVE. Times use your device's local timezone.</DialogDescription>
         </DialogHeader>
         
         <Form {...form}>
@@ -206,7 +212,7 @@ export function ScheduleStream({
               )}
             />
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="game_id"
@@ -214,8 +220,8 @@ export function ScheduleStream({
                   <FormItem>
                     <FormLabel>Game</FormLabel>
                     <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
+                      onValueChange={value => field.onChange(value === 'none' ? undefined : value)}
+                      value={field.value || 'none'}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -223,9 +229,9 @@ export function ScheduleStream({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">-- Not Game Specific --</SelectItem>
+                        <SelectItem value="none">-- Not Game Specific --</SelectItem>
                         {isLoadingGames ? (
-                          <SelectItem value="" disabled>Loading games...</SelectItem>
+                          <SelectItem value="loading" disabled>Loading games...</SelectItem>
                         ) : (
                           games.map(game => (
                             <SelectItem key={game.id} value={game.id}>

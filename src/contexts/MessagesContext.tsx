@@ -26,6 +26,11 @@ export const MessagesProvider = ({ children }: { children: React.ReactNode }) =>
   const { user } = useAuth();
 
   useEffect(() => {
+    let cancelled = false;
+    setMessages([]);
+    setChats([]);
+    setSelectedChat(null);
+    setIsLoading(Boolean(user));
     if (!user) return;
 
     const fetchMessages = async () => {
@@ -37,9 +42,13 @@ export const MessagesProvider = ({ children }: { children: React.ReactNode }) =>
           receiver:profiles!messages_receiver_id_fkey(id, username, avatar_url)
         `)
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+        .limit(100);
 
+      if (cancelled) return;
       if (error) {
+        setIsLoading(false);
         toast.error('Failed to fetch messages');
         return;
       }
@@ -51,6 +60,23 @@ export const MessagesProvider = ({ children }: { children: React.ReactNode }) =>
       }));
 
       setMessages(formattedMessages);
+      const conversations = new Map<string, ChatUser>();
+      for (const message of formattedMessages) {
+        const incoming = message.receiver_id === user.id;
+        const otherId = incoming ? message.sender_id : message.receiver_id;
+        if (!otherId) continue;
+        const profile = incoming ? message.sender : message.receiver;
+        const existing = conversations.get(otherId);
+        if (existing) {
+          existing.unread_count += incoming && !message.read ? 1 : 0;
+        } else {
+          conversations.set(otherId, {
+            id: otherId, username: profile?.username ?? null, avatar_url: profile?.avatar_url ?? null,
+            last_message: message.content, unread_count: incoming && !message.read ? 1 : 0,
+          });
+        }
+      }
+      setChats([...conversations.values()]);
       setIsLoading(false);
     };
 
@@ -62,38 +88,47 @@ export const MessagesProvider = ({ children }: { children: React.ReactNode }) =>
         event: '*', 
         schema: 'public',
         table: 'messages',
-        filter: `sender_id=eq.${user.id},receiver_id=eq.${user.id}` 
+        filter: `sender_id=eq.${user.id}`
       }, () => {
         fetchMessages();
       })
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'messages',
+        filter: `receiver_id=eq.${user.id}`,
+      }, () => { void fetchMessages(); })
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      cancelled = true;
+      void supabase.removeChannel(subscription);
     };
   }, [user]);
 
   const sendMessage = async (content: string, receiverId: string) => {
-    if (!user) return;
+    if (!user) throw new Error('Please sign in to send messages');
+    if (!content.trim() || content.length > 4000) throw new Error('Messages must contain 1–4000 characters');
 
     const { error } = await supabase
       .from('messages')
       .insert({
-        content,
+        content: content.trim(),
         sender_id: user.id,
         receiver_id: receiverId,
       });
 
     if (error) {
       toast.error('Failed to send message');
+      throw error;
     }
   };
 
   const markAsRead = async (messageId: string) => {
+    if (!user) throw new Error('Please sign in');
     const { error } = await supabase
       .from('messages')
       .update({ read: true })
-      .eq('id', messageId);
+      .eq('id', messageId)
+      .eq('receiver_id', user.id);
 
     if (error) {
       toast.error('Failed to mark message as read');
@@ -102,7 +137,7 @@ export const MessagesProvider = ({ children }: { children: React.ReactNode }) =>
 
   const handleSendMessage = (content: string) => {
     if (selectedChat) {
-      sendMessage(content, selectedChat);
+      void sendMessage(content, selectedChat).catch(() => {});
     }
   };
 

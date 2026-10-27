@@ -1,27 +1,48 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source(none);
+@import "./styles/tailwind-v3-compat.css";
+@config "../tailwind.config.ts";
+@source "./";
+
+/* Preserve the single transform that page-specific dock rules override.
+   Tailwind4 individual translate would otherwise compound those transforms. */
+.clipt-dialog-content { transform: translate(-50%, -50%); }
+
+/* Saved preferences use the same HSL-token format as the application theme. */
+html.high-contrast {
+  --background: 0 0% 0%; --foreground: 0 0% 100%;
+  --card: 0 0% 0%; --card-foreground: 0 0% 100%;
+  --popover: 0 0% 0%; --popover-foreground: 0 0% 100%;
+  --muted: 0 0% 8%; --muted-foreground: 0 0% 100%;
+  --primary: 270 80% 70%; --primary-foreground: 0 0% 0%;
+  --border: 0 0% 100%; --ring: 270 80% 80%;
+}
+html.reduce-motion, html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after {
+  animation: none !important; transition: none !important; scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html, *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
 
 @layer base {
   :root {
     --background: 240 27% 8%;
-    --foreground: 255 39% 63%;
+    --foreground: 255 60% 96%;
     --card: 240 27% 12%;
-    --card-foreground: 255 39% 63%;
+    --card-foreground: 255 60% 96%;
     --popover: 240 27% 12%;
-    --popover-foreground: 255 39% 63%;
+    --popover-foreground: 255 60% 96%;
     --primary: 255 39% 37%;
-    --primary-foreground: 255 39% 63%;
+    --primary-foreground: 255 60% 98%;
     --secondary: 240 27% 16%;
-    --secondary-foreground: 255 39% 63%;
+    --secondary-foreground: 255 60% 96%;
     --muted: 240 27% 16%;
-    --muted-foreground: 255 39% 45%;
+    --muted-foreground: 255 35% 78%;
     --accent: 240 27% 16%;
-    --accent-foreground: 255 39% 63%;
+    --accent-foreground: 255 60% 96%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 255 39% 63%;
+    --destructive-foreground: 255 60% 98%;
     --border: 240 27% 16%;
     --input: 240 27% 16%;
     --ring: 255 39% 37%;
@@ -47,7 +68,7 @@
     overflow-x: hidden;
     margin: 0;
     padding: 0;
-    padding-bottom: 250px; /* Add extra padding to ensure content isn't hidden behind gameboy UI */
+    padding-bottom: 0; /* The page-content wrapper reserves controller space once. */
     background-color: var(--background-override, #1A1F2C);
     background-image: 
       radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),

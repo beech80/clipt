@@ -15,8 +15,16 @@ interface BroadcastPresetFormProps {
   presetId?: string;
 }
 
+interface PresetValues {
+  name: string;
+  encoder_preset: string;
+  video_settings: { resolution: string; fps: number };
+}
+
 export function BroadcastPresetForm({ userId, presetId }: BroadcastPresetFormProps) {
-  const { register, handleSubmit, setValue } = useForm();
+  const { register, handleSubmit, setValue } = useForm<PresetValues>({
+    defaultValues: { name: '', encoder_preset: 'veryfast', video_settings: { resolution: '1280x720', fps: 30 } },
+  });
 
   const { data: preset } = useQuery({
     queryKey: ['broadcast-preset', presetId],
@@ -35,7 +43,7 @@ export function BroadcastPresetForm({ userId, presetId }: BroadcastPresetFormPro
   });
 
   const createPreset = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: PresetValues) => {
       const { error } = await supabase
         .from('broadcast_presets')
         .insert({
@@ -53,7 +61,7 @@ export function BroadcastPresetForm({ userId, presetId }: BroadcastPresetFormPro
     }
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: PresetValues) => {
     createPreset.mutate(data);
   };
 

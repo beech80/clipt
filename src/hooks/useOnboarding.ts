@@ -18,9 +18,7 @@ export const useOnboarding = () => {
   const checkOnboardingStatus = async () => {
     try {
       const { data: profileData } = await supabase
-        .from('profiles')
-        .select('onboarding_completed')
-        .eq('id', user?.id)
+        .rpc('get_own_profile')
         .single();
 
       if (profileData?.onboarding_completed) {

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { ChatEmote } from '@/types/chat';
+import { parseChatEmotes } from '@/lib/chat-data';
 
 interface EmoteContextType {
   emotes: ChatEmote[];
@@ -21,7 +22,7 @@ export function EmoteProvider({ children }: { children: React.ReactNode }) {
         .order('name');
 
       if (!error && data) {
-        setEmotes(data);
+        setEmotes(parseChatEmotes(data));
       }
     };
 
@@ -38,7 +39,8 @@ export function EmoteProvider({ children }: { children: React.ReactNode }) {
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setEmotes(prev => [...prev, payload.new as ChatEmote]);
+            const incoming = parseChatEmotes([payload.new]);
+            setEmotes(prev => [...prev.filter(emote => emote.id !== payload.new.id), ...incoming]);
           } else if (payload.eventType === 'DELETE') {
             setEmotes(prev => prev.filter(emote => emote.id !== payload.old.id));
           }

@@ -4,12 +4,12 @@ import * as Sentry from "@sentry/browser";
 // Add type declaration for gtag
 declare global {
   interface Window {
-    gtag: (command: string, ...args: any[]) => void;
-    dataLayer: any[];
+    gtag: (command: string, ...args: unknown[]) => void;
+    dataLayer: unknown[];
   }
 }
 
-export const trackEvent = (eventName: string, properties?: Record<string, any>) => {
+export const trackEvent = (eventName: string, properties?: Record<string, unknown>) => {
   try {
     // Track event in PostHog
     posthog.capture(eventName, properties);
@@ -25,7 +25,7 @@ export const trackEvent = (eventName: string, properties?: Record<string, any>) 
   }
 };
 
-export const identifyUser = (userId: string, traits?: Record<string, any>) => {
+export const identifyUser = (userId: string, traits?: Record<string, unknown>) => {
   try {
     // Identify user in PostHog
     posthog.identify(userId, traits);

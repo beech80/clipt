@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { createComment } from '@/services/commentService';
 import { toast } from 'sonner';
+import { communityErrorMessage, communityTextWarning } from '@/lib/community-text';
 import { Input } from '@/components/ui/input';
 import { Loader2, Smile } from 'lucide-react';
 import {
@@ -35,6 +36,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
 }) => {
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const { user } = useAuth();
@@ -54,10 +56,13 @@ export const CommentForm: React.FC<CommentFormProps> = ({
       return;
     }
     
-    if (!commentText.trim()) {
+    if (isSubmitting || !commentText.trim()) {
       return;
     }
     
+    const warning = communityTextWarning(commentText);
+    if (warning) { setSubmitError(warning); toast.error(warning); return; }
+    setSubmitError('');
     setIsSubmitting(true);
     
     try {
@@ -76,7 +81,9 @@ export const CommentForm: React.FC<CommentFormProps> = ({
       
     } catch (error) {
       console.error('Error posting comment:', error);
-      toast.error('Failed to post comment');
+      const explanation = communityErrorMessage(error, 'Comment was not posted. Your draft has been kept; please try again.');
+      setSubmitError(explanation);
+      toast.error(explanation);
     } finally {
       setIsSubmitting(false);
     }
@@ -116,8 +123,10 @@ export const CommentForm: React.FC<CommentFormProps> = ({
           <Input
             ref={inputRef}
             value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
+            onChange={(e) => { setCommentText(e.target.value); setSubmitError(''); }}
             placeholder={placeholder}
+            aria-label={placeholder}
+            maxLength={2000}
             className="flex-grow border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-0 h-auto py-1.5 text-white placeholder:text-gray-500"
           />
           
@@ -126,14 +135,15 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             <PopoverTrigger asChild>
               <Button 
                 type="button" 
+                aria-label="Choose an emoji"
                 size="sm" 
                 variant="ghost" 
-                className="h-8 w-8 p-0 rounded-full text-gray-400 hover:text-white flex-shrink-0 hover:bg-gaming-700"
+                className="clipt-comment-emoji-trigger h-8 w-8 p-0 rounded-full text-gray-400 hover:text-white flex-shrink-0 hover:bg-gaming-700"
               >
                 <Smile className="h-5 w-5" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent side="top" className="bg-gaming-800 border-gaming-700 p-3 w-64 shadow-lg rounded-xl">
+            <PopoverContent side="top" collisionPadding={12} className="clipt-comment-emoji bg-gaming-800 border-gaming-700 p-3 w-64 shadow-lg rounded-xl">
               <div className="mb-2">
                 <div className="text-sm text-gray-400 mb-1">Popular</div>
                 <div className="flex flex-wrap gap-1">
@@ -186,8 +196,10 @@ export const CommentForm: React.FC<CommentFormProps> = ({
         </div>
       </div>
       
+      {submitError && <p role="alert" className="text-sm text-violet-200 mt-2">{submitError}</p>}
       {onCancel && (
         <Button 
+          type="button"
           onClick={onCancel} 
           size="sm" 
           variant="ghost" 

@@ -36,7 +36,7 @@ export function PlatformAnalytics() {
       const transformedData = {
         ...data,
         daily_stats: Array.isArray(data.daily_stats) 
-          ? data.daily_stats.map((stat: any) => ({
+          ? data.daily_stats.flatMap((stat) => stat && typeof stat === 'object' && !Array.isArray(stat) && typeof stat.date === 'string' ? [{
               date: stat.date,
               users: Number(stat.users) || 0,
               streams: Number(stat.streams) || 0,
@@ -44,7 +44,7 @@ export function PlatformAnalytics() {
               retention: Number(stat.retention) || 0,
               avg_session: Number(stat.avg_session) || 0,
               chat_activity: Number(stat.chat_activity) || 0
-            }))
+            }] : [])
           : []
       };
       

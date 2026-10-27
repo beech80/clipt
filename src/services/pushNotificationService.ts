@@ -16,7 +16,7 @@ interface NotificationData {
   icon?: string;
   image?: string;
   tag?: string;
-  data?: any;
+  data?: unknown;
   actions?: Array<{
     action: string;
     title: string;
@@ -89,7 +89,6 @@ export const registerPushSubscription = async (userId: string): Promise<boolean>
         endpoint: subscription.endpoint,
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth,
-        expiration_time: subscription.expirationTime,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -170,7 +169,6 @@ export const sendLocalNotification = (data: NotificationData): void => {
       const notification = new Notification(data.title, {
         body: data.body,
         icon: data.icon,
-        image: data.image,
         tag: data.tag,
         data: data.data,
       });

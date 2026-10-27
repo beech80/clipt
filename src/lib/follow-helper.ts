@@ -65,7 +65,7 @@ export const isFollowing = async (followerUserId: string, targetUserId: string):
   try {
     const { data, error } = await supabase
       .from('follows')
-      .select('*')
+      .select('follower_id,following_id')
       .eq('follower_id', followerUserId)
       .eq('following_id', targetUserId)
       .maybeSingle();
@@ -135,9 +135,6 @@ export const followUser = async (targetUserId: string): Promise<boolean> => {
         return true; // Still following
       }
       
-      // Update follower count in profiles table
-      await updateFollowerCounts(targetUserId);
-      
       toast.success("User unfollowed");
       return false; // No longer following
     }
@@ -157,38 +154,12 @@ export const followUser = async (targetUserId: string): Promise<boolean> => {
       return false; // Not following
     }
     
-    // Update follower count in profiles table
-    await updateFollowerCounts(targetUserId);
-    
     toast.success("User followed");
     return true; // Now following
   } catch (error) {
     console.error('Exception in followUser:', error);
     toast.error("An error occurred while updating follow status");
     return false;
-  }
-};
-
-/**
- * Updates the follower and following counts in the profiles table
- * @param userId - User ID to update counts for
- */
-export const updateFollowerCounts = async (userId: string): Promise<void> => {
-  try {
-    // Get follower count
-    const followerCount = await getFollowerCount(userId);
-    
-    // Update profile with new count
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ followers: followerCount })
-      .eq('id', userId);
-    
-    if (updateError) {
-      console.error('Error updating follower count:', updateError);
-    }
-  } catch (error) {
-    console.error('Exception in updateFollowerCounts:', error);
   }
 };
 
@@ -204,7 +175,7 @@ export const ensureProfileExists = async (userId: string): Promise<boolean> => {
     // Check if profile exists
     const { data: existingProfile, error: checkError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id')
       .eq('id', userId)
       .maybeSingle();
     
@@ -218,8 +189,9 @@ export const ensureProfileExists = async (userId: string): Promise<boolean> => {
       return true;
     }
     
-    // Profile doesn't exist, create it
-    console.log(`Creating profile for user ${userId}`);
+    // Only the authenticated owner can initialize their own profile.
+    const { data: auth, error: authError } = await supabase.auth.getUser();
+    if (authError || auth.user?.id !== userId) return false;
     
     const { data: newProfile, error: createError } = await supabase
       .from('profiles')
@@ -228,13 +200,9 @@ export const ensureProfileExists = async (userId: string): Promise<boolean> => {
         username: `user_${userId.substring(0, 8)}`,
         display_name: `User ${userId.substring(0, 8)}`,
         bio: '',
-        avatar_url: '',
-        followers: 0,
-        following: 0,
-        achievements: 0,
-        created_at: new Date().toISOString()
+        avatar_url: ''
       })
-      .select()
+      .select('id')
       .single();
     
     if (createError) {
@@ -244,18 +212,7 @@ export const ensureProfileExists = async (userId: string): Promise<boolean> => {
     
     console.log('Profile created successfully:', newProfile);
     
-    // Also create default achievements for this user with 0 progress
-    try {
-      const { createDefaultAchievementsForUser } = await import('@/services/achievementService').then(
-        module => ({ createDefaultAchievementsForUser: module.default.createDefaultAchievementsForUser })
-      );
-      
-      await createDefaultAchievementsForUser(userId);
-      console.log('Default achievements created for new user:', userId);
-    } catch (achievementError) {
-      console.error('Error creating default achievements:', achievementError);
-      // Continue anyway, the profile was created successfully
-    }
+    // Achievement definitions and earned progress are managed by trusted backend events.
     
     return true;
   } catch (error) {

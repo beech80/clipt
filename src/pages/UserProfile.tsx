@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
@@ -8,6 +8,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { followService } from '@/services/followService';
 import { toast } from 'sonner';
+import type { Tables } from '@/integrations/supabase/types';
+import { publicProfileFields } from '@/lib/profile-fields';
+import AchievementList from '@/components/achievements/AchievementList';
+import ProfilePostTile from '@/components/profile/ProfilePostTile';
+import ProfileConnectionsDialog from '@/components/profile/ProfileConnectionsDialog';
+import type { ConnectionKind } from '@/lib/profile-connections';
+import { BlockUserButton } from '@/components/BlockUserButton';
+import { MuteUserButton } from '@/components/profile/MuteUserButton';
+type ProfilePost = Tables<'posts'> & { likes: { count: number }[]; comments: { count: number }[] };
 
 interface ProfileData {
   id: string;
@@ -26,44 +35,58 @@ const UserProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const userId = user?.id;
   const [activeTab, setActiveTab] = useState('posts');
+  const [connections, setConnections] = useState<ConnectionKind | null>(null);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [followLoading, setFollowLoading] = useState(false);
-  const [posts, setPosts] = useState<any[]>([]);
-  const [clips, setClips] = useState<any[]>([]);
-  const [achievements, setAchievements] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const requestRevision = useRef(0);
+  const followBusy = useRef(false);
+  const [posts, setPosts] = useState<ProfilePost[]>([]);
+  const [clips, setClips] = useState<ProfilePost[]>([]);
 
-  const fetchProfileData = async () => {
+  const fetchProfileData = useCallback(async () => {
+    const revision = ++requestRevision.current;
     try {
       setLoading(true);
+      setError(null);
+      const profileId = id || userId;
+      if (!profileId) throw new Error('Choose a profile to view.');
       
       // Fetch user profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('id', id || user?.id)
+        .select(publicProfileFields)
+        .eq('id', profileId)
         .single();
       
       if (profileError) throw profileError;
       
       // Check if the current user is following this profile
       let isFollowing = false;
-      if (user && user.id !== (id || user.id)) {
-        isFollowing = await followService.isFollowing(user.id, id || user.id);
+      if (userId && userId !== profileId) {
+        const {data, error} = await supabase.from('follows').select('follower_id').eq('follower_id', userId).eq('following_id', profileId).maybeSingle();
+        if (error) throw error;
+        isFollowing = Boolean(data);
       }
       
       // Fetch followers count
-      const followersCount = await followService.getFollowersCount(id || user?.id);
-      
-      // Fetch following count
-      const followingCount = await followService.getFollowingCount(id || user?.id);
+      const [followers, following] = await Promise.all([
+        supabase.from('follows').select('follower_id', {count:'exact', head:true}).eq('following_id', profileId),
+        supabase.from('follows').select('follower_id', {count:'exact', head:true}).eq('follower_id', profileId),
+      ]);
+      if (followers.error) throw followers.error;
+      if (following.error) throw following.error;
+      const followersCount = followers.count ?? 0;
+      const followingCount = following.count ?? 0;
       
       // Fetch posts
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select('*')
-        .eq('user_id', id || user?.id)
+        .select('*, likes(count), comments(count)')
+        .eq('user_id', profileId)
         .eq('post_type', 'post')
         .order('created_at', { ascending: false });
       
@@ -72,24 +95,23 @@ const UserProfile = () => {
       // Fetch clips
       const { data: clipsData, error: clipsError } = await supabase
         .from('posts')
-        .select('*')
-        .eq('user_id', id || user?.id)
+        .select('*, likes(count), comments(count)')
+        .eq('user_id', profileId)
         .eq('post_type', 'clipt')
         .order('created_at', { ascending: false });
       
       if (clipsError) throw clipsError;
       
-      // Set data
+      if (revision !== requestRevision.current) return;
+      // Set data only from confirmed requests for the current profile.
       setProfileData({
         id: profileData.id,
         username: profileData.username,
         display_name: profileData.display_name,
         avatar_url: profileData.avatar_url,
-        banner_url: profileData.banner_url,
         bio: profileData.bio,
         followers_count: followersCount,
         following_count: followingCount,
-        achievements_count: 0, // Placeholder for now
         is_following: isFollowing
       });
       
@@ -98,37 +120,39 @@ const UserProfile = () => {
       
     } catch (error) {
       console.error('Error fetching profile data:', error);
-      toast.error('Failed to load profile data');
+      if (revision === requestRevision.current) setError('This profile could not be loaded or is not available to you.');
     } finally {
-      setLoading(false);
+      if (revision === requestRevision.current) setLoading(false);
     }
-  };
+  }, [id, userId]);
 
   useEffect(() => {
-    fetchProfileData();
-  }, [id, user]);
+    void fetchProfileData();
+    return () => { requestRevision.current += 1; };
+  }, [fetchProfileData]);
 
   const handleFollowToggle = async () => {
-    if (!user || !profileData) return;
+    if (!user || !profileData || followBusy.current) return;
+    followBusy.current = true;
     
     try {
       setFollowLoading(true);
       
       if (profileData.is_following) {
-        await followService.unfollow(user.id, profileData.id);
-        setProfileData(prev => prev ? {
+        if (!await followService.unfollow(user.id, profileData.id)) throw new Error('Unfollow was not confirmed');
+        setProfileData(prev => prev?.id === profileData.id ? {
           ...prev,
           is_following: false,
-          followers_count: (prev.followers_count || 0) - 1
-        } : null);
+          followers_count: Math.max(0, (prev.followers_count || 0) - 1)
+        } : prev);
         toast.success(`Unfollowed @${profileData.username}`);
       } else {
-        await followService.follow(user.id, profileData.id);
-        setProfileData(prev => prev ? {
+        if (!await followService.follow(user.id, profileData.id)) throw new Error('Follow was not confirmed');
+        setProfileData(prev => prev?.id === profileData.id ? {
           ...prev,
           is_following: true,
           followers_count: (prev.followers_count || 0) + 1
-        } : null);
+        } : prev);
         toast.success(`Following @${profileData.username}`);
       }
       
@@ -136,6 +160,7 @@ const UserProfile = () => {
       console.error('Error toggling follow:', error);
       toast.error('Failed to update follow status');
     } finally {
+      followBusy.current = false;
       setFollowLoading(false);
     }
   };
@@ -144,32 +169,9 @@ const UserProfile = () => {
     switch(activeTab) {
       case 'posts':
         return posts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="clipt-profile-grid">
             {posts.map((post) => (
-              <div 
-                key={post.id} 
-                className="bg-black/30 backdrop-blur-sm rounded-lg overflow-hidden border border-white/10 cursor-pointer hover:border-purple-500/50 transition-colors"
-                onClick={() => navigate(`/post/${post.id}`)}
-              >
-                <div className="aspect-video bg-gray-800 flex items-center justify-center">
-                  {post.media_urls && post.media_urls[0] ? (
-                    <img 
-                      src={post.media_urls[0]} 
-                      alt={post.caption || 'Post thumbnail'} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <p className="text-gray-400 text-sm">No Thumbnail</p>
-                  )}
-                </div>
-                <div className="p-3">
-                  <p className="text-white text-sm font-medium truncate">{post.caption || 'Untitled'}</p>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-gray-400 text-xs">{post.likes_count || 0} likes</p>
-                    <p className="text-gray-400 text-xs">{post.comments_count || 0} comments</p>
-                  </div>
-                </div>
-              </div>
+              <ProfilePostTile key={post.id} post={post} likes={post.likes[0]?.count ?? 0} comments={post.comments[0]?.count ?? 0} />
             ))}
           </div>
         ) : (
@@ -179,32 +181,9 @@ const UserProfile = () => {
         );
       case 'clips':
         return clips.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="clipt-profile-grid">
             {clips.map((clip) => (
-              <div 
-                key={clip.id} 
-                className="bg-black/30 backdrop-blur-sm rounded-lg overflow-hidden border border-white/10 cursor-pointer hover:border-purple-500/50 transition-colors"
-                onClick={() => navigate(`/post/${clip.id}`)}
-              >
-                <div className="aspect-video bg-gray-800 flex items-center justify-center">
-                  {clip.media_urls && clip.media_urls[0] ? (
-                    <video 
-                      src={clip.media_urls[0]} 
-                      className="w-full h-full object-cover"
-                      poster={clip.thumbnail_url}
-                    />
-                  ) : (
-                    <p className="text-gray-400 text-sm">No Video</p>
-                  )}
-                </div>
-                <div className="p-3">
-                  <p className="text-white text-sm font-medium truncate">{clip.caption || 'Untitled'}</p>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-gray-400 text-xs">{clip.likes_count || 0} likes</p>
-                    <p className="text-gray-400 text-xs">{clip.comments_count || 0} comments</p>
-                  </div>
-                </div>
-              </div>
+              <ProfilePostTile key={clip.id} post={clip} likes={clip.likes[0]?.count ?? 0} comments={clip.comments[0]?.count ?? 0} />
             ))}
           </div>
         ) : (
@@ -214,9 +193,7 @@ const UserProfile = () => {
         );
       case 'achievements':
         return (
-          <div className="flex items-center justify-center h-40 text-gray-400">
-            No achievements available
-          </div>
+          <AchievementList userId={profileData!.id} />
         );
       default:
         return null;
@@ -225,15 +202,17 @@ const UserProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] flex items-center justify-center">
+      <div role="status" aria-label="Loading profile" className="clipt-auth min-h-64 flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-white animate-spin" />
       </div>
     );
   }
 
+  if (error || !profileData) return <main className="mx-auto max-w-xl p-6"><BackButton /><section role="alert" className="gaming-card p-6 space-y-4"><h1 className="text-xl font-semibold">Profile unavailable</h1><p>{error || 'This profile was not found.'}</p><Button onClick={() => void fetchProfileData()}>Retry profile</Button></section></main>;
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c]">
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-black/40 backdrop-blur-lg border-b border-white/10">
+    <main className="clipt-profile mx-auto max-w-6xl px-4 py-6">
+      <div className="clipt-creator-heading p-4 border-b border-purple-500/40">
         <div className="flex items-center justify-center max-w-7xl mx-auto relative">
           <BackButton />
           <h1 className="text-3xl font-bold text-white flex items-center gap-2">
@@ -243,11 +222,11 @@ const UserProfile = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 pt-24 pb-20 max-w-2xl">
+      <div className="mx-auto pt-5 pb-6">
         {/* Profile Header */}
-        <div className="bg-black/30 backdrop-blur-sm rounded-xl overflow-hidden border border-white/10 shadow-xl mb-6">
+        <div className="clipt-profile-header clipt-creator-header gaming-card overflow-hidden mb-6">
           {/* Banner */}
-          <div className="h-40 relative">
+          <div className="clipt-creator-banner h-40 relative">
             {profileData?.banner_url ? (
               <img 
                 src={profileData.banner_url} 
@@ -255,7 +234,7 @@ const UserProfile = () => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="h-40 bg-gradient-to-r from-indigo-500/30 to-purple-500/30" />
+              <div className="clipt-profile-brand-banner h-40" aria-hidden="true" />
             )}
             
             {/* Avatar */}
@@ -278,29 +257,34 @@ const UserProfile = () => {
                   className="flex items-center gap-2 bg-[#1a1b4b] border border-white/10 text-white hover:bg-[#272a5b] px-4 py-1 rounded-sm"
                 >
                   <Settings className="w-4 h-4" />
-                  <span>Settings</span>
+                  <span>Edit Profile</span>
                 </Button>
               </div>
             )}
           </div>
           
           {/* Profile Info */}
-          <div className="pt-14 px-6 pb-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-xl font-bold text-white mb-1">
+          <div className="clipt-creator-info pt-14 px-6 pb-6">
+            <div className="flex flex-wrap justify-between items-start gap-3">
+              <div className="min-w-0 basis-full">
+                <h2 className="text-xl font-bold text-white mb-1 [overflow-wrap:anywhere]">
                   {profileData?.display_name || profileData?.username || 'User'}
                 </h2>
-                <p className="text-gray-400 text-sm mb-4">@{profileData?.username || 'username'}</p>
+                <p className="text-gray-300 text-sm mb-4 [overflow-wrap:anywhere]">@{profileData.username}</p>
                 {profileData?.bio && (
-                  <p className="text-gray-200 text-sm mb-4">{profileData.bio}</p>
+                  <p className="text-gray-200 text-sm mb-4 [overflow-wrap:anywhere]">{profileData.bio}</p>
                 )}
               </div>
               
               {/* Follow button (only show if it's not the user's own profile) */}
+              <BlockUserButton key={`${user?.id}:${profileData.id}`} userId={profileData.id} username={profileData.username} variant="outline" size="default" />
+              <MuteUserButton key={`mute:${user?.id}:${profileData.id}`} userId={profileData.id}/>
+              {user && user.id !== profileData.id && <Button variant="outline" onClick={() => navigate(`/messages/${profileData.id}`)}>Message</Button>}
               {user && user.id !== profileData?.id && (
                 <Button 
                   onClick={handleFollowToggle}
+                  data-page-controller="profile-follow"
+                  aria-pressed={profileData.is_following}
                   variant={profileData?.is_following ? "outline" : "default"}
                   size="sm"
                   className={`px-4 py-1 rounded-sm ${
@@ -319,25 +303,25 @@ const UserProfile = () => {
             </div>
             
             {/* Stats */}
-            <div className="flex gap-6 mt-4">
-              <div>
+            <div className="clipt-profile-stats grid grid-cols-3 gap-3 mt-4">
+              <button type="button" className="min-h-11 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300" onClick={() => setConnections('followers')}>
                 <p className="text-white font-bold">{profileData?.followers_count || 0}</p>
                 <p className="text-gray-400 text-sm">Followers</p>
-              </div>
-              <div>
+              </button>
+              <button type="button" className="min-h-11 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300" onClick={() => setConnections('following')}>
                 <p className="text-white font-bold">{profileData?.following_count || 0}</p>
                 <p className="text-gray-400 text-sm">Following</p>
-              </div>
+              </button>
               <div>
-                <p className="text-white font-bold">{profileData?.achievements_count || 0}</p>
-                <p className="text-gray-400 text-sm">Trophies</p>
+                <p className="text-white font-bold">{posts.length + clips.length}</p>
+                <p className="text-gray-300 text-sm">Visible posts</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex mb-6 border-b border-white/10">
+        <div className="clipt-profile-tabs mb-6" aria-label="Profile content">
           <button
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium ${
               activeTab === 'posts'
@@ -345,6 +329,7 @@ const UserProfile = () => {
                 : 'text-gray-400 hover:text-gray-200'
             }`}
             onClick={() => setActiveTab('posts')}
+            aria-pressed={activeTab === 'posts'}
           >
             <Grid className="h-4 w-4" />
             Posts
@@ -356,6 +341,7 @@ const UserProfile = () => {
                 : 'text-gray-400 hover:text-gray-200'
             }`}
             onClick={() => setActiveTab('clips')}
+            aria-pressed={activeTab === 'clips'}
           >
             <ListVideo className="h-4 w-4" />
             Clipts
@@ -367,16 +353,18 @@ const UserProfile = () => {
                 : 'text-gray-400 hover:text-gray-200'
             }`}
             onClick={() => setActiveTab('achievements')}
+            aria-pressed={activeTab === 'achievements'}
           >
             <Trophy className="h-4 w-4" />
-            Trophies
+            Achievements
           </button>
         </div>
 
         {/* Content Area */}
         {renderContent()}
       </div>
-    </div>
+      {connections && <ProfileConnectionsDialog key={`${profileData.id}:${connections}`} profileId={profileData.id} kind={connections} onClose={() => setConnections(null)} />}
+    </main>
   );
 };
 

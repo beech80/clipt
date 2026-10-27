@@ -1,9 +1,9 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { EncoderPreset } from "@/types/broadcast";
+import { QualityPreset } from "@/types/broadcast";
 
 interface PresetSelectorProps {
-  presets: Record<string, EncoderPreset>;
+  presets: Record<string, QualityPreset>;
   currentPreset: string;
   onPresetChange: (preset: string) => void;
 }

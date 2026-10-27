@@ -48,7 +48,7 @@ const Broadcasting = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream'] });
-      toast.success('Stream started! You can now broadcast through OBS.');
+      toast.success('Stream ingestion initialized. Connect your encoder; live status updates after video is received.');
     }
   });
 
@@ -172,7 +172,7 @@ const Broadcasting = () => {
                 {streamData?.is_live && (
                   <Button 
                     variant="outline"
-                    onClick={() => window.open(`/live/${streamData.stream_path || streamData.id}`, '_blank')}
+                    onClick={() => window.open(`/streaming/${streamData.id}`, '_blank', 'noopener,noreferrer')}
                     className="gap-2"
                   >
                     <ArrowUpRight className="h-4 w-4" />
@@ -195,7 +195,7 @@ const Broadcasting = () => {
         
         <TabsContent value="presets">
           <Card className="p-6">
-            <BroadcastPresetForm />
+            {user && <BroadcastPresetForm userId={user.id} />}
           </Card>
         </TabsContent>
       </Tabs>

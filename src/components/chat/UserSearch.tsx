@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
+type SearchProfile = { id: string; username: string | null; avatar_url: string | null };
+
 interface UserSearchProps {
   onSelect: (userId: string) => void;
   onRemove: (userId: string) => void;
@@ -13,8 +15,8 @@ interface UserSearchProps {
 
 export function UserSearch({ onSelect, onRemove, selectedUsers }: UserSearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [selectedUserDetails, setSelectedUserDetails] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchProfile[]>([]);
+  const [selectedUserDetails, setSelectedUserDetails] = useState<SearchProfile[]>([]);
   const { user } = useAuth();
 
   useEffect(() => {

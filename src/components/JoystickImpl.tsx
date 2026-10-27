@@ -13,7 +13,7 @@ export type JoystickRefs = {
   joystickRef: RefObject<HTMLDivElement>;
 };
 
-export function setupJoystickListeners(
+export function useJoystickListeners(
   refs: JoystickRefs,
   isDragging: boolean,
   setIsDragging: (isDragging: boolean) => void,

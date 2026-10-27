@@ -33,7 +33,6 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
         throw oauthError;
       }
 
-      console.log('Stream initialized:', oauthData);
       return oauthData.stream;
     },
     onSuccess: () => {

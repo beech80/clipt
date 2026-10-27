@@ -9,6 +9,204 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      token_transactions: {
+        Row: { id: number; user_id: string | null; change_amount: number | null; new_balance: number | null; reason: string | null; created_at: string | null }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      token_wallets: {
+        Row: { user_id: string; balance: number; updated_at: string }
+        Insert: { user_id: string; balance?: number; updated_at?: string }
+        Update: { user_id?: string; balance?: number; updated_at?: string }
+        Relationships: []
+      }
+      token_ledger: {
+        Row: { id: string; user_id: string; amount: number; kind: string; idempotency_key: string; reference_id: string; metadata: Json; created_at: string }
+        Insert: { id?: string; user_id: string; amount: number; kind: string; idempotency_key: string; reference_id: string; metadata?: Json; created_at?: string }
+        Update: { amount?: number }
+        Relationships: []
+      }
+      post_video_renditions: {
+        Row: { post_id: string; source_url: string; playback_url: string; codec: string; created_at: string }
+        Insert: { post_id: string; source_url: string; playback_url: string; codec: string; created_at?: string }
+        Update: { post_id?: string; source_url?: string; playback_url?: string; codec?: string; created_at?: string }
+        Relationships: [{ foreignKeyName: "post_video_renditions_post_id_fkey"; columns: ["post_id"]; isOneToOne: true; referencedRelation: "posts"; referencedColumns: ["id"] }]
+      }
+      poll_votes: {
+        Row: { id: string; poll_id: string; option_id: string; user_id: string; created_at: string | null }
+        Insert: { id?: string; poll_id: string; option_id: string; user_id: string; created_at?: string | null }
+        Update: { id?: string; poll_id?: string; option_id?: string; user_id?: string; created_at?: string | null }
+        Relationships: []
+      }
+      stream_clips: {
+        Row: {
+          id: string
+          user_id: string
+          stream_id: string | null
+          title: string
+          description: string | null
+          url: string
+          thumbnail_url: string | null
+          duration: number | null
+          view_count: number | null
+          like_count: number | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          stream_id?: string | null
+          title: string
+          description?: string | null
+          url: string
+          thumbnail_url?: string | null
+          duration?: number | null
+          view_count?: number | null
+          like_count?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          stream_id?: string | null
+          title?: string
+          description?: string | null
+          url?: string
+          thumbnail_url?: string | null
+          duration?: number | null
+          view_count?: number | null
+          like_count?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      clip_likes: {
+        Row: {
+          id: string
+          clip_id: string
+          user_id: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          clip_id: string
+          user_id: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          clip_id?: string
+          user_id?: string
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      clip_views: {
+        Row: {
+          id: string
+          clip_id: string
+          user_id: string | null
+          ip_address: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          clip_id: string
+          user_id?: string | null
+          ip_address?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          clip_id?: string
+          user_id?: string | null
+          ip_address?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
+      scheduled_streams: {
+        Row: {
+            tags: string
+          id: string
+          user_id: string
+          title: string
+          description: string | null
+          scheduled_start: string
+          duration_minutes: number | null
+          is_private: boolean | null
+          thumbnail_url: string | null
+          game_id: string | null
+          stream_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+            tags?: string
+          id?: string
+          user_id: string
+          title: string
+          description?: string | null
+          scheduled_start: string
+          duration_minutes?: number | null
+          is_private?: boolean | null
+          thumbnail_url?: string | null
+          game_id?: string | null
+          stream_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+            tags?: string
+          id?: string
+          user_id?: string
+          title?: string
+          description?: string | null
+          scheduled_start?: string
+          duration_minutes?: number | null
+          is_private?: boolean | null
+          thumbnail_url?: string | null
+          game_id?: string | null
+          stream_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          endpoint: string
+          p256dh: string
+          auth: string
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          endpoint: string
+          p256dh: string
+          auth: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          endpoint?: string
+          p256dh?: string
+          auth?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       accessibility_settings: {
         Row: {
           caption_size: string | null
@@ -4451,6 +4649,7 @@ export type Database = {
       }
       posts: {
         Row: {
+          moderation_hidden: boolean
           content: string | null
           created_at: string
           game_id: string | null
@@ -4608,6 +4807,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          banner_url: string | null
+          last_username_change: string | null
           avatar_url: string | null
           bio: string | null
           bio_description: string | null
@@ -4635,6 +4836,8 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          banner_url?: string | null
+          last_username_change?: string | null
           avatar_url?: string | null
           bio?: string | null
           bio_description?: string | null
@@ -4662,6 +4865,8 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          banner_url?: string | null
+          last_username_change?: string | null
           avatar_url?: string | null
           bio?: string | null
           bio_description?: string | null
@@ -8308,6 +8513,12 @@ export type Database = {
           },
         ]
       }
+      user_mutes: {
+        Row: {owner_id: string; muted_id: string; created_at: string}
+        Insert: {owner_id: string; muted_id: string; created_at?: string}
+        Update: {owner_id?: string; muted_id?: string; created_at?: string}
+        Relationships: []
+      }
       user_blocks: {
         Row: {
           blocked_id: string
@@ -9144,6 +9355,10 @@ export type Database = {
       }
     }
     Views: {
+      public_clipt_discovery: {
+        Row: { id: string; content: string | null; image_url: string | null; created_at: string; game_id: string | null; user_id: string; username: string | null; avatar_url: string | null }
+        Relationships: []
+      }
       active_season_multiplier: {
         Row: {
           current_multiplier: number | null
@@ -9267,6 +9482,66 @@ export type Database = {
       }
     }
     Functions: {
+      clipt_beta_access: { Args: Record<PropertyKey, never>; Returns: boolean }
+      my_photo_review_holds: { Args: Record<PropertyKey, never>; Returns: { post_id: string; state: string; created_at: string }[] }
+      quarantined_photo_preview: { Args: { p_job: string }; Returns: { post_id: string; user_id: string; image_url: string; caption: string | null }[] }
+      my_photo_quarantines: { Args: Record<PropertyKey, never>; Returns: { job_id: string; post_id: string; quarantined_at: string; appeal_requested_at: string | null; decision: string | null }[] }
+      photo_quarantine_queue: { Args: Record<PropertyKey, never>; Returns: { job_id: string; post_id: string; quarantined_at: string; appeal_requested_at: string | null; decision: string | null }[] }
+      appeal_photo_quarantine: { Args: { p_job: string }; Returns: boolean }
+      resolve_photo_quarantine: { Args: { p_job: string; p_decision: string }; Returns: boolean }
+      get_verified_live_status: { Args: { p_stream_id: string }; Returns: { is_live: boolean; playback_url: string | null; verified_until: string | null }[] }
+      clipt_posting_capabilities: { Args: Record<PropertyKey, never>; Returns: boolean }
+      get_boost_economy: { Args: Record<PropertyKey, never>; Returns: Json }
+      get_weekly_mega_status: { Args: Record<PropertyKey, never>; Returns: Json }
+      redeem_weekly_mega: { Args: { p_post: string; p_request: string; p_window: string }; Returns: string }
+      get_my_content_boosts: { Args: Record<PropertyKey, never>; Returns: Json }
+      purchase_content_boost: { Args: { p_post_id: string; p_package_code: string; p_idempotency_key: string; p_expected_cost: number }; Returns: string }
+      redeem_weekly_squad_blast: { Args: { p_post_id: string; p_idempotency_key: string; p_expected_week: string }; Returns: string }
+      activate_content_boost: { Args: { p_post_id: string; p_package_code: string; p_idempotency_key: string }; Returns: string }
+      get_boosted_discovery: { Args: { p_game_id?: string }; Returns: { boost_id: string; post_id: string; package_code: string; expires_at: string; caption: string | null; image_url: string | null }[] }
+      review_content_report: {
+        Args: { report_id: string; decision: string; moderator_notes?: string }
+        Returns: string
+      }
+      report_operational_issue: {
+        Args: { route_key: string }
+        Returns: string
+      }
+      list_operational_alerts: {
+        Args: Record<PropertyKey, never>
+        Returns: { id: string; kind: string; route_key: string; created_at: string;
+          last_seen_at: string; occurrences: number; acknowledged: boolean }[]
+      }
+      ack_operational_alert: {
+        Args: { alert_id: string }
+        Returns: string
+      }
+      get_top_clipts: {
+        Args: { ranking_period?: string }
+        Returns: { post_id: string; creator_id: string; content: string | null;
+          username: string | null; avatar_url: string | null; created_at: string;
+          trophy_count: number }[]
+      }
+      get_creator_dashboard: {
+        Args: { p_days?: number }
+        Returns: Json
+      }
+      get_own_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: Database['public']['Tables']['profiles']['Row'][]
+      }
+      request_stream_clip: {
+        Args: { p_stream_id: string; p_title: string; p_start: number; p_end: number; p_request_id: string }
+        Returns: string
+      }
+      purchase_stream_gift: {
+        Args: { p_stream_id: string; p_gift_id: string; p_idempotency_key: string; p_message?: string }
+        Returns: string
+      }
+      cast_stream_poll_vote: {
+        Args: { p_poll_id: string; p_option_id: string }
+        Returns: undefined
+      }
       award_user_xp: {
         Args: {
           user_id_param: string
@@ -9645,6 +9920,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "moderator" | "user"
       notification_type:
+        | "system_alert"
         | "follow"
         | "like"
         | "comment"

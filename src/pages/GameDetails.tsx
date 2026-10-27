@@ -11,7 +11,7 @@ import { gameIdToUuid, uuidToGameId } from '@/utils/idUtils';
 import { toast } from 'sonner';
 
 // Helper function to safely render any value that might be an object
-const safeRender = (value: any): string => {
+const safeRender = (value: unknown): string => {
   if (value === null || value === undefined) return 'Unknown';
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return String(value);
@@ -19,8 +19,8 @@ const safeRender = (value: any): string => {
     if (Array.isArray(value)) {
       return value.map(safeRender).join(', ');
     }
-    if (value.name) return value.name;
-    if (value.id) return String(value.id);
+    if ('name' in value && typeof value.name === 'string') return value.name;
+    if ('id' in value) return String(value.id);
     return JSON.stringify(value);
   }
   return String(value);
@@ -87,7 +87,7 @@ const GameDetailsPage = () => {
           .from('posts')
           .select(`
             *,
-            user:profiles(*)
+            user:profiles(id,username,display_name,avatar_url)
           `)
           .eq('game_id', uuidCompatibleId)
           .order('created_at', { ascending: false });
@@ -100,9 +100,9 @@ const GameDetailsPage = () => {
         console.log('Posts data:', postsData);
         setPosts(postsData || []);
         setLoading(false);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching game data:', err);
-        setError(err.message || 'Failed to fetch game details');
+        setError(err instanceof Error ? err.message : 'Failed to fetch game details');
         setLoading(false);
         
         // Show a toast with error info

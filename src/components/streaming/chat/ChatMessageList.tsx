@@ -23,7 +23,7 @@ const ChatMessageList = ({ messages, isModeratorView, onDeleteMessage }: ChatMes
 
   // Auto-scroll to bottom when new messages arrive and user is at bottom
   useEffect(() => {
-    if (inView) {
+    if (inView && messages.length > 0) {
       virtualizer.scrollToIndex(messages.length - 1);
     }
   }, [messages.length, inView, virtualizer]);

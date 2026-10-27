@@ -2,13 +2,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { useStreamChatMessages } from '@/hooks/useStreamChatMessages';
+import { parseChatFilterResult } from '@/lib/chat-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { StreamEmotes } from './StreamEmotes';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import type { StreamChatMessage, FilteredMessage } from '@/types/chat';
 import { MoreHorizontal, Ban, Clock } from 'lucide-react';
 import {
   DropdownMenu,
@@ -25,14 +26,19 @@ interface StreamChatProps {
 export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   const { user } = useAuth();
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<StreamChatMessage[]>([]);
+  const { messages, error: chatError, isLoading, refetch } = useStreamChatMessages(streamId);
+  const [isSending, setIsSending] = useState(false);
   const [isModerator, setIsModerator] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messageTimeoutRef = useRef<NodeJS.Timeout>();
+  const sendingRef = useRef(false);
+  useEffect(() => () => clearTimeout(messageTimeoutRef.current), []);
 
   useEffect(() => {
+    let disposed = false;
     const checkModStatus = async () => {
+      setIsModerator(false);
       if (!user) return;
       
       const { data } = await supabase
@@ -42,88 +48,32 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
         .eq('moderator_id', user.id)
         .single();
       
-      setIsModerator(!!data);
+      if (!disposed) setIsModerator(!!data);
     };
 
     checkModStatus();
+    return () => { disposed = true; };
   }, [user, streamId]);
 
-  useEffect(() => {
-    // Load initial messages
-    const loadMessages = async () => {
-      const { data, error } = await supabase
-        .from('stream_chat')
-        .select(`
-          *,
-          profiles:user_id (
-            username,
-            avatar_url
-          )
-        `)
-        .eq('stream_id', streamId)
-        .order('created_at', { ascending: true })
-        .limit(50);
-
-      if (error) {
-        toast.error('Failed to load chat messages');
-        return;
-      }
-
-      setMessages(data as StreamChatMessage[]);
-    };
-
-    loadMessages();
-
-    // Subscribe to new messages
-    const channel = supabase
-      .channel(`stream_chat:${streamId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'stream_chat',
-          filter: `stream_id=eq.${streamId}`
-        },
-        async (payload) => {
-          if (payload.eventType === 'INSERT') {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('username, avatar_url')
-              .eq('id', payload.new.user_id)
-              .single();
-
-            const newMessage: StreamChatMessage = {
-              ...payload.new,
-              profiles: profile
-            };
-
-            setMessages(prev => [...prev, newMessage]);
-          } else if (payload.eventType === 'DELETE') {
-            setMessages(prev => prev.filter(msg => msg.id !== payload.old.id));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [streamId]);
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      const viewport = scrollRef.current.querySelector<HTMLElement>('[data-radix-scroll-area-viewport]');
+      if (viewport) viewport.scrollTop = viewport.scrollHeight;
     }
   }, [messages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !user || isRateLimited) return;
+    if (!message.trim() || !user || !isLive || isRateLimited || sendingRef.current) return;
+    if (message.trim().length > 2000) { toast.error('Messages must be at most 2000 characters.'); return; }
+    sendingRef.current = true;
+    setIsSending(true);
+    const draft = message;
 
     try {
       // Check rate limit
-      const { data: rateLimited, error: rateLimitError } = await supabase.rpc<boolean>(
+      const { data: rateLimited, error: rateLimitError } = await supabase.rpc(
         'check_chat_rate_limit',
         {
           p_user_id: user.id,
@@ -141,7 +91,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
       }
 
       // Check if user is timed out
-      const { data: isTimedOut, error: timeoutError } = await supabase.rpc<boolean>(
+      const { data: isTimedOut, error: timeoutError } = await supabase.rpc(
         'is_user_timed_out',
         {
           p_user_id: user.id,
@@ -157,7 +107,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
       }
 
       // Filter message
-      const { data: filteredMessage, error: filterError } = await supabase.rpc<FilteredMessage>(
+      const { data: filteredMessages, error: filterError } = await supabase.rpc(
         'filter_chat_message',
         {
           p_message: message.trim(),
@@ -166,8 +116,9 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
       );
 
       if (filterError) throw filterError;
+      const filteredMessage = parseChatFilterResult(filteredMessages);
 
-      if (filteredMessage && filteredMessage.is_blocked) {
+      if (filteredMessage.blocked) {
         toast.error('Your message was blocked by chat filters');
         return;
       }
@@ -177,15 +128,17 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
         .insert({
           stream_id: streamId,
           user_id: user.id,
-          message: filteredMessage?.filtered_message || message.trim()
+          message: filteredMessage.message
         });
 
       if (sendError) throw sendError;
 
-      setMessage('');
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message');
+      setMessage(current => current === draft ? '' : current);
+    } catch {
+      toast.error('Message was not sent. Your draft is preserved; please retry.');
+    } finally {
+      sendingRef.current = false;
+      setIsSending(false);
     }
   };
 
@@ -230,8 +183,12 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <ScrollArea ref={scrollRef} className="flex-1 p-4">
+    <section className="clipt-live-chat gaming-card flex flex-col min-w-0" aria-label="Live chat">
+      <h2 className="border-b border-purple-500/40 p-3 text-center font-semibold text-purple-100">Live Chat</h2>
+      {chatError && <div role="alert" className="p-3"><p>{chatError}</p><Button onClick={refetch} variant="outline">Retry chat</Button></div>}
+      {isLoading && <p role="status" className="p-3">Loading live chat…</p>}
+      {!isLoading && !chatError && messages.length === 0 && <p className="p-4 text-sm text-purple-200">No chat messages yet.</p>}
+      <ScrollArea ref={scrollRef} className="flex-1 min-h-0 p-4">
         <div className="space-y-4">
           {messages.map((msg) => (
             <div key={msg.id} className="flex items-start gap-2 group">
@@ -241,8 +198,8 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
                   {msg.profiles?.username?.[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <div className="flex items-baseline gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline gap-2">
                   <span className="text-sm font-medium">
                     {msg.profiles?.username}
                   </span>
@@ -250,14 +207,15 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
                     {new Date(msg.created_at).toLocaleTimeString()}
                   </span>
                 </div>
-                <p className="text-sm">{msg.message}</p>
+                <p className="text-sm [overflow-wrap:anywhere]">{msg.message}</p>
               </div>
               {isModerator && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100"
+                      aria-label={`Moderate message from ${msg.profiles?.username || 'user'}`}
+                      className="h-11 w-11 shrink-0 p-0"
                     >
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
@@ -283,13 +241,17 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
         </div>
       </ScrollArea>
 
-      <form onSubmit={handleSendMessage} className="p-4 border-t">
-        <div className="flex items-center gap-2">
+      <form onSubmit={handleSendMessage} className="p-3 border-t border-purple-500/40">
+        <div className="flex flex-wrap items-center gap-2">
           <StreamEmotes
             streamId={streamId}
             onSelectEmote={(emote) => setMessage(prev => `${prev} ${emote} `)}
           />
           <Input
+            data-live-chat-input
+            className="min-w-0 flex-1"
+            aria-label="Chat message"
+            maxLength={2000}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder={
@@ -299,13 +261,13 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
                 ? "Send a message..."
                 : "Stream is offline"
             }
-            disabled={!isLive || !user || isRateLimited}
+            disabled={!isLive || !user || isRateLimited || isSending}
           />
-          <Button type="submit" disabled={!isLive || !user || isRateLimited}>
-            Send
+          <Button type="submit" disabled={!isLive || !user || isRateLimited || isSending || !message.trim()}>
+            {isSending ? 'Sending…' : 'Send'}
           </Button>
         </div>
       </form>
-    </div>
+    </section>
   );
 };

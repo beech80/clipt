@@ -53,7 +53,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [pulsing, setPulsing] = useState(false);
   const [glowing, setGlowing] = useState(false);
   const [buttonsAnimated, setButtonsAnimated] = useState(false);
-  const [particles, setParticles] = useState<any[]>([]);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   const [joystickActive, setJoystickActive] = useState(false);
@@ -118,14 +117,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
 
     // Debounce function to prevent too many calls
-    function debounce(func: Function, wait: number) {
-      let timeout: any = null;
-      return function(...args: any) {
-        const context = this;
+    function debounce<T extends unknown[]>(func: (...args: T) => void, wait: number) {
+      let timeout: ReturnType<typeof setTimeout>;
+      return (...args: T) => {
         clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          func.apply(context, args);
-        }, wait);
+        timeout = setTimeout(() => func(...args), wait);
       };
     }
 
