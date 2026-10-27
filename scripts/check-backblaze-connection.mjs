@@ -18,9 +18,20 @@ export async function inspectBackblazeConnection({ keyId, applicationKey, fetchI
   };
   const fail = code => ({ ...report, code });
   if (typeof keyId !== 'string' || typeof applicationKey !== 'string' || !keyId || !applicationKey) return fail('missing-credentials');
-  // Preserve supplied bytes. Reject invisible copying artifacts rather than silently changing a key.
-  if (/[\s\x00-\x20\x7f-\uffff:]/.test(keyId) || /[\s\x00-\x20\x7f-\uffff]/.test(applicationKey)) {
-    return fail('unexpected-whitespace-or-control-character');
+  // Report fixed field names and issue categories only, never entered values or characters.
+  const invalidCredentialFields = [];
+  for (const [field, value] of [['CLIPT_B2_KEY_ID', keyId], ['CLIPT_B2_APPLICATION_KEY', applicationKey]]) {
+    const issues = [];
+    if (value.trim() !== value) issues.push('leading-or-trailing-whitespace');
+    if (/\s/.test(value.trim())) issues.push('whitespace-inside-value');
+    if (/[\x00-\x1f\x7f]/.test(value)) issues.push('control-character');
+    if (/[\u0080-\uffff]/.test(value)) issues.push('non-ascii-character');
+    if (field === 'CLIPT_B2_KEY_ID' && value.includes(':')) issues.push('colon-in-key-id');
+    if (issues.length) invalidCredentialFields.push({ field, issues });
+  }
+  // Preserve original bytes and fail before network access when copying artifacts are found.
+  if (invalidCredentialFields.length) {
+    return { ...fail('unexpected-whitespace-or-control-character'), invalidCredentialFields };
   }
   async function request(url, options) {
     try {
