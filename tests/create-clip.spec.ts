@@ -73,7 +73,10 @@ for (const failure of [403,503]) {
       const duplicateWarning=page.getByRole('alert').filter({hasText:'duplicate posting is blocked'});
       await expect(duplicateWarning).toHaveCount(1);
       await expect(duplicateWarning).toContainText('duplicate posting is blocked');
-      await expect(publish).toBeDisabled();
+      // The blocked submit keeps its busy label; verify the unique native submit control.
+      const blockedPublish=page.locator('form button[type="submit"]');
+      await expect(blockedPublish).toHaveCount(1);
+      await expect(blockedPublish).toBeDisabled();
       expect(postAttempts).toBe(1);expect(uploadAttempts).toBe(1);expect(cleanups).toBe(0);
     }
   });

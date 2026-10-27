@@ -53,3 +53,11 @@ a collapsed controller. Its captured accessibility snapshot exposes Show control
 The fixture now uses that public recovery action before navigation, retains the
 duplicate-blocking assertion and additionally verifies no second post/upload or
 cleanup occurred. No timeouts or application behavior were changed.
+
+Third CI run 40507142194: release checks passed; 403 posting passed. The 503
+fixture successfully restored controls, opened navigation and verified the duplicate
+warning. Its final assertion still searched the earlier Post Clipt label, but the
+submit is correctly disabled with its busy label while blocked. It now asserts
+exactly one native form submit and that it is disabled, retaining network/cleanup
+checks. Browser CI now runs all three independent fixtures even if one fails;
+assertion timeouts and checks are unchanged. No app code was changed.

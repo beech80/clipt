@@ -59,7 +59,7 @@ jobs:
       - run: npm ci --no-fund --no-audit
       - run: npx playwright install --with-deps chromium
       - name: Posting failures, safe retry and paginated message history
-        run: npx playwright test tests/create-clip.spec.ts tests/messages-history.spec.ts --reporter=line --max-failures=1
+        run: npx playwright test tests/create-clip.spec.ts tests/messages-history.spec.ts --reporter=line
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: failure()
         with:
