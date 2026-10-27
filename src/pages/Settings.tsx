@@ -8,8 +8,12 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AccessibilitySettings } from "@/components/accessibility/AccessibilitySettings";
+import { ControllerSettings } from '@/components/ControllerSettings';
 import { TwoFactorSettings } from "@/components/settings/TwoFactorSettings";
+import { DeviceStorageSettings } from "@/components/settings/DeviceStorageSettings";
 import { DataPrivacySettings } from "@/components/settings/DataPrivacySettings";
+import { PhotoSafetyNotices } from "@/components/settings/PhotoSafetyNotices";
+import { CreatorSafetySettings } from '@/components/settings/CreatorSafetySettings';
 import { StreamSettings } from "@/components/streaming/StreamSettings";
 import {
   Bell,
@@ -29,37 +33,32 @@ import {
   HardDrive,
   Gauge
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Profile, DatabaseProfile } from "@/types/profile";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import type { DatabaseProfile } from "@/types/profile";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { hash } = useLocation();
+  const activeSection = hash || '#settings-account';
   const queryClient = useQueryClient();
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, isError: profileError, refetch: refetchProfile } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user?.id)
+        .rpc('get_own_profile')
         .single();
 
       if (error) throw error;
       
-      const dbProfile = data as DatabaseProfile;
-
-      return {
-        ...dbProfile
-      } as Profile;
+      return data;
     },
     enabled: !!user?.id
   });
 
-  const { data: notificationPreferences } = useQuery({
-    queryKey: ['notification-preferences'],
+  const { data: notificationPreferences, isLoading: notificationsLoading, isError: notificationsError, refetch: refetchNotifications } = useQuery({
+    queryKey: ['notification-preferences', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('notification_preferences')
@@ -106,10 +105,22 @@ const Settings = () => {
   });
 
   const handleNotificationToggle = (key: string, value: boolean) => {
+    if (!notificationPreferences || notificationsError || updateNotificationsMutation.isPending) return;
     updateNotificationsMutation.mutate({ [key]: value });
   };
 
-  const handleToggle = (setting: keyof Profile) => {
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (settings: Pick<Partial<DatabaseProfile>, 'enable_notifications' | 'enable_sounds'>) => {
+      if (!user) throw new Error('Sign in to update settings');
+      const { data, error } = await supabase.from('profiles').update(settings).eq('id', user.id).select('id').single();
+      if (error) throw error;
+      if (!data) throw new Error('Settings were not saved');
+    },
+    onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['profile', user?.id] }); },
+    onError: () => toast.error('Unable to save settings'),
+  });
+
+  const handleToggle = (setting: 'enable_notifications' | 'enable_sounds') => {
     if (!profile) return;
     
     updateSettingsMutation.mutate({
@@ -133,6 +144,7 @@ const Settings = () => {
           <Button 
             variant="ghost" 
             size="icon"
+            aria-label="Back from settings"
             onClick={() => navigate(-1)}
             className="hover:bg-gray-100 dark:hover:bg-gray-800"
           >
@@ -148,14 +160,15 @@ const Settings = () => {
   }
 
   return (
-    <div className="pb-[180px] sm:pb-[200px]">
-      <div className="container mx-auto py-6 space-y-8">
+    <div className="clipt-settings">
+      <div className="container max-w-6xl mx-auto px-4 py-6 space-y-8">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button 
                 variant="ghost" 
                 size="icon"
+                aria-label="Back from settings"
                 onClick={() => navigate(-1)}
                 className="hover:bg-gray-100 dark:hover:bg-gray-800"
               >
@@ -172,14 +185,29 @@ const Settings = () => {
           <Separator />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="clipt-settings-layout">
+        <nav aria-label="Settings sections" className="clipt-settings-nav gaming-card">
+          {[
+            {id:'account',label:'Account',icon:UserCog},
+            {id:'security',label:'Security / MFA',icon:Shield},
+            {id:'privacy',label:'Privacy & account data',icon:Globe},
+            {id:'photo-safety',label:'Photo safety notices',icon:Shield},
+            {id:'notifications',label:'Notifications',icon:Bell},
+            {id:'accessibility',label:'Accessibility',icon:Layout},
+            {id:'storage',label:'Device storage',icon:HardDrive},
+            {id:'stream',label:'Stream preferences',icon:Video},
+            {id:'help',label:'Help & documentation',icon:BookOpen},
+          ].map(({id,label,icon:Icon}) => <Link key={id} to={`#settings-${id}`} onClick={() => document.getElementById(`settings-${id}`)?.scrollIntoView({block:'start'})} aria-current={activeSection === `#settings-${id}` ? 'location' : undefined}><Icon aria-hidden="true" className="h-5 w-5 shrink-0" /><span>{label}</span></Link>)}
+        </nav>
+        <div className="grid gap-6 lg:grid-cols-2 min-w-0">
           <div className="space-y-6">
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-6">
+            <Card id="settings-account" className="p-6 gaming-card">
+              <div className="clipt-account-heading flex items-center gap-2 mb-6">
                 <UserCog className="w-5 h-5 text-purple-500" />
                 <h2 className="text-xl font-semibold">Account Settings</h2>
               </div>
               <div className="space-y-4">
+                {profileError && <div role="alert" className="space-y-2"><p>Unable to load account settings. Saved preferences have not been changed.</p><Button onClick={() => void refetchProfile()}>Retry account settings</Button></div>}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Email Notifications</Label>
@@ -188,6 +216,8 @@ const Settings = () => {
                     </p>
                   </div>
                   <Switch
+                    aria-label="Email Notifications"
+                    disabled={!profile || updateSettingsMutation.isPending}
                     checked={profile?.enable_notifications}
                     onCheckedChange={() => handleToggle('enable_notifications')}
                   />
@@ -200,6 +230,8 @@ const Settings = () => {
                     </p>
                   </div>
                   <Switch
+                    aria-label="Sound Effects"
+                    disabled={!profile || updateSettingsMutation.isPending}
                     checked={profile?.enable_sounds}
                     onCheckedChange={() => handleToggle('enable_sounds')}
                   />
@@ -224,14 +256,14 @@ const Settings = () => {
               </div>
             </Card>
 
-            <Card className="p-6">
+            <Card id="settings-help" className="p-6 gaming-card">
               <div className="flex items-center gap-2 mb-6">
                 <BookOpen className="w-5 h-5 text-purple-500" />
                 <h2 className="text-xl font-semibold">Documentation</h2>
               </div>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Access our comprehensive documentation, including user guides, API documentation, and community guidelines.
+                  Read the preview user guide, including navigation, account security and current feature limitations.
                 </p>
                 <Button 
                   onClick={() => navigate('/docs/user-guide')}
@@ -249,135 +281,38 @@ const Settings = () => {
                 <h2 className="text-xl font-semibold">Language & Region</h2>
               </div>
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Language</Label>
-                  <Select defaultValue="en">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="de">Deutsch</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Time Zone</Label>
-                  <Select defaultValue="utc">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="utc">UTC (GMT)</SelectItem>
-                      <SelectItem value="est">Eastern Time (ET)</SelectItem>
-                      <SelectItem value="pst">Pacific Time (PT)</SelectItem>
-                      <SelectItem value="cet">Central European Time (CET)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <p>Interface language: English</p>
+                <p className="text-sm text-muted-foreground">
+                  Additional translations and an account-wide time zone override are not available in this preview.
+                  Token earning limits use server UTC days, independently of your device time zone.
+                </p>
               </div>
             </Card>
 
-            <TwoFactorSettings />
-            <DataPrivacySettings />
+            <section id="settings-security" aria-label="Security and MFA"><TwoFactorSettings /></section>
+            <section id="settings-privacy" aria-label="Privacy and account data"><DataPrivacySettings /></section>
+            <CreatorSafetySettings />
+            <section id="settings-photo-safety" aria-label="Photo safety notices"><PhotoSafetyNotices /></section>
           </div>
 
           <div className="space-y-6">
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <HardDrive className="w-5 h-5 text-purple-500" />
-                <h2 className="text-xl font-semibold">Storage & Downloads</h2>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Auto-Download Media</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Automatically download media in chats
-                    </p>
-                  </div>
-                  <Switch
-                    checked={profile?.auto_download_media}
-                    onCheckedChange={() => handleToggle('auto_download_media')}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Storage Usage</Label>
-                  <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
-                    <div className="flex justify-between mb-2">
-                      <span>Used Storage</span>
-                      <span>2.1 GB / 5 GB</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                      <div className="bg-purple-500 h-2.5 rounded-full" style={{ width: '45%' }}></div>
-                    </div>
-                  </div>
-                  <Button variant="outline" className="w-full mt-2">
-                    Clear Cache
-                  </Button>
-                </div>
-              </div>
-            </Card>
+            <section id="settings-storage" aria-label="Device storage"><DeviceStorageSettings /></section>
+            <section id="settings-accessibility" aria-label="Accessibility"><AccessibilitySettings /></section>
+            <Card className="p-6 space-y-4"><h2 className="text-xl font-semibold">Controller</h2><ControllerSettings /></Card>
 
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <Gauge className="w-5 h-5 text-purple-500" />
-                <h2 className="text-xl font-semibold">Performance</h2>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Hardware Acceleration</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Use GPU for better performance
-                    </p>
-                  </div>
-                  <Switch
-                    checked={profile?.hardware_acceleration}
-                    onCheckedChange={() => handleToggle('hardware_acceleration')}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Reduce Animations</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Disable animations for better performance
-                    </p>
-                  </div>
-                  <Switch
-                    checked={profile?.reduce_animations}
-                    onCheckedChange={() => handleToggle('reduce_animations')}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Background Processing</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Allow processing when app is in background
-                    </p>
-                  </div>
-                  <Switch
-                    checked={profile?.background_processing}
-                    onCheckedChange={() => handleToggle('background_processing')}
-                  />
-                </div>
-              </div>
-            </Card>
-
-            <AccessibilitySettings />
-
-            <Card className="p-6">
+            <Card id="settings-notifications" className="p-6 gaming-card">
               <div className="flex items-center gap-2 mb-6">
                 <Bell className="w-5 h-5 text-purple-500" />
                 <h2 className="text-xl font-semibold">Notification Preferences</h2>
               </div>
               <div className="space-y-6">
+                {notificationsLoading && <p role="status">Loading notification preferences…</p>}
+                {notificationsError && <div role="alert" className="space-y-2"><p>Unable to load notification preferences.</p><Button onClick={() => void refetchNotifications()}>Retry notification preferences</Button></div>}
                 <div className="flex items-center justify-between">
                   <Label htmlFor="email-notifications">Email Notifications</Label>
                   <Switch
                     id="email-notifications"
+                    disabled={!notificationPreferences || notificationsError || updateNotificationsMutation.isPending}
                     checked={notificationPreferences?.email_notifications}
                     onCheckedChange={(checked) => handleNotificationToggle('email_notifications', checked)}
                   />
@@ -387,6 +322,7 @@ const Settings = () => {
                   <Label htmlFor="push-notifications">Push Notifications</Label>
                   <Switch
                     id="push-notifications"
+                    disabled={!notificationPreferences || notificationsError || updateNotificationsMutation.isPending}
                     checked={notificationPreferences?.push_notifications}
                     onCheckedChange={(checked) => handleNotificationToggle('push_notifications', checked)}
                   />
@@ -396,6 +332,7 @@ const Settings = () => {
                   <Label htmlFor="stream-notifications">Stream Notifications</Label>
                   <Switch
                     id="stream-notifications"
+                    disabled={!notificationPreferences || notificationsError || updateNotificationsMutation.isPending}
                     checked={notificationPreferences?.stream_notifications}
                     onCheckedChange={(checked) => handleNotificationToggle('stream_notifications', checked)}
                   />
@@ -405,6 +342,7 @@ const Settings = () => {
                   <Label htmlFor="mention-notifications">Mention Notifications</Label>
                   <Switch
                     id="mention-notifications"
+                    disabled={!notificationPreferences || notificationsError || updateNotificationsMutation.isPending}
                     checked={notificationPreferences?.mention_notifications}
                     onCheckedChange={(checked) => handleNotificationToggle('mention_notifications', checked)}
                   />
@@ -414,6 +352,7 @@ const Settings = () => {
                   <Label htmlFor="follower-notifications">Follower Notifications</Label>
                   <Switch
                     id="follower-notifications"
+                    disabled={!notificationPreferences || notificationsError || updateNotificationsMutation.isPending}
                     checked={notificationPreferences?.follower_notifications}
                     onCheckedChange={(checked) => handleNotificationToggle('follower_notifications', checked)}
                   />
@@ -421,8 +360,9 @@ const Settings = () => {
               </div>
             </Card>
 
-            {user && <StreamSettings userId={user.id} />}
+            {user && <section id="settings-stream" aria-label="Stream preferences"><StreamSettings userId={user.id} /></section>}
           </div>
+        </div>
         </div>
       </div>
     </div>

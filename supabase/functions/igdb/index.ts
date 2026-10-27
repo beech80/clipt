@@ -1,26 +1,25 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { authenticatedUser, errorResponse, requestBody, requestMethod, requiredString, serverEnv, jsonResponse } from '../_shared/request.ts'
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
+  const method = requestMethod(req)
+  if (method) return method
 
   try {
-    const { endpoint, query } = await req.json()
-    const clientId = Deno.env.get('TWITCH_CLIENT_ID')
-    const clientSecret = Deno.env.get('TWITCH_CLIENT_SECRET')
+    await authenticatedUser(req)
+    const body = await requestBody(req)
+    const endpoint = requiredString(body.endpoint, 'endpoint', 64)
+    const query = requiredString(body.query, 'query', 12000)
+    if (!/^[a-z_]+$/.test(endpoint)) return jsonResponse({ error: 'Invalid endpoint' }, 400)
+    const clientId = serverEnv('TWITCH_CLIENT_ID')
+    const clientSecret = serverEnv('TWITCH_CLIENT_SECRET')
 
     // Get access token from Twitch
     const tokenResponse = await fetch(
-      `https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`,
-      { method: 'POST' }
+      'https://id.twitch.tv/oauth2/token',
+      { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, grant_type: 'client_credentials' }) }
     )
 
     if (!tokenResponse.ok) {
@@ -45,16 +44,8 @@ serve(async (req) => {
     }
 
     const data = await igdbResponse.json()
-    console.log(`IGDB response for ${endpoint}:`, data)
-
-    return new Response(JSON.stringify(data), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return jsonResponse(data)
   } catch (error) {
-    console.error('Error in IGDB function:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
-    })
+    return errorResponse(error)
   }
 })

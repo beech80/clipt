@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { readPollOptions } from '@/lib/poll-data';
 
 interface PollOption {
   id: string;
@@ -55,12 +56,9 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
       const transformedPoll: Poll = {
         id: data.id,
         question: data.question,
-        options: Array.isArray(data.options) ? data.options.map((opt: { id: string; text: string }) => ({
-          id: opt.id,
-          text: opt.text
-        })) : [],
-        poll_responses: data.poll_responses.map((response: any) => ({
-          selected_options: Array.isArray(response.selected_options) ? response.selected_options : [],
+        options: readPollOptions(data.options),
+        poll_responses: data.poll_responses.map((response) => ({
+          selected_options: Array.isArray(response.selected_options) ? response.selected_options.filter((option): option is string => typeof option === 'string') : [],
           user_id: response.user_id
         })),
         allow_multiple_choices: data.allow_multiple_choices
@@ -73,6 +71,7 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
 
   const submitVote = useMutation({
     mutationFn: async (options: string[]) => {
+      if (!user || !activePoll || options.length === 0) throw new Error('Sign in and select an active poll option');
       const { error } = await supabase
         .from('poll_responses')
         .insert({

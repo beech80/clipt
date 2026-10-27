@@ -21,11 +21,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Camera, AlertCircle } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import type { Profile, DatabaseProfile } from "@/types/profile"
+import type { Profile } from "@/types/profile"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { prepareAvatar } from '@/lib/avatar-upload'
 
 const profileFormSchema = z.object({
-  username: z.string().min(3).max(50),
+  username: z.string().regex(/^[A-Za-z0-9_]{3,50}$/, 'Use 3-50 letters, numbers, or underscores'),
   displayName: z.string().min(2).max(50),
   bioDescription: z.string().max(500).optional(),
   website: z.string().url().optional().or(z.literal("")),
@@ -44,6 +45,12 @@ export function ProfileEditForm() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const queryClient = useQueryClient()
   const [submitting, setSubmitting] = useState(false)
+  const uploadInProgress = useRef(false)
+  const saveInProgress = useRef(false)
+
+  useEffect(() => () => {
+    if (avatarPreview?.startsWith('blob:')) URL.revokeObjectURL(avatarPreview);
+  }, [avatarPreview])
 
   const { data: profile, refetch, isLoading: profileLoading, isError: profileError } = useQuery({
     queryKey: ['profile', user?.id],
@@ -54,52 +61,11 @@ export function ProfileEditForm() {
       
       // First check if profile exists
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
+        .rpc('get_own_profile')
         .single()
 
       if (error) {
         console.error('Error fetching profile:', error);
-        
-        // If the profile doesn't exist, try to create one
-        if (error.code === 'PGRST116') { // PostgreSQL error for no rows returned
-          console.log('Profile not found, attempting to create one');
-          
-          try {
-            // Create a default profile
-            const username = user.email 
-              ? user.email.split('@')[0] 
-              : `user_${Math.random().toString(36).substring(2, 10)}`;
-            
-            const newProfile = {
-              id: user.id,
-              username,
-              display_name: user.user_metadata?.name || username,
-              bio: 'Welcome to my Clipt profile!',
-              avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.id}`,
-              created_at: new Date().toISOString()
-            };
-            
-            // Insert new profile
-            const { data: newData, error: createError } = await supabase
-              .from('profiles')
-              .insert(newProfile)
-              .select('*')
-              .single();
-              
-            if (createError) {
-              console.error('Error creating profile:', createError);
-              throw new Error('Could not create profile');
-            }
-            
-            console.log('Created new profile:', newData);
-            return newData as Profile;
-          } catch (createErr) {
-            console.error('Error in profile creation process:', createErr);
-            throw new Error('Failed to create profile');
-          }
-        }
         
         throw new Error('Could not load profile data');
       }
@@ -109,7 +75,6 @@ export function ProfileEditForm() {
         throw new Error('Profile not found');
       }
 
-      console.log('Profile data retrieved:', data);
 
       // Check if the user can change their username (not more than once every two months)
       if (data.last_username_change) {
@@ -135,13 +100,12 @@ export function ProfileEditForm() {
         id: data.id,
         username: data.username,
         avatar_url: data.avatar_url,
-        display_name: data.display_name || data.displayName || data.username,
-        bio: data.bio || data.bioDescription || "",
+        display_name: data.display_name || data.username,
+        bio: data.bio || data.bio_description || "",
         website: data.website || "",
         created_at: data.created_at,
         enable_notifications: data.enable_notifications,
         enable_sounds: data.enable_sounds,
-        private_profile: data.private_profile,
         last_username_change: data.last_username_change,
         banner_url: data.banner_url
       }
@@ -176,14 +140,15 @@ export function ProfileEditForm() {
   }, [profile, form])
 
   const onSubmit = async (values: ProfileFormValues) => {
-    if (!user) return;
+    if (!user || saveInProgress.current || uploadInProgress.current) return;
+    saveInProgress.current = true;
     
     try {
       setSubmitting(true);
       toast.loading('Updating profile...');
       
       // Simple update with just basic text fields - no images
-      const { error } = await supabase
+      const { data: savedProfile, error } = await supabase
         .from('profiles')
         .update({
           username: values.username,
@@ -191,13 +156,16 @@ export function ProfileEditForm() {
           bio: values.bioDescription || null,
           website: values.website || null,
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select('id')
+        .single();
         
       if (error) {
         console.error('Error updating profile:', error);
         toast.error('Failed to update profile: ' + error.message);
         return;
       }
+      if (!savedProfile) throw new Error('Profile update was not confirmed.');
       
       toast.dismiss();
       toast.success('Profile updated successfully!');
@@ -206,45 +174,19 @@ export function ProfileEditForm() {
       queryClient.removeQueries({ queryKey: ['profile'] });
       await refetch();
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Profile update error:', error);
-      toast.error('Error: ' + (error.message || 'Failed to update profile'));
+      toast.error(error instanceof Error ? error.message : 'Failed to update profile');
     } finally {
+      saveInProgress.current = false;
       setSubmitting(false);
       toast.dismiss();
     }
   };
 
-  // Image upload using Imgur API - reliable and free approach
-  const uploadImageToImgur = async (file: File): Promise<string> => {
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-      
-      const response = await fetch('https://api.imgur.com/3/image', {
-        method: 'POST',
-        headers: {
-          Authorization: 'Client-ID 546c25a59c58ad7'  // Public Imgur client ID for demo purposes
-        },
-        body: formData
-      });
-      
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.data.error || 'Failed to upload image');
-      }
-      
-      return result.data.link;
-    } catch (error: any) {
-      console.error('Imgur upload error:', error);
-      throw new Error('Image upload failed: ' + (error.message || 'Unknown error'));
-    }
-  };
-
-  // Simplified avatar upload using Imgur
+  // Upload only to the app-owned, owner-scoped avatar bucket.
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !user) {
+    if (!e.target.files || e.target.files.length === 0 || !user || uploadInProgress.current) {
       return;
     }
     
@@ -256,27 +198,33 @@ export function ProfileEditForm() {
       return;
     }
     
-    // Show preview immediately for better user experience
-    setAvatarPreview(URL.createObjectURL(file));
-    
+    uploadInProgress.current = true;
+    let uploadedPath: string | null = null;
     try {
       setUploading(true);
       toast.loading('Uploading profile picture...');
       
-      // Upload to Imgur instead of Supabase
-      const imageUrl = await uploadImageToImgur(file);
-      
-      // Update profile with imgur URL
-      const { error: updateError } = await supabase
+      const avatar = await prepareAvatar(file);
+      const path = `${user.id}/${crypto.randomUUID()}.webp`;
+      const { error: uploadError } = await supabase.storage.from('clipt-avatars').upload(path, avatar, {
+        contentType: 'image/webp', upsert: false, cacheControl: '3600',
+      });
+      if (uploadError) throw uploadError;
+      uploadedPath = path;
+      const { data: { publicUrl: imageUrl } } = supabase.storage.from('clipt-avatars').getPublicUrl(path);
+      const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: imageUrl })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select('id')
+        .single();
         
       if (updateError) {
-        console.error('Profile update error:', updateError);
-        toast.error('Failed to update profile with new image');
-        return;
+        throw updateError;
       }
+      if (!updatedProfile) throw new Error('Profile update was not confirmed.');
+      uploadedPath = null;
+      setAvatarPreview(imageUrl);
       
       toast.dismiss();
       toast.success('Profile picture updated successfully!');
@@ -285,10 +233,15 @@ export function ProfileEditForm() {
       queryClient.removeQueries({ queryKey: ['profile'] });
       await refetch();
       
-    } catch (error: any) {
+    } catch (error: unknown) {
+      if (uploadedPath) {
+        const { error: cleanupError } = await supabase.storage.from('clipt-avatars').remove([uploadedPath]);
+        if (cleanupError) toast.error('The unused image could not be removed. Contact support for cleanup.');
+      }
       console.error('Avatar upload/update error:', error);
-      toast.error('Error: ' + (error.message || 'Failed to update profile picture'));
+      toast.error(error instanceof Error ? error.message : 'Failed to update profile picture');
     } finally {
+      uploadInProgress.current = false;
       setUploading(false);
       toast.dismiss();
     }
@@ -342,18 +295,16 @@ export function ProfileEditForm() {
             <div className="flex flex-col items-center sm:flex-row sm:space-x-6">
               {/* Avatar Preview */}
               <div className="relative mb-4 sm:mb-0">
-                <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-purple-500">
-                  <img 
-                    src={avatarPreview || profile?.avatar_url || 'https://static-cdn.jtvnw.net/user-default-pictures-uv/998f01ae-def8-11e9-b95c-784f43822e80-profile_image-300x300.png'} 
-                    alt="Avatar Preview" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                <Avatar className="w-28 h-28 border-2 border-purple-500">
+                  <AvatarImage src={avatarPreview || profile.avatar_url || undefined} alt="Your profile picture" className="object-cover" />
+                  <AvatarFallback className="bg-purple-950 text-purple-100 text-2xl">{(profile.username || 'U').slice(0,2).toUpperCase()}</AvatarFallback>
+                </Avatar>
                 <Button 
                   type="button" 
                   size="sm" 
-                  className="absolute bottom-0 right-0 rounded-full w-8 h-8 p-0"
-                  disabled={uploading}
+                  className="absolute bottom-0 right-0 rounded-full w-11 h-11 p-0"
+                  aria-label="Upload profile picture"
+                  disabled={uploading || submitting}
                   onClick={() => avatarFileInputRef.current?.click()}
                 >
                   <Camera className="w-4 h-4" />
@@ -378,7 +329,7 @@ export function ProfileEditForm() {
                   type="button" 
                   variant="outline" 
                   className="text-sm" 
-                  disabled={uploading}
+                  disabled={uploading || submitting}
                   onClick={() => avatarFileInputRef.current?.click()}
                 >
                   <Camera className="w-4 h-4 mr-2" />
@@ -399,7 +350,7 @@ export function ProfileEditForm() {
                   <Input 
                     placeholder="username" 
                     {...field} 
-                    disabled={!canChangeUsername}
+                    disabled={!canChangeUsername || submitting || uploading}
                   />
                 </FormControl>
                 <FormDescription>
@@ -409,7 +360,7 @@ export function ProfileEditForm() {
                   }
                 </FormDescription>
                 {!canChangeUsername && (
-                  <Alert variant="warning" className="mt-2">
+                  <Alert className="mt-2">
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Username Change Restricted</AlertTitle>
                     <AlertDescription>
@@ -429,7 +380,7 @@ export function ProfileEditForm() {
               <FormItem>
                 <FormLabel>Display Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Display Name" {...field} />
+                  <Input placeholder="Display Name" disabled={submitting || uploading} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -446,6 +397,7 @@ export function ProfileEditForm() {
                   <Textarea
                     placeholder="Tell us about yourself"
                     className="resize-none"
+                    disabled={submitting || uploading}
                     {...field}
                   />
                 </FormControl>
@@ -461,7 +413,7 @@ export function ProfileEditForm() {
               <FormItem>
                 <FormLabel>Website</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://your-website.com" {...field} />
+                  <Input placeholder="https://your-website.com" disabled={submitting || uploading} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

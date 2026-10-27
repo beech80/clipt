@@ -38,7 +38,12 @@ const VideoEditor = ({ videoFile, onSave }: VideoEditorProps) => {
     if (!videoRef.current) return;
 
     try {
-      const stream = (videoRef.current as any).captureStream();
+      const source = videoRef.current as HTMLVideoElement & { captureStream?: () => MediaStream };
+      if (!source.captureStream || typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported('video/webm')) {
+        toast.error('This browser does not support video trimming. Use a browser with WebM recording support.');
+        return;
+      }
+      const stream = source.captureStream();
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'video/webm'
       });

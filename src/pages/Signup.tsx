@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Gamepad2, LogIn, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { LegalLinks } from "@/components/LegalLinks";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -13,24 +14,30 @@ const Signup = () => {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submitting = useRef(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setLoading(true);
     setError(null);
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters long");
       setLoading(false);
+      submitting.current = false;
       return;
     }
 
     try {
-      await signUp(email, password, { username });
-      toast.success("Please check your email to verify your account!");
-      navigate("/login");
+      const result = await signUp(email, password, { username });
+      toast.success(result.requiresEmailConfirmation
+        ? "Check your email to confirm your account before signing in."
+        : "Account created. You’re signed in.");
+      navigate(result.requiresEmailConfirmation ? "/login" : "/clipts");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to sign up";
       setError(errorMessage);
@@ -43,13 +50,14 @@ const Signup = () => {
       toast.error(errorMessage);
       console.error("Signup error:", error);
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1f3c] to-[#0d0f1e] flex flex-col items-center justify-center pb-20">
-      <div className="mx-auto max-w-md space-y-6 p-8 bg-[#0D1117] border border-indigo-500/20 rounded-xl shadow-xl">
+    <main className="clipt-auth clipt-auth-form flex flex-col items-center justify-center px-3 py-6">
+      <div className="gaming-card mx-auto w-full max-w-md space-y-6 p-5 sm:p-8">
         <div className="text-center space-y-2">
           <div className="flex justify-center mb-4">
             <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center shadow-lg">
@@ -72,6 +80,8 @@ const Signup = () => {
           <div>
             <Input
               type="email"
+              aria-label="Email"
+              autoComplete="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -83,6 +93,8 @@ const Signup = () => {
           <div>
             <Input
               type="text"
+              aria-label="Username"
+              autoComplete="username"
               placeholder="Choose a username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -94,6 +106,8 @@ const Signup = () => {
           <div>
             <Input
               type="password"
+              aria-label="Password"
+              autoComplete="new-password"
               placeholder="Choose a password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -121,8 +135,9 @@ const Signup = () => {
             </p>
           </div>
         </form>
+        <LegalLinks />
       </div>
-    </div>
+    </main>
   );
 };
 

@@ -11,14 +11,18 @@ export const SecurityEvents = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('security_events')
-        .select(`
-          *,
-          user:user_id(username)
-        `)
-        .order('created_at', { ascending: false });
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (error) throw error;
-      return data;
+      const ids = [...new Set(data.map(event => event.user_id).filter(Boolean))];
+      const { data: profiles, error: profileError } = ids.length
+        ? await supabase.from('profiles').select('id, username').in('id', ids)
+        : { data: [], error: null };
+      if (profileError) throw profileError;
+      const byId = new Map(profiles.map(profile => [profile.id, profile] as const));
+      return data.map(event => ({ ...event, user: byId.get(event.user_id) }));
     }
   });
 

@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LogIn, UserPlus, Gamepad2 } from "lucide-react";
-import { toast } from "sonner";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -14,16 +13,18 @@ const Login = () => {
   const [error, setError] = useState<string | null>(null);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const submitting = useRef(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setLoading(true);
     setError(null);
 
     try {
       await signIn(email, password);
-      toast.success("Successfully signed in!");
-      navigate("/");
+      navigate("/clipts", { replace: true });
     } catch (error) {
       const errorMessage = error instanceof Error 
         ? error.message 
@@ -39,29 +40,14 @@ const Login = () => {
         setError("Please verify your email before logging in. Check your inbox for a verification email.");
       }
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   };
   
-  // Demo account login for easy testing
-  const handleDemoLogin = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await signIn("demo@clipt.com", "demo123");
-      toast.success("Signed in with demo account!");
-      navigate("/");
-    } catch (error) {
-      setError("Could not sign in with demo account. Try using the regular login instead.");
-      console.error('Demo login error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1f3c] to-[#0d0f1e] flex flex-col items-center justify-center pb-20">
-      <div className="mx-auto max-w-md space-y-6 p-8 bg-[#0D1117] border border-indigo-500/20 rounded-xl shadow-xl">
+    <div className="clipt-auth clipt-login">
+      <div className="mx-auto w-full max-w-md space-y-6 p-6 sm:p-8 bg-[#0D1117] border border-indigo-500/20 rounded-xl shadow-xl">
         <div className="text-center space-y-2">
           <div className="flex justify-center mb-4">
             <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center shadow-lg">
@@ -80,10 +66,12 @@ const Login = () => {
           </Alert>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} aria-busy={loading} className="space-y-4">
           <div>
             <Input
               type="email"
+              aria-label="Email"
+              autoComplete="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -95,6 +83,8 @@ const Login = () => {
           <div>
             <Input
               type="password"
+              aria-label="Password"
+              autoComplete="current-password"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -120,16 +110,6 @@ const Login = () => {
               <span className="bg-[#0D1117] px-2 text-indigo-300/50">or</span>
             </div>
           </div>
-          
-          <Button
-            type="button"
-            className="w-full bg-[#161B22] border border-indigo-500/30 hover:bg-indigo-900/30 text-white h-12 font-medium"
-            onClick={handleDemoLogin}
-            disabled={loading}
-          >
-            <Gamepad2 className="mr-2 h-5 w-5 text-indigo-400" />
-            Try demo account
-          </Button>
           
           <Button
             type="button"

@@ -34,22 +34,25 @@ export const ThumbnailCreator = ({ videoUrl, onThumbnailCreated }: ThumbnailCrea
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       
       // Convert to blob
-      const blob = await new Promise<Blob>((resolve) => {
+      const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (blob) resolve(blob);
+          else reject(new Error('The video frame could not be encoded'));
         }, 'image/jpeg', 0.95);
       });
 
       // Upload to Supabase Storage
-      const fileName = `thumbnail-${Date.now()}.jpg`;
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error('Sign in to upload a thumbnail');
+      const fileName = `${user.id}/thumbnail-${crypto.randomUUID()}.jpg`;
       const { data, error } = await supabase.storage
-        .from('thumbnails')
+        .from('posts')
         .upload(fileName, blob);
 
       if (error) throw error;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('thumbnails')
+        .from('posts')
         .getPublicUrl(fileName);
 
       onThumbnailCreated(publicUrl);

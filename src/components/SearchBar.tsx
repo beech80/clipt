@@ -10,7 +10,9 @@ import { SearchInput } from "./search/SearchInput";
 import { SearchFilters } from "./search/SearchFilters";
 import { SearchHistory } from "./search/SearchHistory";
 import { SearchResults } from "./search/SearchResults";
-import { Json } from "@/integrations/supabase/types";
+import type { SearchResultData } from "./search/SearchResults";
+import { collectSearchResults } from "@/lib/search-results";
+import { Json, Tables } from "@/integrations/supabase/types";
 
 export function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,12 +26,13 @@ export function SearchBar() {
   const { user } = useAuth();
 
   const { data: searchHistory } = useQuery({
-    queryKey: ['search-history'],
+    queryKey: ['search-history', user?.id],
     queryFn: async () => {
       if (!user) return [];
       const { data, error } = await supabase
         .from('search_history')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(5);
       
@@ -40,7 +43,7 @@ export function SearchBar() {
   });
 
   const { data: searchResults, isLoading } = useQuery({
-    queryKey: ['search', searchTerm, filters],
+    queryKey: ['search', user?.id, searchTerm, filters],
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 2) return null;
 
@@ -69,7 +72,8 @@ export function SearchBar() {
       };
 
       const dateFilter = getDateFilter();
-      const queries = [];
+      const queries: Parameters<typeof collectSearchResults<SearchResultData>>[1] = {};
+      const results: SearchResultData = { posts: [], profiles: [], streams: [] };
 
       if (filters.type === 'all' || filters.type === 'posts') {
         let query = supabase
@@ -97,11 +101,11 @@ export function SearchBar() {
           query = query.order('created_at', { ascending: false });
         }
 
-        queries.push(query);
+        queries.posts = query;
       }
 
       if (filters.type === 'all' || filters.type === 'profiles') {
-        queries.push(
+        queries.profiles = (
           supabase
             .from('profiles')
             .select('id, username, avatar_url, display_name')
@@ -131,24 +135,24 @@ export function SearchBar() {
           query = query.order('created_at', { ascending: false });
         }
 
-        queries.push(query);
+        queries.streams = query;
       }
 
-      const [postsResult, profilesResult, streamsResult] = await Promise.all(queries);
-
-      return {
-        posts: (filters.type === 'all' || filters.type === 'posts') ? postsResult.data || [] : [],
-        profiles: (filters.type === 'all' || filters.type === 'profiles') ? profilesResult?.data || [] : [],
-        streams: (filters.type === 'all' || filters.type === 'streams') ? streamsResult?.data || [] : []
-      };
+      return collectSearchResults(results, queries);
     },
     enabled: searchTerm.length >= 2
   });
 
-  const handleSearchHistoryClick = (historyItem: any) => {
+  const handleSearchHistoryClick = (historyItem: Tables<'search_history'>) => {
     setSearchTerm(historyItem.query);
-    if (historyItem.filters) {
-      setFilters(historyItem.filters);
+    const saved = historyItem.filters;
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      setFilters({
+        type: saved.type === 'posts' || saved.type === 'profiles' || saved.type === 'streams' ? saved.type : 'all',
+        dateRange: saved.dateRange === 'today' || saved.dateRange === 'week' || saved.dateRange === 'month' ? saved.dateRange : 'all',
+        hasMedia: saved.hasMedia === true,
+        sortBy: saved.sortBy === 'relevant' ? 'relevant' : 'recent',
+      });
     }
     toast.success("Loaded search from history");
   };

@@ -1,17 +1,19 @@
 
 import { FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { LegalLinks } from '@/components/LegalLinks';
 
 const TermsOfService = () => {
   return (
-    <Card className="p-6">
+    <main className="clipt-auth mx-auto w-full min-w-0 max-w-3xl px-3 py-6">
+    <Card className="p-6 break-words">
       <div className="flex items-center gap-2 mb-6">
-        <FileText className="w-6 h-6 text-purple-500" />
+        <FileText aria-hidden="true" className="w-6 h-6 text-purple-500" />
         <h1 className="text-2xl font-bold">Clipt Terms of Service</h1>
       </div>
 
       <div className="prose dark:prose-invert max-w-none">
-        <p className="text-sm text-muted-foreground mb-6">Last Updated: 2/11/2025</p>
+        <p className="text-sm text-muted-foreground mb-6">Last Updated: October 23, 2026</p>
 
         <p className="mb-6">
           Welcome to Clipt! Clipt is a social media and streaming platform that combines video sharing, live streaming, and interactive gaming elements. By using Clipt, you agree to these Terms of Service ("Terms"). Please read them carefully.
@@ -64,13 +66,16 @@ const TermsOfService = () => {
         <h2 className="text-xl font-semibold mt-8 mb-4">5. Copyright & Intellectual Property</h2>
         <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
           <li>You own the content you create but grant Clipt a license to display, share, and promote it within the platform.</li>
-          <li>If you believe someone is using your content without permission, you can submit a DMCA takedown request.</li>
+          <li>To report content that infringes your rights, email beecher@cliptgaming.com with its location, the rights involved and information needed to investigate. Do not submit knowingly false reports.</li>
         </ul>
 
-        <h2 className="text-xl font-semibold mt-8 mb-4">6. Live Streaming & Monetization</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-4">6. Live Streaming, Beta Features & Payments</h2>
         <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
           <li>If you stream live, you are responsible for what you broadcast.</li>
-          <li>If you earn money through Clipt (e.g., ads, tipping, or paid content), you must comply with our Monetization Policy.</li>
+          <li>Beta features can change, be limited or be unavailable. Displaying a feature does not mean purchases or payouts are enabled.</li>
+          <li>Sandbox checkout is for testing, not real charges. Returning from checkout alone does not confirm payment or membership.</li>
+          <li>Any real paid offering must show its price, renewal and cancellation terms before purchase. These Terms do not enable real billing or promise creator earnings.</li>
+          <li>Tokens, Trophy votes and other in-app activity are not a promise of cash value, investment returns or redemption.</li>
         </ul>
 
         <h2 className="text-xl font-semibold mt-8 mb-4">7. Account Suspension & Termination</h2>
@@ -80,27 +85,31 @@ const TermsOfService = () => {
           <li>Engage in illegal activities.</li>
           <li>Attempt to exploit or manipulate Clipt's systems.</li>
         </ul>
-        <p className="text-muted-foreground mt-4">You can appeal a suspension by following our Report & Appeal Process.</p>
+        <p className="text-muted-foreground mt-4">Report safety concerns through available reporting tools or email beecher@cliptgaming.com. To request review of a suspension or moderation decision, include your username and the relevant decision; do not send your password.</p>
+        <p className="text-muted-foreground mt-4">Request account deletion through the account-deletion page. Limited financial, security or legally required records can remain under the Privacy Policy. Completion follows the app's server-confirmed deletion process.</p>
 
         <h2 className="text-xl font-semibold mt-8 mb-4">8. Disclaimers & Limitations of Liability</h2>
         <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
           <li>Clipt is provided "as is" without warranties.</li>
           <li>We do not guarantee uninterrupted access to our services.</li>
           <li>We are not responsible for content posted by users.</li>
+          <li>These limitations apply only as permitted by applicable law and do not remove rights that cannot legally be excluded.</li>
         </ul>
 
         <h2 className="text-xl font-semibold mt-8 mb-4">9. Changes to These Terms</h2>
         <p className="text-muted-foreground mb-6">
-          We may update these Terms from time to time. Continued use of Clipt means you accept the new Terms.
+          We may update these Terms and will identify material changes through the service or other appropriate communication. Review updated terms before continuing to use Clipt. These Terms do not limit rights that applicable law makes mandatory.
         </p>
 
         <h2 className="text-xl font-semibold mt-8 mb-4">10. Contact Us</h2>
         <p className="text-muted-foreground">
           For questions or concerns, contact us at:<br />
-          📧 <a href="mailto:cliptgaming@gmail.com" className="text-purple-500 hover:text-purple-400">cliptgaming@gmail.com</a>
+          <a href="mailto:beecher@cliptgaming.com" className="text-purple-200 underline">beecher@cliptgaming.com</a>
         </p>
       </div>
+      <LegalLinks />
     </Card>
+    </main>
   );
 };
 

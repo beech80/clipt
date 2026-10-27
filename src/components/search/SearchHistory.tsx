@@ -1,8 +1,9 @@
 import { History } from "lucide-react";
+import type { Tables } from "@/integrations/supabase/types";
 
 interface SearchHistoryProps {
-  searchHistory: any[];
-  onHistoryItemClick: (item: any) => void;
+  searchHistory: Tables<'search_history'>[];
+  onHistoryItemClick: (item: Tables<'search_history'>) => void;
 }
 
 export function SearchHistory({ searchHistory, onHistoryItemClick }: SearchHistoryProps) {
@@ -12,7 +13,7 @@ export function SearchHistory({ searchHistory, onHistoryItemClick }: SearchHisto
     <div className="absolute top-full mt-2 w-full rounded-md border bg-popover text-popover-foreground shadow-lg z-50">
       <div className="p-2">
         <h3 className="px-2 text-sm font-medium text-muted-foreground mb-2">Recent Searches</h3>
-        {searchHistory.map((item: any) => (
+        {searchHistory.map((item) => (
           <button
             key={item.id}
             className="w-full flex items-center gap-2 p-2 hover:bg-accent rounded-md"

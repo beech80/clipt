@@ -360,119 +360,29 @@ const sampleUserProgress = [
 ];
 
 export const achievementService = {
-  async getUserAchievements(userId: string): Promise<(AchievementProgress & { achievement: Achievement })[]> {
-    // For demo purposes, we'll return mock data with progress
-    // In a real app, we would fetch from the database
-    try {
-      // First check if we should create default achievements
-      const { data: existingProgress, error } = await supabase
-        .from('achievement_progress')
-        .select('id')
-        .eq('user_id', userId)
-        .limit(1);
-      
-      if (error) {
-        console.error('Error checking achievements:', error);
-        // Fall back to mock data
-        return this.getMockAchievements();
-      }
-      
-      // If no achievements, create defaults
-      if (!existingProgress || existingProgress.length === 0) {
-        try {
-          await this.createDefaultAchievementsForUser(userId);
-        } catch (e) {
-          console.error('Error creating default achievements:', e);
-          // Fall back to mock data
-          return this.getMockAchievements();
-        }
-      }
-      
-      // Fetch real achievements from database
-      const { data, error: fetchError } = await supabase
-        .from('achievement_progress')
-        .select(`
-          *,
-          achievement:achievements(*)
-        `)
-        .eq('user_id', userId);
-
-      if (fetchError) {
-        console.error('Error fetching user achievements:', fetchError);
-        // Fall back to mock data
-        return this.getMockAchievements();
-      }
-
-      if (!data || data.length === 0) {
-        // Fall back to mock data
-        return this.getMockAchievements();
-      }
-
-      // Transform and sort the data
-      return (data as any[]).map(progress => ({
-        ...progress,
-        completed: progress.current_value >= progress.achievement.target_value,
-        achievement: {
-          ...progress.achievement,
-          reward_value: {
-            points: progress.achievement.points
-          },
-          progress_type: progress.achievement.progress_type as "count" | "value" | "boolean",
-          reward_type: progress.achievement.reward_type as "points" | "badge" | "title",
-          category: progress.achievement.category as "streaming" | "social" | "general" | "gaming"
-        }
-      })).sort((a, b) => {
-        if (a.completed === b.completed) {
-          if (a.achievement.category === b.achievement.category) {
-            return b.achievement.points - a.achievement.points;
-          }
-          return a.achievement.category.localeCompare(b.achievement.category);
-        }
-        return a.completed ? 1 : -1;
-      });
-    } catch (error) {
-      console.error('Error in getUserAchievements:', error);
-      // Fall back to mock data
-      return this.getMockAchievements();
-    }
-  },
-  
-  // Helper method to generate mock achievements with progress
-  getMockAchievements(): (AchievementProgress & { achievement: Achievement })[] {
-    return defaultAchievements.map((achievement, index) => {
-      const progressInfo = sampleUserProgress.find(p => p.achievementName === achievement.name) || {
-        currentValue: 0,
-        completed: false
-      };
-      
+  async getUserAchievements(userId: string): Promise<AchievementProgress[]> {
+    const { data, error } = await supabase.from('achievement_progress')
+      .select('*, achievement:achievements(*)').eq('user_id', userId).limit(500);
+    if (error) throw error;
+    return data.filter(row => row.achievement).map(row => {
+      const achievement = row.achievement;
       return {
-        id: `mock-${index}`,
-        user_id: 'mock-user',
-        achievement_id: `achievement-${index}`,
-        current_value: progressInfo.currentValue,
-        completed: progressInfo.completed,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        id: row.id, userId: row.user_id, achievementId: row.achievement_id,
+        currentValue: row.current_value ?? 0,
+        completed: (row.current_value ?? 0) >= achievement.target_value,
         achievement: {
-          id: `achievement-${index}`,
-          name: achievement.name,
-          description: achievement.description,
-          category: achievement.category as "streaming" | "social" | "general" | "gaming",
-          target_value: achievement.target_value,
-          points: achievement.points,
-          progress_type: achievement.progress_type as "count" | "value" | "boolean",
-          reward_type: achievement.reward_type as "points" | "badge" | "title",
-          reward_value: {
-            points: achievement.points
-          },
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
+          id: achievement.id, name: achievement.name, description: achievement.description,
+          target_value: achievement.target_value, points: achievement.points,
+          category: achievement.category === 'gaming' || achievement.category === 'streaming' || achievement.category === 'social' || achievement.category === 'daily' ? achievement.category : 'general',
+          progress_type: achievement.progress_type === 'value' || achievement.progress_type === 'boolean' ? achievement.progress_type : 'count',
+          reward_type: achievement.reward_type === 'badge' || achievement.reward_type === 'title' ? achievement.reward_type : 'points',
+          reward_value: { points: achievement.points },
+        },
       };
     });
   },
 
-  async getGameAchievements(gameId: number): Promise<any[]> {
+  async getGameAchievements(gameId: number) {
     // In a real app, this would fetch from the database
     // For now, we'll return mock data based on the game ID
     const gameSlug = this.getGameSlugFromId(gameId);
@@ -491,115 +401,6 @@ export const achievementService = {
     }));
   },
 
-  async createDefaultAchievementsForUser(userId: string): Promise<void> {
-    console.log('Creating default achievements for user:', userId);
-    
-    try {
-      // First, check if achievements exist in the database
-      const { data: existingAchievements, error: achievementsError } = await supabase
-        .from('achievements')
-        .select('id');
-      
-      if (achievementsError) throw achievementsError;
-      
-      // If no achievements exist, create them first
-      if (!existingAchievements || existingAchievements.length === 0) {
-        const { error: insertError } = await supabase
-          .from('achievements')
-          .insert(defaultAchievements.map(achievement => ({
-            ...achievement,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })));
-        
-        if (insertError) throw insertError;
-      }
-      
-      // Get the achievements to create progress records
-      const { data: achievements, error: getError } = await supabase
-        .from('achievements')
-        .select('id');
-      
-      if (getError) throw getError;
-      
-      // Create progress records for the user
-      const progressRecords = achievements.map(achievement => ({
-        user_id: userId,
-        achievement_id: achievement.id,
-        current_value: 0,
-        completed: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }));
-      
-      const { error: progressError } = await supabase
-        .from('achievement_progress')
-        .insert(progressRecords);
-      
-      if (progressError) throw progressError;
-      
-      console.log('Successfully created default achievements for user:', userId);
-    } catch (error) {
-      console.error('Error creating default achievements:', error);
-      throw error;
-    }
-  },
-
-  async updateAchievementProgress(userId: string, achievementType: string, incrementBy: number = 1): Promise<void> {
-    try {
-      // First, check if the achievement progress entry exists
-      const { data: existingProgress, error: fetchError } = await supabase
-        .from('achievement_progress')
-        .select('id, progress, target_value')
-        .eq('user_id', userId)
-        .eq('achievement_id', achievementType)
-        .maybeSingle();
-  
-      if (fetchError) throw fetchError;
-  
-      if (existingProgress) {
-        // Update existing progress
-        const newProgress = Math.min(existingProgress.progress + incrementBy, existingProgress.target_value);
-        const completed = newProgress >= existingProgress.target_value;
-  
-        const { error: updateError } = await supabase
-          .from('achievement_progress')
-          .update({ 
-            progress: newProgress,
-            completed,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingProgress.id);
-  
-        if (updateError) throw updateError;
-      } else {
-        // Create new progress entry with 0 progress
-        const { data: achievement, error: achievementError } = await supabase
-          .from('achievements')
-          .select('id, target_value')
-          .eq('id', achievementType)
-          .single();
-  
-        if (achievementError) throw achievementError;
-  
-        if (achievement) {
-          const { error: insertError } = await supabase
-            .from('achievement_progress')
-            .insert({
-              user_id: userId,
-              achievement_id: achievementType,
-              progress: 0, // Initialize at 0
-              target_value: achievement.target_value,
-              completed: false
-            });
-  
-          if (insertError) throw insertError;
-        }
-      }
-    } catch (error) {
-      console.error('Error updating achievement progress:', error);
-    }
-  },
 
   // Helper method to map game IDs to slugs for the mock data
   getGameSlugFromId(gameId: number): string {

@@ -80,7 +80,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               const postLink = post.querySelector('a[href*="/post/"]');
               if (postLink) {
                 const href = postLink.getAttribute('href') || '';
-                const match = href.match(/\/post\/([^\/]+)/);
+                const match = href.match(/\/post\/([^/]+)/);
                 if (match && match[1]) {
                   postId = match[1];
                 }
@@ -167,14 +167,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
 
     // Debounce function to prevent too many calls
-    function debounce(func: Function, wait: number) {
-      let timeout: any = null;
-      return function(...args: any) {
-        const context = this;
+    function debounce<T extends unknown[]>(func: (...args: T) => void, wait: number) {
+      let timeout: ReturnType<typeof setTimeout>;
+      return (...args: T) => {
         clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          func.apply(context, args);
-        }, wait);
+        timeout = setTimeout(() => func(...args), wait);
       };
     }
 
@@ -565,7 +562,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             
             allButtons.forEach(button => {
               // Check if this button is in or near our target post
-              let closestPost = button.closest('[data-post-id]');
+              const closestPost = button.closest('[data-post-id]');
               if (!closestPost) {
                 // Try to find post by proximity if it's not a direct parent
                 const buttonRect = button.getBoundingClientRect();
@@ -678,8 +675,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }));
       
       // Invalidate any React Query caches for this post
-      queryClient.invalidateQueries(['likes', postId]);
-      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries({ queryKey: ['likes', postId] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
     } catch (error) {
       console.error('Error liking post:', error);
       toast.error('Failed to like post');
@@ -778,7 +775,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   }} 
                 />
               </div>
-            </div>
             
             {/* Right - Action Buttons in diamond shape */}
             <div className="relative w-32 h-32">

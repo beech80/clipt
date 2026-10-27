@@ -1,360 +1,132 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from '@/lib/supabase';
+import type { Tables } from '@/integrations/supabase/types';
 
-export interface Stream {
-  id: string;
-  title: string;
-  description: string;
-  user_id: string;
-  is_live: boolean;
-  started_at: string | null;
-  ended_at: string | null;
-  stream_key: string;
-  rtmp_url: string;
-  stream_path: string;
-  thumbnail_url: string | null;
-  viewer_count: number;
-  game_id: string | null;
-  created_at: string;
+const publicFields = 'id, title, description, user_id, is_live, started_at, ended_at, thumbnail_url, viewer_count, created_at, playback_url' as const;
+export type Stream = Pick<Tables<'streams'>, 'id' | 'title' | 'description' | 'user_id' | 'is_live' | 'started_at' | 'ended_at' | 'thumbnail_url' | 'viewer_count' | 'created_at' | 'playback_url'>;
+type StreamMetadata = Pick<Stream, 'title' | 'description' | 'thumbnail_url'>;
+export interface StreamResponse<T = Stream> { data: T | null; error: Error | null }
+export interface StreamCredentials { id: string; rtmp_url: string; stream_key: string }
+export interface MuxTestLiveStatus { id: string; is_live: boolean; provider_status: 'active' | 'idle' | 'disabled'; playback_url: string; provider_stream_id?: string; checked_at?: string; test: true }
+export async function getMuxTestLiveStatus(streamId: string): Promise<StreamResponse<MuxTestLiveStatus>> {
+  try {
+    if(!import.meta.env.DEV)throw new Error('Local development live pilot only');
+    await currentUser();
+    const {data,error}=await supabase.functions.invoke('mux-test-live',{body:{action:'status',streamId}});
+    if(error){
+      let detail='Verified provider status unavailable. The pilot must be securely configured.';
+      if(error.context instanceof Response){
+        detail+=' HTTP '+error.context.status+'.';
+        try{
+          const rejected=await error.context.clone().json();
+          const safe=['Mux credentials were rejected','Mux token lacks permission to read this stream',
+            'Mux test stream was not found in the configured token environment','Mux request limit reached; retry later',
+            'Development live pilot is disabled','Designated stream owner required','This service is not configured',
+            'Verify your authenticator to continue','Provider status unavailable; no live status assumed',
+            'Mux stream identity could not be verified','Mux resource is not a verified test stream; paid streaming remains blocked',
+            'Mux test duration could not be verified within the approved limit','Mux returned an unsupported live status',
+            'Mux public test playback could not be verified','Mux response could not be verified',
+            'Mux credential format is invalid; copy the API token pair without quotes or extra text',
+            'Mux connection timed out; no live status assumed','Mux connection failed before an HTTP response; no live status assumed',
+            ...['authentication','configuration','ownership','credentials','provider connection','provider validation'].map(phase=>'Live pilot failed during '+phase+'; no live status assumed')];
+          if(safe.includes(rejected?.error))detail+=' '+rejected.error;
+        }catch{/* Never expose raw provider responses or credentials. */}
+      }
+      throw new Error(detail);
+    }
+    if(data?.id!==streamId||data.test!==true||!['active','idle','disabled'].includes(data.provider_status)
+      ||data.is_live!==(data.provider_status==='active')||typeof data.playback_url!=='string'
+      ||!/^https:\/\/stream\.mux\.com\/[A-Za-z0-9]+\.m3u8$/.test(data.playback_url))
+      throw new Error('Provider response could not be verified');
+    return {data,error:null};
+  }catch(error){return failure(error);}
+}
+const failure = (error: unknown) => ({ data: null, error: error instanceof Error ? error : new Error('Stream operation failed') });
+
+async function currentUser() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error('Sign in to manage your stream');
+  return data.user;
 }
 
-interface CreateStreamParams {
-  title: string;
-  description: string;
-  game_id?: string;
-  thumbnail_url?: string;
+export async function createStream(params: StreamMetadata): Promise<StreamResponse> {
+  try {
+    const user = await currentUser();
+    const { data, error } = await supabase.from('streams').insert({
+      user_id: user.id, title: params.title, description: params.description, thumbnail_url: params.thumbnail_url,
+    }).select(publicFields).single();
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) { return failure(error); }
 }
 
-export interface StreamResponse {
-  data: any | null;
-  error: Error | null;
+export async function getStreamById(streamId: string): Promise<StreamResponse> {
+  try {
+    const { data, error } = await supabase.from('streams').select(publicFields).eq('id', streamId).single();
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) { return failure(error); }
 }
 
-/**
- * Create a new stream for the current user
- */
-export const createStream = async (params: CreateStreamParams): Promise<StreamResponse> => {
+export async function getUserStream(): Promise<StreamResponse> {
   try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) {
-      throw new Error('You must be logged in to create a stream');
-    }
-    
-    const { data, error } = await supabase
-      .from('streams')
-      .insert({
-        user_id: userData.user.id,
-        title: params.title,
-        description: params.description,
-        game_id: params.game_id || null,
-        thumbnail_url: params.thumbnail_url || null,
-        is_live: false
-      })
-      .select(`
-        id, 
-        title, 
-        description, 
-        user_id, 
-        is_live, 
-        started_at, 
-        ended_at,
-        stream_key,
-        rtmp_url,
-        stream_path,
-        thumbnail_url,
-        viewer_count,
-        game_id,
-        created_at
-      `)
-      .single();
-
+    const user = await currentUser();
+    const { data, error } = await supabase.from('streams').select(publicFields)
+      .eq('user_id', user.id).order('is_live', { ascending: false }).order('created_at', { ascending: false }).limit(1).maybeSingle();
     if (error) throw error;
-
     return { data, error: null };
-  } catch (error) {
-    console.error("Error creating stream:", error);
-    return { data: null, error: error as Error };
-  }
-};
+  } catch (error) { return failure(error); }
+}
 
-/**
- * Get a stream by ID
- */
-export const getStreamById = async (streamId: string): Promise<StreamResponse> => {
+// Credentials are never queried through public/browser table grants.
+export async function getStreamCredentials(streamId: string): Promise<StreamResponse<StreamCredentials>> {
   try {
-    const { data, error } = await supabase
-      .from('streams')
-      .select(`
-        id, 
-        title, 
-        description, 
-        user_id,
-        profiles:user_id(username, avatar_url),
-        is_live, 
-        started_at, 
-        ended_at,
-        stream_key,
-        rtmp_url,
-        stream_path,
-        thumbnail_url,
-        viewer_count,
-        game_id,
-        games:game_id(name, cover_url),
-        created_at
-      `)
-      .eq('id', streamId)
-      .single();
-
+    await currentUser();
+    const { data, error } = await supabase.functions.invoke('oauth', { body: { action: 'get_stream_credentials', streamId } });
     if (error) throw error;
+    if (!data || data.id !== streamId || typeof data.rtmp_url !== 'string' || !data.rtmp_url || typeof data.stream_key !== 'string' || !data.stream_key) {
+      throw new Error('Stream credentials are not configured');
+    }
+    return { data: { id: data.id, rtmp_url: data.rtmp_url, stream_key: data.stream_key }, error: null };
+  } catch (error) { return failure(error); }
+}
 
-    return { data, error: null };
-  } catch (error) {
-    console.error("Error getting stream:", error);
-    return { data: null, error: error as Error };
-  }
-};
-
-/**
- * Get the current user's active stream
- */
-export const getUserStream = async (): Promise<StreamResponse> => {
+async function lifecycle(streamId: string, action: 'initialize_stream' | 'end_stream'): Promise<StreamResponse> {
   try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) {
-      throw new Error('You must be logged in to get your stream');
-    }
-
-    // First check if there's an active stream
-    const { data: activeStream, error: activeError } = await supabase
-      .from('streams')
-      .select(`
-        id, 
-        title, 
-        description, 
-        user_id, 
-        is_live, 
-        started_at, 
-        ended_at,
-        stream_key,
-        rtmp_url,
-        stream_path,
-        thumbnail_url,
-        viewer_count,
-        game_id,
-        games:game_id(name, cover_url),
-        created_at
-      `)
-      .eq('user_id', userData.user.id)
-      .eq('is_live', true)
-      .maybeSingle();
-
-    if (activeError) throw activeError;
-
-    // If active stream exists, return it
-    if (activeStream) {
-      return { data: activeStream, error: null };
-    }
-
-    // Otherwise, get or create a default stream
-    const { data: existingStream, error: existingError } = await supabase
-      .from('streams')
-      .select(`
-        id, 
-        title, 
-        description, 
-        user_id, 
-        is_live, 
-        started_at, 
-        ended_at,
-        stream_key,
-        rtmp_url,
-        stream_path,
-        thumbnail_url,
-        viewer_count,
-        game_id,
-        games:game_id(name, cover_url),
-        created_at
-      `)
-      .eq('user_id', userData.user.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (existingError) throw existingError;
-
-    // If a previous stream exists, return it
-    if (existingStream) {
-      return { data: existingStream, error: null };
-    }
-
-    // Otherwise, create a new stream
-    return await createStream({
-      title: `${userData.user.user_metadata?.username || 'User'}'s Stream`,
-      description: 'Welcome to my Clipt stream!'
-    });
-  } catch (error) {
-    console.error("Error getting user stream:", error);
-    return { data: null, error: error as Error };
-  }
-};
-
-/**
- * Start a stream
- */
-export const startStream = async (streamId: string): Promise<StreamResponse> => {
-  try {
-    const { data, error } = await supabase
-      .from('streams')
-      .update({
-        is_live: true,
-        started_at: new Date().toISOString(),
-        ended_at: null
-      })
-      .eq('id', streamId)
-      .select()
-      .single();
-
+    await currentUser();
+    const { error } = await supabase.functions.invoke('oauth', { body: { action, streamId } });
     if (error) throw error;
+    // Initializing ingestion is not proof that video is live. Read the backend state.
+    return getStreamById(streamId);
+  } catch (error) { return failure(error); }
+}
+export const startStream = (streamId: string) => lifecycle(streamId, 'initialize_stream');
+export const endStream = (streamId: string) => lifecycle(streamId, 'end_stream');
 
-    return { data, error: null };
-  } catch (error) {
-    console.error("Error starting stream:", error);
-    return { data: null, error: error as Error };
-  }
-};
-
-/**
- * End a stream
- */
-export const endStream = async (streamId: string): Promise<StreamResponse> => {
+export async function updateStream(streamId: string, updates: Partial<StreamMetadata>): Promise<StreamResponse> {
   try {
-    const { data, error } = await supabase
-      .from('streams')
-      .update({
-        is_live: false,
-        ended_at: new Date().toISOString()
-      })
-      .eq('id', streamId)
-      .select()
-      .single();
-
+    const user = await currentUser();
+    const metadata: Partial<StreamMetadata> = {};
+    for (const key of ['title', 'description', 'thumbnail_url'] as const) {
+      if (updates[key] !== undefined) metadata[key] = updates[key];
+    }
+    const { data, error } = await supabase.from('streams').update(metadata).eq('id', streamId).eq('user_id', user.id).select(publicFields).single();
     if (error) throw error;
-
     return { data, error: null };
-  } catch (error) {
-    console.error("Error ending stream:", error);
-    return { data: null, error: error as Error };
-  }
-};
+  } catch (error) { return failure(error); }
+}
 
-/**
- * Update stream metadata
- */
-export const updateStream = async (streamId: string, updates: Partial<Stream>): Promise<StreamResponse> => {
+export async function regenerateStreamKey(_streamId: string): Promise<StreamResponse<StreamCredentials>> {
+  // A local random value cannot rotate a real provider's ingest credential.
+  return failure(new Error('Provider-backed stream key rotation is not configured'));
+}
+
+export async function getActiveStreams(limit = 10, page = 0): Promise<StreamResponse<{ streams: Stream[]; total: number; page: number; limit: number; hasMore: boolean }>> {
   try {
-    const { data, error } = await supabase
-      .from('streams')
-      .update(updates)
-      .eq('id', streamId)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return { data, error: null };
-  } catch (error) {
-    console.error("Error updating stream:", error);
-    return { data: null, error: error as Error };
-  }
-};
-
-/**
- * Regenerate stream key
- */
-export const regenerateStreamKey = async (streamId: string): Promise<StreamResponse> => {
-  try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) {
-      throw new Error('You must be logged in to regenerate a stream key');
-    }
-
-    // First, directly call the RPC function
-    const { data: newKey, error: rpcError } = await supabase.rpc('generate_stream_key');
-    
-    if (rpcError) {
-      console.error("Error calling RPC function:", rpcError);
-      throw rpcError;
-    }
-    
-    if (!newKey) {
-      throw new Error('Failed to generate new stream key');
-    }
-    
-    console.log("Successfully generated new key:", newKey);
-    
-    // Then update the stream with the new key
-    const { data, error } = await supabase
-      .from('streams')
-      .update({ stream_key: newKey })
-      .eq('id', streamId)
-      .eq('user_id', userData.user.id) // Ensure user only updates own stream
-      .select('id, stream_key')
-      .single();
-
-    if (error) {
-      console.error("Error updating stream with new key:", error);
-      throw error;
-    }
-
-    return { data: { stream_key: newKey }, error: null };
-  } catch (error) {
-    console.error("Error regenerating stream key:", error);
-    return { data: null, error: error as Error };
-  }
-};
-
-/**
- * Get active streams
- */
-export const getActiveStreams = async (limit = 10, page = 0): Promise<StreamResponse> => {
-  try {
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100 || !Number.isSafeInteger(page) || page < 0) throw new Error('Invalid pagination');
     const offset = page * limit;
-    
-    const { data, error, count } = await supabase
-      .from('streams')
-      .select(`
-        id, 
-        title, 
-        description, 
-        user_id,
-        profiles:user_id(username, avatar_url),
-        is_live, 
-        started_at,
-        thumbnail_url,
-        viewer_count,
-        game_id,
-        games:game_id(name, cover_url)
-      `, { count: 'exact' })
-      .eq('is_live', true)
-      .order('viewer_count', { ascending: false })
-      .range(offset, offset + limit - 1);
-
+    const { data, error, count } = await supabase.from('streams').select(publicFields, { count: 'exact' })
+      .eq('is_live', true).order('viewer_count', { ascending: false }).order('id').range(offset, offset + limit - 1);
     if (error) throw error;
-
-    return { 
-      data: { 
-        streams: data,
-        total: count,
-        page,
-        limit,
-        hasMore: (offset + limit) < (count || 0)
-      }, 
-      error: null 
-    };
-  } catch (error) {
-    console.error("Error getting active streams:", error);
-    return { data: null, error: error as Error };
-  }
-};
+    return { data: { streams: data ?? [], total: count ?? 0, page, limit, hasMore: offset + limit < (count ?? 0) }, error: null };
+  } catch (error) { return failure(error); }
+}

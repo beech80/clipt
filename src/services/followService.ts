@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 interface FollowResponse {
-  data: any | null;
+  data: unknown;
   error: Error | null;
   followed?: boolean;
 }
@@ -15,6 +15,9 @@ interface FollowResponse {
  */
 const toggleFollow = async (followerUserId: string, targetUserId: string): Promise<FollowResponse> => {
   try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+    if (!user || user.id !== followerUserId) throw new Error('Sign in as the follower to change follow status');
     if (!followerUserId || !targetUserId) {
       console.error("Missing IDs:", { follower: followerUserId, target: targetUserId });
       throw new Error("Both follower and target user IDs are required");
@@ -40,26 +43,6 @@ const toggleFollow = async (followerUserId: string, targetUserId: string): Promi
     if (checkError && checkError.code !== 'PGRST116') {
       // Error other than "no rows returned"
       console.error("Error checking follow status:", checkError);
-      
-      // Handle "relation does not exist" error by creating the table
-      if (checkError.message?.includes("relation") && checkError.message?.includes("does not exist")) {
-        console.log("Follows table may not exist, attempting to create it");
-        try {
-          // Create follows table if it doesn't exist
-          const { error: createError } = await supabase.rpc('create_follows_table_if_not_exists');
-          
-          if (createError) {
-            console.error("Failed to create follows table:", createError);
-            throw createError;
-          }
-          
-          // Try operation again after creating table
-          return toggleFollow(followerUserId, targetUserId);
-        } catch (createTableError) {
-          console.error("Error creating follows table:", createTableError);
-          throw createTableError;
-        }
-      }
       
       throw checkError;
     }

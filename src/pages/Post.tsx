@@ -14,6 +14,14 @@ import { CommentList } from "@/components/post/CommentList";
 const Post = () => {
   const { id } = useParams();
   const location = useLocation();
+  const [showComments, setShowComments] = useState(false);
+  const commentsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (location.hash !== '#comments') return;
+    setShowComments(true);
+    const timer = setTimeout(() => commentsRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
+    return () => clearTimeout(timer);
+  }, [location.hash]);
 
   const { data: post, isLoading, error } = useQuery({
     queryKey: ['post', id],
@@ -112,22 +120,6 @@ const Post = () => {
     month: 'long',
     day: 'numeric'
   });
-
-  const [showComments, setShowComments] = useState(false);
-  const commentsRef = useRef<HTMLDivElement>(null);
-
-  // Check if URL has #comments hash on load
-  useEffect(() => {
-    if (location.hash === '#comments') {
-      setShowComments(true);
-      // Add slight delay to ensure DOM is ready
-      setTimeout(() => {
-        if (commentsRef.current) {
-          commentsRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 300);
-    }
-  }, [location.hash]);
 
   return (
     <>

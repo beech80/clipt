@@ -5,6 +5,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import type { Json } from "@/integrations/supabase/types";
+
+function rewardPoints(value: Json | undefined): number {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return 0;
+  return typeof value.points === 'number' && Number.isFinite(value.points) ? Math.max(0, value.points) : 0;
+}
 
 export const AchievementProgress = () => {
   const { user } = useAuth();
@@ -81,10 +87,10 @@ export const AchievementProgress = () => {
                     <div>
                       <h4 className="font-medium">{p.achievement?.name}</h4>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        {p.achievement?.reward_value?.points > 0 && (
+                        {rewardPoints(p.achievement?.reward_value) > 0 && (
                           <div className="flex items-center gap-1">
                             <Star className="w-4 h-4" />
-                            <span>{p.achievement?.reward_value.points} points</span>
+                            <span>{rewardPoints(p.achievement?.reward_value)} points</span>
                           </div>
                         )}
                       </div>

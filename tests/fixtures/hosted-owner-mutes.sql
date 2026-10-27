@@ -1,0 +1,34 @@
+BEGIN;
+DO $test$
+DECLARE a uuid:=gen_random_uuid(); b uuid:=gen_random_uuid(); n integer; denied boolean;
+BEGIN
+ INSERT INTO auth.users(id,aud,role) VALUES(a,'authenticated','authenticated'),(b,'authenticated','authenticated');
+ INSERT INTO public.profiles(id) VALUES(a),(b) ON CONFLICT(id) DO NOTHING;
+ PERFORM set_config('request.jwt.claim.sub',a::text,true);
+ PERFORM set_config('request.jwt.claims',json_build_object('sub',a,'role','authenticated','aal','aal1')::text,true);
+ EXECUTE 'SET LOCAL ROLE authenticated';
+ INSERT INTO public.user_mutes(owner_id,muted_id) VALUES(a,b);
+ SELECT count(*) INTO n FROM public.user_mutes WHERE owner_id=a;
+ IF n<>1 THEN RAISE EXCEPTION 'Owner mute read failed'; END IF;
+ denied:=false;BEGIN INSERT INTO public.user_mutes(owner_id,muted_id) VALUES(a,a);EXCEPTION WHEN check_violation THEN denied:=true;END;
+ IF NOT denied THEN RAISE EXCEPTION 'Self mute accepted'; END IF;
+ EXECUTE 'RESET ROLE';
+ PERFORM set_config('request.jwt.claim.sub',b::text,true);
+ PERFORM set_config('request.jwt.claims',json_build_object('sub',b,'role','authenticated','aal','aal1')::text,true);
+ EXECUTE 'SET LOCAL ROLE authenticated';
+ SELECT count(*) INTO n FROM public.user_mutes WHERE owner_id=a;
+ IF n<>0 THEN RAISE EXCEPTION 'Foreign mute leaked'; END IF;
+ DELETE FROM public.user_mutes WHERE owner_id=a; GET DIAGNOSTICS n=ROW_COUNT;
+ IF n<>0 THEN RAISE EXCEPTION 'Foreign delete accepted'; END IF;
+ denied:=false;BEGIN INSERT INTO public.user_mutes(owner_id,muted_id) VALUES(a,b);EXCEPTION WHEN insufficient_privilege THEN denied:=true;END;
+ IF NOT denied THEN RAISE EXCEPTION 'Foreign insert accepted'; END IF;
+ EXECUTE 'RESET ROLE';
+ EXECUTE 'SET LOCAL ROLE anon';denied:=false;
+ BEGIN PERFORM 1 FROM public.user_mutes;EXCEPTION WHEN insufficient_privilege THEN denied:=true;END;
+ IF NOT denied THEN RAISE EXCEPTION 'Anonymous read accepted'; END IF;
+ EXECUTE 'RESET ROLE';
+ DELETE FROM public.profiles WHERE id=b;
+ IF EXISTS(SELECT 1 FROM public.user_mutes WHERE owner_id=a) THEN RAISE EXCEPTION 'Deleted target mute retained'; END IF;
+END;$test$;
+ROLLBACK;
+SELECT 'PASS: owner mute privacy, foreign/anonymous denial, self-mute validation and target deletion cleanup; fixtures rolled back' AS result;

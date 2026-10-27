@@ -50,24 +50,26 @@ export default function ClipPage() {
       
       const { data, error } = await supabase
         .from('stream_clips')
-        .select(`
-          *,
-          stream:stream_id (title, user_id, thumbnail_url),
-          user:user_id (username, display_name, avatar_url)
-        `)
+        .select('*')
         .eq('id', id)
         .single();
         
       if (error) throw error;
       if (!data) throw new Error("Clip not found");
       
-      return data as StreamClip;
+      const [streamResult, profileResult] = await Promise.all([
+        supabase.from('streams').select('title, user_id, thumbnail_url').eq('id', data.stream_id).maybeSingle(),
+        supabase.from('profiles').select('username, display_name, avatar_url').eq('id', data.user_id).maybeSingle(),
+      ]);
+      if (streamResult.error) throw streamResult.error;
+      if (profileResult.error) throw profileResult.error;
+      return { ...data, clip_url: data.url,
+        stream: streamResult.data ?? { title: 'Unavailable stream', user_id: data.user_id, thumbnail_url: null },
+        user: profileResult.data ?? { username: 'Deleted user', display_name: null, avatar_url: null },
+      };
     },
     enabled: !!id,
     retry: 1,
-    onError: (err) => {
-      console.error("Error loading clip:", err);
-    }
   });
   
   // Check if user has liked this clip
@@ -99,13 +101,10 @@ export default function ClipPage() {
         .insert({
           clip_id: clip.id,
           user_id: user?.id || null,
-          ip_hash: 'anonymous', // In a real app, you would hash the IP
-          created_at: new Date().toISOString()
+          viewed_at: new Date().toISOString()
         });
         
-      // Update view count
-      await supabase
-        .rpc('increment_clip_views', { clip_id: clip.id });
+      // The database trigger updates the aggregate from the view record.
     };
     
     recordView();
@@ -122,23 +121,21 @@ export default function ClipPage() {
     try {
       if (isLiked) {
         // Unlike
-        await supabase
+        const { error } = await supabase
           .from('clip_likes')
           .delete()
           .match({ clip_id: clip.id, user_id: user.id });
           
-        await supabase
-          .rpc('decrement_clip_likes', { clip_id: clip.id });
+        if (error) throw error;
           
         setIsLiked(false);
       } else {
         // Like
-        await supabase
+        const { error } = await supabase
           .from('clip_likes')
           .insert({ clip_id: clip.id, user_id: user.id });
           
-        await supabase
-          .rpc('increment_clip_likes', { clip_id: clip.id });
+        if (error) throw error;
           
         setIsLiked(true);
       }
@@ -204,7 +201,7 @@ export default function ClipPage() {
         
         <div className="bg-black rounded-lg overflow-hidden mb-4">
           <video
-            src={clip.clip_url || `https://stream.clipt.app/clips/${clip.id}`}
+            src={clip.clip_url}
             poster={clip.thumbnail_url || clip.stream.thumbnail_url}
             controls
             autoPlay
@@ -217,7 +214,7 @@ export default function ClipPage() {
         
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Link to={`/profile/${clip.user.username}`} className="flex items-center gap-2">
+            <Link to={`/user/${clip.user_id}`} className="flex items-center gap-2">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={clip.user.avatar_url || undefined} alt={displayName} />
                 <AvatarFallback>{displayName.substring(0, 2).toUpperCase()}</AvatarFallback>

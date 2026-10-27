@@ -2,12 +2,13 @@ import * as React from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, metadata?: { [key: string]: any }) => Promise<void>;
+  signUp: (email: string, password: string, metadata?: Record<string, unknown>) => Promise<{ requiresEmailConfirmation: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<void>;
@@ -18,7 +19,7 @@ const AuthContext = React.createContext<AuthContextType>({
   user: null,
   loading: true,
   signIn: async () => {},
-  signUp: async () => {},
+  signUp: async () => { throw new Error('Authentication provider unavailable'); },
   signOut: async () => {},
   resetPassword: async () => {},
   resendVerificationEmail: async () => {},
@@ -27,21 +28,33 @@ const AuthContext = React.createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = React.useState<User | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const queryClient = useQueryClient();
 
   React.useEffect(() => {
     let mounted = true;
+    let authRevision = 0;
+    let previousUserId: string | null = null;
+    const acceptSession = (nextUser: User | null) => {
+      if (!mounted) return;
+      if (previousUserId !== (nextUser?.id ?? null)) {
+        queryClient.clear();
+        previousUserId = nextUser?.id ?? null;
+      }
+      setUser(nextUser);
+      setLoading(false);
+    };
 
     // Get initial session
     const getInitialSession = async () => {
+      const revision = authRevision;
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (mounted) {
-          setUser(session?.user ?? null);
-          setLoading(false);
+        if (mounted && revision === authRevision) {
+          acceptSession(session?.user ?? null);
         }
       } catch (error) {
         console.error('Error getting initial session:', error);
-        if (mounted) {
+        if (mounted && revision === authRevision) {
           setLoading(false);
         }
       }
@@ -50,10 +63,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     getInitialSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (mounted) {
-        setUser(session?.user ?? null);
-        setLoading(false);
+        authRevision += 1;
+        acceptSession(session?.user ?? null);
+        // Retry caller-scoped reads after the provider upgrades this session.
+        // This event is not an authorization substitute; RLS still decides.
+        if (event === 'MFA_CHALLENGE_VERIFIED') void queryClient.invalidateQueries();
       }
     });
 
@@ -61,7 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [queryClient]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -73,18 +89,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
       if (!data.user) throw new Error('No user returned from sign in');
 
-      // Create profile if it doesn't exist
-      await ensureUserProfile(data.user);
+      // The existing database Auth trigger owns profile initialization.
+      // Signing in must not manufacture profile data or perform an upsert.
       
       toast.success('Successfully signed in!');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Sign in error:', error);
-      toast.error(error.message);
+      toast.error(error instanceof Error ? error.message : 'Authentication request failed.');
       throw error;
     }
   };
 
-  const signUp = async (email: string, password: string, metadata?: { [key: string]: any }) => {
+  const signUp = async (email: string, password: string, metadata?: Record<string, unknown>) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
@@ -100,35 +116,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error('Account already exists');
       }
 
-      toast.success('Account created successfully! Please check your email to verify your account.');
-    } catch (error: any) {
+      if (!data.user) throw new Error('No user returned from signup');
+      return { requiresEmailConfirmation: !data.session };
+    } catch (error) {
       console.error('Sign up error:', error);
-      toast.error(error.message);
+      toast.error(error instanceof Error ? error.message : 'Authentication request failed.');
       throw error;
     }
   };
 
-  const signOut = async () => {
+  const signOut = React.useCallback(async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      queryClient.clear();
       toast.success('Successfully signed out!');
       
       // Redirect to login page
       window.location.href = '/login';
-    } catch (error: any) {
+    } catch (error) {
       console.error('Sign out error:', error);
-      toast.error(error.message);
+      toast.error(error instanceof Error ? error.message : 'Authentication request failed.');
+      throw error;
     }
-  };
+  }, [queryClient]);
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase());
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo: `${window.location.origin}/update-password`,
+      });
       if (error) throw error;
-      toast.success('Password reset instructions sent to your email!');
-    } catch (error: any) {
+      toast.success('If an account exists, a reset link has been requested. Check your inbox.');
+    } catch (error) {
       console.error('Reset password error:', error);
-      toast.error(error.message);
+      toast.error(error instanceof Error ? error.message : 'Authentication request failed.');
       throw error;
     }
   };
@@ -138,65 +160,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: email.trim().toLowerCase(),
+        options: { emailRedirectTo: `${window.location.origin}/login` },
       });
       if (error) throw error;
-      toast.success('Verification email resent!');
-    } catch (error: any) {
-      console.error('Resend verification error:', error);
-      toast.error(error.message);
-      throw error;
-    }
-  };
-
-  // Helper function to ensure a user profile exists
-  const ensureUserProfile = async (user: User) => {
-    if (!user) return;
-    
-    try {
-      // Check if profile exists
-      const { data: existingProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .single();
-      
-      if (profileError || !existingProfile) {
-        console.log('Creating new profile for user:', user.id);
-        
-        // Default username from email or a random one
-        const username = user.email 
-          ? user.email.split('@')[0] 
-          : `user_${Math.random().toString(36).substring(2, 10)}`;
-        
-        // Create a new profile
-        const { error: createError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            username,
-            display_name: user.user_metadata?.name || username,
-            bio: 'Welcome to my Clipt profile!',
-            avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.id}`,
-            followers: 0,
-            following: 0,
-            achievements: 0,
-            created_at: new Date().toISOString()
-          });
-          
-        if (createError) {
-          console.error('Error creating profile:', createError);
-        } else {
-          // Create default achievements for the new user
-          try {
-            const { achievementService } = await import('@/services/achievementService');
-            await achievementService.createDefaultAchievementsForUser(user.id);
-          } catch (err) {
-            console.error('Error creating default achievements:', err);
-          }
-        }
-      }
+      toast.success('Verification request accepted. Check your inbox; delivery is not yet verified.');
     } catch (error) {
-      console.error('Error ensuring user profile:', error);
+      console.error('Resend verification error:', error);
+      toast.error(error instanceof Error ? error.message : 'Authentication request failed.');
+      throw error;
     }
   };
 
@@ -210,7 +181,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       resetPassword,
       resendVerificationEmail,
     }),
-    [user, loading]
+    [user, loading, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

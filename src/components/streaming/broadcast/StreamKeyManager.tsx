@@ -1,48 +1,41 @@
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Copy, RefreshCw, AlertCircle } from 'lucide-react';
-import { getStreamById, regenerateStreamKey } from '@/services/streamService';
+import { Eye, EyeOff, Copy, AlertCircle } from 'lucide-react';
+import { getStreamCredentials } from '@/services/streamService';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface StreamKeyManagerProps {
   streamId: string;
 }
 
 export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
+  const { user } = useAuth();
   const [showKey, setShowKey] = useState(false);
 
   const { data: streamData, refetch, isLoading, error } = useQuery({
-    queryKey: ['stream-key', streamId],
+    queryKey: ['stream-key', user?.id, streamId],
+    enabled: Boolean(user && streamId),
+    gcTime: 0,
+    retry: false,
     queryFn: async () => {
-      const { data, error } = await getStreamById(streamId);
+      const { data, error } = await getStreamCredentials(streamId);
       if (error) throw error;
       return data;
     },
   });
 
-  const regenerateKeyMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await regenerateStreamKey(streamId);
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      refetch();
-      toast.success('Stream key regenerated successfully');
-    },
-    onError: (error) => {
-      console.error('Failed to regenerate stream key:', error);
-      toast.error('Failed to regenerate stream key');
-    },
-  });
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard');
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Copied to clipboard');
+    } catch {
+      toast.error('Clipboard access failed');
+    }
   };
 
   if (isLoading) {
@@ -76,17 +69,19 @@ export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label>RTMP URL</Label>
+          <Label htmlFor="stream-ingest-url">RTMP URL</Label>
           <div className="flex gap-2">
             <Input
-              value={streamData.rtmp_url || 'rtmp://stream.clipt.app/live'}
+              id="stream-ingest-url"
+              value={streamData.rtmp_url}
               readOnly
               type="text"
             />
             <Button
               variant="outline"
               size="icon"
-              onClick={() => copyToClipboard(streamData.rtmp_url || 'rtmp://stream.clipt.app/live')}
+              onClick={() => copyToClipboard(streamData.rtmp_url)}
+              aria-label="Copy ingest URL"
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -94,9 +89,10 @@ export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
         </div>
 
         <div className="space-y-2">
-          <Label>Stream Key</Label>
+          <Label htmlFor="stream-ingest-key">Stream Key</Label>
           <div className="flex gap-2">
             <Input
+              id="stream-ingest-key"
               value={streamData.stream_key || ''}
               type={showKey ? 'text' : 'password'}
               readOnly
@@ -105,6 +101,7 @@ export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
               variant="outline"
               size="icon"
               onClick={() => setShowKey(!showKey)}
+              aria-label={showKey ? 'Hide stream key' : 'Show stream key'}
             >
               {showKey ? (
                 <EyeOff className="h-4 w-4" />
@@ -116,6 +113,7 @@ export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
               variant="outline"
               size="icon"
               onClick={() => copyToClipboard(streamData.stream_key || '')}
+              aria-label="Copy stream key"
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -123,17 +121,19 @@ export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
         </div>
 
         <div className="space-y-2">
-          <Label>Stream URL (for viewers)</Label>
+          <Label htmlFor="stream-viewer-url">Stream URL (for viewers)</Label>
           <div className="flex gap-2">
             <Input
-              value={`https://clipt.app/live/${streamData.stream_path || streamData.id}`}
+              id="stream-viewer-url"
+              value={`${window.location.origin}/streaming/${streamData.id}`}
               readOnly
               type="text"
             />
             <Button
               variant="outline"
               size="icon"
-              onClick={() => copyToClipboard(`https://clipt.app/live/${streamData.stream_path || streamData.id}`)}
+              onClick={() => copyToClipboard(`${window.location.origin}/streaming/${streamData.id}`)}
+              aria-label="Copy viewer URL"
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -144,23 +144,17 @@ export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
           <p className="flex items-start">
             <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
             <span>
-              Warning: Regenerating your stream key will disconnect any active broadcasts. Only do this if you believe your key has been compromised.
+              Keep your stream key private. Provider-backed key rotation is not available in Clipt yet.
             </span>
           </p>
         </div>
 
         <Button
           variant="secondary"
-          onClick={() => regenerateKeyMutation.mutate()}
-          disabled={regenerateKeyMutation.isPending}
+          disabled
           className="w-full"
         >
-          {regenerateKeyMutation.isPending ? (
-            <span className="animate-spin h-4 w-4 mr-2 border-2 border-current border-t-transparent rounded-full"></span>
-          ) : (
-            <RefreshCw className="h-4 w-4 mr-2" />
-          )}
-          Regenerate Stream Key
+          Key rotation unavailable
         </Button>
       </div>
     </Card>

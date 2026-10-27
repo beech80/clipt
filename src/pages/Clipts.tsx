@@ -1,268 +1,159 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { RefreshCw } from "lucide-react";
-import PostItem from "@/components/PostItem";
-import { Post } from "@/types/post"; 
-import { Button } from "@/components/ui/button";
-import { BackButton } from "@/components/ui/back-button";
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import PostItem from '@/components/PostItem';
+import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+import { EngagementHud } from '@/components/post/EngagementHud';
+import { RefreshCw, Clapperboard, UsersRound } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import './clipt-console.css';
+import { usePortraitSwipe } from '@/hooks/usePortraitSwipe';
+import {publishingSnapshot,subscribePublishing} from '@/lib/publishing-status';
 
-// Define an extended type that includes our runtime properties
-// This allows us to match the expected structure while adding our own properties
-type ExtendedPost = Post & {
-  trophy_count?: number;
-  profiles?: {
-    username: string;
-    display_name: string;
-    avatar_url: string | null;
-  };
-  games?: {
-    id: string;
-    name: string;
-  }[];
-};
-
-const Clipts = () => {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [rawPosts, setRawPosts] = useState<ExtendedPost[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Direct fetch function - simplified based on what worked previously
-  const fetchPostsDirectly = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      console.log('Fetching video posts from tat123 only');
-      
-      // Query for ONLY posts with videos from tat123
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          content,
-          image_url,
-          video_url,
-          user_id,
-          created_at,
-          post_type,
-          is_published,
-          profiles (
-            username,
-            display_name, 
-            avatar_url
-          ),
-          games (
-            id,
-            name
-          )
-        `)
-        .not('video_url', 'is', null)
-        .not('video_url', 'eq', '')
-        .eq('is_published', true)
-        .eq('profiles.username', 'tat123')
-        .limit(50);
-        
-      if (error) {
-        console.error('Error fetching posts:', error);
-        setError(`Database error: ${error.message}`);
-        setIsLoading(false);
-        return;
+const PAGE_SIZE = 20;
+const MEDIA_FILTER = 'and(video_url.not.is.null,video_url.neq.),and(image_url.not.is.null,image_url.neq.)';
+export default function Clipts() {
+  const { user } = useAuth();
+  const publishingState=useSyncExternalStore(subscribePublishing,publishingSnapshot,()=>null);
+  const publishing=publishingState?.owner===user?.id?publishingState:null;
+  const [hiddenPublishing,setHiddenPublishing]=useState('');
+  const [feed, setFeed] = useState('clipts');
+  useEffect(() => {
+    const toggle = () => setFeed(current => current === 'squad' ? 'clipts' : 'squad');
+    window.addEventListener('clipt:toggle-feed', toggle);
+    return () => window.removeEventListener('clipt:toggle-feed', toggle);
+  }, []);
+  const muted=useQuery({queryKey:['muted-creators',user?.id],enabled:!!user,retry:false,queryFn:async()=>{
+    const ids:string[]=[];
+    for(let offset=0;;offset+=500){const {data,error}=await supabase.from('user_mutes').select('muted_id').eq('owner_id',user!.id).order('muted_id').range(offset,offset+499);if(error)throw error;ids.push(...data.map(x=>x.muted_id));if(data.length<500)return ids;}
+  }});
+  const following = useQuery({
+    queryKey: ['squad-following', user?.id], enabled: feed === 'squad' && Boolean(user), retry: false,
+    queryFn: async ({ signal }) => {
+      const ids: string[] = [];
+      for (let offset = 0; ; offset += 500) {
+        const { data, error } = await supabase.from('follows').select('following_id')
+          .eq('follower_id', user!.id).order('following_id').range(offset, offset + 499).abortSignal(signal).retry(false);
+        if (error) throw error;
+        ids.push(...data.map(row => row.following_id));
+        if (data.length < 500) return ids;
       }
-      
-      console.log(`Query returned ${data?.length || 0} video posts from tat123`);
-      
-      if (!data || data.length === 0) {
-        console.log('No video posts found from tat123');
-        setIsLoading(false);
-        return;
-      }
-      
-      // Process only posts with videos from tat123
-      const processedPosts = data
-        .filter(post => post.video_url && post.video_url.trim() !== '')
-        .map(async post => {
-          // Fetch trophy count for each post
-          const { count: trophyCount, error: trophyError } = await supabase
-            .from('clip_votes')
-            .select('*', { count: 'exact', head: true })
-            .eq('post_id', post.id);
-            
-          if (trophyError) {
-            console.error(`Error fetching trophy count for post ${post.id}:`, trophyError);
-          }
-          
-          return {
-            id: post.id,
-            content: post.content || "",
-            image_url: post.image_url,
-            video_url: post.video_url,
-            user_id: post.user_id,
-            created_at: post.created_at,
-            profiles: post.profiles || {
-              username: "tat123",
-              display_name: "tat123",
-              avatar_url: null
-            },
-            games: post.games || [],
-            clip_votes: [{ count: trophyCount || 0 }],
-            is_published: true,
-            trophy_count: trophyCount || 0
-          };
+    },
+  });
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [engagementOpen, setEngagementOpen] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const { data, error, isPending, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } = useInfiniteQuery({
+    queryKey: ['clipts-feed', user?.id, feed, following.data, muted.data],
+    enabled: (!user || muted.isSuccess) && (feed === 'clipts' || Boolean(user && following.isSuccess)),
+    retry: false,
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      if (feed === 'squad' && !following.data?.length) return [];
+      let request = supabase.from('posts')
+        .select('id, content, image_url, video_url, user_id, created_at, is_published, is_premium, is_subscriber_only, post_type, profiles(username, display_name, avatar_url), games(id, name)')
+        .or(feed === 'squad' ? MEDIA_FILTER : `and(or(${MEDIA_FILTER}),or(post_type.is.null,post_type.neq.squad))`).eq('is_published', true)
+        .order('created_at', { ascending: false }).order('id', { ascending: false })
+        .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
+      if (feed === 'squad') request = request.in('user_id', following.data!);
+      if(user && muted.data?.length) request=request.not('user_id','in',`(${muted.data.join(',')})`);
+      const { data, error } = await request.retry(false);
+      if (error) throw error;
+      return data;
+    },
+    getNextPageParam: (lastPage, pages) => lastPage.length === PAGE_SIZE ? pages.length : undefined,
+  });
+  const uploadedPost=useQuery({queryKey:['published-home-post',user?.id,publishing?.postId],enabled:Boolean(user&&publishing?.stage==='complete'&&publishing.postId),retry:false,
+    queryFn:async({signal})=>{const {data,error}=await supabase.from('posts').select('id,content,image_url,video_url,user_id,created_at,is_published,is_premium,is_subscriber_only,post_type,profiles(username,display_name,avatar_url),games(id,name)')
+      .eq('id',publishing!.postId!).eq('user_id',user!.id).eq('is_published',true).abortSignal(signal).retry(false).maybeSingle();if(error)throw error;return data;}});
+  const basePosts=data?.pages.flat() || [];
+  const ownUploaded=publishing?.stage==='complete' && uploadedPost.data && (uploadedPost.data.post_type==='squad' ? feed==='squad' : feed==='clipts') ? uploadedPost.data:null;
+  const posts = user && !muted.isSuccess ? [] : [...new Map((ownUploaded?[ownUploaded,...basePosts]:basePosts).map(post => [post.id, post])).values()];
+  useEffect(()=>{if(publishing?.stage==='complete'){setFeed(publishing.destination);setActiveIndex(0);trackRef.current?.scrollTo({left:0,behavior:'instant'});}},[publishing?.id,publishing?.stage]);
+  const activePost = posts[activeIndex];
+  const swipePath = usePortraitSwipe(trackRef, posts.length > 0);
+  useEffect(() => {
+    setActiveIndex(0);
+    setEngagementOpen(false);
+    trackRef.current?.scrollTo({ left: 0, behavior: 'instant' });
+  }, [user?.id, feed]);
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const navigate = (event: Event) => {
+      if (document.querySelector('[data-sliding-panel][data-panel-size="full"]:not([data-state="closed"]), [role="dialog"]:not(.clipt-engagement-hud):not([data-sliding-panel]):not([data-state="closed"])')) return;
+      const direction = (event as CustomEvent<{ direction: number }>).detail?.direction;
+      if (direction !== -1 && direction !== 1) return;
+      const nextIndex = Math.max(0, Math.min(posts.length - 1, activeIndex + direction));
+      const slide = track.querySelector<HTMLElement>('[data-slide-index="' + nextIndex + '"]');
+      if (!slide) return;
+      track.scrollTo({ left: slide.offsetLeft - track.offsetLeft - (track.clientWidth - slide.clientWidth) / 2,
+        behavior: matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduce-motion') ? 'instant' : 'smooth' });
+    };
+    window.addEventListener('clipt:navigate', navigate);
+    return () => window.removeEventListener('clipt:navigate', navigate);
+  }, [activeIndex, posts.length]);
+  useEffect(() => {
+    if (posts.length && activeIndex >= posts.length - 3 && hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  }, [activeIndex, posts.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  return <main className="clipt-fyp" data-feed={feed}>
+    {publishing && hiddenPublishing!==publishing.id && <aside className="clipt-publishing-status" role={publishing.stage==='error'?'alert':'status'}>
+      {publishing.stage==='error'?<><strong>Upload needs attention</strong><p>{publishing.message}</p>{!publishing.uncertain&&<Link to="/new-post">Open posting</Link>}<Link to="/profile">Check my posts before retrying</Link></>:publishing.stage==='complete'?<><strong>{uploadedPost.data?'Your post is ready below.':'Upload saved.'}</strong>{!uploadedPost.data&&<p>It will appear after any required safety review. <button onClick={()=>void uploadedPost.refetch()}>Check again</button></p>}</>:<><strong>{publishing.stage==='uploading'?'Uploading your post…':publishing.stage==='reward'?'Post saved. Checking Token reward…':'Publishing your post…'}</strong><p>Keep CLIPT open until this finishes. You can watch while it uploads.</p></>}
+      {['complete','error'].includes(publishing.stage)&&<button type="button" aria-label="Dismiss upload status" onClick={()=>setHiddenPublishing(publishing.id)}>Dismiss</button>}
+    </aside>}
+    <header className="clipt-fyp-header">
+      <h1 className="sr-only">Clipts</h1>
+      <Link to="/clipts" className="clipt-fyp-brand" aria-label="Clipt — For You home">CLIPT</Link>
+      <div className="clipt-fyp-header-actions">
+      <span className="clipt-fyp-counter" aria-live="polite">{posts.length ? activeIndex + 1 : 0} / {posts.length}{hasNextPage ? '+' : ''}</span>
+      <Button aria-label="Refresh clips" onClick={() => void refetch()} disabled={isFetching} size="icon" variant="ghost">
+        <RefreshCw className={isFetching ? 'animate-spin' : ''} />
+      </Button>
+      </div>
+    </header>
+    <Tabs value={feed} onValueChange={setFeed} className="clipt-feed-tabs"><TabsList aria-label="Choose Clipt feed"><TabsTrigger value="clipts" aria-label="Clipts" title="Clipts"><Clapperboard size={22} aria-hidden="true" /></TabsTrigger><TabsTrigger value="squad" aria-label="Squad" title="Squad"><UsersRound size={22} aria-hidden="true" /></TabsTrigger></TabsList></Tabs>
+    {feed === 'squad' && !user ? <p className="clipt-feed-state"><Link to="/login">Sign in to see your Squad.</Link></p> : following.isError && feed === 'squad' ? <div className="clipt-feed-state" role="alert">Your following list could not be loaded. <Button onClick={() => void following.refetch()}>Retry Squad</Button></div> : isPending && <p role="status" className="clipt-feed-state">Loading Clipts…</p>}
+    {muted.isError && user && <div role="alert" className="clipt-feed-state"><p>Mute preferences could not be loaded. Feed paused.</p><Button onClick={()=>void muted.refetch()}>Retry mute preferences</Button></div>}
+    {error && <div role="alert" className="clipt-feed-state"><p>Could not load Clipts. Please try again.</p><Button onClick={() => void refetch()}>Retry</Button></div>}
+    {!isPending && !error && posts.length === 0 && <p className="clipt-feed-state">{feed === 'squad' ? 'No Squad clips yet. Follow creators to see their clips here.' : 'No clips yet. Be the first to share one.'}</p>}
+    {posts.length > 0 && <div ref={trackRef} className="clipt-fyp-track" data-horizontal-feed
+      role="region" aria-roledescription="carousel" aria-label="Clipts horizontal feed" tabIndex={0}
+      onKeyDown={event => {
+        if (event.target !== event.currentTarget || !['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) return;
+        event.preventDefault();
+        window.dispatchEvent(new CustomEvent('clipt:navigate', { detail: { direction: ['ArrowRight','ArrowDown'].includes(event.key) ? 1 : -1 } }));
+      }}
+      onScroll={() => {
+        const track = trackRef.current;
+        if (!track) return;
+        const midpoint = track.getBoundingClientRect().left + track.clientWidth / 2;
+        let closest = 0, distance = Infinity;
+        track.querySelectorAll<HTMLElement>('[data-slide-index]').forEach(slide => {
+          const rect = slide.getBoundingClientRect();
+          const candidate = Math.abs(rect.left + rect.width / 2 - midpoint);
+          if (candidate < distance) { distance = candidate; closest = Number(slide.dataset.slideIndex); }
         });
-      
-      console.log('Video posts from tat123 processed, waiting for trophy counts...');
-      
-      // Wait for all trophy count fetches to complete
-      const completedPosts = await Promise.all(processedPosts);
-      
-      // Only update state if we still have posts after filtering
-      if (completedPosts.length > 0) {
-        setRawPosts(completedPosts);
-        console.log('Posts with trophy counts:', completedPosts);
-      } else {
-        console.log('No valid video posts from tat123 after filtering');
-      }
-      
-      setIsLoading(false);
-    } catch (err) {
-      console.error('Exception fetching posts:', err);
-      setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Helper function for sample posts - REMOVED, no longer using sample posts
-  const getSamplePosts = useCallback(() => {
-    return [];
-  }, []);
-
-  // Function to manually refresh posts
-  const refreshPosts = useCallback(() => {
-    console.log("Manually refreshing posts...");
-    setRefreshKey(prev => prev + 1);
-    fetchPostsDirectly();
-  }, [fetchPostsDirectly]);
-
-  // Auto-refresh posts on load - with very short timeout
-  useEffect(() => {
-    console.log("Clipts page mounted - simplified version");
-    
-    // Set a shorter timeout (3 seconds)
-    const timeoutId = setTimeout(() => {
-      if (isLoading) {
-        console.log('Fetch timeout');
-        setIsLoading(false);
-      }
-    }, 3000);
-    
-    // Only fetch on first load or manual refresh
-    fetchPostsDirectly();
-    
-    return () => clearTimeout(timeoutId);
-  }, [fetchPostsDirectly, refreshKey]);
-
-  // Trophy count updates - now actively refreshes trophy counts
-  useEffect(() => {
-    const handleTrophyCountUpdate = async () => {
-      console.log('Trophy count update event received, refreshing trophy counts');
-      
-      // Refresh trophy counts for all displayed posts without changing the posts array
-      if (rawPosts.length > 0) {
-        const updatedPosts = await Promise.all(
-          rawPosts.map(async post => {
-            // Fetch updated trophy count
-            const { count: trophyCount } = await supabase
-              .from('clip_votes')
-              .select('*', { count: 'exact', head: true })
-              .eq('post_id', post.id);
-              
-            return {
-              ...post,
-              trophy_count: trophyCount || 0,
-              clip_votes: [{ count: trophyCount || 0 }]
-            };
-          })
-        );
-        
-        console.log('Updated trophy counts:', updatedPosts.map(p => ({ id: p.id, count: p.trophy_count })));
-        setRawPosts(updatedPosts);
-      }
-    };
-    
-    window.addEventListener('trophy-count-update', handleTrophyCountUpdate);
-    
-    return () => {
-      window.removeEventListener('trophy-count-update', handleTrophyCountUpdate);
-    };
-  }, [rawPosts]);
-
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="flex items-center justify-between p-4 fixed top-0 w-full z-10 bg-background/80 backdrop-blur-sm">
-        <BackButton />
-        <h1 className="text-xl font-bold text-primary">Clipts</h1>
-        <Button
-          onClick={refreshPosts}
-          size="icon"
-          variant="ghost"
-          className="text-primary"
-        >
-          <RefreshCw className={`h-5 w-5 ${refreshKey > 0 ? 'animate-spin' : ''}`} />
-        </Button>
-      </div>
-
-      <div className="container mx-auto px-4 py-24 max-w-2xl">
-        {isLoading && (
-          <div className="flex justify-center my-8">
-            <div className="animate-pulse">Loading videos...</div>
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-500/20 border border-red-500 text-white p-4 rounded-lg mb-6">
-            <h3 className="font-bold">Error:</h3>
-            <p>{error}</p>
-            <button 
-              onClick={() => fetchPostsDirectly()} 
-              className="mt-3 px-3 py-1 bg-purple-700 rounded text-white text-xs"
-            >
-              Try Again
-            </button>
-          </div>
-        )}
-
-        {/* Video posts */}
-        {!isLoading && rawPosts.length > 0 && (
-          <div className="space-y-6">
-            {rawPosts.map((post) => (
-              <div key={`post-${post.id}-${Math.random().toString(36).substring(2, 15)}`} className="mb-6 bg-card rounded-lg overflow-hidden">
-                <PostItem key={post.id} post={post} />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* If no results found */}
-        {!isLoading && rawPosts.length === 0 && !error && (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <p className="text-white/60">No videos found from tat123</p>
-              <button 
-                onClick={() => fetchPostsDirectly()} 
-                className="mt-3 px-3 py-1 bg-purple-700 rounded text-white text-xs"
-              >
-                Refresh
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default Clipts;
+        setActiveIndex(closest);
+      }}>
+      {posts.map((post, index) => <section key={post.id} className="clipt-fyp-slide" data-slide-index={index}
+        aria-label={'Clipt ' + (index + 1) + ' of ' + posts.length} aria-roledescription="slide">
+        {Math.abs(index - activeIndex) <= 1
+          ? <PostItem post={post} cinematic active={index === activeIndex} onOpenEngagement={() => setEngagementOpen(true)} />
+          : <div className="clipt-fyp-placeholder">Clipt {index + 1}</div>}
+      </section>)}
+      <div className="clipt-bottom-swipe-zone" aria-hidden="true" />
+    </div>}
+    <svg className="clipt-swipe-trail" aria-hidden="true"><path ref={swipePath} /></svg>
+    <Dialog open={engagementOpen && Boolean(activePost)} onOpenChange={setEngagementOpen} modal={false}>
+      {engagementOpen && activePost && <EngagementHud postId={activePost.id}
+        username={activePost.profiles?.username} caption={activePost.content} avatarUrl={activePost.profiles?.avatar_url} followFeed />}
+    </Dialog>
+    {hasNextPage && <Button className="m-4" onClick={() => void fetchNextPage()} disabled={isFetchingNextPage}>
+      {isFetchingNextPage ? 'Loading…' : 'Load more clips'}
+    </Button>}
+  </main>;
+}

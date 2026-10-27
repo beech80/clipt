@@ -1,11 +1,18 @@
 // Types for user profiles and achievements
+import type { Database } from '@/integrations/supabase/types';
+export type DatabaseProfile = Database['public']['Tables']['profiles']['Row'];
 
 export interface Profile {
+  banner_url?: string | null;
+  last_username_change?: string | null;
+  enable_notifications?: boolean;
+  enable_sounds?: boolean;
   id: string;
   username: string;
   display_name?: string;
   avatar_url?: string;
   bio?: string;
+  location?: string | null;
   website?: string;
   followers?: number;
   following?: number;

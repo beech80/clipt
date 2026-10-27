@@ -37,7 +37,10 @@ export const StreamOverlay = ({ userId }: StreamOverlayProps) => {
     const { error } = await supabase
       .from('custom_overlays')
       .upsert({
+        id: customOverlays?.find(overlay => overlay.type === 'basic')?.id,
         user_id: userId,
+        name: 'Stream overlay',
+        type: 'basic',
         settings: overlaySettings,
         is_active: true,
       });

@@ -1,0 +1,832 @@
+@import './clipt-immersion.css';
+
+.clipt-start {
+  /* Legacy mobile main rules force visible overflow; decorative planets must stay clipped. */
+  position: relative; isolation: isolate; overflow: hidden !important; min-height: calc(100dvh - 160px - env(safe-area-inset-bottom,0px));
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+  padding: 32px 20px; color: #f5f3ff; text-align: center;
+  background: radial-gradient(ellipse at 45% 65%, #5e16814d, transparent 55%), radial-gradient(ellipse at 75% 10%, #21469455, transparent 50%), #050713;
+}
+.clipt-start::before { content: ''; position: absolute; inset: 0; z-index: -1; opacity: .5;
+  background-image: radial-gradient(#c4b5fd 1px, transparent 1px), radial-gradient(#60a5fa 1px, transparent 1px);
+  background-size: 63px 77px, 127px 91px; background-position: 0 0, 19px 37px;
+}
+.clipt-wordmark { font-family: 'Press Start 2P', monospace; font-size: clamp(40px, 10vw, 96px); line-height: 1.4;
+  color: white; text-shadow: 3px 0 #c026d3, -3px 0 #818cf8, 0 0 24px #a855f7; margin: 0; }
+.clipt-eyebrow { font-size: 11px; letter-spacing: .24em; color: #c4b5fd; line-height: 1.8; }
+.clipt-start-tagline { letter-spacing: .16em; font-size: clamp(10px, 2.5vw, 16px); }
+.clipt-start .clipt-enter { min-width: 180px; min-height: 48px; border: 1px solid #d8b4fe; border-radius: 999px;
+  background: linear-gradient(135deg,#7e22ce,#4338ca); color: white; box-shadow: 0 0 24px #9333ea66; }
+.clipt-orbit { position: absolute; z-index: -1; pointer-events: none; width: min(64vw,340px); aspect-ratio: 1;
+  top: 50%; left: 50%; transform: translate(-50%,-63%); border: 1px solid #c4b5fd;
+  border-radius: 50%; opacity: .75;
+  background: radial-gradient(ellipse at 32% 24%,#a5b4fc55 0 5%,transparent 6%),
+    radial-gradient(ellipse at 38% 39%,#6366f177 0 13%,transparent 14%),
+    radial-gradient(ellipse at 64% 48%,#818cf855 0 12%,transparent 13%),
+    radial-gradient(ellipse at 59% 65%,#6366f177 0 8%,transparent 9%),
+    radial-gradient(circle at 32% 25%,#162760,#0c1030 55%,#02040d 78%);
+  box-shadow: inset -28px -22px 40px #02030dcc, inset 3px 2px 12px #c4b5fd88, 0 0 18px #8b5cf6, 0 0 65px #7e22ce66;
+}
+.clipt-orbit::before { content: ''; position: absolute; width: 2px; height: 90px; bottom: 100%; left: 50%;
+  background: linear-gradient(transparent,#c4b5fd,#fff); box-shadow: 0 0 18px #a855f7; }
+.clipt-start::after { content: ''; position: absolute; z-index: -1; pointer-events: none; width: min(150vw,1100px);
+  height: 180px; bottom: -145px; left: 50%; transform: translateX(-50%); border-radius: 50%;
+  border-top: 2px solid #a78bfa; background: #080b25; box-shadow: 0 -4px 30px #7c3aed99; }
+.clipt-start-tagline, .clipt-start .clipt-eyebrow { text-shadow: 0 2px 6px #02030d,0 0 16px #02030d; }
+.clipt-start-reference { background: linear-gradient(#03061133,#03061155),url('/img/clipt-start-reference-v1.png') center / cover no-repeat; gap: 18px; }
+.clipt-start-reference::before, .clipt-start-reference::after { display: none; }
+.clipt-start-reference .clipt-wordmark { font-family: 'Orbitron',sans-serif; font-weight: 900; font-size: clamp(64px,15vw,148px); letter-spacing: .04em; line-height: 1.1; text-shadow: 0 0 4px #fff,0 0 14px #e879f9,0 0 36px #9333ea,4px 3px 0 #7e22ce; }
+.clipt-start-reference .clipt-enter { border-radius: 18px; width: min(80vw,360px); font-size: 25px; min-height: 60px; background: linear-gradient(#17092bbf,#25095dbf); box-shadow: 0 0 6px #e9d5ff,0 0 24px #a855f7,inset 0 0 18px #9333ea80; }
+.clipt-start-reference .clipt-start-tagline { padding: 7px; color: #fff; text-shadow: 0 0 5px #030611,0 0 14px #030611; }
+@media(max-width:600px) { .clipt-start-reference { background-position: 50% center; } }
+.clipt-fyp { color: #f5f3ff; background: transparent; min-height: calc(100dvh - 160px - env(safe-area-inset-bottom,0px)); }
+.clipt-feed-tabs { display: flex; justify-content: center; padding: 4px 12px 12px; }
+.clipt-fyp-header h1.sr-only { border: 0; padding: 0; box-shadow: none; }
+.clipt-fyp-brand { grid-column: 2; }
+.clipt-watch-page { color: #f5f3ff; background: radial-gradient(ellipse at 15% 5%,#7e22ce55,transparent 60%),linear-gradient(145deg,#1b102d99,#090510cc); }
+.clipt-watch-content { max-width: min(520px,calc((100dvh - 420px) * 16 / 19 + 66px)); }
+.clipt-watch-page .gaming-card { border: 1px solid #a855f780; border-radius: 14px; overflow: hidden; }
+html.high-contrast .clipt-watch-page { background: #000; }
+.clipt-feed-tabs [role="tablist"] { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); width: min(100%,108px); height: auto; padding: 4px; border: 1px solid #a855f780; border-radius: 12px; background: linear-gradient(160deg,#282238,#080b16); box-shadow: inset 0 1px 0 #ffffff20,0 4px 12px #0009; }
+.clipt-feed-tabs [role="tab"] { min-height: 44px; color: #d8cfee; border-radius: 8px; }
+.clipt-feed-tabs [data-state="active"] { background: linear-gradient(160deg,#a855f7,#5b21b6 48%,#301354); color: #fff; box-shadow: inset 0 1px 1px #ffffff66,0 0 15px #9333ea66; }
+.clipt-feed-description { text-align: center; font-size: 11px; color: #d8cfee; padding: 4px 12px 10px; }
+.clipt-post-destinations { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.clipt-post-destinations legend { padding-bottom: 8px; }
+.clipt-post-destinations label { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-width: 0; min-height: 108px; padding: 8px 4px; border: 1px solid #8b5cf680; border-radius: 10px; background: linear-gradient(160deg,#232033,#090c18); box-shadow: inset 0 1px 0 #ffffff18,0 4px 8px #0006; cursor: pointer; text-align: center; }
+.clipt-post-destinations label[data-selected="true"] { border-color: #d8b4fe; background: linear-gradient(160deg,#8939d4,#3e1768); box-shadow: inset 0 1px 0 #ffffff40,0 0 16px #9333ea66; }
+.clipt-post-destinations label:has(input:disabled) { opacity: .65; cursor: not-allowed; }
+.clipt-post-destinations label:has(input:focus-visible) { outline: 3px solid #e9d5ff; outline-offset: 2px; }
+.clipt-post-destinations input { accent-color: #c084fc; width: 18px; height: 18px; }
+.clipt-post-destinations span { font-size: 10px; color: #e2d8f3; overflow-wrap: break-word; }
+.clipt-auth { color: #f5f3ff; background: transparent; }
+.clipt-auth-form { min-height: calc(100dvh - 160px - env(safe-area-inset-bottom,0px)); }
+.clipt-auth-form input::placeholder { color: #b9afd2; opacity: 1; }
+.clipt-achievement-catalog { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media(min-width:768px) { .clipt-achievement-catalog { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+.clipt-login {
+  box-sizing: border-box;
+  height: calc(100dvh - 160px - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: 24px 16px;
+  scroll-padding-block: 24px;
+}
+.clipt-login input::placeholder { color: #b9afd2; opacity: 1; }
+.clipt-fyp-header { height: 56px; padding: 8px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.clipt-fyp-header h1 { font-size: 14px; letter-spacing: .15em; font-weight: 700; }
+.clipt-fyp-counter { color: #d8b4fe; font-size: 12px; font-variant-numeric: tabular-nums; }
+.clipt-fyp-header { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 8px; padding-inline: 12px; }
+.clipt-fyp-header h1 { justify-self: start; min-width: 0; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clipt-fyp-brand { color: #fff; font-family: 'Orbitron',sans-serif; font-size: clamp(22px,5vw,32px); font-weight: 900; letter-spacing: .04em; text-shadow: 0 0 12px #a855f7,2px 1px #9333ea; }
+.clipt-fyp-header-actions { display: flex; align-items: center; justify-self: end; gap: 6px; }
+.clipt-fyp-counter { white-space: nowrap; font-size: clamp(9px,2.6vw,12px); }
+.clipt-fyp-track { display: flex; gap: 16px; overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scroll-padding-inline: 12px; padding: 0 12px 12px; scrollbar-width: thin;
+  height: calc(100dvh - 300px - env(safe-area-inset-bottom,0px)); min-height: 160px; touch-action: pan-x pan-y pinch-zoom; }
+.clipt-fyp-slide { flex: 0 0 88%; min-width: 0; scroll-snap-align: center; scroll-snap-stop: always; height: 100%; }
+.clipt-fyp-track { padding-inline: 6%; scroll-padding-inline: 6%; }
+.clipt-fyp-slide > article { height: 100%; display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid #a855f780; border-radius: 16px; background: #080d19; box-shadow: 0 0 18px #7c3aed25; }
+.clipt-cinematic-header { flex: 0 0 auto; }
+.clipt-cinematic-media { flex: 1 1 auto; min-height: 0; }
+.clipt-cinematic-media > div, .clipt-cinematic-media > div > div { height: 100%; }
+.clipt-cinematic-media .clipt-photo-frame { height: 100%; aspect-ratio: auto; }
+.clipt-cinematic-caption { flex: 0 0 auto; max-height: 90px; overflow-y: auto; }
+.clipt-cinematic-caption p { font-size: 14px; line-height: 1.5; }
+.clipt-fyp-placeholder { height: 100%; display: grid; place-items: center; border: 1px solid #44345d; border-radius: 16px; color: #b9afcf; }
+.clipt-feed-state { margin: 24px auto; padding: 24px; max-width: 560px; text-align: center; }
+body { padding-bottom: 0; }
+.clipt-engagement-hud[role="dialog"] { top: auto; bottom: calc(160px + env(safe-area-inset-bottom,0px)); transform: translateX(-50%);
+  width: min(calc(100vw - 16px),36rem);
+  max-height: calc(100dvh - 180px - env(safe-area-inset-bottom,0px)); overflow-y: auto; border-color: #a855f7; border-radius: 18px;
+  background: linear-gradient(160deg,#161326f5,#080d19fa); color: #f5f3ff; box-shadow: 0 0 35px #7c3aed44; }
+.clipt-engagement-metrics { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 4px; text-align: center; }
+.clipt-engagement-metrics span { display: block; color: #c4b5fd; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+@media(min-width:768px) {
+  .clipt-creator-header { padding: 12px !important; margin-bottom: 12px !important; }
+  .clipt-fyp-track { padding-inline: calc((100vw - min(70vw,900px))/2); scroll-padding-inline: calc((100vw - min(70vw,900px))/2); }
+  .clipt-fyp-slide { flex-basis: min(70vw,900px); }
+}
+@media(prefers-reduced-motion:reduce) { .clipt-fyp-track { scroll-behavior:auto; } }
+
+/* Shared console materials: decoration only, never substituted account data. */
+.clipt-masthead { display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; gap: 10px; min-height: 72px; padding: 10px 14px; border-bottom: 1px solid #a855f780; background: linear-gradient(90deg,#030611dd,#03061166,#030611dd),url('/img/clipt-start-reference-v1.png') center 44% / cover; }
+.clipt-screen-name { min-width: 0; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #f5f3ff; padding: 7px; border: 1px solid #c084fc; border-radius: 7px; box-shadow: 0 0 12px #9333ea66; overflow-wrap: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clipt-masthead-brand { display: flex; flex-direction: column; align-items: center; color: #fff; text-decoration: none; }
+.clipt-masthead-brand > span { font-family: 'Orbitron',sans-serif; font-size: 24px; font-weight: 900; letter-spacing: .05em; text-shadow: 0 0 10px #a855f7,2px 1px #9333ea; }
+.clipt-masthead-brand small { font-size: 5px; letter-spacing: .15em; }
+.clipt-masthead nav { display: flex; gap: 6px; }
+.clipt-masthead nav a { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #a855f780; border-radius: 8px; color: #e9d5ff; background: #030611cc; }
+@media(min-width:768px) { .clipt-masthead { grid-template-columns: 1fr 1fr 1fr; min-height: 80px; padding-inline: 24px; } .clipt-masthead nav { justify-self: end; } .clipt-screen-name { justify-self: start; font-size: 14px; padding: 9px 14px; } .clipt-masthead-brand > span { font-size: 38px; } .clipt-masthead-brand small { font-size: 8px; letter-spacing: .22em; } }
+.app-container { isolation: isolate; position: relative; background: radial-gradient(ellipse at 12% 8%,#672c9055,transparent 38%),radial-gradient(ellipse at 85% 22%,#233b7d60,transparent 45%),linear-gradient(135deg,#181824 0%,#050916 35%,#262036 65%,#050711 100%); }
+.app-container::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(circle,#e9d5ff88 .7px,transparent 1px) 0 0/89px 103px,radial-gradient(circle,#a5b4fc66 .7px,transparent 1px) 37px 21px/151px 137px,repeating-linear-gradient(115deg,#ffffff04 0 1px,transparent 1px 5px),linear-gradient(115deg,transparent 20%,#b6a2da08 21%,transparent 22%); }
+html.high-contrast .app-container { background: #000; }
+html.high-contrast .app-container::before { display: none; }
+html.high-contrast .clipt-feed-tabs [role="tablist"], html.high-contrast .clipt-feed-tabs [role="tab"], html.high-contrast .clipt-post-destinations label { background: #000; color: #fff; border-color: #fff; }
+html.high-contrast .clipt-feed-tabs [data-state="active"], html.high-contrast .clipt-post-destinations label[data-selected="true"] { outline: 2px solid #fff; outline-offset: -4px; }
+.app-container .page-content { padding-bottom: calc(160px + env(safe-area-inset-bottom,0px)); }
+.app-container .gaming-card, .app-container .glass-card { border-radius: 12px; background: linear-gradient(145deg,#101026f2,#040813f7); border-color: #9254c780; box-shadow: inset 0 0 14px #7c3aed12,0 0 16px #7c3aed24; }
+.app-container .gaming-button { border-radius: 8px; }
+.app-container button:not([role="switch"]):not([role="checkbox"]) { min-height: 44px; min-width: 44px; }
+.app-container button[role="switch"], .app-container button[role="checkbox"] { position: relative; }
+.app-container button[role="switch"]::before { content: ''; position: absolute; inset: -10px 0; }
+.app-container button[role="checkbox"]::before { content: ''; position: absolute; inset: -14px; }
+.app-container a.inline-flex { min-height: 44px; }
+.app-container input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) { min-height: 44px; }
+.app-container input, .app-container textarea { scroll-margin-bottom: calc(170px + env(safe-area-inset-bottom,0px)); }
+.app-container :focus-visible { outline-offset: 3px; }
+.clipt-achievements [role="tablist"] { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; height: auto; padding: 8px; border: 1px solid #9254c780; border-radius: 12px; background: #050915; }
+.clipt-achievements [role="tab"] { min-width: 0; min-height: 44px; border: 1px solid #9254c780; border-radius: 8px; background: #060a18; color: #e9d5ff; }
+.clipt-achievements [role="tab"][data-state="active"], .clipt-creator-dashboard button[aria-pressed="true"] { background: linear-gradient(135deg,#9500ff,#5300bc); border-color: #d8b4fe; color: #fff; box-shadow: 0 0 16px #a855f770; }
+.clipt-achievements .clipt-achievement-catalog > .border, .clipt-creator-dashboard .clipt-dashboard-metrics > .border { min-width: 0; border-radius: 12px; border-color: #9254c780; background: linear-gradient(145deg,#121025,#030711); box-shadow: inset 0 0 14px #7c3aed12,0 0 16px #7c3aed24; }
+.clipt-creator-dashboard .clipt-dashboard-metrics dt { overflow-wrap: break-word; }
+.clipt-user-guide > .border { min-width: 0; border-radius: 12px; border-color: #9254c780; background: linear-gradient(145deg,#121025,#030711); box-shadow: inset 0 0 14px #7c3aed12,0 0 16px #7c3aed24; overflow-wrap: break-word; }
+html.high-contrast .clipt-user-guide > .border { background: #000; border-color: #fff; }
+html.high-contrast .clipt-achievements [role="tablist"], html.high-contrast .clipt-achievements [role="tab"], html.high-contrast .clipt-achievements .clipt-achievement-catalog > .border, html.high-contrast .clipt-creator-dashboard .clipt-dashboard-metrics > .border { background: #000; border-color: #fff; }
+html.high-contrast .clipt-achievements [role="tab"][data-state="active"], html.high-contrast .clipt-creator-dashboard button[aria-pressed="true"] { background: #000; border-color: #fff; outline: 2px solid #fff; outline-offset: -4px; }
+@media(min-width:768px) { .clipt-achievements [role="tablist"] { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+.clipt-fyp-header h1 { border: 1px solid #c084fc; border-radius: 8px; padding: 7px 10px; box-shadow: 0 0 12px #9333ea55; font-size: clamp(10px,2.8vw,14px); }
+.clipt-fyp-slide > article { border-radius: 10px; box-shadow: 0 0 20px #9333ea44,inset 0 0 10px #9333ea22; }
+.clipt-engagement-hud[role="dialog"] { border: 1px solid #c4b5fd; box-shadow: 0 0 6px #c4b5fd66,0 0 30px #7c3aed66,inset 0 0 20px #7c3aed20; }
+html.high-contrast .app-container .gaming-card, html.high-contrast .app-container .glass-card { background: #000; border-color: #fff; }
+.clipt-leaderboard > header { padding: 20px; border: 1px solid #a855f780; border-radius: 12px; background: radial-gradient(ellipse at 25% 0%,#7c3aed35,transparent 70%),#050915; }
+.clipt-leaderboard h1 { color: #faf5ff; letter-spacing: .04em; text-shadow: 0 0 12px #a855f780; }
+.clipt-rankings { display: grid; gap: 12px; }
+.clipt-rankings > li { min-width: 0; background: linear-gradient(150deg,#17112a,#050915); }
+.clipt-rankings > li:nth-child(-n+3) { border-color: #c084fc; box-shadow: 0 0 15px #9333ea33; }
+.clipt-rankings > li:first-child { border-color: #fbbf24; background: radial-gradient(ellipse at top,#78350f55,transparent 75%),#080915; }
+.clipt-rankings > li:nth-child(2) { border-color: #67e8f9; background: radial-gradient(ellipse at top,#164e6355,transparent 75%),#080915; }
+.clipt-rankings > li:nth-child(3) { border-color: #fb923c; background: radial-gradient(ellipse at top,#7c2d1255,transparent 75%),#080915; }
+.clipt-leaderboard > header { background: linear-gradient(90deg,#030611f2,#030611a6),url('/img/clipt-start-reference-v1.png') center 58% / cover; }
+.clipt-leaderboard h1 { font-size: clamp(26px,4vw,42px); text-transform: uppercase; }
+.clipt-create-layout { display: grid; gap: 16px; }
+.clipt-create-layout > section { min-width: 0; padding: 16px; border: 1px solid #a855f780; border-radius: 12px; background: linear-gradient(145deg,#121025,#030711); box-shadow: 0 0 14px #9333ea24; }
+.clipt-create-media > button { border-style: dashed; min-height: 150px; }
+.clipt-create-media video { max-height: 55dvh; }
+.clipt-create-details > button[type="submit"] { min-height: 48px; background: linear-gradient(135deg,#8b00f5,#4f00b8); box-shadow: 0 0 18px #a855f755; }
+.clipt-boosts .clipt-boost-package { display: flex; flex-direction: column; min-width: 0; border-radius: 12px; background: radial-gradient(ellipse at top,#312e8140,transparent 60%),#050a18; box-shadow: 0 0 16px #7c3aed24; }
+.clipt-boost-package > button { margin-top: auto; min-height: 48px; }
+.clipt-boosts .clipt-boost-package[data-boost-package="king_now"] { border-color: #fbbf2490; background: radial-gradient(ellipse at top,#78350f40,transparent 65%),#050a18; }
+.clipt-boost-package > svg { color: #c084fc; filter: drop-shadow(0 0 7px #9333ea); }
+.clipt-boost-package[data-boost-package="king_now"] > svg { color: #fbbf24; }
+.clipt-discovery > header, .clipt-live-discovery > header { border-bottom: 1px solid #a855f770; padding-bottom: 16px; }
+.clipt-token-store > section { border-radius: 12px; background: linear-gradient(150deg,#11102b,#030813); }
+.clipt-search > header { border-bottom: 1px solid #a855f770; padding-bottom: 16px; }
+.clipt-search form { padding: 12px; border: 1px solid #c084fc80; border-radius: 12px; box-shadow: 0 0 18px #9333ea33; background: #050915; }
+.clipt-search > .clipt-search-heading { display: flex; align-items: center; gap: 10px; border: 0; padding-bottom: 0; }
+.clipt-search-heading > div { min-width: 0; }
+.clipt-search form > button[type="submit"] { background: linear-gradient(135deg,#9500ff,#5300bc); border-color: #d8b4fe; box-shadow: 0 0 16px #a855f770; }
+.clipt-search .clipt-search-categories { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; padding: 0; background: transparent; }
+.clipt-search-categories [role="tab"] { min-width: 0; min-height: 58px; display: flex; flex-direction: column; gap: 5px; border: 1px solid #9254c780; border-radius: 8px; background: #060a18; color: #e9d5ff; }
+.clipt-search-categories [role="tab"] svg { width: 20px; height: 20px; }
+.clipt-search-categories [role="tab"][data-state="active"] { background: linear-gradient(135deg,#9500ff,#5300bc); border-color: #d8b4fe; color: #fff; box-shadow: 0 0 16px #a855f770; }
+.clipt-search[data-search-category="all"] .clipt-search-results { display: grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(124px,16%); overflow-x: auto; overscroll-behavior-x: contain; padding: 4px 2px 10px; scroll-snap-type: x proximity; }
+.clipt-search[data-search-category="all"] .clipt-search-results > li { scroll-snap-align: start; }
+.clipt-search[data-search-category="all"] .clipt-search-results[data-category="creators"] { grid-auto-columns: minmax(112px,12%); }
+.clipt-search-results[data-category="creators"] .clipt-search-result { background: transparent; border-color: transparent; text-align: center; }
+.clipt-search-results[data-category="creators"] .clipt-search-result > span { font-size: 12px; }
+html.high-contrast .clipt-search-categories [role="tab"] { border-color: #fff; background: #000; }
+html.high-contrast .clipt-search-categories [role="tab"][data-state="active"] { outline: 2px solid #fff; outline-offset: -4px; }
+.clipt-search-results { scrollbar-color: #9b6ad3 #0a0b1c; scrollbar-width: thin; contain: layout paint; }
+@media(min-width:768px) {
+  .clipt-search { position: relative; }
+  .clipt-search > .clipt-search-heading { position: absolute; top: 16px; left: 16px; }
+  .clipt-search-heading > div { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .clipt-search > form { margin-left: 56px; margin-top: 0; }
+}
+.clipt-filter-bar { padding: 6px; border: 1px solid #9254c780; border-radius: 10px; background: #030711; }
+.clipt-filter-bar > button { flex: 1 1 auto; min-width: 0; background: #080b1d; border-width: 1px; border-color: #6e438b; color: #e9d5ff; }
+.clipt-filter-bar > button[aria-pressed="true"] { background: linear-gradient(135deg,#9500ff,#5300bc); border-color: #d8b4fe; color: #fff; box-shadow: 0 0 16px #a855f770,inset 0 0 12px #c084fc33; }
+.clipt-notification-item { display: grid; grid-template-columns: 44px minmax(0,1fr); gap: 12px; align-items: start; }
+.clipt-notification-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid #c084fc; background: radial-gradient(circle at top,#6d28d950,#060a18); color: #e9d5ff; box-shadow: 0 0 12px #9333ea55; }
+.clipt-notification-icon svg { width: 22px; height: 22px; }
+html.high-contrast .clipt-filter-bar, html.high-contrast .clipt-filter-bar > button, html.high-contrast .clipt-notification-icon { background: #000; border-color: #fff; color: #fff; }
+html.high-contrast .clipt-filter-bar > button[aria-pressed="true"] { outline: 2px solid #fff; outline-offset: -4px; }
+.clipt-search-results { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.clipt-search-results li { min-width: 0; }
+.clipt-search-result { display: block; border: 1px solid #8b5cf670; border-radius: 10px; overflow: hidden; background: #060a18; }
+.clipt-search-result > span { display: block; padding: 10px; overflow-wrap: anywhere; font-size: 13px; }
+.clipt-search-result-image { display: grid; place-items: center; aspect-ratio: 16 / 10; background: radial-gradient(ellipse at top,#4c1d9570,#050915); color: #d8b4fe; }
+.clipt-search-result-image img { width: 100%; height: 100%; object-fit: cover; }
+.clipt-search-results[data-category="creators"] .clipt-search-result-image { aspect-ratio: 1; border-radius: 50%; margin: 12px auto 0; width: min(100px,75%); overflow: hidden; border: 2px solid #a855f7; }
+.clipt-store-nav { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border: 1px solid #a855f780; border-radius: 12px; background: #060a18; }
+.clipt-store-nav a { display: flex; align-items: center; min-height: 44px; padding: 10px 14px; border: 1px solid #8b5cf655; border-radius: 8px; color: #e9d5ff; }
+.clipt-store-nav a:hover, .clipt-store-nav a:focus-visible { background: #6d28d955; }
+.clipt-store-topbar { display: grid; gap: 12px; align-items: stretch; }
+.clipt-store-topbar > * { min-width: 0; }
+.clipt-store-topbar .clipt-store-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.clipt-store-topbar .clipt-store-nav a { gap: 8px; min-width: 0; overflow-wrap: anywhere; }
+/* Icon-over-label tiles preserve complete words on narrow iPhones. */
+@media(max-width:400px) {
+  .clipt-store-topbar .clipt-store-nav a {
+    flex-direction: column; justify-content: center; text-align: center;
+    padding-inline: 8px; overflow-wrap: normal; word-break: normal;
+  }
+}
+.clipt-store-nav svg { width: 22px; height: 22px; flex-shrink: 0; color: #d8b4fe; }
+.clipt-store-balance { background: radial-gradient(ellipse at top left,#78350f44,transparent 65%),#030813; box-shadow: 0 0 14px #9333ea24; }
+@media(min-width:1024px) { .clipt-store-topbar { grid-template-columns: minmax(0,2fr) minmax(230px,1fr); } }
+.clipt-security-symbol { width: 32px; height: 32px; color: #c4b5fd; filter: drop-shadow(0 0 8px #7c3aed); }
+.clipt-token-store > section[id] { scroll-margin-top: 16px; }
+.clipt-dashboard-metrics > div { background: radial-gradient(ellipse at top,#4c1d9535,#060a18); border-color: #a855f770; }
+@media(min-width:640px) { .clipt-search-results { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+@media(min-width:1024px) { .clipt-search-results { grid-template-columns: repeat(6,minmax(0,1fr)); } }
+.clipt-profile-header { background: radial-gradient(ellipse at 80% 0%,#5b21b644,transparent 60%),linear-gradient(155deg,#101027,#030610) !important; }
+.clipt-profile > .clipt-profile-header { background: linear-gradient(90deg,#030610f2,#030610c9),url('/img/clipt-start-reference-v1.png') center 75% / cover !important; }
+@media(max-width:767px) {
+  .clipt-profile > .clipt-profile-header { padding: 16px; }
+  .clipt-profile .clipt-profile-stats { gap: 6px; }
+  .clipt-profile .clipt-profile-stats p:last-child { font-size: 11px; overflow-wrap: normal; word-break: normal; }
+}
+@media(max-width:767px) {
+  .clipt-creator-header { padding: 8px !important; }
+  .clipt-creator-info { padding-left: 12px !important; padding-right: 12px !important; }
+  .clipt-creator-info .clipt-profile-stats { gap: 6px; }
+  .clipt-creator-info .clipt-profile-stats p:last-child { font-size: 11px; overflow-wrap: normal; }
+}
+@media(min-width:768px) {
+  .clipt-creator-heading { padding: 0 !important; border: 0; }
+  .clipt-creator-heading h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .clipt-creator-banner, .clipt-creator-banner .clipt-profile-brand-banner { height: 90px !important; }
+  .clipt-creator-banner > .absolute.-bottom-12 { bottom: -40px; }
+  .clipt-creator-info { padding-top: 46px !important; padding-bottom: 16px !important; }
+  .clipt-creator-info .clipt-profile-stats { margin-top: 8px !important; text-align: center; }
+}
+.clipt-profile-brand-banner { background: linear-gradient(#03061055,#03061099),url('/img/clipt-start-reference-v1.png') center 78% / cover; }
+.clipt-messages { height: calc(100dvh - 232px - env(safe-area-inset-bottom,0px)) !important; }
+.clipt-inbox, .clipt-dm-panel { border: 1px solid #b9adff80; box-shadow: 0 0 16px #7c3aed33,inset 0 0 12px #7c3aed18; }
+.clipt-inbox-heading { gap: 12px; margin-bottom: 12px; }
+.clipt-inbox-heading h2 { min-width: 0; color: #faf5ff; }
+.clipt-inbox-heading svg { color: #d8b4fe; filter: drop-shadow(0 0 5px #9333ea); }
+.clipt-inbox-heading > button, .clipt-dm-composer button[type="submit"] { background: linear-gradient(135deg,#9500ff,#5300bc); border: 1px solid #d8b4fe; box-shadow: 0 0 12px #a855f770; }
+.clipt-conversation-row { border: 1px solid #8b5cf630; padding: 10px; }
+.clipt-conversation-row[aria-current="true"] { border-color: #c4b5fd; background: linear-gradient(110deg,#5b21b680,#130a31); box-shadow: 0 0 12px #9333ea70,inset 0 0 12px #9333ea22; }
+.clipt-dm-heading { padding: 12px; border: 1px solid #9254c760; border-radius: 8px; background: linear-gradient(90deg,#030611f2,#030611c9),url('/img/clipt-start-reference-v1.png') center 55% / cover; }
+.clipt-dm-history { padding: 4px; scrollbar-color: #9b6ad3 #0a0b1c; scrollbar-width: thin; }
+.clipt-message-bubble { min-width: 0; border: 1px solid #8b5cf650; background: #080e20; color: #f5f3ff; }
+.clipt-message-bubble[data-message-direction="outgoing"] { border-color: #c4b5fd; background: linear-gradient(135deg,#6d00d1,#350a86); box-shadow: 0 0 10px #9333ea66,inset 0 1px 3px #ffffff22; }
+.clipt-dm-composer { padding-top: 10px; border-top: 1px solid #8b5cf660; }
+.clipt-dm-composer input { min-width: 0; border-color: #9254c780; background: #030813; }
+@media(min-width:768px) { .clipt-messages-heading { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } }
+html.high-contrast .clipt-dm-heading, html.high-contrast .clipt-message-bubble, html.high-contrast .clipt-conversation-row[aria-current="true"] { background: #000; color: #fff; border-color: #fff; }
+.clipt-message-picker[role="dialog"] { top: auto; bottom: calc(160px + env(safe-area-inset-bottom,0px)); transform: translateX(-50%); max-height: calc(100dvh - 180px - env(safe-area-inset-bottom,0px)); overflow-y: auto; width: min(36rem,calc(100vw - 24px)); background: linear-gradient(145deg,#151035f5,#030813fa); border-color: #a78bfa; }
+@media(min-width:768px) { .clipt-messages { height: calc(100dvh - 240px - env(safe-area-inset-bottom,0px)) !important; } }
+.clipt-profile-stats > :is(div,button) { padding: 12px 6px; border: 1px solid #8b5cf655; border-radius: 8px; background: #040814aa; min-width: 0; overflow-wrap: anywhere; }
+.clipt-profile-stats p:first-child { font-size: 20px; color: #f5f3ff; font-variant-numeric: tabular-nums; }
+.clipt-profile-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 5px; max-width: 100%; }
+.clipt-profile-tabs > button { flex-shrink: 0; min-height: 44px; border: 1px solid #8b5cf660; border-radius: 8px; white-space: nowrap; }
+.clipt-profile-tabs > button[aria-pressed="true"] { color: #fff; border-color: #d8b4fe; background: linear-gradient(135deg,#8b00f5,#4f00b8); box-shadow: 0 0 14px #9333ea55; }
+.clipt-profile-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.clipt-profile-grid > .gaming-card { grid-column: 1 / -1; }
+.clipt-profile-tile { display: block; min-width: 0; overflow: hidden; border: 1px solid #a855f780; border-radius: 9px; background: #050915; transition: border-color .15s; }
+.clipt-profile-tile:hover { border-color: #e9d5ff; }
+.clipt-profile-thumbnail { position: relative; aspect-ratio: 16 / 10; background: radial-gradient(ellipse at center,#4c1d9560,#030711); }
+.clipt-profile-thumbnail > img { width: 100%; height: 100%; object-fit: cover; }
+.clipt-profile-thumbnail-empty { display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; height: 100%; color: #d8b4fe; font-size: 12px; }
+.clipt-profile-media-kind { position: absolute; top: 7px; right: 7px; padding: 4px; border-radius: 5px; background: #030711bf; color: #fff; }
+.clipt-profile-tile-caption { padding: 8px; font-size: 12px; color: #e9d5ff; }
+.clipt-profile-tile-caption > p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 6px; }
+.clipt-profile-tile-caption > div, .clipt-profile-tile-caption span { display: flex; align-items: center; gap: 5px; }
+.clipt-profile-tile-caption > div { flex-wrap: wrap; gap: 10px; }
+.clipt-achievements-grid { display: grid; gap: 12px; }
+.clipt-achievements-grid > div { border: 1px solid #8b5cf660; border-radius: 10px; min-width: 0; background: #090c1c; }
+@media(min-width:640px) { .clipt-profile-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media(min-width:1024px) { .clipt-profile-grid { grid-template-columns: repeat(6,minmax(0,1fr)); } .clipt-achievements-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+.clipt-security-panel { background: linear-gradient(150deg,#121026,#040814); box-shadow: 0 0 18px #9333ea24; }
+.clipt-settings-layout { display: grid; grid-template-columns: minmax(0,1fr); gap: 20px; align-items: start; }
+.clipt-settings-layout > * { min-width: 0; }
+.clipt-settings button:not([role="switch"]) { max-width: 100%; min-height: 44px; height: auto; white-space: normal; }
+.clipt-stream-setup-layout { display: grid; gap: 20px; align-items: start; }
+.clipt-moderation-layout { display: grid; gap: 20px; align-items: start; }
+.clipt-moderation #moderation-reports { scroll-margin-top: 16px; }
+@media(min-width:768px) { .clipt-moderation-layout { grid-template-columns: 220px minmax(0,1fr); } }
+.clipt-stream-setup-layout > *, .clipt-stream-player > * { min-width: 0; }
+.clipt-stream-setup-layout > .border, .clipt-boosts > .border { border-color: #9254c780; border-radius: 12px; background: linear-gradient(145deg,#101026f2,#040813f7); box-shadow: inset 0 0 14px #7c3aed12,0 0 16px #7c3aed24; }
+html.high-contrast .clipt-stream-setup-layout > .border, html.high-contrast .clipt-boosts > .border, html.high-contrast .clipt-boosts .clipt-boost-package { background: #000; border-color: #fff; }
+.clipt-stream-preview { min-height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; padding: 20px; background: radial-gradient(ellipse at center,#5b21b640,transparent 70%),#030711; border: 1px solid #a855f770; border-radius: 12px; }
+.clipt-stream-preview { background: linear-gradient(#030711c9,#030711e6),url('/img/clipt-start-reference-v1.png') center 55% / cover; box-shadow: inset 0 0 22px #7c3aed33,0 0 14px #7c3aed24; }
+html.high-contrast .clipt-stream-preview { background: #000; border-color: #fff; }
+.clipt-stream-viewer > header, .clipt-stream-setup > header { border-bottom: 1px solid #a855f770; padding-bottom: 16px; }
+.clipt-live-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.clipt-live-chat { height: min(520px,65dvh); min-height: 300px; border: 1px solid #a855f780; border-radius: 12px; overflow: hidden; }
+.clipt-live-discovery > .text-center { border-radius: 12px; border-color: #9254c780; background: linear-gradient(145deg,#101026f2,#040813f7); box-shadow: inset 0 0 14px #7c3aed12,0 0 16px #7c3aed24; }
+html.high-contrast .clipt-live-discovery > .text-center { background: #000; border-color: #fff; }
+.clipt-donation-hud[role="dialog"] { top: auto; bottom: calc(160px + env(safe-area-inset-bottom,0px)); transform: translateX(-50%); width: min(640px,calc(100vw - 24px)); max-height: calc(100dvh - 180px - env(safe-area-inset-bottom,0px)); overflow-y: auto; color: #f5f3ff; border: 1px solid #a78bfa; border-radius: 18px; background: linear-gradient(145deg,#151035f5,#030813fa); box-shadow: 0 0 8px #a78bfa70,0 0 35px #7c3aed66; }
+.clipt-donation-amounts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.clipt-boost-review[role="alertdialog"] {
+  top: auto; bottom: calc(160px + env(safe-area-inset-bottom,0px));
+  transform: translateX(-50%); width: min(640px,calc(100vw - 24px));
+  max-height: calc(100dvh - 180px - env(safe-area-inset-bottom,0px));
+  overflow-y: auto; color: #f5f3ff; border: 1px solid #b9adff; border-radius: 10px;
+  background: radial-gradient(ellipse at top,#52269255,transparent 65%),linear-gradient(155deg,#10142af7,#030813fa);
+  box-shadow: 0 0 4px #e9d5ff80,0 0 22px #7c3aed80,inset 0 0 22px #6366f122;
+}
+html.high-contrast .clipt-boost-review[role="alertdialog"] { background: #000; color: #fff; border-color: #fff; }
+.clipt-donation-amounts button { min-height: 60px; }
+.clipt-donation-amounts [aria-pressed="true"] { background: linear-gradient(135deg,#8b00f5,#4f00b8); border-color: #e9d5ff; box-shadow: 0 0 14px #9333ea66; }
+.clipt-donation-summary { display: grid; gap: 10px; }
+.clipt-donation-summary > div { padding: 12px; min-width: 0; border: 1px solid #8b5cf655; border-radius: 8px; background: #050915; overflow-wrap: anywhere; }
+.clipt-donation-summary dt { color: #c4b5fd; font-size: 12px; margin-bottom: 5px; }
+.clipt-donation-summary dd { color: #fff; }
+@media(min-width:640px) { .clipt-donation-summary { grid-template-columns: 1fr 1fr; } }
+@media(min-width:1024px) { .clipt-stream-setup-layout { grid-template-columns: 1fr 1fr; } }
+.clipt-settings-nav { display: grid; gap: 6px; padding: 12px; }
+.clipt-settings-nav a { min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid #8b5cf655; border-radius: 8px; color: #ede9fe; overflow-wrap: anywhere; }
+.clipt-settings-nav a:hover, .clipt-settings-nav a:focus-visible { background: #6d28d955; border-color: #c084fc; }
+.clipt-settings-nav a[aria-current="location"] { color: #fff; border-color: #d8b4fe; background: linear-gradient(135deg,#9500ff,#5300bc); box-shadow: 0 0 16px #a855f766,inset 0 0 12px #c084fc33; }
+.clipt-account-heading { padding: 14px; border: 1px solid #9254c780; border-radius: 8px; background: linear-gradient(90deg,#030611f2,#030611a6),url('/img/clipt-start-reference-v1.png') center 55% / cover; }
+.clipt-account-heading svg { color: #d8b4fe; filter: drop-shadow(0 0 6px #a855f7); }
+.clipt-settings-layout > div > div > [id="settings-account"] > .space-y-4 > .flex { gap: 16px; }
+.clipt-settings-layout > div > div > [id="settings-account"] > .space-y-4 > .flex > .space-y-0\.5 { min-width: 0; }
+.clipt-settings [role="switch"] { flex-shrink: 0; }
+.clipt-settings-layout > div > div > .rounded-lg,
+.clipt-settings-layout section > .rounded-lg {
+  min-width: 0; border-radius: 12px; border-color: #9254c780;
+  background: linear-gradient(145deg,#101026f2,#040813f7);
+  box-shadow: inset 0 0 14px #7c3aed12,0 0 16px #7c3aed24;
+}
+html.high-contrast .clipt-settings-layout > div > div > .rounded-lg,
+html.high-contrast .clipt-settings-layout section > .rounded-lg {
+  background: #000; border-color: #fff; color: #fff; box-shadow: none;
+}
+html.high-contrast .clipt-settings-nav a[aria-current="location"], html.high-contrast .clipt-account-heading { background: #000; border-color: #fff; color: #fff; }
+.clipt-settings [id^="settings-"] { scroll-margin-top: 16px; min-width: 0; }
+.clipt-settings [id^="settings-"]:target { outline: 1px solid #c084fc; outline-offset: 4px; border-radius: 12px; }
+@media(min-width:768px) { .clipt-settings-layout { grid-template-columns: 240px minmax(0,1fr); } .clipt-settings-nav { position: sticky; top: 16px; } }
+.clipt-report-dialog[role="dialog"] { top: auto; bottom: calc(160px + env(safe-area-inset-bottom,0px)); transform: translateX(-50%); width: min(640px,calc(100vw - 24px)); max-height: calc(100dvh - 180px - env(safe-area-inset-bottom,0px)); overflow-y: auto; border: 1px solid #c084fc; border-radius: 16px; background: linear-gradient(145deg,#141029,#030813); box-shadow: 0 0 28px #9333ea55; }
+.clipt-report-reasons { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.clipt-report-reasons > div:has([data-state="checked"]) { background: #6d28d955; border-color: #c084fc; box-shadow: 0 0 10px #9333ea55; }
+.clipt-notifications li { min-width: 0; overflow-wrap: anywhere; background: linear-gradient(140deg,#141029,#030813); }
+.clipt-media-gallery[role="dialog"] { top: auto; bottom: calc(160px + env(safe-area-inset-bottom,0px)); transform: translateX(-50%); width: calc(100vw - 24px); max-width: 1100px; height: calc(100dvh - 180px - env(safe-area-inset-bottom,0px)); max-height: 800px; overflow: auto; }
+.clipt-media-gallery img { max-height: 100%; }
+.clipt-media-gallery .clipt-gallery-stage { overflow: hidden; }
+.clipt-media-gallery button:focus-visible, .clipt-photo-frame:focus-visible { outline: 2px solid #e9d5ff; outline-offset: 3px; }
+@media(min-width:1024px) {
+  .clipt-engagement-hud[role="dialog"] { left: auto; right: 24px; width: 380px; transform: none; }
+}
+@media(max-width:350px) { .clipt-report-reasons { grid-template-columns: 1fr; } }
+@media(min-width:1024px) {
+  .clipt-create-layout { grid-template-columns: 1.1fr 1fr; align-items: start; }
+  .clipt-create-media { position: sticky; top: 16px; }
+}
+.clipt-engagement-hud[role="dialog"], .clipt-donation-hud[role="dialog"], .clipt-report-dialog[role="dialog"] {
+  border-radius: 10px;
+  border: 1px solid #b9adff;
+  background:
+    linear-gradient(#67e8f9,#a78bfa) left top / 34px 2px no-repeat,
+    linear-gradient(#67e8f9,#a78bfa) right top / 34px 2px no-repeat,
+    linear-gradient(#a78bfa,#67e8f9) left bottom / 34px 2px no-repeat,
+    linear-gradient(#a78bfa,#67e8f9) right bottom / 34px 2px no-repeat,
+    radial-gradient(ellipse at 50% 0%,#52269255,transparent 60%),linear-gradient(155deg,#10142af7,#030813fa);
+  box-shadow: 0 0 4px #e9d5ff80,0 0 22px #7c3aed80,inset 0 0 22px #6366f122;
+}
+html.high-contrast .clipt-engagement-hud[role="dialog"], html.high-contrast .clipt-donation-hud[role="dialog"], html.high-contrast .clipt-report-dialog[role="dialog"] { background: #000; border-color: #fff; }
+/* Non-modal holographic side panel: the player stays visible and interactive. */
+.clipt-engagement-hud[role="dialog"] { left: auto; right: max(8px,env(safe-area-inset-right,0px)); top: auto; bottom: calc(172px + env(safe-area-inset-bottom,0px)); transform: none; width: min(76vw,360px); max-width: none; max-height: min(52dvh,520px); padding: 12px; gap: 8px; overflow-y: auto; background-color: #14091e; }
+.clipt-engagement-hud .clipt-engagement-metrics span { font-size: 9px; letter-spacing: 0; }
+.clipt-hud-comments .clipt-comment-history { max-height: 160px; overflow-y: auto; overscroll-behavior: contain; padding-inline: 4px; }
+.clipt-hud-comments > div { padding-inline: 4px; }
+@media(max-width:1023px) {
+  .clipt-engagement-hud[role="dialog"] { display: flex; flex-direction: column; width: min(68vw,360px); height: min(52dvh,420px); padding: 10px; overflow-y: auto; }
+  .clipt-engagement-hud .clipt-hud-description { display: none; }
+  .clipt-engagement-hud h2 { font-size: 14px; padding-right: 24px; }
+  /* The reference uses icon/count metrics. Keep full labels for screen readers. */
+  .clipt-engagement-hud .clipt-engagement-metrics span {
+    position: absolute; width: 1px; height: 1px; padding: 0;
+    overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+  .clipt-hud-comments { flex: 1; min-height: 0; overflow-y: auto; }
+  .clipt-hud-comments .clipt-comment-history { min-height: 40px; max-height: 90px; }
+  .clipt-hud-comments > div { padding-block: 6px; }
+  .clipt-hud-comments .clipt-comment-history .py-8 { padding-block: 8px; }
+  .clipt-hud-comments .clipt-comment-history .p-6 { padding: 8px; }
+  /* Keep a full-width typing row instead of squeezing it between three controls. */
+  .clipt-hud-comments form > .relative > .flex-shrink-0 { display: none; }
+  .clipt-hud-comments form > .relative { border-radius: 12px; }
+  .clipt-hud-comments form > .relative > div {
+    display: grid; grid-template-columns: 44px minmax(0,1fr);
+    min-width: 0; width: 100%; padding-inline: 0; gap: 4px; border-radius: 8px;
+  }
+  .clipt-hud-comments form input { grid-column: 1 / -1; min-width: 0; width: 100%; font-size: 16px; }
+  .clipt-hud-comments form button[type="submit"] { justify-self: end; margin-left: 0; }
+}
+@media(min-width:1024px) { .clipt-engagement-hud[role="dialog"] { right: 24px; width: 360px; max-height: calc(100dvh - 240px); } .clipt-hud-comments .clipt-comment-history { max-height: 260px; } }
+@media(min-width:768px) {
+  .clipt-rankings { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .clipt-rankings > li:nth-child(-n+3) { min-height: 240px; display: grid; align-items: center; border-width: 2px; }
+  .clipt-rankings > li:nth-child(-n+3) > div { display: grid; grid-template-columns: auto auto; justify-content: center; text-align: center; }
+  .clipt-rankings > li:nth-child(-n+3) > div > span:first-child { width: auto; font-size: 64px; line-height: 1; text-shadow: 0 0 18px #fbbf2440; }
+  .clipt-rankings > li:nth-child(-n+3) > div > span:nth-child(2) { width: 88px; height: 88px; border: 2px solid #c084fc; box-shadow: 0 0 15px #9333ea80; }
+  .clipt-rankings > li:nth-child(-n+3) > div > div, .clipt-rankings > li:nth-child(-n+3) > div > span:last-child { grid-column: 1 / -1; }
+  .clipt-rankings > li:nth-child(-n+3) > div > span:last-child { font-size: 18px; padding: 8px; border-top: 1px solid #a855f740; }
+  .clipt-rankings > li:first-child { grid-column: 2; grid-row: 1; box-shadow: 0 0 22px #fbbf2430; }
+  .clipt-rankings > li:nth-child(2) { grid-column: 1; grid-row: 1; }
+  .clipt-rankings > li:nth-child(3) { grid-column: 3; grid-row: 1; }
+}
+/* Unmodified Google Fonts Orbitron; license: /fonts/OFL.txt.
+   Scoped alias keeps the approved controller typography unchanged. */
+@font-face {
+  font-family: 'Clipt Console Display';
+  src: url('/fonts/orbitron-variable.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+}
+.clipt-start-reference .clipt-wordmark,
+.clipt-fyp-brand,
+.clipt-masthead-brand > span { font-family: 'Clipt Console Display',sans-serif !important; }
+
+/* Console finish pass: scoped materials only; controller geometry stays untouched. */
+.app-container {
+  --clipt-panel-edge: #b897ee70;
+  --clipt-panel-depth: inset 0 1px 0 #eee4ff24, inset 0 -1px 0 #0009, 0 12px 28px #02030d66, 0 0 18px #9333ea16;
+}
+.app-container .page-content :is(.gaming-card,.glass-card),
+.clipt-create-layout > section,
+.clipt-settings-layout section > .rounded-lg {
+  border-color: var(--clipt-panel-edge);
+  background: linear-gradient(155deg,#251b36f5 0%,#100d20fa 35%,#080611fa 100%);
+  box-shadow: var(--clipt-panel-depth);
+}
+.clipt-masthead { box-shadow: inset 0 -1px 0 #e9d5ff16, 0 8px 24px #02030d55; }
+.clipt-masthead-brand small { color: #e3d5f7; line-height: 1.7; }
+.clipt-masthead nav a { background: linear-gradient(155deg,#2b1b3f,#0a0713); box-shadow: inset 0 1px 0 #ffffff20,0 3px 8px #0006; }
+.clipt-auth > .max-w-md {
+  border-color: #b897ee70;
+  border-radius: 20px;
+  background: radial-gradient(ellipse at 50% 0%,#64318b38,transparent 62%),linear-gradient(155deg,#20162c,#090711 65%);
+  box-shadow: var(--clipt-panel-depth);
+}
+.clipt-auth h1 { letter-spacing: -.025em; line-height: 1.2; }
+.clipt-auth :is(input,textarea), .clipt-dm-composer input, .clipt-search form input {
+  border-radius: 10px; border-color: #a78bfa66;
+  box-shadow: inset 0 2px 5px #0005;
+}
+.clipt-auth input:autofill { border-color: #c4b5fd; }
+.clipt-auth input:-webkit-autofill {
+  -webkit-text-fill-color: #f5f3ff;
+  -webkit-box-shadow: inset 0 0 0 1000px #171025;
+  caret-color: #f5f3ff;
+}
+.clipt-conversation-row { border: 1px solid transparent; transition: border-color 140ms ease,background-color 140ms ease; }
+.clipt-conversation-row[aria-current="true"] { border-color: #c4b5fd99; box-shadow: inset 0 1px 0 #ffffff18,0 0 12px #9333ea20; }
+.clipt-message-bubble { line-height: 1.6; box-shadow: inset 0 1px 0 #ffffff12,0 3px 8px #0003; }
+.clipt-profile-stats > :is(div,button) { box-shadow: inset 0 1px 0 #ffffff16,0 3px 8px #0003; }
+.clipt-masthead nav a:focus-visible,
+.app-container .page-content :is(button,a,input,textarea,select):focus-visible {
+  outline: 2px solid #e9d5ff; outline-offset: 3px;
+}
+@media(hover:hover) and (pointer:fine) {
+  .clipt-masthead nav a:hover, .clipt-conversation-row:hover, .clipt-profile-tile:hover { border-color: #d8b4fe; }
+}
+@media(max-width:767px) {
+  .clipt-auth :is(input,textarea), .clipt-dm-composer input, .clipt-search form input { font-size: 16px; }
+  .clipt-message-bubble { line-height: 1.55; }
+}
+html.high-contrast .app-container .page-content :is(.gaming-card,.glass-card),
+html.high-contrast .clipt-create-layout > section,
+html.high-contrast .clipt-settings-layout section > .rounded-lg,
+html.high-contrast .clipt-auth > .max-w-md,
+html.high-contrast .clipt-masthead nav a { background: #000; border-color: #fff; color: #fff; box-shadow: none; }
+html.high-contrast .clipt-auth input:-webkit-autofill { -webkit-text-fill-color: #fff; -webkit-box-shadow: inset 0 0 0 1000px #000; }
+html.high-contrast .clipt-conversation-row[aria-current="true"] { border-color: #fff; }
+@media(prefers-reduced-motion:reduce) { .clipt-conversation-row { transition: none; } }
+html.reduce-motion .clipt-conversation-row { transition: none; }
+/* End console finish pass. */
+/* Floating Clipt cards: visual lift only; carousel geometry remains stable. */
+.clipt-fyp-slide > article {
+  box-shadow: 0 14px 28px #02030d99, 0 0 22px #a855f735, inset 0 1px 0 #e9d5ff40;
+  border-color: #c4b5fd88;
+}
+@keyframes clipt-card-float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.reduce-motion) .clipt-fyp-slide > article { animation: clipt-card-float 6s ease-in-out infinite; }
+  html:not(.reduce-motion) .clipt-fyp-slide > article:focus-within { animation-play-state: paused; }
+}
+html.high-contrast .clipt-fyp-slide > article { border-color: #fff; box-shadow: none; }
+/* Landscape theater fits the actual dynamic viewport above the feed controls.
+   No minimum media/card height may push the picture behind the controller. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .clipt-fyp { position: fixed; inset: env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px); min-height: 0; display: block; overflow: hidden; background: #000; }
+  body:has(.clipt-controller-feed[data-expanded="true"]) .clipt-fyp { right: calc(min(216px,calc(100vw - 24px)) + 24px + env(safe-area-inset-right,0px)); display: grid; grid-template-rows: minmax(0,1fr); z-index: 51; }
+  .clipt-fyp-header { display: contents; }
+  .clipt-fyp-header .clipt-fyp-brand, .clipt-fyp-header .clipt-fyp-header-actions { display: none; }
+  .clipt-feed-tabs { display: none; }
+  body:has(.clipt-controller-feed[data-expanded="true"]) .clipt-feed-tabs { display: flex; position: fixed; right: calc(70px + env(safe-area-inset-right,0px)); bottom: calc(24px + env(safe-area-inset-bottom,0px)); width: 100px; margin: 0; padding: 0; z-index: 61; }
+  body:has(.clipt-controller-feed[data-expanded="true"]) .clipt-controller-body { max-height: calc(100% - 56px); flex-grow: 0; }
+  .clipt-feed-tabs [role="tablist"] { width: 100px; padding: 0; border-radius: 12px; }
+  .clipt-fyp-track { height: 100%; min-height: 0; padding: 0; scroll-padding-inline: 0; gap: 0; scrollbar-width: none; }
+  body:has(.clipt-controller-feed[data-expanded="true"]) .clipt-fyp-track { grid-row: 1; }
+  .clipt-fyp-slide { flex-basis: 100%; min-height: 0; }
+  .clipt-fyp .clipt-fyp-slide > article { position: relative; display: block; height: 100%; padding: 0; border: 0; border-radius: 0; box-shadow: none; animation: none !important; background: #000; }
+  .clipt-cinematic-header { position: absolute; bottom: 12px; left: 12px; z-index: 2; max-width: calc(100% - 240px); padding: 0 8px !important; border-radius: 12px; background: #080813c9 !important; }
+  .clipt-cinematic-caption { display: none; }
+  body:has(.clipt-controller-feed[data-expanded="true"]) .clipt-cinematic-caption { display: block; position: absolute; bottom: 4px; left: 140px; right: 12px; z-index: 2; max-height: 44px; overflow-y: auto; border-radius: 8px; background: #080813e6; }
+  .clipt-cinematic-media { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; }
+  body:has(.clipt-controller-feed[data-expanded="true"]) .clipt-cinematic-media { height: calc(100% - 52px); bottom: 52px; }
+  body:has(.clipt-controller-feed[data-expanded="true"]) .clipt-cinematic-header { bottom: 4px; max-width: 116px; }
+  /* Short Safari landscape must not collapse the inbox under its own header. */
+  .clipt-messages { height: auto !important; min-height: 320px; padding-block: 8px; }
+  .clipt-messages-heading { margin-bottom: 8px !important; }
+  .clipt-messages > .grid { flex: none; min-height: 260px; }
+  .clipt-inbox-heading { margin-bottom: 8px !important; }
+  .clipt-message-picker[role="dialog"] { max-height: calc(100dvh - 24px); overflow-y: auto; }
+  .clipt-fyp-slide > article .clipt-cinematic-header { gap: 4px; border-bottom: 0; }
+  .clipt-fyp-slide > article .clipt-cinematic-header > div { gap: 8px; min-width: 0; }
+  .clipt-fyp-slide > article .clipt-cinematic-header > div > button { display: none; }
+  .clipt-fyp-slide > article .clipt-cinematic-header > div > div { min-width: 0; }
+  .clipt-fyp-slide > article .clipt-cinematic-header button { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .clipt-fyp-slide > article .clipt-cinematic-caption { border-top: 0; padding: 4px !important; }
+}
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 600px) {
+  body:has(.clipt-controller-feed[data-expanded="true"]) .clipt-cinematic-caption { display: none; }
+}
+/* Keep connection headings and close control reachable in short Safari viewports.
+   Anchor to the safe top, rather than vertically centering an oversized dialog. */
+.clipt-connections-dialog[role="dialog"] {
+  top: max(12px,env(safe-area-inset-top,0px));
+  bottom: auto;
+  transform: translateX(-50%);
+  width: min(36rem,calc(100vw - 32px));
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px;
+  padding-right: 48px;
+  border-radius: 18px;
+}
+/* Feed-only refinement: quiet framing and one author label, with media dominant. */
+.clipt-fyp-slide > article .clipt-cinematic-header { background: transparent; }
+.clipt-fyp-slide > article .clipt-cinematic-caption { border-top-color: #a78bfa26; }
+.clipt-fyp-slide > article .clipt-cinematic-caption p > button { display: none; }
+.clipt-fyp-slide > article .clipt-cinematic-caption p { color: #ddd6ee; }
+/* A centered conversation surface, above the controller, replaces the cramped
+   side HUD. One scroll area keeps the composer reachable with enlarged text. */
+.clipt-engagement-hud[role="dialog"] {
+  left: 50%; right: auto; top: max(12px,env(safe-area-inset-top,0px)); bottom: auto;
+  transform: translateX(-50%); z-index: 70;
+  display: flex; flex-direction: column;
+  width: min(640px,calc(100vw - 24px)); max-width: none; height: auto;
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  padding: 16px; gap: 12px; overflow-y: auto; overscroll-behavior: contain;
+}
+.clipt-engagement-hud[role="dialog"] > * { flex-shrink: 0; }
+.clipt-engagement-hud[role="dialog"] h2 { padding-right: 44px; font-size: 18px; line-height: 1.4; }
+.clipt-engagement-hud[role="dialog"] > button:last-child { width: 44px; height: 44px; top: 4px; right: 4px; display: grid; place-items: center; }
+.clipt-engagement-hud[role="dialog"] .clipt-hud-comments { flex: none; min-height: 0; overflow: visible; }
+.clipt-engagement-hud[role="dialog"] .clipt-comment-history { max-height: none; overflow: visible; }
+.clipt-comment-dock-header { display: flex; align-items: center; justify-content: space-between; gap: 4px; position: sticky; top: -16px; z-index: 3; margin: -16px -16px 0; padding: 12px; background: #100c20; border-bottom: 1px solid #a78bfa55; }
+.clipt-comment-dock-close { display: grid; place-items: center; min-width: 44px; min-height: 44px; flex-shrink: 0; }
+.clipt-engagement-hud[role="dialog"] .clipt-comment-dock-header h2 { padding-right: 0; min-width: 0; overflow-wrap: anywhere; }
+.clipt-engagement-hud[role="dialog"] > button:last-child { display: none; }
+/* In landscape, conversation replaces the controller in its existing box. */
+@media (orientation: landscape) and (max-height: 500px) {
+  body:has(.clipt-fyp) .clipt-engagement-hud[role="dialog"] {
+    left: auto; right: max(12px,env(safe-area-inset-right,0px));
+    top: max(12px,env(safe-area-inset-top,0px)); bottom: auto;
+    transform: none; animation: none;
+    width: min(216px,calc(100vw - 24px));
+    height: calc(100dvh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+    padding: 12px; gap: 10px; border-radius: 24px;
+  }
+  body:has(.clipt-fyp):has(.clipt-engagement-hud[role="dialog"]) .clipt-controller-feed,
+  body:has(.clipt-fyp):has(.clipt-engagement-hud[role="dialog"]) .clipt-feed-tabs { visibility: hidden; }
+  body:has(.clipt-fyp) .clipt-engagement-hud[role="dialog"] h2 { font-size: 14px; }
+  body:has(.clipt-fyp) .clipt-engagement-hud .clipt-hud-description { display: none; }
+  body:has(.clipt-fyp) .clipt-comment-dock-header { display: flex; align-items: center; justify-content: space-between; gap: 4px; position: sticky; top: -12px; z-index: 3; margin: -12px -12px 0; padding: 8px; background: #100c20; border-bottom: 1px solid #a78bfa55; }
+  body:has(.clipt-fyp) .clipt-comment-dock-header h2 { padding-right: 0; min-width: 0; overflow-wrap: anywhere; }
+  body:has(.clipt-fyp) .clipt-comment-dock-close { display: grid; place-items: center; min-width: 44px; min-height: 44px; flex-shrink: 0; }
+  body:has(.clipt-fyp) .clipt-engagement-hud[role="dialog"] > button:last-child { display: none; }
+}
+@media (orientation: portrait) and (max-width: 300px) {
+  .clipt-fyp { padding-bottom: calc(190px + env(safe-area-inset-bottom,0px)); }
+  .clipt-fyp-header { display: none; }
+  .clipt-fyp-brand { grid-column: 1; justify-self: start; font-size: 22px; }
+  .clipt-fyp-counter { display: none; }
+  .clipt-fyp-track { height: auto; min-height: 0; align-items: flex-start; }
+  .clipt-fyp-slide { height: auto; flex-basis: 94%; }
+  .clipt-fyp .clipt-fyp-slide > article { height: auto; padding: 0 !important; animation: none !important; }
+  .clipt-fyp .clipt-cinematic-media { flex: none; height: auto; min-height: 120px; }
+  .clipt-fyp .clipt-cinematic-media .clipt-photo-frame { height: auto; min-height: 120px; }
+  .clipt-fyp .clipt-cinematic-header { flex-wrap: wrap; gap: 4px; padding: 8px !important; }
+  .clipt-fyp .clipt-cinematic-header > div { min-width: 0; flex: 1 1 100%; }
+  .clipt-fyp .clipt-cinematic-header > div > div { min-width: 0; max-width: 100%; }
+  .clipt-fyp .clipt-cinematic-header button, .clipt-fyp .clipt-cinematic-caption { overflow-wrap: anywhere; }
+}
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 480px) {
+  body:has(.clipt-controller-feed[data-expanded="true"]) .clipt-fyp { right: calc(204px + env(safe-area-inset-right,0px)); }
+  .gameboy-controls.clipt-controller.clipt-controller-feed.clipt-controller-feed[data-expanded="true"], body:has(.clipt-fyp) .clipt-engagement-hud[role="dialog"] { width: 180px; }
+  .gameboy-controls.clipt-controller-feed[data-expanded="true"] .clipt-controller-body { grid-template-rows: 148px auto; }
+  .gameboy-controls.clipt-controller-feed .clipt-controller-actions { width: 148px; height: 148px; }
+  .gameboy-controls.clipt-controller-feed .clipt-controller-like { left: 52px; }
+  .gameboy-controls.clipt-controller-feed .clipt-controller-trophy, .gameboy-controls.clipt-controller-feed .clipt-controller-comment { top: 52px; }
+  .gameboy-controls.clipt-controller-feed .clipt-controller-follow { left: 52px; }
+  body:has(.clipt-controller-feed[data-expanded="true"]) .clipt-feed-tabs { right: calc(52px + env(safe-area-inset-right,0px)); }
+  .clipt-cinematic-header { max-width: calc(100% - 80px); }
+}
+/* Comments can already be open when a portrait device rotates into landscape. */
+@media (orientation: landscape) and (max-height: 500px) {
+  body:has(.clipt-engagement-hud[role="dialog"]) .clipt-fyp { right: calc(240px + env(safe-area-inset-right,0px)); display: grid; grid-template-rows: minmax(0,1fr); z-index: 51; }
+  body:has(.clipt-engagement-hud[role="dialog"]) .clipt-cinematic-media { height: calc(100% - 52px); bottom: 52px; }
+  body:has(.clipt-engagement-hud[role="dialog"]) .clipt-cinematic-header { bottom: 4px; max-width: 116px; }
+}
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 480px) {
+  body:has(.clipt-engagement-hud[role="dialog"]) .clipt-fyp { right: calc(204px + env(safe-area-inset-right,0px)); }
+}
+/* A dedicated header keeps scrolling controls out from beneath the close target. */
+@media (orientation: landscape) and (max-height: 320px) {
+  .gameboy-controls.clipt-controller-feed[data-expanded="true"] .clipt-controller-body { margin-top: 48px; max-height: calc(100% - 104px); }
+}
+.clipt-hud-comments > div:first-child { flex-wrap: wrap; gap: 4px; }
+.clipt-hud-comments > div:first-child > div { min-width: 0; flex-wrap: wrap; }
+.clipt-hud-comments > div:first-child button { min-width: 44px; min-height: 44px; }
+.clipt-comment-emoji-trigger { min-width: 44px; min-height: 44px; }
+.clipt-comment-emoji.clipt-comment-emoji { z-index: 90; width: min(256px,calc(100vw - 24px)); max-height: min(var(--radix-popover-content-available-height,calc(100dvh - 24px)),calc(100dvh - 24px)); overflow-y: auto; }
+.clipt-comment-emoji button { min-width: 44px; min-height: 44px; }
+
+/* Keep conversation metadata in the dock, not over the landscape media. */
+.clipt-comment-post-details { min-width: 0; overflow-wrap: anywhere; }
+.clipt-comment-author { font-weight: 700; color: #ede9fe; }
+.clipt-comment-caption { white-space: pre-wrap; margin-top: 6px; color: #ddd6fe; }
+.clipt-engagement-hud[role="dialog"].clipt-engagement-hud { touch-action: pan-y pinch-zoom; scrollbar-gutter: stable; -webkit-overflow-scrolling: touch; }
+@media (orientation: landscape) and (max-height: 500px) {
+  .clipt-fyp .clipt-cinematic-header,
+  .clipt-fyp .clipt-cinematic-caption,
+  body:has(.clipt-controller-feed[data-expanded="true"]) .clipt-fyp .clipt-cinematic-caption { display: none; }
+  .clipt-fyp .clipt-cinematic-media,
+  body:has(.clipt-controller-feed[data-expanded="true"]) .clipt-fyp .clipt-cinematic-media,
+  body:has(.clipt-engagement-hud[role="dialog"]) .clipt-fyp .clipt-cinematic-media { height: 100%; bottom: 0; }
+}
+
+/* Clipts is a fitted app surface: only the carousel and conversation own scroll. */
+html:has(.clipt-fyp), body:has(.clipt-fyp), body:has(.clipt-fyp) #root {
+  height: 100%; overflow: hidden !important; overscroll-behavior: none;
+}
+.clipt-fyp .clipt-fyp-track { overflow-y: hidden; overscroll-behavior: contain; }
+.clipt-fyp .clipt-cinematic-caption { overflow: hidden; }
+@media (orientation: portrait), (min-height: 501px) {
+  .clipt-fyp {
+    position: fixed; top: env(safe-area-inset-top,0px); left: env(safe-area-inset-left,0px); right: env(safe-area-inset-right,0px);
+    bottom: calc(134px + env(safe-area-inset-bottom,0px));
+    min-height: 0 !important; height: auto !important; padding: 0 !important;
+    display: grid; grid-template-rows: auto auto minmax(0,1fr) auto; overflow: hidden !important;
+  }
+  .clipt-fyp > .clipt-fyp-header { grid-row: 1; }
+  .clipt-fyp > .clipt-feed-tabs { grid-row: 2; }
+  .clipt-fyp > .clipt-fyp-track { grid-row: 3; height: 100%; min-height: 0; }
+  .clipt-fyp .clipt-fyp-slide, .clipt-fyp .clipt-fyp-slide > article { min-height: 0; height: 100%; }
+  .clipt-fyp .clipt-cinematic-media { flex: 1 1 0; height: auto; min-height: 0; }
+  .clipt-fyp .clipt-cinematic-media .clipt-photo-frame { height: 100%; min-height: 0; }
+  .clipt-fyp .clipt-cinematic-caption { max-height: 3em; }
+  .clipt-fyp > .clipt-feed-state { grid-row: 3; min-height: 0; margin: 0; }
+}
+@media (orientation: portrait) and (max-width: 300px) {
+  .clipt-fyp { bottom: calc(188px + env(safe-area-inset-bottom,0px)); }
+}
+body:has(.clipt-controller[data-layout="immersive"]):not(:has(.clipt-engagement-hud[role="dialog"])) .clipt-fyp {
+  inset: env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+  display: block; padding: 0; min-height: 0; background: black;
+}
+body:has(.clipt-controller[data-layout="immersive"]) .clipt-fyp-header { display: none; }
+body:has(.clipt-controller[data-layout="immersive"]) .clipt-fyp-track { height: 100%; min-height: 0; padding: 0; scroll-padding: 0; gap: 0; }
+body:has(.clipt-controller[data-layout="immersive"]) .clipt-fyp-slide { flex-basis: 100%; }
+body:has(.clipt-controller[data-layout="immersive"]) .clipt-feed-tabs { position: fixed; display: flex; top: max(12px,env(safe-area-inset-top,0px)); bottom: auto !important; left: 50%; right: auto !important; transform: translateX(-50%); width: 100px; padding: 0; z-index: 59; }
+body:has(.clipt-controller[data-layout="immersive"][data-hidden="true"]) .clipt-feed-tabs { visibility: hidden; }
+body:has(.clipt-controller[data-layout="immersive"][data-emergency="true"]) .clipt-feed-tabs { display: none; }
+/* Classic lifts its reserved media pane above the controller wrapper (z50).
+   Immersive overlays share that wrapper, so the full-size media must not cover it. */
+body:has(.clipt-controller[data-layout="immersive"]) .clipt-fyp { z-index: 0 !important; }
+body:has(.clipt-controller[data-layout="immersive"]) .clipt-feed-tabs { display: none; }
+/* Upright phones reuse the floating controls: media owns the surface, not the
+   oversized classic header/panel. Author and caption remain in the comment dock. */
+.clipt-portrait-comment-avatar, .clipt-portrait-caption { display: none; }
+.clipt-swipe-trail { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 59; overflow: hidden; }
+.clipt-swipe-trail path { fill: none; stroke: #c084fc; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px #9333ea); opacity: 0; transition: opacity 450ms ease-out; }
+@media (orientation:landscape), (prefers-reduced-motion:reduce) { .clipt-swipe-trail { display: none; } }
+.reduce-motion .clipt-swipe-trail { display: none; }
+body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-fyp-track { touch-action: pan-x pinch-zoom; }
+body:has(.clipt-controller[data-mobile-v2="true"][data-portrait-viewing="true"]) .clipt-fyp {
+  position: fixed; inset: env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px) !important;
+  display: block; padding: 0; min-height: 0; background: black;
+}
+body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp {
+  position: fixed; inset: env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px) !important;
+  display: block; padding: 0 !important; min-height: 0 !important; background: black; z-index: 0 !important;
+}
+body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp-header,
+body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-feed-tabs,
+body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp .clipt-cinematic-header,
+body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp .clipt-cinematic-caption { display: none !important; }
+body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp-track { height: 100%; min-height: 0; padding: 0; gap: 0; }
+body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp-slide { flex-basis: 100%; height: 100%; }
+body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp .clipt-fyp-slide > article { position: relative; height: 100%; padding: 0 !important; border: 0; border-radius: 0; background: black; }
+body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp .clipt-cinematic-media { position: absolute; inset: 0; width: 100%; height: 100% !important; min-height: 0; flex: none; }
+@media (orientation: portrait) {
+  body:has(.clipt-controller[data-layout="immersive"]) .clipt-fyp .clipt-fyp-slide > article {
+    position: relative; width: 100%; height: 100%; padding: 0 !important;
+    border: 0; border-radius: 0; background: black;
+  }
+  body:has(.clipt-controller[data-layout="immersive"]) .clipt-fyp .clipt-cinematic-header,
+  body:has(.clipt-controller[data-layout="immersive"]) .clipt-fyp .clipt-cinematic-caption { display: none; }
+  body:has(.clipt-controller[data-layout="immersive"]) .clipt-fyp .clipt-cinematic-media {
+    position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; flex: none;
+  }
+  body:has(.clipt-controller[data-layout="immersive"]) .clipt-fyp .clipt-photo-frame { height: 100%; min-height: 0; }
+  body:has(.clipt-controller[data-layout="immersive"]) .clipt-fyp video,
+  body:has(.clipt-controller[data-layout="immersive"]) .clipt-fyp .clipt-photo-frame img { width: 100%; height: 100%; object-fit: contain; }
+  body:has(.clipt-controller[data-layout="immersive"]) .clipt-engagement-hud[role="dialog"] {
+    top: max(12px,env(safe-area-inset-top,0px)); bottom: max(12px,env(safe-area-inset-bottom,0px));
+    height: auto; max-height: none; transform: translateX(-50%); animation: none;
+  }
+}
+/* Attribute, not orientation media query: the keyboard may invert CSS aspect ratio. */
+  body:has(.clipt-controller[data-portrait-zoom="true"]) .clipt-fyp .clipt-fyp-slide > article { position: relative; width: 100%; height: 100%; padding: 0 !important; border: 0; border-radius: 0; background: black; }
+  body:has(.clipt-controller[data-portrait-zoom="true"]) .clipt-fyp .clipt-cinematic-header,
+  body:has(.clipt-controller[data-portrait-zoom="true"]) .clipt-fyp .clipt-cinematic-caption { display: none; }
+  body:has(.clipt-controller[data-portrait-zoom="true"]) .clipt-fyp .clipt-cinematic-media { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; flex: none; }
+  body:has(.clipt-controller[data-portrait-zoom="true"]) .clipt-fyp video { width: 100%; height: 100%; object-fit: contain; }
+  body:has(.clipt-controller[data-portrait-zoom="true"]) .clipt-engagement-hud[role="dialog"] {
+    top: calc(var(--clipt-portrait-visible-top,0px) + 8px + env(safe-area-inset-top,0px)); bottom: auto;
+    left: max(8px,env(safe-area-inset-left,0px)); right: max(8px,env(safe-area-inset-right,0px)); width: auto;
+    height: calc(var(--clipt-portrait-visible-height,100dvh) - 16px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+    max-height: none; min-height: 0; overflow-y: auto; overscroll-behavior: contain; overflow-anchor: none; transform: none;
+  }
+  body:has(.clipt-controller[data-portrait-zoom="true"]) .clipt-comment-post-details { border-bottom: 1px solid #a78bfa66; padding-bottom: 12px; }
+  body:has(.clipt-controller[data-portrait-zoom="true"]) .clipt-portrait-comment-avatar { display: flex; width: 36px; height: 36px; margin-bottom: 6px; }
+  body:has(.clipt-controller[data-portrait-zoom="true"]) .clipt-original-caption { display: none; }
+  body:has(.clipt-controller[data-portrait-zoom="true"]) .clipt-portrait-caption { display: inline; }
+  body:has(.clipt-controller[data-portrait-zoom="true"]) .clipt-hud-comments form { position: relative; background: #100c20; padding-bottom: env(safe-area-inset-bottom,0px); }
+@media (orientation: landscape) and (max-height: 500px), (orientation: portrait) and (max-width: 300px) {
+  .clipt-media-gallery[role="dialog"] { top: max(12px,env(safe-area-inset-top,0px)); bottom: auto; left: max(12px,env(safe-area-inset-left,0px)); transform: none; animation: none; width: calc(100vw - 24px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)); height: calc(100dvh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)); max-height: none; padding: 8px; gap: 4px; z-index: 80; }
+  .clipt-media-gallery > div:not(.clipt-gallery-stage) { min-height: 44px; padding: 0 48px 0 4px; flex-shrink: 0; }
+  .clipt-media-gallery[role="dialog"] > button:last-child { top: 4px; right: 4px; min-width: 44px; min-height: 44px; }
+  body:has(.clipt-media-gallery[role="dialog"]) .clipt-controller-feed { visibility: hidden; }
+}
+/* The carousel moves only through explicit navigation, never native page panning. */
+body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp-track { overflow: hidden !important; touch-action: pinch-zoom !important; }
+.clipt-bottom-swipe-zone { display: none; }
+body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-bottom-swipe-zone {
+  display: grid; place-items: center; position: fixed; z-index: 58;
+  left: calc(var(--clipt-portrait-visible-left,0px) + 70px + env(safe-area-inset-left,0px));
+  bottom: calc(100dvh - var(--clipt-portrait-visible-height,100dvh) - var(--clipt-portrait-visible-top,0px) + env(safe-area-inset-bottom,0px));
+  width: max(44px,calc(var(--clipt-portrait-visible-width,100vw) - 140px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)));
+  height: 96px; touch-action: pinch-zoom; user-select: none;
+}
+.clipt-bottom-swipe-zone span { color: #c4b5fd; font-size: .75rem; pointer-events: none; }
+.clipt-bottom-swipe-zone::before,
+.clipt-bottom-swipe-zone::after {
+  content: ''; position: absolute; inset: 14px 8px; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle at 12% 62%,#e9d5ff 0 1px,transparent 2px),radial-gradient(circle at 29% 35%,#c4b5fd 0 .7px,transparent 1.6px),radial-gradient(circle at 43% 74%,#f5eaff 0 .8px,transparent 1.8px),radial-gradient(circle at 62% 42%,#d8b4fe 0 1px,transparent 2px),radial-gradient(circle at 78% 65%,#e9d5ff 0 .6px,transparent 1.5px),radial-gradient(circle at 91% 28%,#a78bfa 0 .8px,transparent 1.8px);
+  animation: clipt-swipe-dust 8s ease-in-out infinite;
+}
+.clipt-bottom-swipe-zone::after { animation-delay: -4s; background-size: 83% 79%; }
+@keyframes clipt-swipe-dust { 0%,100% { opacity: 0; transform: translate3d(-12px,4px,0); } 40%,60% { opacity: .28; } 90% { opacity: 0; transform: translate3d(12px,-4px,0); } }
+@media (prefers-reduced-motion: reduce) { .clipt-bottom-swipe-zone::before,.clipt-bottom-swipe-zone::after { animation: none; opacity: .12; transform: none; } }
+.reduce-motion .clipt-bottom-swipe-zone::before,.reduce-motion .clipt-bottom-swipe-zone::after { animation: none; opacity: .12; transform: none; }
+body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-fyp .clipt-cinematic-media {
+  bottom: 112px !important; height: calc(100% - 112px) !important;
+}
+.clipt-swipe-trail path { stroke: #eedcff; stroke-width: 2; filter: drop-shadow(0 0 3px #c084fc) drop-shadow(0 0 8px #9333ea) drop-shadow(0 0 12px #7e22ce); }
+/* Shared chrome cleanup and complete, responsive game catalog. */
+.clipt-masthead, .clipt-masthead.clipt-masthead { grid-template-columns: minmax(0,1fr); justify-items: center; }
+.clipt-search .clipt-search-results[data-category="games"],
+.clipt-search[data-search-category="all"] .clipt-search-results[data-category="games"] {
+  display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,140px),1fr)); grid-auto-flow: row; grid-auto-columns: auto;
+  overflow-x: visible; min-width: 0; contain: none;
+}
+.clipt-search-results[data-category="games"] > li { min-width: 0; }
+.clipt-publishing-status { position: absolute; z-index: 65; top: max(8px,env(safe-area-inset-top,0px)); left: max(8px,env(safe-area-inset-left,0px)); right: max(8px,env(safe-area-inset-right,0px)); max-height: 35dvh; overflow-y: auto; padding: 10px; border: 1px solid #c4b5fd; border-radius: 12px; background: #100b20f2; color: #f5f3ff; font-size: 14px; }
+.clipt-publishing-status :is(a,button) { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 10px; text-decoration: underline; }
+body:has(.clipt-controller[data-page-controller]) { --clipt-page-controller-space: calc(132px + env(safe-area-inset-bottom,0px)); }
+@media(min-width:768px) { body:has(.clipt-controller[data-page-controller]) { --clipt-page-controller-space: calc(160px + env(safe-area-inset-bottom,0px)); } }
+@media(orientation:landscape) and (max-height:500px) { body:has(.clipt-controller[data-page-controller]) { --clipt-page-controller-space: calc(128px + env(safe-area-inset-bottom,0px)); } }
+@media(max-width:319px) { body:has(.clipt-controller[data-page-controller]) { --clipt-page-controller-space: calc(212px + env(safe-area-inset-bottom,0px)); } }
+.clipt-messages[data-conversation-open="true"] {
+  position: fixed; inset: max(8px,env(safe-area-inset-top,0px)) max(8px,env(safe-area-inset-right,0px)) calc(var(--clipt-page-controller-space,160px) + 8px) max(8px,env(safe-area-inset-left,0px));
+  z-index: 55; width: auto; max-width: none; height: auto !important; min-height: 0 !important; padding: 0; background: #090612;
+}
+.clipt-messages[data-conversation-open="true"] > .grid { grid-template-columns: minmax(0,1fr); flex: 1; min-height: 0; gap: 0; }
+.clipt-messages[data-conversation-open="true"] .clipt-inbox { display: none !important; }
+body:has(.clipt-messages[data-conversation-open="true"]) .clipt-masthead { visibility: hidden; }
+.clipt-messages[data-conversation-open="true"] > h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.clipt-messages[data-conversation-open="true"] .clipt-dm-panel { overflow: hidden; }
+.clipt-messages[data-conversation-open="true"] .clipt-dm-heading { padding: 6px; margin-bottom: 8px; flex-shrink: 0; }
+.clipt-messages[data-conversation-open="true"] .clipt-dm-composer { flex-shrink: 0; }
+@media(max-height:260px) {
+  /* The Back control restores the console when neither surface can fit together. */
+  .clipt-messages[data-conversation-open="true"] { bottom: max(8px,env(safe-area-inset-bottom,0px)); z-index: 70; }
+}
+/* Large unfolded/square portrait surfaces get a real action gutter, not zoom scaling. */
+@media (min-width: 600px) and (orientation: portrait) {
+  body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-fyp .clipt-cinematic-media {
+    width: calc(100% - 72px) !important; right: auto; left: 0;
+  }
+  body:has(.clipt-controller[data-portrait-viewing="true"][data-hand="left"]) .clipt-fyp .clipt-cinematic-media {
+    left: 72px; right: 0;
+  }
+}

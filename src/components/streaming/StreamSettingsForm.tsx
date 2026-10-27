@@ -14,7 +14,7 @@ interface StreamSettingsFormProps {
     chatSlowMode: number;
     notificationEnabled: boolean;
   };
-  onSettingsChange: (settings: any) => void;
+  onSettingsChange: (settings: StreamSettingsFormProps['settings']) => void;
   onSave: () => void;
   isLoading: boolean;
 }

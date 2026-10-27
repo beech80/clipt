@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 // Import from our centralized icon library
@@ -12,11 +12,13 @@ import {
 } from "@/components/ui/icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { getComments, getCommentCount, likeComment, deleteComment, editComment, createComment } from "@/services/commentService";
+import { getComments, likeComment, deleteComment, editComment, createComment, MAX_COMMENT_LENGTH } from "@/services/commentService";
+import type { Post } from "@/types/post";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Textarea } from "@/components/ui/textarea";
+import { Loader2 as SmallLoader, MessageSquare } from 'lucide-react';
 import { formatDistanceToNowStrict } from "date-fns";
 import {
   DropdownMenu,
@@ -37,7 +39,8 @@ const TinyCloseIcon = () => <CloseIcon className="h-3 w-3" />;
 interface CommentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  postId: string;
+  postId?: string;
+  autoFocusInput?: boolean;
 }
 
 interface Comment {
@@ -49,7 +52,7 @@ interface Comment {
   post_id: string;
   profiles: {
     username: string;
-    avatar_url: string;
+    avatar_url: string | null;
   };
   likes_count: number;
   liked_by_me?: boolean;
@@ -63,43 +66,38 @@ interface CommentData {
   parent_id?: string | null;
 }
 
-const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) => {
+const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose, autoFocusInput = false }) => {
   const { user } = useAuth();
-  const [comment, setComment] = useState("");
+  const [draft, setComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
   const [editingComment, setEditingComment] = useState<Comment | null>(null);
   const [editContent, setEditContent] = useState("");
   const [showRepliesFor, setShowRepliesFor] = useState<Record<string, boolean>>({});
-  const [post, setPost] = useState<any>(null);
+  const [post, setPost] = useState<Post | null>(null);
   const [showUserComments, setShowUserComments] = useState<string | null>(null);
   const [userComments, setUserComments] = useState<Comment[]>([]);
   const [isLoadingUserComments, setIsLoadingUserComments] = useState(false);
+  const activePostRef = useRef(postId);
+  activePostRef.current = postId;
 
   // Get useQueryClient
   const queryClient = useQueryClient();
 
-  // Console.log when component mounts and dependencies change
   useEffect(() => {
-    console.log(`CommentModal rendered - postId: ${postId}, isOpen: ${isOpen}`);
-    
-    if (isOpen && postId) {
-      console.log(`Modal open for post ${postId}, fetching data...`);
-    }
-  }, [postId, isOpen]);
-
-  // Force refresh comments when modal opens
-  useEffect(() => {
-    if (isOpen && postId) {
-      console.log("Modal opened, forcing comment refresh");
-      refetch();
-    }
-  }, [isOpen, postId, refetch]);
+    setComment("");
+    setReplyingTo(null);
+    setEditingComment(null);
+    setShowRepliesFor({});
+    setShowUserComments(null);
+    setUserComments([]);
+  }, [postId]);
 
   // Fetch the post data
   useEffect(() => {
+    let cancelled = false;
+    setPost(null);
     if (isOpen && postId) {
       const fetchPost = async () => {
-        console.log(`Fetching post data for ${postId}`);
         try {
           const { data, error } = await supabase
             .from("posts")
@@ -121,8 +119,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
             return;
           }
           
-          console.log("Post data retrieved:", data);
-          setPost(data);
+          if (!cancelled) setPost(data as unknown as Post);
         } catch (error) {
           console.error("Error in fetchPost:", error);
           toast.error("An error occurred while loading the post");
@@ -131,6 +128,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
       
       fetchPost();
     }
+    return () => { cancelled = true; };
   }, [isOpen, postId]);
 
   // Fetch comments
@@ -139,33 +137,35 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
     isLoading, 
     error,
     refetch 
-  } = useQuery({
-    queryKey: ['comments', postId],
+  } = useQuery<Comment[]>({
+    queryKey: ['comments', postId, user?.id],
     queryFn: async () => {
-      console.log(`Running useQuery to fetch comments for post ${postId}`);
       if (!postId) return [];
       const { data, error } = await getComments(postId);
       if (error) {
         console.error('Error fetching comments in useQuery:', error);
         throw error;
       }
-      console.log(`Comments fetched in useQuery:`, data?.length, data);
-      return data || [];
+      return data.map(item => ({ ...item, parent_id: item.parent_id ?? null }));
     },
-    enabled: !!postId && isOpen
+    enabled: !!postId && isOpen,
+    staleTime: 0,
   });
+
+  // Query variables must exist before an effect dependency evaluates them.
+  useEffect(() => {
+    if (isOpen && postId) void refetch();
+  }, [isOpen, postId, refetch]);
 
   // Add comment mutation
   const addComment = useMutation({
-    mutationFn: async ({ content, parentId }: { content: string, parentId?: string }) => {
-      if (!user || !postId) {
+    mutationFn: async ({ content, parentId, targetPostId }: { content: string, parentId?: string, targetPostId: string }) => {
+      if (!user || !targetPostId) {
         throw new Error('User or post ID is missing');
       }
       
-      console.log(`Adding comment: content=${content}, parentId=${parentId}, postId=${postId}`);
-      
       const commentData: CommentData = {
-        post_id: postId,
+        post_id: targetPostId,
         user_id: user.id,
         content: content,
         parent_id: parentId || null
@@ -177,14 +177,16 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
       }
       return result.data;
     },
-    onSuccess: () => {
-      console.log("Comment added successfully, refetching comments...");
-      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
-      setComment('');
-      setReplyingTo(null);
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['comments', variables.targetPostId] });
+      queryClient.invalidateQueries({ queryKey: ['comments-count', variables.targetPostId] });
+      if (activePostRef.current === variables.targetPostId) {
+        setComment('');
+        setReplyingTo(null);
+      }
       toast.success('Comment added successfully!');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error("Error adding comment:", error);
       toast.error('Failed to add comment. Please try again.');
     }
@@ -271,7 +273,10 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
         return;
       }
       
-      setUserComments(data || []);
+      setUserComments(((data || []) as unknown as Comment[]).map(item => ({
+        ...item,
+        profiles: item.profiles || { username: "Deleted user", avatar_url: null },
+      })));
     } catch (error) {
       console.error("Error in fetchUserComments:", error);
       toast.error("An error occurred while loading user comments");
@@ -291,14 +296,9 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
   }, [showUserComments, fetchUserComments]);
 
   // Handle comment submission
-  const handleSubmitComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!comment.trim()) return;
-    
-    console.log(`Submitting comment for post ${postId}`, {
-      content: comment.trim(),
-      parentId: replyingTo?.id || null
-    });
+  const handleSubmitComment = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!draft.trim() || !postId || addComment.isPending) return;
     
     if (!user) {
       toast.error("You must be logged in to comment");
@@ -306,8 +306,9 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
     }
     
     addComment.mutate({
-      content: comment.trim(),
-      parentId: replyingTo?.id
+      content: draft.trim(),
+      parentId: replyingTo?.id,
+      targetPostId: postId,
     });
   };
 
@@ -547,8 +548,12 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                 
                 <div className="flex-1 min-w-0">
                   <Textarea
-                    value={comment}
+                    id="comment-textarea"
+                    value={draft}
                     onChange={(e) => setComment(e.target.value)}
+                    aria-label="Comment"
+                    maxLength={MAX_COMMENT_LENGTH}
+                    autoFocus={autoFocusInput}
                     placeholder={replyingTo ? `Reply to ${replyingTo.profiles.username}...` : "Write a comment..."}
                     className="min-h-[80px] resize-none bg-transparent border-0 focus-visible:ring-0 text-white placeholder:text-gray-500 p-0"
                   />
@@ -569,7 +574,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                     
                     <Button
                       onClick={() => handleSubmitComment}
-                      disabled={!comment.trim() || addComment.isPending}
+                      disabled={!draft.trim() || addComment.isPending}
                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full px-4"
                     >
                       {addComment.isPending ? <SmallLoader className="mr-2 animate-spin" /> : null}
@@ -777,8 +782,10 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                     <div className="ml-10 mt-2">
                       <div className="bg-gaming-800/30 rounded-lg p-2 border border-gaming-700/30">
                         <Textarea
-                          value={comment}
+                          value={draft}
                           onChange={(e) => setComment(e.target.value)}
+                          aria-label="Reply"
+                          maxLength={MAX_COMMENT_LENGTH}
                           placeholder={`Reply to ${replyingTo.profiles.username}...`}
                           className="min-h-[60px] resize-none bg-transparent border-0 focus-visible:ring-0 text-white p-0 text-sm"
                         />
@@ -794,7 +801,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                           <Button
                             size="sm"
                             onClick={() => handleSubmitComment()}
-                            disabled={!comment.trim() || addComment.isPending}
+                            disabled={!draft.trim() || addComment.isPending}
                             className="h-7 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white"
                           >
                             Reply

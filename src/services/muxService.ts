@@ -50,21 +50,5 @@ export const deleteMuxAsset = async (assetId: string) => {
   if (error) throw error;
 };
 
-export const trackMuxAsset = async (assetId: string, userId: string) => {
-  const asset = await getMuxAsset(assetId);
-  
-  const { error } = await supabase
-    .from('mux_assets')
-    .insert({
-      user_id: userId,
-      asset_id: assetId,
-      playback_id: asset.playback_ids[0]?.id,
-      status: asset.status,
-      duration: asset.duration,
-      max_stored_resolution: asset.max_stored_resolution,
-      max_stored_frame_rate: asset.max_stored_frame_rate,
-      aspect_ratio: asset.aspect_ratio
-    });
-
-  if (error) throw error;
-};
+// Asset ownership and provider metadata must be persisted by the authenticated
+// upload handler/webhook, never by a browser-supplied asset ID or user ID.

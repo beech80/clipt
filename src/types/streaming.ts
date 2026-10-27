@@ -25,9 +25,9 @@ export interface StreamingConfig {
   ingest_endpoint: string;
   playback_endpoint: string;
   provider: string;
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
   cdn_provider?: string;
-  cdn_config?: Record<string, any>;
+  cdn_config?: Record<string, unknown>;
   obs_recommended_settings?: {
     video: {
       fps: number;
@@ -48,7 +48,7 @@ export interface StreamingConfig {
       sample_rate: number;
     };
   };
-  rtmp_server_locations?: any[];
+  rtmp_server_locations?: unknown[];
   stream_key_prefix?: string;
 }
 

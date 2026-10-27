@@ -1,98 +1,48 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { Gamepad2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { gameCatalogPage } from '@/lib/game-catalog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
 import { BackButton } from '@/components/ui/back-button';
-import { Gamepad2, TrendingUp, Users } from 'lucide-react';
 
-const TopGames = () => {
-  const navigate = useNavigate();
-  
-  // Sample game data
-  const games = [
-    { id: 1, name: "Fortnite", players: "2.4M", trending: true },
-    { id: 2, name: "Counter-Strike 2", players: "1.2M", trending: true },
-    { id: 3, name: "Apex Legends", players: "980K", trending: false },
-    { id: 4, name: "Call of Duty: Warzone", players: "850K", trending: true },
-    { id: 5, name: "Valorant", players: "820K", trending: false },
-    { id: 6, name: "League of Legends", players: "780K", trending: false },
-    { id: 7, name: "Dota 2", players: "650K", trending: false },
-    { id: 8, name: "Minecraft", players: "620K", trending: true },
-  ];
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c]">
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-black/40 backdrop-blur-lg border-b border-white/10">
-        <div className="flex items-center justify-center max-w-7xl mx-auto relative">
-          <BackButton />
-          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-            <TrendingUp className="text-purple-400" size={24} />
-            Top Games
-          </h1>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 pt-24 pb-20 max-w-2xl">
-        <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-white/10 shadow-xl overflow-hidden">
-          <div className="p-4 border-b border-white/10">
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder="Search games..." 
-                className="w-full bg-gray-800/50 border border-gray-700 rounded-full py-2 px-4 text-white placeholder:text-gray-400 pl-10"
-              />
-              <svg 
-                className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-          </div>
-          
-          <div className="divide-y divide-white/10">
-            {games.map(game => (
-              <div 
-                key={game.id}
-                className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors"
-                onClick={() => navigate(`/game/${game.id}`)}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
-                    <Gamepad2 className="text-purple-400" size={20} />
-                  </div>
-                  <div>
-                    <div className="flex items-center">
-                      <h3 className="font-medium text-white">{game.name}</h3>
-                      {game.trending && (
-                        <span className="ml-2 px-1.5 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded-md flex items-center">
-                          <TrendingUp size={12} className="mr-1" />
-                          Hot
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center text-gray-400 text-sm mt-1">
-                      <Users size={14} className="mr-1" />
-                      {game.players} players
-                    </div>
-                  </div>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="border-gray-700 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-600"
-                >
-                  Follow
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default TopGames;
+export default function TopGames() {
+  const { user } = useAuth();
+  const [input, setInput] = useState('');
+  const [term, setTerm] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setTerm(input.trim()), 250);
+    return () => clearTimeout(timer);
+  }, [input]);
+  const games = useInfiniteQuery({
+    queryKey: ['game-catalog', user?.id, term], retry: false,
+    initialPageParam: 0,
+    queryFn: ({ signal, pageParam }) => gameCatalogPage(term, pageParam, signal),
+    getNextPageParam: (last, pages) => last.length === 40 ? pages.length : undefined,
+  });
+  const catalog = games.data?.pages.flat() ?? [];
+  return <main className="mx-auto max-w-3xl space-y-5 px-4 py-6 pb-44">
+    <BackButton />
+    <header className="space-y-2">
+      <h1 className="flex items-center gap-2 text-2xl font-bold"><Gamepad2 aria-hidden="true" />Game catalog</h1>
+      <p className="text-sm text-muted-foreground">Explore games in Clipt. Listed alphabetically, not by player counts or Trophy ranking.</p>
+    </header>
+    <Input type="search" aria-label="Search games" placeholder="Search games…" maxLength={80} value={input} onChange={event => setInput(event.target.value)} />
+    {input.trim() !== term && <p role="status">Updating search…</p>}
+    {games.isPending ? <p role="status">Loading games…</p> : games.isError ? <Card className="space-y-3 p-4">
+      <p role="alert">Unable to load games. Please try again.</p>
+      <Button onClick={() => void games.refetch()}>Retry games</Button>
+    </Card> : !catalog.length ? <Card className="p-4">{term ? 'No games match this search.' : 'No games are available yet.'}</Card> :
+      <ul className="grid gap-3 sm:grid-cols-2">{catalog.map(game => <li key={game.id}>
+        <Card><Link to={`/game/${game.id}`} className="flex min-w-0 items-center gap-3 rounded-lg p-4 hover:bg-primary/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+          <Gamepad2 className="h-8 w-8 shrink-0 text-primary" aria-hidden="true" />
+          <span className="min-w-0 break-words font-medium">{game.name}</span>
+        </Link></Card>
+      </li>)}</ul>}
+    {games.hasNextPage && <Button disabled={games.isFetchingNextPage} onClick={() => void games.fetchNextPage()}>{games.isFetchingNextPage ? 'Loading games…' : 'Load more games'}</Button>}
+    <p className="text-xs text-muted-foreground">Browse every game in the configured Clipt catalog. Search any game name; unavailable games are not fabricated.</p>
+  </main>;
+}

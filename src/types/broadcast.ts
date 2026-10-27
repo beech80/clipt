@@ -75,7 +75,7 @@ export interface EngineConfig {
       min: number;
     };
   };
-  ingest_endpoints: any[];
+  ingest_endpoints: unknown[];
   created_at: string;
   updated_at: string;
 }

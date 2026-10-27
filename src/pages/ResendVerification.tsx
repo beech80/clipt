@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -13,26 +13,30 @@ const ResendVerification = () => {
   const [error, setError] = useState<string | null>(null);
   const { resendVerificationEmail } = useAuth();
   const navigate = useNavigate();
+  const submitting = useRef(false);
 
   const handleResend = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setLoading(true);
     setError(null);
 
     try {
       await resendVerificationEmail(email);
-      toast.success('Verification email sent! Please check your inbox.');
+      toast.success('Verification request accepted. Check your inbox for the confirmation link.');
       navigate('/login');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   };
 
   return (
-    <div className="pb-[180px] sm:pb-[200px]">
-      <div className="mx-auto max-w-md space-y-6 pt-12">
+    <main className="clipt-auth-form px-4 py-8">
+      <div className="gaming-card mx-auto max-w-md space-y-6 p-6">
         <div className="text-center space-y-2">
           <div className="flex justify-center mb-4">
             <div className="h-12 w-12 rounded-lg bg-primary/20 flex items-center justify-center">
@@ -51,8 +55,12 @@ const ResendVerification = () => {
 
         <form onSubmit={handleResend} className="space-y-4">
           <div>
+            <label htmlFor="verification-email" className="block mb-2">Email address</label>
             <Input
+              id="verification-email"
               type="email"
+              autoComplete="email"
+              disabled={loading}
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -76,7 +84,7 @@ const ResendVerification = () => {
           </Button>
         </form>
       </div>
-    </div>
+    </main>
   );
 };
 

@@ -1,27 +1,10 @@
-
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 export default function PaymentSuccess() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    toast.success('Payment successful! Thank you for your purchase.');
-    // Redirect to home after 3 seconds
-    const timeout = setTimeout(() => {
-      navigate('/');
-    }, 3000);
-
-    return () => clearTimeout(timeout);
-  }, [navigate]);
-
-  return (
-    <div className="container mx-auto px-4 py-16 text-center">
-      <h1 className="text-4xl font-bold mb-4">Payment Successful!</h1>
-      <p className="text-xl text-muted-foreground mb-8">
-        Thank you for your purchase. You will be redirected shortly...
-      </p>
-    </div>
-  );
+  return <main className="clipt-auth mx-auto max-w-xl space-y-5 px-4 py-12">
+    <h1 className="text-2xl font-bold">Returned from checkout</h1>
+    <p>Returning here does not confirm payment or activate membership. Your subscription page shows the server-confirmed account status.</p>
+    <Button asChild><Link to="/subscription">Check membership status</Link></Button>
+  </main>;
 }

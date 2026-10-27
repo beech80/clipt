@@ -1,6 +1,8 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { reportOperationalFailure } from '@/lib/operational-alerts';
 
 interface Props {
   children: ReactNode;
@@ -54,8 +56,10 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log the error to console
-    console.error('Error caught by ErrorBoundary:', error, errorInfo);
+    // Error objects/stacks can contain signed media or auth URLs and user text.
+    // Keep the production console event generic; this is not an alert service.
+    console.error('CLIPT render failure');
+    void reportOperationalFailure(window.location.pathname);
     this.setState({
       error,
       errorInfo
@@ -97,7 +101,10 @@ class ErrorBoundary extends Component<Props, State> {
     }
 
     if (this.state.hasError) {
-      const errorMessage = this.state.error?.message || 'Something went wrong';
+      if (this.props.fallback) return this.props.fallback;
+      const errorMessage = import.meta.env.DEV
+        ? this.state.error?.message || 'Something went wrong'
+        : 'Clipt could not display this page. Please try again.';
       
       // Custom fallback UI
       return (
@@ -107,7 +114,7 @@ class ErrorBoundary extends Component<Props, State> {
             <h1 className="text-2xl font-bold text-red-400">Something went wrong</h1>
             <div className="text-gray-300 text-center">
               <p className="text-sm mb-4">{errorMessage}</p>
-              {this.state.error?.stack && (
+              {import.meta.env.DEV && this.state.error?.stack && (
                 <details className="mt-4 text-left">
                   <summary className="cursor-pointer text-gaming-300 hover:text-gaming-200 text-sm mb-2">
                     Error Details

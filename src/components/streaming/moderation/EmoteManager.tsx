@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import type { ChatEmote } from '@/types/chat';
+import { parseChatEmotes } from '@/lib/chat-data';
 
 interface EmoteManagerProps {
   streamId: string;
@@ -25,22 +25,26 @@ export const EmoteManager = ({ streamId }: EmoteManagerProps) => {
       const { data, error } = await supabase
         .from('chat_emotes')
         .select('*')
-        .eq('stream_id', streamId);
+        .contains('permissions', { stream_id: streamId });
       
       if (error) throw error;
-      return data as ChatEmote[];
+      return parseChatEmotes(data ?? []);
     }
   });
 
   const addEmote = useMutation({
     mutationFn: async () => {
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError || !auth.user) throw new Error('Sign in to manage emotes');
+      if (!emoteName.trim() || new URL(emoteUrl).protocol !== 'https:') throw new Error('Use a name and HTTPS image URL');
       const { error } = await supabase
         .from('chat_emotes')
         .insert([{
-          stream_id: streamId,
-          name: emoteName,
+          created_by: auth.user.id,
+          name: emoteName.trim(),
           url: emoteUrl,
           permissions: {
+            stream_id: streamId,
             subscriber_only: subscriberOnly,
             moderator_only: false
           }

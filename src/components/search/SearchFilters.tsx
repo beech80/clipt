@@ -31,6 +31,7 @@ export function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) 
         <Button 
           variant="outline" 
           size="icon"
+          aria-label="Open search filters"
           className="touch-manipulation active:scale-95 transition-transform"
         >
           <SlidersHorizontal className="h-4 w-4" />
@@ -45,7 +46,8 @@ export function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) 
             <Label>Content Type</Label>
             <Select
               value={filters.type}
-              onValueChange={(value: any) => {
+              onValueChange={(value) => {
+                if (value !== 'all' && value !== 'posts' && value !== 'profiles' && value !== 'streams') return;
                 onFiltersChange({ ...filters, type: value });
                 toast.success(`Filtering by ${value}`);
               }}
@@ -66,7 +68,11 @@ export function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) 
             <Label>Date Range</Label>
             <Select
               value={filters.dateRange}
-              onValueChange={(value: any) => onFiltersChange({ ...filters, dateRange: value })}
+              onValueChange={(value) => {
+                if (value === 'all' || value === 'today' || value === 'week' || value === 'month') {
+                  onFiltersChange({ ...filters, dateRange: value });
+                }
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select date range" />
@@ -92,7 +98,9 @@ export function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) 
             <Label>Sort By</Label>
             <Select
               value={filters.sortBy}
-              onValueChange={(value: any) => onFiltersChange({ ...filters, sortBy: value })}
+              onValueChange={(value) => {
+                if (value === 'recent' || value === 'relevant') onFiltersChange({ ...filters, sortBy: value });
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select sorting" />

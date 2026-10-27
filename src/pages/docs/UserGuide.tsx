@@ -7,9 +7,10 @@ import userGuideContent from '../../../docs/USER_GUIDE.md?raw';
 
 const UserGuide = () => {
   return (
-    <Card className="p-6">
+    <main className="clipt-user-guide mx-auto max-w-3xl p-4 sm:p-6">
+    <Card className="p-4 sm:p-6">
       <div className="flex items-center gap-2 mb-6">
-        <BookOpen className="w-5 h-5 text-purple-500" />
+        <BookOpen aria-hidden="true" className="w-5 h-5 text-purple-300" />
         <h1 className="text-2xl font-bold">User Guide</h1>
       </div>
       
@@ -17,6 +18,9 @@ const UserGuide = () => {
         <ReactMarkdown 
           remarkPlugins={[remarkGfm]}
           components={{
+            h1: ({node, ...props}) => (
+              <h2 className="text-xl font-semibold mt-8 mb-4" {...props} />
+            ),
             h2: ({node, ...props}) => (
               <h2 className="flex items-center gap-2 text-xl font-semibold mt-8 mb-4" {...props}>
                 {props.children}
@@ -42,6 +46,7 @@ const UserGuide = () => {
         </ReactMarkdown>
       </div>
     </Card>
+    </main>
   );
 };
 

@@ -34,11 +34,13 @@ export default function GameClips() {
         .select(`
           *,
           profiles:user_id (username, avatar_url),
-          games:game_id (name)
+          games:game_id (id, name)
         `)
         .eq('game_id', id)
-        .eq('type', 'video')
-        .order('created_at', { ascending: false });
+        .not('video_url', 'is', null)
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) throw error;
       return data || [];

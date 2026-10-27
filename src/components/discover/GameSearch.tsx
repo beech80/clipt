@@ -30,7 +30,7 @@ interface GameSearchProps {
     releaseYear?: string;
     hasClips?: boolean;
   };
-  onFiltersChange?: (filters: any) => void;
+  onFiltersChange?: (filters: NonNullable<GameSearchProps['filters']>) => void;
   isLoading?: boolean;
 }
 
@@ -60,7 +60,7 @@ export function GameSearch({
         
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" aria-label="Advanced game filters">
               <SlidersHorizontal className="h-4 w-4" />
             </Button>
           </SheetTrigger>

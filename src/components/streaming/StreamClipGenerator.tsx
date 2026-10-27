@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import ShareButton from '@/components/shared/ShareButton';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 
 interface StreamClipGeneratorProps {
@@ -30,6 +30,8 @@ export const StreamClipGenerator = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const clipStartTimeRef = useRef(0);
   const clipLengthSeconds = 30; // Default clip length in seconds
+  const requestRef = useRef<{ identity: string; id: string } | null>(null);
+  const pendingRef = useRef(false);
 
   const handleStartClip = () => {
     if (!videoRef.current) return;
@@ -47,45 +49,34 @@ export const StreamClipGenerator = ({
   };
 
   const handleSaveClip = async () => {
-    if (!videoRef.current || !user) return;
+    if (!videoRef.current || !user || pendingRef.current) return;
+    pendingRef.current = true;
     
     setIsProcessing(true);
     try {
-      // This would typically involve server-side processing
-      // For this implementation, we'll simulate the process and create a clip record
-
       // Calculate clip end time (start time + clip length, max at video duration)
       const clipEndTime = Math.min(
         clipStartTimeRef.current + clipLengthSeconds,
         videoRef.current.duration
       );
       
-      // In a real implementation, you would send start/end times to your backend
-      // to process the actual video clip. Here we're just creating a database record.
-      
-      const { data, error } = await supabase.from('stream_clips').insert({
-        user_id: user.id,
-        stream_id: streamId,
-        title: clipTitle,
-        start_time: clipStartTimeRef.current,
-        end_time: clipEndTime,
-        duration: clipEndTime - clipStartTimeRef.current,
-        created_at: new Date().toISOString(),
-      }).select('id').single();
+      const identity = JSON.stringify([user.id, streamId, clipTitle.trim(), clipStartTimeRef.current, clipEndTime]);
+      if (requestRef.current?.identity !== identity) requestRef.current = { identity, id: crypto.randomUUID() };
+      const { data, error } = await supabase.rpc('request_stream_clip', {
+        p_stream_id: streamId, p_title: clipTitle.trim(), p_start: clipStartTimeRef.current,
+        p_end: clipEndTime, p_request_id: requestRef.current.id,
+      });
       
       if (error) throw error;
       
-      // In a real implementation, the backend would generate an actual clip URL
-      // For now, we'll generate a shareable URL that references this clip in the database
-      const generatedClipUrl = `${window.location.origin}/clips/${data.id}`;
-      setClipUrl(generatedClipUrl);
-      setClipGenerated(true);
-      
-      toast.success('Clip created successfully!');
+      if (!data) throw new Error('Clip request was not confirmed');
+      setIsCreatingClip(false);
+      toast.info('Clip processing request saved. Playback is unavailable until processing completes.');
     } catch (error) {
       console.error('Error creating clip:', error);
       toast.error('Failed to create clip. Please try again.');
     } finally {
+      pendingRef.current = false;
       setIsProcessing(false);
     }
   };

@@ -52,7 +52,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
             .from('follows')
             .select('*')
             .eq('follower_id', userId)
-            .eq('followed_id', authorId)
+            .eq('following_id', authorId)
             .single();
             
           setIsFollowing(!!existingFollow);
@@ -82,29 +82,30 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
       
       if (isLiked) {
         // Unlike
-        await supabase
+        const { error } = await supabase
           .from('likes')
           .delete()
           .eq('post_id', currentPostId)
           .eq('user_id', userId);
+        if (error) throw error;
           
         toast.success('Post unliked');
         setIsLiked(false);
       } else {
         // Like
-        await supabase
+        const { error } = await supabase
           .from('likes')
           .insert({
             post_id: currentPostId,
             user_id: userId
           });
+        if (error) throw error;
           
         toast.success('Post liked');
         setIsLiked(true);
       }
       
-      // Update post like count
-      await supabase.rpc('update_post_like_count', { post_id_param: currentPostId });
+      // Counts are derived from persisted likes, not written by the browser.
       
     } catch (error) {
       console.error('Error liking post:', error);
@@ -158,22 +159,24 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
       
       if (isFollowing) {
         // Unfollow
-        await supabase
+        const { error } = await supabase
           .from('follows')
           .delete()
           .eq('follower_id', userId)
-          .eq('followed_id', authorId);
+          .eq('following_id', authorId);
+        if (error) throw error;
           
         toast.success('User unfollowed');
         setIsFollowing(false);
       } else {
         // Follow
-        await supabase
+        const { error } = await supabase
           .from('follows')
           .insert({
             follower_id: userId,
-            followed_id: authorId
+            following_id: authorId
           });
+        if (error) throw error;
           
         toast.success('User followed');
         setIsFollowing(true);

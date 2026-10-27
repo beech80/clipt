@@ -3,9 +3,20 @@ import { PieChart, Vote, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { z } from 'zod';
+import type { Database } from '@/integrations/supabase/types';
+
+const optionSchema = z.object({ id: z.string().uuid(), text: z.string().min(1).max(200), votes: z.number().int().nonnegative() });
+const parsePoll = (row: Database['public']['Tables']['stream_polls']['Row']): PollData => {
+  const options = z.array(optionSchema).min(2).max(5).parse(row.options).map(option => ({
+    id: option.id, text: option.text, votes: option.votes,
+  }));
+  return { id: row.id, question: row.question, options, total_votes: options.reduce((sum, option) => sum + option.votes, 0),
+    is_active: row.is_active, created_at: row.created_at, end_time: row.ends_at };
+};
 
 interface PollOption {
   id: string;
@@ -57,12 +68,12 @@ export function StreamPoll({ streamId, isStreamer, className = '' }: StreamPollP
         }
 
         if (data) {
-          setActivePoll(data);
+          setActivePoll(parsePoll(data));
           
           // Check if user has voted
           if (user) {
             const { data: voteData } = await supabase
-              .from('stream_poll_votes')
+              .from('poll_votes')
               .select('*')
               .eq('poll_id', data.id)
               .eq('user_id', user.id)
@@ -95,7 +106,7 @@ export function StreamPoll({ streamId, isStreamer, className = '' }: StreamPollP
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'stream_poll_votes',
+        table: 'poll_votes',
         filter: activePoll ? `poll_id=eq.${activePoll.id}` : undefined,
       }, fetchActivePoll)
       .subscribe();
@@ -128,7 +139,7 @@ export function StreamPoll({ streamId, isStreamer, className = '' }: StreamPollP
       if (activePoll) {
         await supabase
           .from('stream_polls')
-          .update({ is_active: false, end_time: new Date().toISOString() })
+          .update({ is_active: false, ends_at: new Date().toISOString() })
           .eq('id', activePoll.id);
       }
       
@@ -143,10 +154,9 @@ export function StreamPoll({ streamId, isStreamer, className = '' }: StreamPollP
         .from('stream_polls')
         .insert({
           stream_id: streamId,
-          user_id: user.id,
+          creator_id: user.id,
           question: pollQuestion,
           options: optionsWithVotes,
-          total_votes: 0,
           is_active: true,
           created_at: new Date().toISOString()
         })
@@ -155,7 +165,7 @@ export function StreamPoll({ streamId, isStreamer, className = '' }: StreamPollP
         
       if (error) throw error;
       
-      setActivePoll(data);
+      setActivePoll(parsePoll(data));
       setIsCreatingPoll(false);
       setPollQuestion('');
       setPollOptions(['', '']);
@@ -172,32 +182,11 @@ export function StreamPoll({ streamId, isStreamer, className = '' }: StreamPollP
     if (!user || !activePoll || userVoted) return;
     
     try {
-      // Add vote
-      const { error: voteError } = await supabase
-        .from('stream_poll_votes')
-        .insert({
-          poll_id: activePoll.id,
-          user_id: user.id,
-          option_id: optionId,
-          created_at: new Date().toISOString()
-        });
+      const { error: voteError } = await supabase.rpc('cast_stream_poll_vote', {
+        p_poll_id: activePoll.id, p_option_id: optionId,
+      });
         
       if (voteError) throw voteError;
-      
-      // Update poll data
-      const updatedOptions = activePoll.options.map(opt => 
-        opt.id === optionId ? { ...opt, votes: opt.votes + 1 } : opt
-      );
-      
-      const { error: pollError } = await supabase
-        .from('stream_polls')
-        .update({ 
-          options: updatedOptions,
-          total_votes: activePoll.total_votes + 1
-        })
-        .eq('id', activePoll.id);
-        
-      if (pollError) throw pollError;
       
       setUserVoted(true);
       toast.success('Vote recorded!');
@@ -211,13 +200,14 @@ export function StreamPoll({ streamId, isStreamer, className = '' }: StreamPollP
     if (!activePoll || !isStreamer) return;
     
     try {
-      await supabase
+      const { error } = await supabase
         .from('stream_polls')
         .update({ 
           is_active: false,
-          end_time: new Date().toISOString()
+          ends_at: new Date().toISOString()
         })
         .eq('id', activePoll.id);
+      if (error) throw error;
         
       setActivePoll(null);
       toast.success('Poll ended');

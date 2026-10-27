@@ -1,4 +1,5 @@
 import PubNub from 'pubnub';
+import type { Json } from '@/integrations/supabase/types';
 import { supabase } from '@/lib/supabase';
 
 let pubnubInstance: PubNub | null = null;
@@ -36,7 +37,7 @@ export const cleanupPubNub = () => {
 };
 
 // Utility functions for common PubNub operations
-export const publishMessage = async (channel: string, message: any) => {
+export const publishMessage = async (channel: string, message: Json) => {
   const pubnub = getPubNub();
   return await pubnub.publish({
     channel,
@@ -46,7 +47,7 @@ export const publishMessage = async (channel: string, message: any) => {
 
 export const subscribeToChannel = (
   channel: string, 
-  callback: (message: any) => void
+  callback: (message: unknown) => void
 ) => {
   const pubnub = getPubNub();
   

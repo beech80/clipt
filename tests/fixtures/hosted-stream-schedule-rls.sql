@@ -1,0 +1,81 @@
+-- Development only. SQL-role probes, not browser-authentication certification.
+-- Every disposable identity, schedule and profile is rolled back.
+BEGIN;
+SET LOCAL statement_timeout='30s';
+DO $test$
+DECLARE
+  alice uuid := gen_random_uuid(); bob uuid := gen_random_uuid();
+  private_id uuid; public_id uuid; n integer; denied boolean;
+BEGIN
+  INSERT INTO auth.users(id,aud,role) VALUES (alice,'authenticated','authenticated'),(bob,'authenticated','authenticated');
+  INSERT INTO public.profiles(id) VALUES (alice),(bob) ON CONFLICT(id) DO NOTHING;
+  PERFORM set_config('request.jwt.claim.sub',alice::text,true);
+  PERFORM set_config('request.jwt.claims',json_build_object('sub',alice,'role','authenticated','aal','aal1')::text,true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  INSERT INTO public.scheduled_streams(user_id,title,scheduled_start,is_private,tags)
+    VALUES(alice,'Private fixture',now()+interval '1 day',true,'test') RETURNING id INTO private_id;
+  INSERT INTO public.scheduled_streams(user_id,title,scheduled_start,is_private)
+    VALUES(alice,'Public fixture',now()+interval '2 days',false) RETURNING id INTO public_id;
+  SELECT count(*) INTO n FROM public.scheduled_streams WHERE user_id=alice;
+  IF n<>2 THEN RAISE EXCEPTION 'Owner read failed'; END IF;
+  UPDATE public.scheduled_streams SET title='Updated fixture' WHERE id=private_id;
+  denied:=false;
+  BEGIN UPDATE public.scheduled_streams SET user_id=bob WHERE id=private_id;
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true; END;
+  IF NOT denied THEN RAISE EXCEPTION 'Ownership reassignment accepted'; END IF;
+  denied:=false;
+  BEGIN INSERT INTO public.scheduled_streams(user_id,title,scheduled_start) VALUES(alice,'Past fixture',now()-interval '1 day');
+  EXCEPTION WHEN invalid_parameter_value THEN denied:=true; END;
+  IF NOT denied THEN RAISE EXCEPTION 'Past date accepted'; END IF;
+  denied:=false;
+  BEGIN INSERT INTO public.scheduled_streams(user_id,title,scheduled_start) VALUES(alice,'Duplicate fixture',now()+interval '1 day');
+  EXCEPTION WHEN unique_violation THEN denied:=true; END;
+  IF NOT denied THEN RAISE EXCEPTION 'Duplicate accepted'; END IF;
+  denied:=false;
+  BEGIN INSERT INTO public.scheduled_streams(user_id,title,scheduled_start,duration_minutes) VALUES(alice,'Duration fixture',now()+interval '3 days',1);
+  EXCEPTION WHEN check_violation THEN denied:=true; END;
+  IF NOT denied THEN RAISE EXCEPTION 'Invalid duration accepted'; END IF;
+  EXECUTE 'RESET ROLE';
+  PERFORM set_config('request.jwt.claim.sub',bob::text,true);
+  PERFORM set_config('request.jwt.claims',json_build_object('sub',bob,'role','authenticated','aal','aal1')::text,true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  SELECT count(*) INTO n FROM public.scheduled_streams WHERE id=private_id;
+  IF n<>0 THEN RAISE EXCEPTION 'Private schedule leaked'; END IF;
+  SELECT count(*) INTO n FROM public.scheduled_streams WHERE id=public_id;
+  IF n<>1 THEN RAISE EXCEPTION 'Public schedule unreadable'; END IF;
+  UPDATE public.scheduled_streams SET title='Foreign update' WHERE id=public_id;
+  GET DIAGNOSTICS n=ROW_COUNT;
+  IF n<>0 THEN RAISE EXCEPTION 'Foreign update accepted'; END IF;
+  DELETE FROM public.scheduled_streams WHERE id=public_id;
+  GET DIAGNOSTICS n=ROW_COUNT;
+  IF n<>0 THEN RAISE EXCEPTION 'Foreign delete accepted'; END IF;
+  denied:=false;
+  BEGIN INSERT INTO public.scheduled_streams(user_id,title,scheduled_start) VALUES(alice,'Foreign fixture',now()+interval '4 days');
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true; END;
+  IF NOT denied THEN RAISE EXCEPTION 'Foreign insert accepted'; END IF;
+  EXECUTE 'RESET ROLE';
+  INSERT INTO public.user_blocks(blocker_id,blocked_id) VALUES(bob,alice);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  SELECT count(*) INTO n FROM public.scheduled_streams WHERE id=public_id;
+  IF n<>0 THEN RAISE EXCEPTION 'Blocked schedule visible'; END IF;
+  EXECUTE 'RESET ROLE';
+  EXECUTE 'SET LOCAL ROLE anon';
+  denied:=false;
+  BEGIN PERFORM 1 FROM public.scheduled_streams LIMIT 1;
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true; END;
+  IF NOT denied THEN RAISE EXCEPTION 'Anonymous access accepted'; END IF;
+  EXECUTE 'RESET ROLE';
+  DELETE FROM public.profiles WHERE id=alice;
+  IF EXISTS(SELECT 1 FROM public.scheduled_streams WHERE user_id=alice) THEN RAISE EXCEPTION 'Deleted profile schedules retained'; END IF;
+  PERFORM set_config('request.jwt.claim.sub',alice::text,true);
+  PERFORM set_config('request.jwt.claims',json_build_object('sub',alice,'role','authenticated','aal','aal1')::text,true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  denied:=false;
+  BEGIN INSERT INTO public.scheduled_streams(user_id,title,scheduled_start) VALUES(alice,'Deleted fixture',now()+interval '4 days');
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true; END;
+  IF NOT denied THEN RAISE EXCEPTION 'Deleted account write accepted'; END IF;
+  EXECUTE 'RESET ROLE';
+END;
+$test$;
+ROLLBACK;
+SELECT 'PASS: isolated schedule ownership/privacy/blocking/validation/deletion SQL-role probes; all fixtures rolled back' AS result;

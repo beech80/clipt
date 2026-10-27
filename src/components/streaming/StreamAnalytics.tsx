@@ -4,7 +4,7 @@ import ActivityIcon from '@/components/ui/activity-icon';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Select,
   SelectContent,
@@ -60,134 +60,65 @@ export function StreamAnalytics({ userId, streamId }: StreamAnalyticsProps) {
   // Only allow the actual streamer or admins to view analytics
   const canViewAnalytics = user && (user.id === userId || user.app_metadata?.role === 'admin');
   
-  // Query for overview metrics
-  const { data: metrics, isLoading: isLoadingMetrics } = useQuery({
-    queryKey: ['stream-metrics', userId, timeRange, streamId],
+  const { data: analytics, isLoading: isLoadingMetrics, error: analyticsError } = useQuery({
+    queryKey: ['stream-analytics', user?.id, userId, timeRange, streamId],
     queryFn: async () => {
-      if (!canViewAnalytics) return null;
-      
-      const startDate = getUnixTime(subDays(new Date(), 
-        timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90
-      ));
-      
-      let query = supabase.rpc('get_stream_metrics', { 
-        p_user_id: userId,
-        p_days: timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90
+      const since = subDays(new Date(), Number(timeRange.slice(0, -1))).toISOString();
+      let query = supabase.from('streams')
+        .select('id, title, started_at, ended_at, is_live')
+        .eq('user_id', userId).gte('started_at', since)
+        .order('started_at', { ascending: false }).limit(100);
+      if (streamId) query = query.eq('id', streamId);
+      const { data: streams, error } = await query;
+      if (error) throw error;
+      if (!streams.length) return { sessions: [], viewerData: [], totalHours: 0, average: null, peak: null };
+      const ids = streams.map(stream => stream.id);
+      const { data: samples, error: sampleError } = await supabase.from('stream_analytics')
+        .select('stream_id, created_at, average_viewers, peak_viewers')
+        .in('stream_id', ids).gte('created_at', since).order('created_at').limit(5000);
+      if (sampleError) throw sampleError;
+      const { data: clips, error: clipError } = await supabase.from('stream_clips')
+        .select('stream_id').in('stream_id', ids).limit(5000);
+      if (clipError) throw clipError;
+      const sessions = streams.map(stream => {
+        const points = samples.filter(sample => sample.stream_id === stream.id);
+        const averages = points.map(point => point.average_viewers).filter(value => typeof value === 'number');
+        const peaks = points.map(point => point.peak_viewers).filter(value => typeof value === 'number');
+        return {
+          id: stream.id, title: stream.title, start_time: stream.started_at, end_time: stream.ended_at,
+          is_live: stream.is_live,
+          duration_seconds: stream.started_at && stream.ended_at ? Math.max(0, (Date.parse(stream.ended_at) - Date.parse(stream.started_at)) / 1000) : null,
+          avg_viewers: averages.length ? averages.reduce((sum, value) => sum + value, 0) / averages.length : null,
+          max_viewers: peaks.length ? Math.max(...peaks) : null,
+          clips_created: clips.filter(clip => clip.stream_id === stream.id).length,
+        };
       });
-      
-      if (streamId) {
-        query = supabase.rpc('get_single_stream_metrics', { 
-          p_stream_id: streamId
-        });
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      return data as StreamMetrics;
+      const averages = samples.map(sample => sample.average_viewers).filter(value => typeof value === 'number');
+      const peaks = samples.map(sample => sample.peak_viewers).filter(value => typeof value === 'number');
+      return {
+        sessions,
+        totalHours: sessions.reduce((sum, session) => sum + (session.duration_seconds ?? 0), 0) / 3600,
+        average: averages.length ? averages.reduce((sum, value) => sum + value, 0) / averages.length : null,
+        peak: peaks.length ? Math.max(...peaks) : null,
+        viewerData: samples.filter(sample => sample.created_at && sample.average_viewers !== null).map(sample => ({
+          date: format(new Date(sample.created_at), 'MMM dd HH:mm'),
+          time: format(new Date(sample.created_at), 'HH:mm'),
+          viewers: sample.average_viewers,
+        })),
+      };
     },
-    enabled: canViewAnalytics,
+    enabled: !!canViewAnalytics,
   });
-  
-  // Query for stream sessions
-  const { data: sessions, isLoading: isLoadingSessions } = useQuery({
-    queryKey: ['stream-sessions', userId, timeRange, streamId],
-    queryFn: async () => {
-      if (!canViewAnalytics) return [];
-      
-      const startDate = subDays(new Date(), 
-        timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90
-      );
-      
-      let query = supabase
-        .from('streams')
-        .select(`
-          id,
-          title,
-          start_time,
-          end_time,
-          duration_seconds,
-          max_viewers,
-          avg_viewers,
-          total_views,
-          (
-            SELECT count(*) FROM stream_clips WHERE stream_id = streams.id
-          ) as clips_created,
-          (
-            SELECT count(*) FROM stream_donations WHERE stream_id = streams.id
-          ) as donations_received
-        `)
-        .eq('user_id', userId)
-        .gte('start_time', startDate.toISOString())
-        .order('start_time', { ascending: false });
-      
-      if (streamId) {
-        query = query.eq('id', streamId);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      return data as StreamSession[];
-    },
-    enabled: canViewAnalytics,
-  });
-  
-  // Query for viewer count over time (for charts)
-  const { data: viewerData, isLoading: isLoadingViewerData } = useQuery({
-    queryKey: ['stream-viewer-data', userId, timeRange, streamId],
-    queryFn: async () => {
-      if (!canViewAnalytics) return [];
-      
-      const startDate = subDays(new Date(), 
-        timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90
-      );
-      
-      let query = supabase
-        .from('stream_viewer_counts')
-        .select('timestamp, viewer_count, stream_id')
-        .eq('user_id', userId)
-        .gte('timestamp', getUnixTime(startDate));
-      
-      if (streamId) {
-        query = query.eq('stream_id', streamId);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      
-      // Process data for charts - group by day for the overview
-      if (!streamId) {
-        const groupedByDay: Record<string, number> = {};
-        
-        if (data && Array.isArray(data)) {
-          data.forEach((item) => {
-            const date = format(fromUnixTime(item.timestamp), 'yyyy-MM-dd');
-            if (!groupedByDay[date]) {
-              groupedByDay[date] = 0;
-            }
-            groupedByDay[date] = Math.max(groupedByDay[date], item.viewer_count);
-          });
-        
-          return Object.keys(groupedByDay).map(date => ({
-            date,
-            viewers: groupedByDay[date]
-          }));
-        }
-        
-        return [];
-      }
-      
-      // Return detailed data for a specific stream
-      return data && Array.isArray(data) ? data.map(item => ({
-        time: format(fromUnixTime(item.timestamp), 'HH:mm'),
-        timestamp: item.timestamp,
-        viewers: item.viewer_count
-      })).sort((a, b) => a.timestamp - b.timestamp) : [];
-    },
-    enabled: canViewAnalytics,
-  });
+  const sessions = analytics?.sessions;
+  const viewerData = analytics?.viewerData;
+  const isLoadingSessions = isLoadingMetrics;
+  const isLoadingViewerData = isLoadingMetrics;
+  const metrics = analytics ? {
+    total_streams: analytics.sessions.length,
+    total_hours_streamed: analytics.totalHours,
+    avg_viewers: analytics.average,
+    max_viewers: analytics.peak,
+  } : null;
   
   if (!canViewAnalytics) {
     return (
@@ -204,6 +135,7 @@ export function StreamAnalytics({ userId, streamId }: StreamAnalyticsProps) {
   
   return (
     <div className="space-y-4">
+      {analyticsError && <p role="alert">Unable to load analytics. Metrics below are unavailable.</p>}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">
           {streamId ? 'Stream Analytics' : 'Streaming Analytics'}
@@ -236,7 +168,7 @@ export function StreamAnalytics({ userId, streamId }: StreamAnalyticsProps) {
             {isLoadingMetrics ? (
               <Skeleton className="h-7 w-16" />
             ) : (
-              <div className="text-2xl font-bold">{metrics?.total_streams || 0}</div>
+              <div className="text-2xl font-bold">{metrics?.total_streams ?? 'Unavailable'}</div>
             )}
             <p className="text-xs text-muted-foreground">
               {timeRange === '7d' ? 'Last 7 days' : timeRange === '30d' ? 'Last 30 days' : 'Last 90 days'}
@@ -254,7 +186,7 @@ export function StreamAnalytics({ userId, streamId }: StreamAnalyticsProps) {
               <Skeleton className="h-7 w-20" />
             ) : (
               <div className="text-2xl font-bold">
-                {Math.round((metrics?.total_hours_streamed || 0) * 10) / 10}h
+                {metrics ? `${Math.round(metrics.total_hours_streamed * 10) / 10}h` : 'Unavailable'}
               </div>
             )}
             <p className="text-xs text-muted-foreground">
@@ -272,7 +204,7 @@ export function StreamAnalytics({ userId, streamId }: StreamAnalyticsProps) {
             {isLoadingMetrics ? (
               <Skeleton className="h-7 w-16" />
             ) : (
-              <div className="text-2xl font-bold">{Math.round(metrics?.avg_viewers || 0)}</div>
+              <div className="text-2xl font-bold">{metrics?.avg_viewers != null ? Math.round(metrics.avg_viewers) : 'Not measured'}</div>
             )}
             <p className="text-xs text-muted-foreground">
               {metrics?.max_viewers ? `Peak: ${metrics.max_viewers}` : ''}
@@ -290,11 +222,11 @@ export function StreamAnalytics({ userId, streamId }: StreamAnalyticsProps) {
               <Skeleton className="h-7 w-24" />
             ) : (
               <div className="text-2xl font-bold">
-                ${Math.round((metrics?.donations_amount || 0) * 100) / 100}
+                Not available
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              {metrics?.total_donations ? `${metrics.total_donations} donations` : 'No donations yet'}
+              Payment fulfillment is not connected to analytics.
             </p>
           </CardContent>
         </Card>
@@ -389,7 +321,7 @@ export function StreamAnalytics({ userId, streamId }: StreamAnalyticsProps) {
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-medium">{session.title}</h3>
                         <div className="px-2 py-0.5 rounded text-xs bg-muted">
-                          {session.end_time ? 'Completed' : 'Live'}
+                          {session.end_time ? 'Completed' : session.is_live ? 'Live' : 'Offline'}
                         </div>
                       </div>
                       

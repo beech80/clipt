@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import type { StreamChatMessage } from '@/types/stream-chat';
+import type { Tables } from '@/integrations/supabase/types';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +20,7 @@ export function StreamPlayerChat({
   viewerCount,
   onViewerCountChange
 }: StreamPlayerChatProps) {
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<StreamChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const { user } = useAuth();
   const chatRef = useRef<HTMLDivElement>(null);
@@ -30,7 +32,7 @@ export function StreamPlayerChat({
         .from('stream_chat')
         .select(`
           *,
-          profiles:user_id(username, avatar_url)
+          profiles:profiles!stream_chat_user_id_fkey(username, avatar_url)
         `)
         .eq('stream_id', streamId)
         .order('created_at', { ascending: true });
@@ -48,7 +50,7 @@ export function StreamPlayerChat({
     // Subscribe to new messages
     const channel = supabase
       .channel(`stream_chat:${streamId}`)
-      .on('postgres_changes', {
+      .on<Tables<'stream_chat'>>('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'stream_chat',
@@ -131,7 +133,7 @@ export function StreamPlayerChat({
               placeholder="Send a message..."
               className="flex-1"
             />
-            <Button type="submit" size="icon">
+            <Button type="submit" size="icon" aria-label="Send message" disabled={!user}>
               <Send className="h-4 w-4" />
             </Button>
           </div>

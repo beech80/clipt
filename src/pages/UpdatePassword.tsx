@@ -1,87 +1,48 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Gamepad2 } from "lucide-react";
-import { toast } from "sonner";
+import { useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
-const UpdatePassword = () => {
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default function UpdatePassword() {
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Check if we're in a password reset flow
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    if (!hashParams.get("access_token")) {
-      navigate("/login");
-    }
-  }, [navigate]);
-
-  const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: password
-      });
-
-      if (error) throw error;
-
-      toast.success("Password updated successfully");
-      navigate("/login");
-    } catch (error: any) {
-      setError(error.message);
-      toast.error("Failed to update password");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="mx-auto max-w-md space-y-6 pt-12">
-      <div className="text-center space-y-2">
-        <div className="flex justify-center mb-4">
-          <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center">
-            <Gamepad2 className="h-6 w-6 text-gaming-400" />
-          </div>
-        </div>
-        <h1 className="text-2xl font-bold">Update Password</h1>
-        <p className="text-muted-foreground">Enter your new password</p>
-      </div>
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <form onSubmit={handleUpdatePassword} className="space-y-4">
-        <div>
-          <Input
-            type="password"
-            placeholder="Enter new password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-          />
-        </div>
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={loading}
-        >
-          {loading ? "Updating..." : "Update Password"}
-        </Button>
+  const [password, setPassword] = useState('');
+  const [confirmation, setConfirmation] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [complete, setComplete] = useState(false);
+  const submitting = useRef(false);
+  if (loading) return <p role="status">Checking recovery session…</p>;
+  if (!user) return <main className="max-w-md mx-auto p-6"><h1>Password reset link expired</h1><Link to="/reset-password">Request a new reset link</Link></main>;
+  return <main className="clipt-auth-form gaming-card max-w-md mx-auto p-6 space-y-4">
+    <h1 className="text-2xl font-bold">Choose a new password</h1>
+    {error && <p role="alert">{error}</p>}
+    {complete ? <p role="status">Password updated. <Link to="/login">Return to login</Link></p> : (
+      <form className="space-y-4" onSubmit={async event => {
+        event.preventDefault();
+        if (submitting.current) return;
+        if (password !== confirmation) { setError('Passwords do not match.'); return; }
+        setBusy(true);
+        submitting.current = true;
+        setError('');
+        try {
+          const { error } = await supabase.auth.updateUser({ password });
+          if (error) throw error;
+          setComplete(true);
+          setPassword('');
+          setConfirmation('');
+          const result = await supabase.auth.signOut();
+          if (!result.error) navigate('/login', { replace: true });
+        } catch (error) {
+          setError(error instanceof Error ? error.message : 'Password update failed. Please try again.');
+        } finally { submitting.current = false; setBusy(false); }
+      }}>
+        <label className="block">New password<Input disabled={busy} type="password" autoComplete="new-password" minLength={8} required value={password} onChange={event => setPassword(event.target.value)} /></label>
+        <label className="block">Confirm new password<Input disabled={busy} type="password" autoComplete="new-password" minLength={8} required value={confirmation} onChange={event => setConfirmation(event.target.value)} /></label>
+        <Button disabled={busy} type="submit">{busy ? 'Updating…' : 'Update password'}</Button>
       </form>
-    </div>
-  );
-};
-
-export default UpdatePassword;
+    )}
+  </main>;
+}

@@ -26,15 +26,23 @@ import { CommentList } from "./post/CommentList";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Textarea } from './ui/textarea';
+import { EngagementHud } from './post/EngagementHud';
+import { readEngagementUpdate } from '@/lib/engagement-event';
+import { deleteOwnedPost } from '@/lib/delete-owned-post';
+import { trophyIneligibility, trophyVoteError } from '@/lib/trophy-eligibility';
 
 interface PostItemProps {
   post: Post;
   onCommentClick?: () => void;
+  onOpenEngagement?: () => void;
   highlight?: boolean;
+  cinematic?: boolean;
+  watchPage?: boolean;
+  active?: boolean;
   'data-post-id'?: string;
 }
 
-const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = false, 'data-post-id': postIdAttr }) => {
+const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagement, highlight = false, cinematic = false, watchPage = false, active = true, 'data-post-id': postIdAttr }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
@@ -48,20 +56,16 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
   const [trophyCount, setTrophyCount] = useState(0);
   const [hasTrophy, setHasTrophy] = useState(false);
   const [trophyLoading, setTrophyLoading] = useState(false);
+  const [postDeleted, setPostDeleted] = useState(false);
   const { user } = useAuth();
   const isOwner = user?.id === post.user_id;
+  const trophyUnavailable = trophyIneligibility(post);
   const queryClient = useQueryClient();
 
   // Ensure we have a valid string post ID
   const postId = post && post.id ? String(post.id) : "";
 
-  // Debug logging
   useEffect(() => {
-    console.log(`PostItem rendering with postId: ${postId}`, {
-      postObject: post,
-      postIdRaw: post?.id,
-      postIdNormalized: postId
-    });
     setIsLoading(false);
   }, [postId, post]);
 
@@ -111,16 +115,11 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
 
   const handleDeletePost = async () => {
     try {
-      const { error } = await supabase
-        .from('posts')
-        .delete()
-        .eq('id', postId)
-        .eq('user_id', user?.id);
-
-      if (error) throw error;
-      
+      if (!user || !isOwner) throw new Error('Post owner sign-in required.');
+      await deleteOwnedPost(supabase, postId, user.id);
+      setPostDeleted(true);
       toast.success('Post deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      for (const queryKey of [['posts'], ['clipts-feed'], ['post', postId], ['clipt-drafts']]) void queryClient.invalidateQueries({ queryKey });
     } catch (error) {
       console.error('Error deleting post:', error);
       toast.error('Failed to delete post');
@@ -129,6 +128,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (likeLoading) return;
     
     if (!user) {
       toast.error("Please log in to like posts");
@@ -148,12 +148,13 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       console.log(`Liking post ID: ${postId}`);
       
       // Check if already liked
-      const { data: existingLike } = await supabase
+      const { data: existingLike, error: readError } = await supabase
         .from('likes')
         .select('*')
         .eq('post_id', postId)
         .eq('user_id', user.id)
         .maybeSingle();
+      if (readError) throw readError;
       
       if (existingLike) {
         // Unlike the post
@@ -205,6 +206,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       
       // Invalidate cache for this post
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
+      void queryClient.invalidateQueries({ queryKey: ['engagement-hud', postId] });
       
     } catch (error) {
       console.error("Error liking post:", error);
@@ -219,6 +221,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
   };
 
   const submitComment = async () => {
+    if (isSubmitting) return;
     if (!user) {
       toast.error('Please login to comment');
       return;
@@ -246,6 +249,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       
       // Update local state
       setCommentsCount(commentsCount + 1);
+      void queryClient.invalidateQueries({ queryKey: ['comments-count', postId] });
+      void queryClient.invalidateQueries({ queryKey: ['engagement-hud', postId] });
       setCommentText('');
       setIsDialogOpen(false);
       toast.success('Comment added');
@@ -283,7 +288,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     try {
       console.log(`Navigating to profile: ${userId}`);
       // Use window.location for more reliable navigation
-      window.location.href = `/profile/${userId}`;
+      window.location.href = `/user/${userId}`;
     } catch (error) {
       console.error('Error navigating to profile:', error);
       toast.error('Could not navigate to profile');
@@ -319,7 +324,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     }
 
     // If we're already processing, don't allow another click
-    if (trophyLoading) {
+    if (trophyLoading || trophyUnavailable) {
+      if (trophyUnavailable) toast(trophyUnavailable);
       return;
     }
 
@@ -369,8 +375,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         // Create a properly formatted trophy vote object
         const voteObject = {
           post_id: postId,
-          user_id: user.id,
-          created_at: new Date().toISOString()
+          user_id: user.id
         };
         
         console.log('Trophy vote object:', voteObject);
@@ -382,7 +387,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
           
         if (addError) {
           console.error('Error adding trophy:', addError.message, addError.details, addError.hint);
-          toast.error('Failed to add trophy: ' + addError.message);
+          toast.error(trophyVoteError(addError));
           return;
         }
         
@@ -411,6 +416,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         console.log('Dispatching trophy update event:', detail);
         
         window.dispatchEvent(new CustomEvent('trophy-update', { detail }));
+        void queryClient.invalidateQueries({ queryKey: ['engagement-hud', postId] });
         
         // Additional event for global count updates with short delay
         setTimeout(() => {
@@ -584,18 +590,18 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     fetchTrophyCount();
     
     // Set up event listeners for real-time updates
-    const handleLikeUpdate = (e: CustomEvent) => {
-      const detail = (e as any).detail;
-      if (detail?.postId === postId) {
+    const handleLikeUpdate = (e: CustomEvent<unknown>) => {
+      const detail = readEngagementUpdate(e.detail, postId);
+      if (detail) {
         console.log('Like update event received', detail);
         setLiked(detail.active);
         setLikesCount(detail.count);
       }
     };
     
-    const handleTrophyUpdate = (e: CustomEvent) => {
-      const detail = (e as any).detail;
-      if (detail?.postId === postId) {
+    const handleTrophyUpdate = (e: CustomEvent<unknown>) => {
+      const detail = readEngagementUpdate(e.detail, postId);
+      if (detail) {
         console.log('Trophy update event received', detail);
         setHasTrophy(detail.active);
         setTrophyCount(detail.count);
@@ -760,8 +766,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
   const gameName = post.games?.name;
-  // Extract the original game ID from the UUID format
-  const gameId = post.games?.id ? String(post.games.id).replace('00000000-0000-0000-0000-', '').replace(/^0+/, '') : '';
+  // Route using the actual catalog ID, including its complete UUID.
+  const gameId = post.games?.id != null ? String(post.games.id) : '';
 
   // Early return if post data is invalid
   if (!post || !postId) {
@@ -772,46 +778,50 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     );
   }
 
+  if (postDeleted) return <p role="status" className="p-4">This post has been deleted.</p>;
+
   return (
     <article 
       className={`relative w-full gaming-card transition-opacity duration-300 ${
         isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
       } ${highlight ? 'ring-2 ring-blue-500' : ''}`}
       data-post-id={postId}
+      data-active-clip={cinematic ? String(active) : undefined}
     >
       {/* User Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gaming-400/20">
+      <div className="clipt-cinematic-header flex items-center justify-between p-4 border-b border-gaming-400/20">
         <div className="flex items-center space-x-3">
-          <Avatar 
+          <button type="button" aria-label={`View ${username}'s profile`} onClick={() => handleProfileClick(post.user_id)} className="min-h-11 min-w-11 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300">
+          <Avatar
             className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200"
-            onClick={() => handleProfileClick(post.user_id)}
           >
             <AvatarImage src={avatarUrl || ''} alt={username} />
             <AvatarFallback>{username[0]?.toUpperCase() || '?'}</AvatarFallback>
           </Avatar>
+          </button>
           <div className="flex flex-col">
-            <span 
+            <button type="button"
               onClick={() => handleProfileClick(post.user_id)}
-              className="text-base font-semibold text-gaming-100 hover:text-gaming-200 transition-all duration-200 cursor-pointer"
+              className="min-h-11 text-left text-base font-semibold text-gaming-100 hover:text-gaming-200 transition-all duration-200 cursor-pointer"
             >
               {username}
-            </span>
+            </button>
             {gameName && gameId && (
               <div className="mb-1">
-                <span 
-                  className="text-gaming-300 hover:text-gaming-100 cursor-pointer text-sm"
+                <button type="button"
+                  className="min-h-11 text-left text-gaming-300 hover:text-gaming-100 cursor-pointer text-sm"
                   onClick={(e) => handleGameClick(e, gameId, gameName)} 
                 >
                   Playing {gameName}
-                </span>
+                </button>
               </div>
             )}
           </div>
         </div>
         {isOwner && (
           <DropdownMenu>
-            <DropdownMenuTrigger className="p-2 hover:bg-gaming-800 rounded-full transition-colors">
-              <MoreIcon className="h-5 w-5 text-gaming-300" />
+            <DropdownMenuTrigger aria-label="Post options" className="min-h-11 min-w-11 p-2 hover:bg-gaming-800 rounded-full transition-colors">
+              <MoreIcon aria-hidden="true" className="h-5 w-5 text-gaming-300" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem
@@ -827,19 +837,23 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       </div>
 
       {/* Post Content */}
-      <div className="w-full">
+      <div className={cinematic ? "clipt-cinematic-media w-full" : "w-full"}>
         <PostContent
           imageUrl={post.image_url}
           videoUrl={post.video_url}
           postId={postId}
+          allowFullscreen={!cinematic}
+          frameAspectRatio={watchPage ? '16 / 19' : undefined}
         />
       </div>
 
       {/* Interaction Counts */}
-      <div className="flex justify-around py-3 border-t border-gaming-400/20">
+      <div className={cinematic ? "hidden" : "flex justify-around py-3 border-t border-gaming-400/20"}>
         <button 
           className="like-button flex items-center text-sm font-medium transition-all duration-200 group"
           onClick={handleLike}
+          disabled={likeLoading}
+          aria-label={liked ? 'Unlike post' : 'Like post'}
         >
           <HeartIcon 
             className={`h-6 w-6 ${liked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
@@ -849,53 +863,31 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
             {likesCount}
           </span>
         </button>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={onOpenEngagement ? false : isDialogOpen} onOpenChange={open => {
+          if (onOpenEngagement) { if (open) onOpenEngagement(); }
+          else setIsDialogOpen(open);
+        }} modal={false}>
           <DialogTrigger asChild>
             <button 
               className="comment-button flex items-center text-sm font-medium text-gray-400 hover:text-blue-500 transition-all duration-200 group"
-              onClick={handleComment}
+              aria-label="Comment on post"
             >
               <MessageIcon 
                 className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
               />
               <span className="text-base font-medium text-gray-400 group-hover:text-blue-300">
-                {commentsCount}
+                {commentsCountQuery}
               </span>
             </button>
           </DialogTrigger>
-          <DialogContent className="bg-[#1D1E2A] border-[#2C2D41] text-white p-4 max-w-md mx-auto">
-            <h3 className="text-lg font-bold mb-3">Add Comment</h3>
-            <p className="text-sm text-gray-400 mb-4">Commenting on post from {post.profiles?.username || 'user'}</p>
-            
-            <Textarea
-              placeholder="Write your comment..."
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              className="bg-[#252636] border-[#333442] text-white min-h-[100px] mb-4"
-            />
-            
-            <div className="flex justify-end gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsDialogOpen(false)}
-                className="border-[#3F4252] text-gray-300 hover:bg-[#2C2D41]"
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={submitComment}
-                disabled={isSubmitting || !commentText.trim()}
-                className="bg-[#6366F1] hover:bg-[#4F46E5] text-white"
-              >
-                {isSubmitting ? 'Posting...' : 'Post Comment'}
-              </Button>
-            </div>
-          </DialogContent>
+          {!onOpenEngagement && isDialogOpen ? <EngagementHud postId={postId} username={post.profiles?.username} caption={post.content} /> : null}
         </Dialog>
         <button 
           className="trophy-button flex items-center text-sm font-medium text-gray-400 hover:text-yellow-500 transition-all duration-200 group"
           onClick={handleTrophyVote}
-          disabled={trophyLoading}
+          disabled={trophyLoading || Boolean(trophyUnavailable)}
+          title={trophyUnavailable || 'Award Trophy — public video rankings'}
+          aria-label={trophyUnavailable || 'Award trophy'}
         >
           <TrophyIcon 
             className={`h-6 w-6 ${hasTrophy ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-500'} transition-all ${trophyLoading ? 'opacity-50' : ''}`}
@@ -929,11 +921,11 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
 
       {/* Caption */}
       {post.content && (
-        <div className="px-4 py-3 border-t border-gaming-400/20">
+        <div className="clipt-cinematic-caption px-4 py-3 border-t border-gaming-400/20">
           <p className="text-base text-gaming-100">
-            <span className="font-semibold hover:text-gaming-200 cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
+            <button type="button" className="min-h-6 font-semibold hover:text-gaming-200 cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
               {username}
-            </span>
+            </button>
             {' '}
             <span className="text-gaming-200">{post.content}</span>
           </p>

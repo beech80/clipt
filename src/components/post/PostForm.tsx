@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import type { Tables } from '@/integrations/supabase/types';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -7,12 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Upload, Camera, Search, Hash, AtSign, X, Film, Home } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Progress } from '@/components/ui/progress';
 
 type PostDestination = 'clipts' | 'home';
 
 export const PostForm = () => {
+  const queryClient = useQueryClient();
   const [content, setContent] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [filePreview, setFilePreview] = useState<string[]>([]);
@@ -26,7 +28,7 @@ export const PostForm = () => {
   const [showMentionInput, setShowMentionInput] = useState(false);
   const [currentHashtag, setCurrentHashtag] = useState('');
   const [currentMention, setCurrentMention] = useState('');
-  const [userResults, setUserResults] = useState<any[]>([]);
+  const [userResults, setUserResults] = useState<Pick<Tables<'profiles'>, 'id' | 'username' | 'display_name' | 'avatar_url'>[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -48,10 +50,12 @@ export const PostForm = () => {
       });
 
       if (error) throw error;
-      return data.map((game: any) => ({
-        id: game.id.toString(),
-        name: game.name
-      }));
+      if (!Array.isArray(data)) throw new Error('Invalid game search response');
+      return data.flatMap((game: unknown) => {
+        if (!game || typeof game !== 'object' || !('id' in game) || !('name' in game) ||
+          (typeof game.id !== 'string' && typeof game.id !== 'number') || typeof game.name !== 'string') return [];
+        return [{ id: String(game.id), name: game.name }];
+      });
     }
   });
 
@@ -302,7 +306,7 @@ export const PostForm = () => {
       setUploadProgress(100);
 
       // Invalidate any existing posts queries to ensure fresh data
-      await supabase.rpc('invalidate_cache', { cache_key: 'posts' });
+      await Promise.all(['posts', 'clipts'].map(key => queryClient.invalidateQueries({ queryKey: [key] })));
 
       toast.success(
         destination === 'clipts' ? 'Clip created successfully!' : 'Post created successfully!'
@@ -327,7 +331,7 @@ export const PostForm = () => {
         navigate(`/?refresh=${Date.now()}`);
       }
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Post creation error:', error);
       toast.error(
         error instanceof Error ? error.message : 'Failed to create post. Please try again.',

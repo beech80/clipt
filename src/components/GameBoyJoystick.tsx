@@ -41,8 +41,8 @@ const GameBoyJoystick: React.FC<JoystickProps> = ({ onPositionChange }) => {
     const baseCenterY = baseRect.top + baseRect.height / 2;
     
     // Calculate relative position
-    let dx = e.clientX - baseCenterX;
-    let dy = e.clientY - baseCenterY;
+    const dx = e.clientX - baseCenterX;
+    const dy = e.clientY - baseCenterY;
     
     updateJoystickPosition(dx, dy);
   };
@@ -89,8 +89,8 @@ const GameBoyJoystick: React.FC<JoystickProps> = ({ onPositionChange }) => {
     const baseCenterY = baseRect.top + baseRect.height / 2;
     
     // Calculate relative position
-    let dx = e.touches[0].clientX - baseCenterX;
-    let dy = e.touches[0].clientY - baseCenterY;
+    const dx = e.touches[0].clientX - baseCenterX;
+    const dy = e.touches[0].clientY - baseCenterY;
     
     updateJoystickPosition(dx, dy);
   };

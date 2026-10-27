@@ -23,8 +23,8 @@ export const OBSConnectionStatus = ({ streamId }: OBSConnectionStatusProps) => {
           table: 'obs_connection_logs',
           filter: `stream_id=eq.${streamId}`
         },
-        (payload: any) => {
-          if (payload.new) {
+        (payload) => {
+          if ('connected_at' in payload.new && typeof payload.new.connected_at === 'string' && Number.isFinite(Date.parse(payload.new.connected_at))) {
             setIsConnected(payload.new.disconnected_at === null);
             setLastConnected(new Date(payload.new.connected_at));
           }

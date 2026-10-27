@@ -78,14 +78,11 @@ const PostDetector: React.FC<PostDetectorProps> = ({
     };
 
     // Debounce function to prevent too many calls
-    function debounce(func: Function, wait: number) {
-      let timeout: any = null;
-      return function(...args: any) {
-        const context = this;
+    function debounce<T extends unknown[]>(func: (...args: T) => void, wait: number) {
+      let timeout: ReturnType<typeof setTimeout>;
+      return (...args: T) => {
         clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          func.apply(context, args);
-        }, wait);
+        timeout = setTimeout(() => func(...args), wait);
       };
     }
 

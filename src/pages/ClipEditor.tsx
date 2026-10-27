@@ -14,8 +14,8 @@ interface ClipEditingSession {
   id?: string;
   user_id?: string;
   clip_id?: string;
-  effects: any[];
-  edit_history: any[][];
+  effects: Json[];
+  edit_history: Json[][];
   status?: string;
   created_at?: string;
   updated_at?: string;
@@ -24,7 +24,7 @@ interface ClipEditingSession {
 const ClipEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [editHistory, setEditHistory] = useState<any[][]>([]);
+  const [editHistory, setEditHistory] = useState<Json[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [trimStart, setTrimStart] = useState(0);
   const [trimEnd, setTrimEnd] = useState(100);
@@ -42,11 +42,8 @@ const ClipEditor = () => {
       if (error && error.code !== 'PGRST116') throw error;
       
       if (dbData) {
-        const parsedHistory = (dbData.edit_history as unknown as any[][]).map(historyEntry =>
-          historyEntry.map(effect => ({
-            ...effect
-          }))
-        );
+        const parsedHistory = Array.isArray(dbData.edit_history)
+          ? dbData.edit_history.filter((entry): entry is Json[] => Array.isArray(entry)) : [];
 
         return {
           ...dbData,

@@ -1,9 +1,17 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Author = Pick<Tables<'profiles'>, 'username' | 'avatar_url'>;
+export interface SearchResultData {
+  profiles: Pick<Tables<'profiles'>, 'id' | 'username' | 'avatar_url' | 'display_name'>[];
+  posts: (Pick<Tables<'posts'>, 'id' | 'content'> & { profiles: Author | null })[];
+  streams: (Pick<Tables<'streams'>, 'id' | 'title'> & { profiles: Author | null })[];
+}
 
 interface SearchResultsProps {
   isLoading: boolean;
-  results: any;
+  results: SearchResultData | null | undefined;
   onProfileClick: (id: string) => void;
   onPostClick: (id: string) => void;
   onStreamClick: (id: string) => void;
@@ -16,7 +24,7 @@ export function SearchResults({
   onPostClick,
   onStreamClick 
 }: SearchResultsProps) {
-  if (!results) return null;
+  if (!results && !isLoading) return null;
 
   return (
     <div className="absolute top-full mt-2 w-full rounded-md border bg-popover text-popover-foreground shadow-lg z-50">
@@ -25,12 +33,12 @@ export function SearchResults({
           <div className="p-4 text-center text-sm text-muted-foreground">
             Searching...
           </div>
-        ) : (
+        ) : results ? (
           <div className="p-2 touch-manipulation">
             {results.profiles.length > 0 && (
               <div className="mb-4">
                 <h3 className="px-2 text-sm font-medium text-muted-foreground">Users</h3>
-                {results.profiles.map((profile: any) => (
+                {results.profiles.map((profile) => (
                   <button
                     key={profile.id}
                     className="w-full flex items-center gap-2 p-2 hover:bg-accent rounded-md active:scale-98 transition-transform"
@@ -52,7 +60,7 @@ export function SearchResults({
             {results.posts.length > 0 && (
               <div className="mb-4">
                 <h3 className="px-2 text-sm font-medium text-muted-foreground">Posts</h3>
-                {results.posts.map((post: any) => (
+                {results.posts.map((post) => (
                   <button
                     key={post.id}
                     className="w-full flex items-center gap-2 p-2 hover:bg-accent rounded-md"
@@ -74,7 +82,7 @@ export function SearchResults({
             {results.streams.length > 0 && (
               <div>
                 <h3 className="px-2 text-sm font-medium text-muted-foreground">Streams</h3>
-                {results.streams.map((stream: any) => (
+                {results.streams.map((stream) => (
                   <button
                     key={stream.id}
                     className="w-full flex items-center gap-2 p-2 hover:bg-accent rounded-md"
@@ -101,7 +109,7 @@ export function SearchResults({
                 </div>
               )}
           </div>
-        )}
+        ) : null}
       </ScrollArea>
     </div>
   );

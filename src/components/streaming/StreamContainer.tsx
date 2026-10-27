@@ -6,7 +6,7 @@ import { StreamSettings } from './StreamSettings';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Input } from '@/components/ui/input';
-import { StreamHealthIndicator } from './StreamHealthIndicator';
+import { StreamHealthIndicator } from './health/StreamHealthIndicator';
 import { StreamOverlay } from './overlay/StreamOverlay';
 import { StreamAlerts } from './alerts/StreamAlerts';
 import { StreamWidgets } from './widgets/StreamWidgets';
@@ -16,8 +16,8 @@ import { AdvancedChatSettings } from './chat/AdvancedChatSettings';
 interface StreamContainerProps {
   userId: string;
   isLive: boolean;
-  streamConfig: any;
-  onStreamUpdate: (data: any) => void;
+  streamConfig: unknown;
+  onStreamUpdate: (data: { title: string; description: string }) => void;
 }
 
 export const StreamContainer = ({ 
@@ -65,7 +65,7 @@ export const StreamContainer = ({
             description={description}
             onStreamStateChange={() => onStreamUpdate({ title, description })}
           />
-          <StreamHealthIndicator streamId={stream?.id} />
+          {stream?.id && <StreamHealthIndicator streamId={stream.id} />}
         </div>
       </Card>
 

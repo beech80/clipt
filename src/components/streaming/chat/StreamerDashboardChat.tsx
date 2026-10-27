@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { useStreamChatMessages } from '@/hooks/useStreamChatMessages';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import type { StreamChatMessage } from '@/types/chat';
 import { Send, X, MessageSquare } from 'lucide-react';
 
 interface StreamerDashboardChatProps {
@@ -18,72 +18,10 @@ interface StreamerDashboardChatProps {
 export const StreamerDashboardChat = ({ streamId, isLive }: StreamerDashboardChatProps) => {
   const { user } = useAuth();
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<StreamChatMessage[]>([]);
+  const { messages, error: chatError } = useStreamChatMessages(streamId);
   const [isExpanded, setIsExpanded] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    // Load initial messages
-    const loadMessages = async () => {
-      const { data, error } = await supabase
-        .from('stream_chat')
-        .select(`
-          *,
-          profiles:user_id (
-            username,
-            avatar_url
-          )
-        `)
-        .eq('stream_id', streamId)
-        .order('created_at', { ascending: true })
-        .limit(100);
-
-      if (error) {
-        toast.error('Failed to load chat messages');
-        return;
-      }
-
-      setMessages(data as StreamChatMessage[]);
-    };
-
-    loadMessages();
-
-    // Subscribe to new messages
-    const channel = supabase
-      .channel(`stream_chat:${streamId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'stream_chat',
-          filter: `stream_id=eq.${streamId}`
-        },
-        async (payload) => {
-          if (payload.eventType === 'INSERT') {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('username, avatar_url')
-              .eq('id', payload.new.user_id)
-              .single();
-
-            const newMessage: StreamChatMessage = {
-              ...payload.new,
-              profiles: profile
-            };
-
-            setMessages(prev => [...prev, newMessage]);
-          } else if (payload.eventType === 'DELETE') {
-            setMessages(prev => prev.filter(msg => msg.id !== payload.old.id));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [streamId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -132,6 +70,7 @@ export const StreamerDashboardChat = ({ streamId, isLive }: StreamerDashboardCha
         </Button>
       </CardHeader>
       <CardContent className="p-0 flex flex-col h-[calc(100%-48px)]">
+        {chatError && <p role="alert">{chatError}</p>}
         <ScrollArea 
           ref={scrollRef} 
           className="flex-1 p-3"

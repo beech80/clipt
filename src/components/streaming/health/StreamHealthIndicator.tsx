@@ -23,10 +23,12 @@ export const StreamHealthIndicator = ({ streamId }: StreamHealthIndicatorProps) 
           table: 'streams',
           filter: `id=eq.${streamId}`
         },
-        (payload: any) => {
-          if (payload.new) {
-            setHealthStatus(payload.new.stream_health_status);
-            setLastCheck(payload.new.last_health_check);
+        (payload) => {
+          if ('stream_health_status' in payload.new) {
+            const status = payload.new.stream_health_status;
+            setHealthStatus(status === 'excellent' || status === 'good' || status === 'poor' || status === 'critical' ? status : 'offline');
+            const checked = payload.new.last_health_check;
+            setLastCheck(typeof checked === 'string' && Number.isFinite(Date.parse(checked)) ? new Date(checked) : null);
           }
         }
       )

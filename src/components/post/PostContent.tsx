@@ -1,65 +1,92 @@
-import React, { useState, useEffect } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-import { Gamepad2, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { Badge } from '@/components/ui/badge';
+import { Gamepad2, ChevronLeft, ChevronRight } from 'lucide-react';
 import PhotoCollage from './PhotoCollage';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { usePrivateMediaUrl, usePrivateMediaUrls } from '@/hooks/usePrivateMedia';
+import { postImageReferences } from '@/lib/post-image-references';
 
 interface PostContentProps {
   imageUrl?: string | null;
   videoUrl?: string | null;
   postId: string;
+  frameAspectRatio?: string;
+  allowFullscreen?: boolean;
 }
 
-const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
+const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullscreen = true }: PostContentProps) => {
+  const { data: rendition, isPending: isRenditionPending } = useQuery({
+    queryKey: ['post-video-rendition', postId, videoUrl],
+    enabled: !!videoUrl && !!postId,
+    staleTime: 300_000,
+    retry: 1,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.from('post_video_renditions')
+        .select('playback_url').eq('post_id', postId).eq('source_url', videoUrl!)
+        .abortSignal(signal).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const playbackReference = rendition?.playback_url || videoUrl;
+  const videoAccess = usePrivateMediaUrl(playbackReference, false);
+  const playbackUrl = videoAccess.src;
   const [isMediaLoaded, setIsMediaLoaded] = useState(false);
   const [isMediaError, setIsMediaError] = useState(false);
+  const [videoErrorCode, setVideoErrorCode] = useState<number | null>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [hasMultipleImages, setHasMultipleImages] = useState(false);
   const [showFullscreenGallery, setShowFullscreenGallery] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const [mediaRetryRevision, setMediaRetryRevision] = useState(0);
+  const imageAccess = usePrivateMediaUrls(videoUrl ? [] : imageUrls);
+  const imageSources = imageAccess.map(image => image.src ?? '');
+  const imageSourceKey = imageSources.join('|');
+  const lastVideoTime = useRef(0);
 
-  // Fetch multiple images if available
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const photoTriggerRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    const fetchImagesUrls = async () => {
-      if (postId) {
-        const { data, error } = await supabase
-          .from('posts')
-          .select('image_url')
-          .eq('id', postId)
-          .single();
-        
-        if (error) {
-          console.error("Error fetching image URLs:", error);
-          return;
-        }
-        
-        if (data && data.image_url) {
-          // Check if it's a comma-separated string
-          if (data.image_url.includes(',')) {
-            const urls = data.image_url.split(',');
-            setImageUrls(urls);
-            setHasMultipleImages(urls.length > 1);
-          } else {
-            // Single image
-            setImageUrls([data.image_url]);
-            setHasMultipleImages(false);
-          }
-        } else if (imageUrl) {
-          // Fallback to passed prop
-          setImageUrls([imageUrl]);
-          setHasMultipleImages(false);
-        }
-      }
-    };
-    
-    fetchImagesUrls();
-  }, [postId, imageUrl]);
+    const urls = postImageReferences(imageUrl);
+    setImageUrls(urls);
+    setHasMultipleImages(urls.length > 1);
+    setCurrentImageIndex(0);
+    setShowFullscreenGallery(false);
+    setIsMediaLoaded(false);
+    setIsMediaError(false);
+    setVideoErrorCode(null);
+    lastVideoTime.current = 0;
+  }, [postId, imageUrl, playbackReference]);
 
-  // Debug logging for postId
+  // A renewed signed URL can recover an expired/network-failed source. Do not
+  // leave its old error latched, or reset the saved playback position.
   useEffect(() => {
-    // Remove debug logging to keep things clean
-  }, [postId]);
+    setIsMediaLoaded(false);
+    setIsMediaError(false);
+    setVideoErrorCode(null);
+  }, [playbackUrl]);
+
+  useEffect(() => {
+    setIsMediaLoaded(false);
+    setIsMediaError(false);
+  }, [imageSourceKey]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    let visible = false;
+    const pause = () => { if (document.hidden) video.pause(); };
+    const observer = new IntersectionObserver(entries => {
+      visible = entries[0].intersectionRatio >= 0.7;
+      if (!visible || document.hidden) video.pause();
+    }, { threshold: [0, 0.7, 1] });
+    observer.observe(video);
+    document.addEventListener('visibilitychange', pause);
+    return () => { observer.disconnect(); document.removeEventListener('visibilitychange', pause); video.pause(); };
+  }, [playbackUrl, isMediaError, isRenditionPending]);
 
   const handleMediaLoad = () => {
     setIsMediaLoaded(true);
@@ -67,14 +94,11 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
   };
 
   const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
-    const target = e.target as HTMLVideoElement;
-    console.error("Video error:", target.error?.message || "Unknown error", "Code:", target.error?.code);
+    const target = e.currentTarget;
+    // Native error text can include a signed media URL; log only the safe code.
+    console.error("Video playback failed. Code:", target.error?.code);
     
-    // Attempt video recovery on specific errors
-    if (target.error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
-      console.log("Source not supported, may be MIME type issue. Attempting recovery...");
-    }
-    
+    setVideoErrorCode(target.error?.code ?? null);
     setIsMediaError(true);
     setIsMediaLoaded(false);
   };
@@ -85,19 +109,17 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
     setIsMediaLoaded(false);
   };
 
-  const handlePlayError = (error: any) => {
-    console.error("Video playback error:", error);
-    setIsMediaError(true);
-    toast.error("Failed to play video");
-  };
-
   const goToPreviousImage = () => {
+    setIsMediaError(false);
+    setIsMediaLoaded(false);
     setCurrentImageIndex(prevIndex => 
       prevIndex === 0 ? imageUrls.length - 1 : prevIndex - 1
     );
   };
 
   const goToNextImage = () => {
+    setIsMediaError(false);
+    setIsMediaLoaded(false);
     setCurrentImageIndex(prevIndex => 
       prevIndex === imageUrls.length - 1 ? 0 : prevIndex + 1
     );
@@ -107,6 +129,26 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
     setCurrentImageIndex(index);
     setShowFullscreenGallery(true);
   };
+
+  async function retryMedia() {
+    if (retrying) return;
+    setRetrying(true);
+    try {
+      const results = videoUrl ? [await videoAccess.retry()] : await Promise.all(imageAccess.map(image => image.retry()));
+      if (results.every(result => !result.isError)) {
+        setIsMediaError(false); setIsMediaLoaded(false); setVideoErrorCode(null);
+        // Access refresh may return the same URL (especially public media).
+        // Remount the failed element so retry actually starts a new load.
+        setMediaRetryRevision(revision => revision + 1);
+      }
+    } finally { setRetrying(false); }
+  }
+
+  if (!videoUrl && imageAccess.some(image => image.error)) return <div role="alert" className="aspect-video bg-gray-900 p-4 text-center">
+    <p>Media access is unavailable. No private URL has been substituted.</p>
+    <button type="button" disabled={retrying} onClick={() => void retryMedia()} className="mt-3 rounded bg-purple-700 px-3 py-2">Retry media</button>
+  </div>;
+  if (!videoUrl && imageAccess.some(image => image.isLoading)) return <div role="status" className="flex aspect-video items-center justify-center bg-gray-900">Loading media…</div>;
 
   if (!imageUrl && !videoUrl && imageUrls.length === 0) {
     return (
@@ -120,16 +162,15 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
     <div className="relative">
       {/* Media Content */}
       {videoUrl ? (
-        <div className="w-full aspect-video bg-black relative">
-          {isMediaError ? (
+        <div className="clipt-video-frame w-full aspect-video bg-black relative" style={frameAspectRatio ? { aspectRatio: frameAspectRatio } : undefined}>
+          {isMediaError || videoAccess.error ? (
             <div className="absolute inset-0 flex items-center justify-center text-red-500">
-              <div className="text-center p-4">
-                <p>Unable to play video.</p>
+              <div className="text-center p-4" role="alert">
+                <p>{videoAccess.error ? 'Media access is unavailable.' : videoErrorCode === 4 ? 'This video format is not supported by your browser.' : 'Unable to play video.'}</p>
+                {videoErrorCode === 4 && <p className="mt-2 text-sm text-gray-300">The clip needs a compatible video rendition. Retrying may not resolve a codec issue.</p>}
                 <button 
-                  onClick={() => {
-                    setIsMediaError(false);
-                    setIsMediaLoaded(false);
-                  }}
+                  type="button" disabled={retrying || videoAccess.isFetching}
+                  onClick={() => void retryMedia()}
                   className="mt-2 px-2 py-1 bg-purple-700 rounded text-white text-xs"
                 >
                   Try Again
@@ -140,42 +181,56 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
             <>
               {!isMediaLoaded && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="animate-pulse">Loading video...</div>
+                  <div role="status" className="animate-pulse">Loading video...</div>
                 </div>
               )}
-              <video
-                key={`video-${postId}-${Math.random().toString(36).substring(2, 15)}`}
-                src={videoUrl}
+              {!isRenditionPending && !videoAccess.isLoading && playbackUrl && <video
+                key={postId + ":" + playbackUrl + ":" + mediaRetryRevision}
+                ref={videoRef}
+                src={playbackUrl || undefined}
                 className="w-full h-full object-contain"
                 controls
                 playsInline
-                muted={false}
+                onPlay={() => document.querySelectorAll("video").forEach(video => { if (video !== videoRef.current) video.pause(); })}
                 preload="metadata"
                 onLoadedData={handleMediaLoad}
+                onTimeUpdate={event => { if (event.currentTarget.readyState >= 2 && event.currentTarget.currentTime > 0) lastVideoTime.current = event.currentTarget.currentTime; }}
+                onLoadedMetadata={event => {
+                  const video = event.currentTarget;
+                  if (lastVideoTime.current > 0 && Number.isFinite(video.duration)) video.currentTime = Math.min(lastVideoTime.current, Math.max(0, video.duration - 0.05));
+                }}
                 onError={handleVideoError}
                 onContextMenu={(e) => e.preventDefault()}
-              />
+              />}
             </>
           )}
         </div>
       ) : imageUrls.length > 0 ? (
-        showFullscreenGallery ? (
+        showFullscreenGallery && allowFullscreen ? (
           // Full-screen gallery view for when an image is clicked
-          <div className="fixed inset-0 bg-black/90 z-50 flex flex-col">
+          <Dialog open={showFullscreenGallery} onOpenChange={setShowFullscreenGallery}>
+          <DialogContent className="clipt-media-gallery flex flex-col bg-black/95" onCloseAutoFocus={event => {
+            if (photoTriggerRef.current) { event.preventDefault(); photoTriggerRef.current.focus(); }
+          }} onKeyDown={event => {
+            if (imageUrls.length < 2 || event.altKey || event.ctrlKey || event.metaKey) return;
+            if (event.key === 'ArrowLeft') { event.preventDefault(); event.stopPropagation(); goToPreviousImage(); }
+            if (event.key === 'ArrowRight') { event.preventDefault(); event.stopPropagation(); goToNextImage(); }
+          }}>
+            <DialogTitle className="sr-only">Post image gallery</DialogTitle>
+            <DialogDescription className="sr-only">View the photo. Use Escape to close; for multiple photos use the previous and next buttons or arrow keys.</DialogDescription>
             <div className="flex justify-between items-center p-4">
               <span className="text-white">{currentImageIndex + 1} / {imageUrls.length}</span>
-              <button 
-                className="text-white"
-                onClick={() => setShowFullscreenGallery(false)}
-              >
-                Close
-              </button>
             </div>
-            <div className="flex-1 relative">
+            <div className="clipt-gallery-stage flex-1 min-h-0 relative flex items-center justify-center">
+              {isMediaError && <div role="alert" className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/90 p-4 text-center">
+                <p>Unable to load this photo.</p>
+                <button type="button" disabled={retrying} onClick={() => void retryMedia()} className="min-h-11 rounded bg-purple-700 px-4 py-2">{retrying ? 'Retrying…' : 'Retry media'}</button>
+              </div>}
               <img
-                src={imageUrls[currentImageIndex]}
+                key={imageSources[currentImageIndex] + ":" + mediaRetryRevision}
+                src={imageSources[currentImageIndex]}
                 alt="Post content fullscreen"
-                className="max-h-[80vh] max-w-full object-contain mx-auto"
+                className="h-full w-full min-h-0 object-contain mx-auto"
                 onLoad={handleMediaLoad}
                 onError={handleImageError}
               />
@@ -183,6 +238,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
               {imageUrls.length > 1 && (
                 <>
                   <button 
+                    type="button" aria-label="Previous image"
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 rounded-full p-3"
                     onClick={goToPreviousImage}
                   >
@@ -190,6 +246,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                   </button>
                   
                   <button 
+                    type="button" aria-label="Next image"
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 rounded-full p-3"
                     onClick={goToNextImage}
                   >
@@ -198,37 +255,53 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 </>
               )}
             </div>
+          </DialogContent>
+          </Dialog>
+        ) : !allowFullscreen ? (
+          <div className="clipt-photo-frame relative block w-full aspect-video bg-black" style={frameAspectRatio ? { aspectRatio: frameAspectRatio } : undefined}>
+            <img key={imageSources[currentImageIndex] + ':' + mediaRetryRevision}
+              src={imageSources[currentImageIndex]} alt={imageUrls.length > 1 ? `Post content ${currentImageIndex + 1} of ${imageUrls.length}` : 'Post content'}
+              className="w-full h-full object-contain bg-black" onLoad={handleMediaLoad} onError={handleImageError} />
+            {imageUrls.length > 1 && <>
+              <button type="button" aria-label="Previous image" onClick={goToPreviousImage} className="absolute left-2 top-1/2 min-h-11 min-w-11 -translate-y-1/2 rounded-full bg-black/70 text-white"><ChevronLeft className="mx-auto" aria-hidden="true" /></button>
+              <button type="button" aria-label="Next image" onClick={goToNextImage} className="absolute right-2 top-1/2 min-h-11 min-w-11 -translate-y-1/2 rounded-full bg-black/70 text-white"><ChevronRight className="mx-auto" aria-hidden="true" /></button>
+              <span className="absolute left-1/2 bottom-2 -translate-x-1/2 rounded bg-black/70 px-2 text-white" aria-live="polite">{currentImageIndex + 1} / {imageUrls.length}</span>
+            </>}
           </div>
         ) : hasMultipleImages ? (
           // Photo collage for multiple images
           <PhotoCollage 
-            images={imageUrls} 
+            key={mediaRetryRevision}
+            images={imageSources}
             onImageClick={handleCollageImageClick}
+            onImageLoad={handleMediaLoad}
+            onImageError={handleImageError}
           />
         ) : (
           // Single image view
-          <img
-            src={imageUrls[0]}
+          <button ref={photoTriggerRef} type="button" aria-label="Open post image 1 of 1" className="clipt-photo-frame block w-full aspect-video bg-black" style={frameAspectRatio ? { aspectRatio: frameAspectRatio } : undefined} onClick={() => setShowFullscreenGallery(true)}><img
+            key={imageSources[0] + ":" + mediaRetryRevision}
+            src={imageSources[0]}
             alt="Post content"
-            className="w-full aspect-video object-cover bg-black"
+            className="w-full h-full object-contain bg-black"
             onLoad={handleMediaLoad}
             onError={handleImageError}
-            onClick={() => setShowFullscreenGallery(true)}
-          />
+          /></button>
         )
       ) : null}
 
       {/* Loading Indicator */}
-      {!isMediaLoaded && !isMediaError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+      {!isMediaLoaded && !isMediaError && !videoAccess.error && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/50">
+          <span role="status" className="sr-only">Loading media…</span><div aria-hidden="true" className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
         </div>
       )}
 
       {/* Error State */}
-      {isMediaError && (
+      {isMediaError && !videoUrl && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
           <Badge variant="destructive" className="px-3 py-1">Media unavailable</Badge>
+          <button type="button" disabled={retrying} onClick={() => void retryMedia()} className="ml-3 rounded bg-purple-700 px-3 py-2">Retry media</button>
         </div>
       )}
     </div>

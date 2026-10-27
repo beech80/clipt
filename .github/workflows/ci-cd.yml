@@ -1,94 +1,68 @@
-name: Clipt CI/CD
+name: CLIPT reviewed source validation
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
       - '.github/workflows/production-monitor.yml'
       - 'scripts/check-production-availability.mjs'
       - 'tests/operations/external-monitor.test.mjs'
       - 'docs/EXTERNAL-MONITOR-2026-10-26.md'
   pull_request:
-    branches: [ main ]
-    paths-ignore:
-      - '.github/workflows/production-monitor.yml'
-      - 'scripts/check-production-availability.mjs'
-      - 'tests/operations/external-monitor.test.mjs'
-      - 'docs/EXTERNAL-MONITOR-2026-10-26.md'
+    branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: source-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CYPRESS_INSTALL_BINARY: '0'
+  VITE_APP_ENV: development
+  VITE_SUPABASE_URL: http://127.0.0.1:54321
+  VITE_SUPABASE_ANON_KEY: sb_publishable_local_test_fixture
+
 jobs:
-  build:
+  release-checks:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          node-version: '20'
-          cache: 'npm'
-          
-      - name: Install dependencies
-        run: npm ci
-        
-      - name: Build app
-        run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://slnjliheyiiummxhrgmk.supabase.co' }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsbmpsaWhleWlpdW1teGhyZ21rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4MDI2MTEsImV4cCI6MjA1MjM3ODYxMX0.0O3AhsGPFIoHQPY329lM0HA1JdFZoSodIK6uFz6DLyM' }}
-          
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          name: build-files
-          path: dist/
-          
-  # Commented out deploy job until GitHub Pages is properly configured
-  # Uncomment and configure when ready to deploy
-  # deploy:
-  #   needs: build
-  #   if: github.ref == 'refs/heads/main'
-  #   runs-on: ubuntu-latest
-  #   
-  #   steps:
-  #     - name: Download build artifacts
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: build-files
-  #         path: dist
-  #       
-  #     - name: Deploy to production
-  #       uses: peaceiris/actions-gh-pages@v3
-  #       with:
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
-  #         publish_dir: ./dist
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-fund --no-audit
+      - run: npm run typecheck
+      - run: npm test
+      - run: node --test tests/operations/external-monitor.test.mjs
+      - run: npm run test:security
+      - run: npm run test:build-css
+      - run: npm run build
 
-  # Commented out supabase-types sync until Supabase CLI is properly configured 
-  # Uncomment when Supabase access token is added to GitHub secrets
-  # sync-supabase-types:
-  #   runs-on: ubuntu-latest
-  #   if: github.ref == 'refs/heads/main'
-  #   
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
-  #         
-  #     - name: Install Supabase CLI
-  #       run: npm install -g supabase
-  #       
-  #     - name: Generate types
-  #       run: |
-  #         supabase login ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-  #         supabase gen types typescript --project-id slnjliheyiiummxhrgmk > src/integrations/supabase/types.ts
-  #         
-  #     - name: Commit and push type changes
-  #       uses: stefanzweifel/git-auto-commit-action@v5
-  #       with:
-  #         commit_message: "chore: update Supabase types"
-  #         file_pattern: src/integrations/supabase/types.ts
+  browser-local-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-fund --no-audit
+      - run: npx playwright install --with-deps chromium
+      - name: Posting failures, safe retry and paginated message history
+        run: npx playwright test tests/create-clip.spec.ts tests/messages-history.spec.ts --reporter=line --max-failures=1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: failure()
+        with:
+          name: source-browser-failure-evidence
+          path: test-results/
+          retention-days: 3

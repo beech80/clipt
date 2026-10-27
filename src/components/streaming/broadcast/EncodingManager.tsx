@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { EngineConfig } from '@/types/broadcast';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -7,8 +8,8 @@ import ActivityIcon from '@/components/ui/activity-icon';
 
 interface EncodingManagerProps {
   streamId: string;
-  engineConfig: any;
-  encodingSession: any;
+  engineConfig: EngineConfig | null;
+  encodingSession: { encoder_stats?: { cpu_usage: number; dropped_frames: number; bandwidth_usage: number; current_fps: number } } | null;
 }
 
 export const EncodingManager = ({

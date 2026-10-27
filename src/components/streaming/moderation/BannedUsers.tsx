@@ -19,15 +19,17 @@ export const BannedUsers = ({ streamId }: BannedUsersProps) => {
     queryKey: ['banned-users', streamId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('banned_users')
+        .from('chat_timeouts')
         .select(`
           *,
-          profiles:user_id (
+          profiles:profiles!chat_timeouts_user_id_fkey (
             username,
             avatar_url
           )
         `)
-        .eq('stream_id', streamId);
+        .eq('stream_id', streamId)
+        .gt('expires_at', new Date().toISOString())
+        .limit(100);
       
       if (error) throw error;
       return data;
@@ -36,6 +38,8 @@ export const BannedUsers = ({ streamId }: BannedUsersProps) => {
 
   const banUser = useMutation({
     mutationFn: async (username: string) => {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error('Sign in to moderate chat');
       // First get the user ID from the username
       const { data: userData, error: userError } = await supabase
         .from('profiles')
@@ -48,10 +52,12 @@ export const BannedUsers = ({ streamId }: BannedUsersProps) => {
       }
 
       const { error } = await supabase
-        .from('banned_users')
+        .from('chat_timeouts')
         .insert([{
           stream_id: streamId,
-          user_id: userData.id
+          user_id: userData.id,
+          moderator_id: user.id,
+          expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
         }]);
 
       if (error) throw error;
@@ -69,9 +75,10 @@ export const BannedUsers = ({ streamId }: BannedUsersProps) => {
   const unbanUser = useMutation({
     mutationFn: async (banId: string) => {
       const { error } = await supabase
-        .from('banned_users')
+        .from('chat_timeouts')
         .delete()
-        .eq('id', banId);
+        .eq('id', banId)
+        .eq('stream_id', streamId);
 
       if (error) throw error;
     },
@@ -109,7 +116,7 @@ export const BannedUsers = ({ streamId }: BannedUsersProps) => {
               <div className="space-y-1">
                 <p className="font-medium">{ban.profiles?.username}</p>
                 <p className="text-sm text-muted-foreground">
-                  Banned on {new Date(ban.created_at).toLocaleDateString()}
+                  Restricted until {new Date(ban.expires_at).toLocaleDateString()}
                 </p>
               </div>
               <Button

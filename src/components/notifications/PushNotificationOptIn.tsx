@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Bell, BellOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import {
   requestPushPermission,

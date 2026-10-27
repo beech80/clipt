@@ -1,16 +1,17 @@
 import { supabase } from '@/lib/supabase';
+import { redactLogValue } from '@/lib/log-redaction';
 
 type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 interface LogContext {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface LogMetadata {
   browser?: string;
   os?: string;
   url?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 class LoggingService {
@@ -18,7 +19,7 @@ class LoggingService {
     return {
       browser: navigator.userAgent,
       os: navigator.platform,
-      url: window.location.href,
+      url: window.location.pathname,
       viewport: {
         width: window.innerWidth,
         height: window.innerHeight
@@ -37,13 +38,13 @@ class LoggingService {
       const browserInfo = this.getBrowserInfo();
       const { error } = await supabase.from('application_logs').insert({
         level,
-        message,
+        message: String(redactLogValue(message)),
         component,
-        context,
-        metadata: {
+        context: redactLogValue(context),
+        metadata: redactLogValue({
           ...browserInfo,
           ...metadata
-        }
+        })
       });
 
       if (error) {
@@ -52,11 +53,11 @@ class LoggingService {
 
       // Also log to console in development
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[${level.toUpperCase()}] ${message}`, {
+        console.log(`[${level.toUpperCase()}]`, redactLogValue({
           component,
           context,
           metadata
-        });
+        }));
       }
     } catch (err) {
       console.error('Logging failed:', err);
@@ -92,10 +93,10 @@ class LoggingService {
       const browserInfo = this.getBrowserInfo();
       const { error: dbError } = await supabase.from('error_reports').insert({
         error_type: errorType,
-        message: error.message,
-        stack_trace: error.stack,
-        component_stack: componentStack,
-        browser_info: browserInfo
+        message: String(redactLogValue(error.message)),
+        stack_trace: String(redactLogValue(error.stack ?? '')),
+        component_stack: String(redactLogValue(componentStack ?? '')),
+        browser_info: redactLogValue(browserInfo)
       });
 
       if (dbError) {

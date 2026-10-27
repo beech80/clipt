@@ -27,7 +27,7 @@ interface PerformanceMetrics {
 export function usePerformanceMonitoring(componentName: string) {
   useEffect(() => {
     const startTime = performance.now();
-    let metrics: Partial<PerformanceMetrics> = {};
+    const metrics: Partial<PerformanceMetrics> = {};
 
     // Track Web Vitals
     if ('PerformanceObserver' in window) {
@@ -115,12 +115,12 @@ export function usePerformanceMonitoring(componentName: string) {
           status: String(response.status)
         });
         return response;
-      } catch (error: any) {
+      } catch (error: unknown) {
         const duration = performance.now() - startTime;
         LoggingService.trackMetric('fetch_error', duration, {
           component: componentName,
           url: typeof args[0] === 'string' ? args[0] : 'unknown',
-          error: error.message
+          error: error instanceof Error ? error.message : 'Request failed'
         });
         throw error;
       }

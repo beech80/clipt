@@ -1,20 +1,5 @@
-import { supabase } from './supabase';
-
-// Create a bucket if it doesn't exist
-export const createBucketIfNotExists = async () => {
-  const { data: buckets } = await supabase.storage.listBuckets();
-  
-  if (!buckets?.find(b => b.name === 'posts')) {
-    const { error } = await supabase.storage.createBucket('posts', {
-      public: true,
-      fileSizeLimit: 5242880, // 5MB
-    });
-    
-    if (error) {
-      console.error('Error creating bucket:', error);
-    }
-  }
+// Retained for legacy callers, but browser clients must never provision
+// buckets or change media visibility. Configure private buckets server-side.
+export const createBucketIfNotExists = async (): Promise<never> => {
+  throw new Error('Storage provisioning is unavailable in the browser. Use the development server-managed storage configuration.');
 };
-
-// Call this when the app starts
-createBucketIfNotExists();

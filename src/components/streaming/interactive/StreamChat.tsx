@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import type { StreamChatMessage } from '@/types/stream-chat';
+import type { Tables } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -16,7 +18,7 @@ interface StreamChatProps {
 export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   const { user } = useAuth();
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<StreamChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,7 +28,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
         .from('stream_chat')
         .select(`
           *,
-          profiles:user_id (
+          profiles:profiles!stream_chat_user_id_fkey (
             username,
             avatar_url
           )
@@ -48,7 +50,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
     // Subscribe to new messages
     const channel = supabase
       .channel(`stream_chat:${streamId}`)
-      .on(
+      .on<Tables<'stream_chat'>>(
         'postgres_changes',
         {
           event: '*',

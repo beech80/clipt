@@ -3,9 +3,11 @@ import React from 'react';
 interface PhotoCollageProps {
   images: string[];
   onImageClick?: (index: number) => void;
+  onImageLoad?: () => void;
+  onImageError?: () => void;
 }
 
-const PhotoCollage: React.FC<PhotoCollageProps> = ({ images, onImageClick }) => {
+const PhotoCollage: React.FC<PhotoCollageProps> = ({ images, onImageClick, onImageLoad, onImageError }) => {
   if (!images || images.length === 0) {
     return null;
   }
@@ -16,6 +18,23 @@ const PhotoCollage: React.FC<PhotoCollageProps> = ({ images, onImageClick }) => 
     }
   };
 
+  const imageControl = (index: number): React.HTMLAttributes<HTMLImageElement> => ({
+    onLoad: onImageLoad,
+    onError: onImageError,
+    ...(onImageClick ? {
+    role: 'button',
+    tabIndex: 0,
+    'aria-label': `Open post image ${index + 1} of ${images.length}`,
+    onClick: () => handleImageClick(index),
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        handleImageClick(index);
+      }
+    },
+    } : {}),
+  });
+
   // Single image
   if (images.length === 1) {
     return (
@@ -24,7 +43,7 @@ const PhotoCollage: React.FC<PhotoCollageProps> = ({ images, onImageClick }) => 
           src={images[0]} 
           alt="Post content" 
           className="w-full h-full object-cover"
-          onClick={() => handleImageClick(0)}
+          {...imageControl(0)}
         />
       </div>
     );
@@ -40,7 +59,7 @@ const PhotoCollage: React.FC<PhotoCollageProps> = ({ images, onImageClick }) => 
               src={image} 
               alt={`Post content ${index + 1}`} 
               className="w-full h-full object-cover"
-              onClick={() => handleImageClick(index)}
+              {...imageControl(index)}
             />
           </div>
         ))}
@@ -57,7 +76,7 @@ const PhotoCollage: React.FC<PhotoCollageProps> = ({ images, onImageClick }) => 
             src={images[0]} 
             alt="Post content 1" 
             className="w-full h-full object-cover"
-            onClick={() => handleImageClick(0)}
+            {...imageControl(0)}
           />
         </div>
         <div className="grid grid-rows-2 gap-1">
@@ -67,7 +86,7 @@ const PhotoCollage: React.FC<PhotoCollageProps> = ({ images, onImageClick }) => 
                 src={image} 
                 alt={`Post content ${index + 2}`} 
                 className="w-full h-full object-cover"
-                onClick={() => handleImageClick(index + 1)}
+                {...imageControl(index + 1)}
               />
             </div>
           ))}
@@ -85,12 +104,12 @@ const PhotoCollage: React.FC<PhotoCollageProps> = ({ images, onImageClick }) => 
             src={image} 
             alt={`Post content ${index + 1}`} 
             className="w-full h-full object-cover"
-            onClick={() => handleImageClick(index)}
+            {...imageControl(index)}
           />
           {index === 3 && images.length > 4 && (
             <div 
-              className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold text-xl cursor-pointer"
-              onClick={() => handleImageClick(3)}
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold text-xl"
             >
               +{images.length - 4} more
             </div>

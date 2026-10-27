@@ -57,12 +57,7 @@ export const useAchievementProgress = (userId: string) => {
         throw error;
       }
 
-      // Set all current values to 0 as requested
-      return data?.map(item => ({
-        ...item,
-        current_value: 0,
-        completed: false
-      })) || [];
+      return data || [];
     },
     enabled: !!userId,
   });

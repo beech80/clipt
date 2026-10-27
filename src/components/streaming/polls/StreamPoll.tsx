@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { readPollOptions } from '@/lib/poll-data';
 
 interface PollOption {
   id: string;
@@ -31,7 +32,7 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
 
   React.useEffect(() => {
     loadActivePoll();
-    subscribeToPollUpdates();
+    return subscribeToPollUpdates();
   }, [streamId]);
 
   const loadActivePoll = async () => {
@@ -51,11 +52,7 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
       const formattedPoll: Poll = {
         id: data.id,
         question: data.question,
-        options: (data.options as any[]).map(option => ({
-          id: option.id,
-          text: option.text,
-          votes: option.votes || 0
-        }))
+        options: readPollOptions(data.options)
       };
       setPoll(formattedPoll);
       calculateTotalVotes(formattedPoll.options);
@@ -78,11 +75,7 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
             const updatedPoll: Poll = {
               id: payload.new.id,
               question: payload.new.question,
-              options: (payload.new.options as any[]).map(option => ({
-                id: option.id,
-                text: option.text,
-                votes: option.votes || 0
-              }))
+              options: readPollOptions(payload.new.options)
             };
             setPoll(updatedPoll);
             calculateTotalVotes(updatedPoll.options);
@@ -156,7 +149,7 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
             </Button>
             {hasVoted && (
               <Progress
-                value={(option.votes / totalVotes) * 100}
+                value={totalVotes > 0 ? (option.votes / totalVotes) * 100 : 0}
                 className="h-2"
               />
             )}

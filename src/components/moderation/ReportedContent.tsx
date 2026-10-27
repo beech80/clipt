@@ -1,156 +1,65 @@
-
-import React from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Badge } from '@/components/ui/badge';
 
 export const ReportedContent = () => {
-  const queryClient = useQueryClient();
-
-  const { data: reports, isLoading } = useQuery({
-    queryKey: ['content-reports'],
+  const { user } = useAuth();
+  const [pendingOnly, setPendingOnly] = useState(true);
+  const cache = useQueryClient();
+  const reports = useQuery({
+    queryKey: ['content-reports', user?.id, pendingOnly],
+    retry: false,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('content_reports')
-        .select(`
-          *,
-          reporter:reporter_id(username),
-          content:content_id(
-            id,
-            content,
-            user_id,
-            profiles:user_id(username)
-          )
-        `)
-        .order('created_at', { ascending: false });
-
+      let query = supabase.from('content_reports')
+        .select('id,content_id,content_type,reason,notes,status,created_at,action_taken,resolved_at,resolved_by,severity_level')
+        .order('created_at', { ascending: false }).order('id').limit(100);
+      if (pendingOnly) query = query.in('status', ['pending', 'reviewed']);
+      const { data, error } = await query.retry(false);
       if (error) throw error;
       return data;
-    }
+    },
   });
-
-  const handleReportMutation = useMutation({
-    mutationFn: async ({ reportId, action, notes }: { reportId: string, action: string, notes?: string }) => {
-      const { error } = await supabase
-        .from('content_reports')
-        .update({
-          status: 'resolved',
-          action_taken: action,
-          notes,
-          resolved_at: new Date().toISOString(),
-        })
-        .eq('id', reportId);
-
-      if (error) throw error;
+  const review = useMutation({
+    mutationFn: async ({ id, decision }: { id: string; decision: 'dismiss' | 'hide_post' }) => {
+      const { data, error } = await supabase.rpc('review_content_report', { report_id: id, decision });
+      if (error || data !== id) throw error ?? new Error('Review not confirmed');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['content-reports'] });
-      toast.success('Report handled successfully');
+      void cache.invalidateQueries({ queryKey: ['content-reports'] });
+      void cache.invalidateQueries({ queryKey: ['top-clipts'] });
+      toast.success('Report decision saved');
     },
-    onError: (error) => {
-      toast.error('Failed to handle report');
-      console.error('Error handling report:', error);
-    }
+    onError: () => toast.error('Review was not confirmed. Refresh the queue before retrying.'),
   });
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'low': return 'bg-yellow-500/10 text-yellow-500';
-      case 'medium': return 'bg-orange-500/10 text-orange-500';
-      case 'high': return 'bg-red-500/10 text-red-500';
-      case 'critical': return 'bg-red-700/10 text-red-700';
-      default: return 'bg-gray-500/10 text-gray-500';
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      {isLoading ? (
-        <div className="flex justify-center p-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-        </div>
-      ) : reports?.length === 0 ? (
-        <Card className="p-6">
-          <p className="text-center text-muted-foreground">No reports to review</p>
-        </Card>
-      ) : (
-        reports?.map((report) => (
-          <Card key={report.id} className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="font-semibold">Reported Content</h4>
-                  <p className="text-sm text-muted-foreground">
-                    by {report.reporter?.username} • {new Date(report.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-                <Badge className={getSeverityColor(report.severity_level)}>
-                  {report.severity_level}
-                </Badge>
-              </div>
-
-              <div>
-                <h5 className="font-medium">Reason:</h5>
-                <p className="text-muted-foreground">{report.reason}</p>
-              </div>
-
-              <div className="bg-card-secondary p-4 rounded-lg">
-                <p className="text-sm font-medium text-muted-foreground mb-2">
-                  Content by {report.content?.profiles?.username}:
-                </p>
-                <p>{report.content?.content}</p>
-              </div>
-
-              {report.status === 'pending' ? (
-                <div className="flex gap-2">
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleReportMutation.mutate({
-                      reportId: report.id,
-                      action: 'content_removed',
-                      notes: 'Content violated community guidelines'
-                    })}
-                  >
-                    Remove Content
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleReportMutation.mutate({
-                      reportId: report.id,
-                      action: 'warning_issued',
-                      notes: 'Warning issued to user'
-                    })}
-                  >
-                    Issue Warning
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => handleReportMutation.mutate({
-                      reportId: report.id,
-                      action: 'dismissed',
-                      notes: 'Report dismissed - no violation found'
-                    })}
-                  >
-                    Dismiss
-                  </Button>
-                </div>
-              ) : (
-                <div>
-                  <Badge variant="outline">
-                    {report.action_taken} • {new Date(report.resolved_at!).toLocaleDateString()}
-                  </Badge>
-                  {report.notes && (
-                    <p className="text-sm text-muted-foreground mt-2">{report.notes}</p>
-                  )}
-                </div>
-              )}
-            </div>
-          </Card>
-        ))
-      )}
+  return <section className="space-y-4" aria-label="Content reports">
+    <div className="flex flex-wrap gap-2">
+      <Button aria-pressed={pendingOnly} onClick={() => setPendingOnly(true)}>Pending</Button>
+      <Button aria-pressed={!pendingOnly} onClick={() => setPendingOnly(false)}>All reports</Button>
+      <Button variant="outline" disabled={reports.isFetching} onClick={() => void reports.refetch()}>Refresh</Button>
     </div>
-  );
+    <p className="text-xs text-muted-foreground">Showing up to 100 most recent matching reports.</p>
+    {reports.isSuccess && <div aria-label="Loaded report summary" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {[{label:'Reports in this view',value:reports.data.length},{label:'Awaiting review in this view',value:reports.data.filter(report=>['pending','reviewed'].includes(report.status)).length},{label:'Other statuses in this view',value:reports.data.filter(report=>!['pending','reviewed'].includes(report.status)).length}].map(({label,value})=><div key={label} className="gaming-card p-4"><p className="text-sm text-purple-200">{label}</p><p className="text-2xl font-semibold tabular-nums">{value}</p></div>)}
+    </div>}
+    {reports.isPending ? <p role="status">Loading reports…</p> : reports.isError ?
+      <p role="alert">Reports could not be loaded. Use Refresh to try again.</p> : !reports.data?.length ?
+      <p>No reports to review in this view.</p> : reports.data.map(report =>
+        <article key={report.id} className="gaming-card space-y-3 rounded-xl border border-primary/40 p-4 [overflow-wrap:anywhere]">
+          <h2 className="font-semibold">{report.content_type} report · {report.status}</h2>
+          <p className="break-words">Reason: {report.reason}</p>
+          {report.notes ? <p className="break-words text-sm">{report.notes}</p> : null}
+          <p className="text-xs text-muted-foreground">Submitted {new Date(report.created_at).toLocaleString()}</p>
+          {report.content_type === 'post' ? <Link className="inline-block underline" to={`/post/${report.content_id}`}>View reported post</Link> : null}
+          {['pending', 'reviewed'].includes(report.status) ? <div className="flex flex-wrap gap-2">
+            {report.content_type === 'post' ? <Button variant="destructive" disabled={review.isPending} onClick={() => {
+              if (window.confirm('Hide this post from other users? The post and media will be retained.')) review.mutate({ id: report.id, decision: 'hide_post' });
+            }}>Hide post</Button> : null}
+            <Button variant="outline" disabled={review.isPending} onClick={() => review.mutate({ id: report.id, decision: 'dismiss' })}>Dismiss report</Button>
+          </div> : <p className="text-sm">Decision: {report.action_taken ?? report.status}{report.resolved_at ? ` · ${new Date(report.resolved_at).toLocaleString()}` : ''}</p>}
+        </article>)}
+  </section>;
 };

@@ -58,7 +58,7 @@ export function fixPostDetection() {
           const postLink = post.querySelector('a[href*="/post/"]');
           if (postLink) {
             const href = postLink.getAttribute('href') || '';
-            const postIdMatch = href.match(/\/post\/([^\/]+)/);
+            const postIdMatch = href.match(/\/post\/([^/]+)/);
             if (postIdMatch && postIdMatch[1]) {
               post.setAttribute('data-post-id', postIdMatch[1]);
               console.log(`Added data-post-id=${postIdMatch[1]} from link`);

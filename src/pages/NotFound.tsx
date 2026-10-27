@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, Search } from 'lucide-react';
 
@@ -7,10 +7,10 @@ const NotFound = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] flex flex-col items-center justify-center px-4 text-center">
-      <div className="bg-black/30 backdrop-blur-sm rounded-xl p-8 border border-white/10 shadow-xl max-w-md">
+    <main className="min-h-[calc(100dvh-160px-env(safe-area-inset-bottom,0px))] flex flex-col items-center justify-center px-4 py-8 text-center">
+      <div className="gaming-card w-full p-6 sm:p-8 max-w-md">
         <div className="w-20 h-20 bg-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Search className="h-10 w-10 text-purple-400" />
+          <Search aria-hidden="true" className="h-10 w-10 text-purple-400" />
         </div>
         
         <h1 className="text-3xl font-bold text-white mb-2">Page Not Found</h1>
@@ -19,12 +19,10 @@ const NotFound = () => {
         </p>
         
         <div className="flex flex-col space-y-3">
-          <Button 
-            onClick={() => navigate('/')}
+          <Button asChild
             className="bg-purple-600 hover:bg-purple-700 text-white w-full"
           >
-            <Home className="mr-2 h-4 w-4" />
-            Return Home
+            <Link to="/clipts"><Home aria-hidden="true" className="mr-2 h-4 w-4" />Return to Clipts</Link>
           </Button>
           
           <Button 
@@ -38,9 +36,9 @@ const NotFound = () => {
       </div>
       
       <div className="mt-8 text-gray-400 text-sm">
-        <p>Need help? Contact our support team</p>
+        <Link to="/docs/user-guide" className="inline-flex min-h-11 items-center underline text-purple-200">Read the Clipt user guide</Link>
       </div>
-    </div>
+    </main>
   );
 };
 

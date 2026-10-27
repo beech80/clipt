@@ -56,7 +56,7 @@ export const MultiPlatformManager = ({ userId }: MultiPlatformManagerProps) => {
           </div>
           <div className="flex items-center gap-2">
             <Switch
-              checked={platforms?.some(p => p.platform_name === 'twitch')?.is_enabled ?? false}
+              checked={platforms?.find(p => p.platform_name === 'twitch')?.is_enabled ?? false}
               onCheckedChange={(checked) => togglePlatform('twitch', checked)}
             />
             <Button variant="outline">Connect</Button>
@@ -71,7 +71,7 @@ export const MultiPlatformManager = ({ userId }: MultiPlatformManagerProps) => {
           </div>
           <div className="flex items-center gap-2">
             <Switch
-              checked={platforms?.some(p => p.platform_name === 'youtube')?.is_enabled ?? false}
+              checked={platforms?.find(p => p.platform_name === 'youtube')?.is_enabled ?? false}
               onCheckedChange={(checked) => togglePlatform('youtube', checked)}
             />
             <Button variant="outline">Connect</Button>
@@ -86,7 +86,7 @@ export const MultiPlatformManager = ({ userId }: MultiPlatformManagerProps) => {
           </div>
           <div className="flex items-center gap-2">
             <Switch
-              checked={platforms?.some(p => p.platform_name === 'facebook')?.is_enabled ?? false}
+              checked={platforms?.find(p => p.platform_name === 'facebook')?.is_enabled ?? false}
               onCheckedChange={(checked) => togglePlatform('facebook', checked)}
             />
             <Button variant="outline">Connect</Button>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Trophy, Calendar, Users } from "lucide-react";
 import { format } from "date-fns";
 
 export function TournamentList() {
-  const [tournaments, setTournaments] = useState<any[]>([]);
+  const [tournaments, setTournaments] = useState<(Tables<'tournaments'> & { tournament_participants: { count: number }[] })[]>([]);
 
   useEffect(() => {
     loadTournaments();
@@ -52,7 +53,7 @@ export function TournamentList() {
               <div className="flex items-center gap-1">
                 <Users className="h-4 w-4" />
                 <span>
-                  {tournament.tournament_participants[0].count}/{tournament.max_participants}
+                  {tournament.tournament_participants[0]?.count ?? 0}/{tournament.max_participants}
                 </span>
               </div>
             </div>

@@ -7,7 +7,9 @@ export const AchievementChain = ({ achievementId }: { achievementId: string }) =
   const { user } = useAuth();
   const { data: achievements } = useAchievementData(user?.id || '');
 
-  const getChainedAchievements = (id: string): any[] => {
+  const getChainedAchievements = (id: string, visited = new Set<string>()): NonNullable<typeof achievements> => {
+    if (visited.has(id)) return [];
+    visited.add(id);
     const achievement = achievements?.find(a => a.id === id);
     if (!achievement) return [];
 
@@ -17,7 +19,7 @@ export const AchievementChain = ({ achievementId }: { achievementId: string }) =
 
     return [
       achievement,
-      ...chainedAchievements.flatMap(a => getChainedAchievements(a.id)),
+      ...chainedAchievements.flatMap(a => getChainedAchievements(a.id, visited)),
     ];
   };
 

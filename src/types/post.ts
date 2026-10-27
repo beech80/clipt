@@ -19,7 +19,9 @@ export interface Post {
   clip_votes?: Array<{ count: number }>;
   comments_count?: number;
   is_published?: boolean;
+  post_type?: string | null;
   is_premium?: boolean;
+  is_subscriber_only?: boolean;
   required_tier_id?: string | null;
   scheduled_publish_time?: string | null;
   type?: 'video' | 'image' | 'text';

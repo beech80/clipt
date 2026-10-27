@@ -114,7 +114,7 @@ const Discover = () => {
               profiles:user_id (username, avatar_url, display_name),
               games:game_id (name, id, cover_url)
             `)
-            .or(`content.ilike.%${searchQuery}%,title.ilike.%${searchQuery}%`)
+            .ilike('content', `%${searchQuery}%`)
             .order('created_at', { ascending: false })
             .limit(15);
             
@@ -176,7 +176,7 @@ const Discover = () => {
       // Fetch user's interests to enhance recommendations
       if (user) {
         const { data: userInterests } = await supabase
-          .from('user_interests')
+          .from('user_games')
           .select('game_id')
           .eq('user_id', user.id);
           
@@ -284,7 +284,7 @@ const Discover = () => {
                 </div>
               ) : searchResults && searchResults.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {searchResults.map((game: any) => (
+                  {searchResults.map((game) => (
                     <Card 
                       key={game.id} 
                       className="overflow-hidden flex flex-col hover:bg-gaming-800 transition-colors cursor-pointer"
@@ -332,7 +332,7 @@ const Discover = () => {
             <>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-white">Featured Games</h2>
-                <Select value={gameFilter} onValueChange={(value: any) => setGameFilter(value)}>
+                <Select value={gameFilter} onValueChange={value => { if (value === 'top_rated' || value === 'most_played' || value === 'most_watched') setGameFilter(value); }}>
                   <SelectTrigger className="w-36 sm:w-40">
                     <SelectValue />
                   </SelectTrigger>
@@ -360,11 +360,11 @@ const Discover = () => {
                 </div>
               ) : searchResults && searchResults.length > 0 ? (
                 <div className="space-y-4">
-                  {searchResults.map((streamer: Streamer) => (
+                  {searchResults.filter((result): result is Streamer => 'username' in result && 'streams' in result).map(streamer => (
                     <div 
                       key={streamer.id}
                       className="bg-gaming-800 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:bg-gaming-700 transition-colors"
-                      onClick={() => navigate(`/profile/${streamer.id}`)}
+                      onClick={() => navigate(`/user/${streamer.id}`)}
                     >
                       <Avatar className="h-16 w-16 border-2 border-purple-500">
                         <AvatarImage src={streamer.avatar_url || undefined} />
@@ -503,7 +503,7 @@ const Discover = () => {
             ) : trendingPosts && trendingPosts.length > 0 ? (
               <div className="space-y-4">
                 {trendingPosts.map((post) => (
-                  <PostItem key={post.id} post={post} />
+                  <PostItem key={post.id} post={{ ...post, likes_count: post.likes_count[0]?.count ?? 0, comments_count: post.comments_count[0]?.count ?? 0 }} />
                 ))}
               </div>
             ) : (

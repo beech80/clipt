@@ -69,10 +69,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
     
     // Add to window for debugging
-    (window as any).gameboyLog = log;
+    (window as Window & { gameboyLog?: (message: string) => void }).gameboyLog = log;
     
     return () => {
       document.body.removeChild(debugElement);
+      delete (window as Window & { gameboyLog?: (message: string) => void }).gameboyLog;
     };
   }, []);
 
@@ -80,9 +81,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   useEffect(() => {
     const logToDebug = (message: string) => {
       console.log(message);
-      if ((window as any).gameboyLog) {
-        (window as any).gameboyLog(message);
-      }
+      (window as Window & { gameboyLog?: (message: string) => void }).gameboyLog?.(message);
     };
     
     logToDebug('Setting up post detection');
@@ -183,14 +182,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
 
     // Debounce function to prevent too many calls
-    function debounce(func: Function, wait: number) {
-      let timeout: any = null;
-      return function(...args: any) {
-        const context = this;
+    function debounce<T extends unknown[]>(func: (...args: T) => void, wait: number) {
+      let timeout: ReturnType<typeof setTimeout>;
+      return (...args: T) => {
         clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          func.apply(context, args);
-        }, wait);
+        timeout = setTimeout(() => func(...args), wait);
       };
     }
 
@@ -274,9 +270,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Log debug info
     const logToDebug = (message: string) => {
       console.log(message);
-      if ((window as any).gameboyLog) {
-        (window as any).gameboyLog(message);
-      }
+      (window as Window & { gameboyLog?: (message: string) => void }).gameboyLog?.(message);
     };
     
     // Visual feedback on controller button

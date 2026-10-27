@@ -11,8 +11,8 @@ interface StreamPreStartControlsProps {
   description: string;
   selectedCategory: string;
   selectedTags: string[];
-  categories: any[];
-  tags: any[];
+  categories: React.ComponentProps<typeof StreamMetaForm>['categories'];
+  tags: React.ComponentProps<typeof StreamMetaForm>['tags'];
   onTitleChange: (title: string) => void;
   onDescriptionChange: (description: string) => void;
   onCategoryChange: (category: string) => void;

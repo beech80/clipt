@@ -1,9 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Gamepad2, Trophy, MessageSquare, Settings, UserX } from "lucide-react";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { Gamepad2, Trophy, MessageSquare, Settings, UserX, Pencil, Grid, MapPin } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useParams, useNavigate } from "react-router-dom";
 import AchievementList from "@/components/achievements/AchievementList";
@@ -12,7 +10,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
 import styled from "styled-components";
 import { UserLink } from '@/components/user/UserLink';
-import PostItem from '@/components/PostItem';
+import ProfilePostTile from '@/components/profile/ProfilePostTile';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import ProfileConnectionsDialog from '@/components/profile/ProfileConnectionsDialog';
+import type { ConnectionKind } from '@/lib/profile-connections';
 
 /**
  * Profile page component - displays user profile details
@@ -20,7 +21,7 @@ import PostItem from '@/components/PostItem';
 const ProfileContent = styled.div`
   max-height: none; /* Remove any height restrictions */
   overflow-y: visible; /* Allow content to be visible */
-  padding-bottom: 250px; /* Add more padding at bottom for better scrolling */
+  padding-bottom: 24px; /* The app shell reserves controller clearance. */
   
   /* Apply CSS to ensure scrolling works */
   -webkit-overflow-scrolling: touch;
@@ -34,14 +35,15 @@ const ProfileContent = styled.div`
 const Profile = () => {
   // Component state
   const { id } = useParams();
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { user, loading: authLoading } = useAuth();
+  const userId = user?.id;
+  const requestRevision = useRef(0);
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'clips' | 'achievements'>('clips');
+  const [activeTab, setActiveTab] = useState<'posts' | 'clips' | 'achievements'>('posts');
   const [profile, setProfile] = useState<ProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userPosts, setUserPosts] = useState<any[]>([]);
+  const [userPosts, setUserPosts] = useState<(import('@/types/post').Post & { post_type: string | null })[]>([]);
   
   // Stats for displaying counts
   const [stats, setStats] = useState({
@@ -49,6 +51,7 @@ const Profile = () => {
     following: 0,
     achievements: 0
   });
+  const [connections, setConnections] = useState<ConnectionKind | null>(null);
 
   // Safe profile ID handling
   const profileId = id || user?.id;
@@ -57,88 +60,42 @@ const Profile = () => {
   /**
    * Fetch the user's profile data
    */
-  const fetchProfileData = async (userId: string) => {
+  const fetchProfileData = useCallback(async (targetId: string) => {
     try {
+      if (targetId === userId) {
+        const { data, error } = await supabase.rpc('get_own_profile').retry(false);
+        if (error) throw error;
+        return data?.[0] ?? null;
+      }
       // Try to get the profile by ID
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select()
-        .eq('id', userId)
-        .single();
+        .select('id,username,avatar_url,created_at,bio,website,display_name,is_moderator,bio_description,location,custom_theme,social_links,is_verified')
+        .eq('id', targetId)
+        .maybeSingle();
       
-      // If there's an error or no profile for current user, create one
-      if (error || !profile) {
-        if (userId === user?.id) {
-          console.log("No profile found for current user, creating one");
-          
-          // Create a default profile for the current user
-          const defaultProfile = {
-            id: userId,
-            username: `user_${userId.substring(0, 8)}`,
-            display_name: user?.user_metadata?.name || 'New User',
-            bio: 'Welcome to my Clipt profile!',
-            avatar_url: user?.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userId,
-            created_at: new Date().toISOString(),
-          };
-          
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .upsert(defaultProfile)
-            .select()
-            .single();
-          
-          if (createError) {
-            console.error("Error creating profile:", createError);
-            throw new Error('Failed to create profile');
-          }
-          
-          return newProfile;
-        } else {
-          // Profile doesn't exist and it's not the current user
-          console.error("Profile not found for user:", userId);
-          return null;
-        }
-      }
+      if (error) throw error;
       
       return profile;
     } catch (error) {
       console.error("Error fetching profile:", error);
       
-      // Return a fallback profile for UI display when fetch fails
-      // This prevents the UI from showing errors to the user
-      if (userId === user?.id) {
-        return {
-          id: userId,
-          username: user?.email?.split('@')[0] || 'user',
-          display_name: user?.user_metadata?.name || 'Your Profile',
-          bio: 'Profile information temporarily unavailable',
-          avatar_url: user?.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userId,
-          created_at: new Date().toISOString(),
-        };
-      }
-      return null;
+      // Do not turn an authorization/network failure into fabricated profile data.
+      throw error;
     }
-  };
+  }, [userId]);
 
-  // Load profile data when component mounts or profile ID changes
-  useEffect(() => {
+  const loadProfileData = useCallback(async () => {
     if (!profileId) return;
-    
+    const revision = ++requestRevision.current;
     setLoading(true);
     setError(null);
-    
-    // Add a delay to ensure auth context is fully loaded
-    const timer = setTimeout(() => {
-      loadProfileData();
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, [profileId, user]);
-
-  const loadProfileData = async () => {
+    setProfile(null);
+    setUserPosts([]);
     try {
       // Fetch profile data
       const profileData = await fetchProfileData(profileId);
+      if (revision !== requestRevision.current) return;
       
       if (!profileData) {
         setError("Profile not found");
@@ -147,13 +104,20 @@ const Profile = () => {
       }
       
       setProfile(profileData);
-      console.log("Successfully loaded profile:", profileData);
       
-      // Always ensure we have stats, even if they're zeroed out
+      const [followers, following, achievements] = await Promise.all([
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileId),
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileId),
+        supabase.from('user_achievements').select('*', { count: 'exact', head: true }).eq('user_id', profileId),
+      ]);
+      if (revision !== requestRevision.current) return;
+      for (const result of [followers, following, achievements]) {
+        if (result.error) throw result.error;
+      }
       setStats({
-        followers: profileData.followers || 0,
-        following: profileData.following || 0,
-        achievements: profileData.achievements || 0
+        followers: followers.count ?? 0,
+        following: following.count ?? 0,
+        achievements: achievements.count ?? 0
       });
       
       // Fetch user's posts for the clips tab
@@ -177,29 +141,22 @@ const Profile = () => {
             clip_votes:clip_votes(count)
           `)
           .eq('user_id', profileId)
+          .eq('is_published', true)
           .order('created_at', { ascending: false });
+        if (revision !== requestRevision.current) return;
         
         if (postsError) {
           console.error("Error fetching posts:", postsError);
+          throw postsError;
         } else {
-          console.log("User posts loaded:", postsData);
-          setUserPosts(postsData || []);
+          setUserPosts((postsData || []).map(post => ({ ...post,
+            likes_count: post.likes_count[0]?.count ?? 0,
+            comments_count: post.comments_count[0]?.count ?? 0,
+          })));
         }
       } catch (postError) {
         console.error("Error fetching user posts:", postError);
-        // Continue execution even if posts fail to load
-      }
-      
-      // Initialize default achievements for the new user if needed
-      if (profileData.id === user?.id && (!profileData.achievements || profileData.achievements === 0)) {
-        try {
-          const { achievementService } = await import('@/services/achievementService');
-          await achievementService.createDefaultAchievementsForUser(user.id);
-          console.log("Created default achievements for user");
-        } catch (err) {
-          console.error("Failed to create default achievements:", err);
-          // Continue execution even if achievement creation fails
-        }
+        throw postError;
       }
       
       // Success - clear any errors
@@ -207,41 +164,24 @@ const Profile = () => {
     } catch (error) {
       console.error("Error in profile data loading:", error);
       
-      // Create a fallback profile if this is the current user
-      if (profileId === user?.id) {
-        console.log("Creating fallback profile for current user");
-        const fallbackProfile = {
-          id: user.id,
-          username: user.email?.split('@')[0] || `user_${user.id.substring(0, 8)}`,
-          display_name: user.user_metadata?.name || 'Your Profile',
-          bio: 'Welcome to your Clipt profile!',
-          avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.id}`,
-          created_at: new Date().toISOString(),
-          followers: 0,
-          following: 0,
-          achievements: 0
-        };
-        
-        setProfile(fallbackProfile);
-        setStats({
-          followers: 0,
-          following: 0,
-          achievements: 0
-        });
-        setUserPosts([]);
-        setError(null); // Use fallback, don't show error
-      } else {
-        setError("Failed to load profile data");
-      }
+      if (revision === requestRevision.current) setError("Failed to load profile data");
     } finally {
-      setLoading(false);
+      if (revision === requestRevision.current) setLoading(false);
     }
-  };
+  }, [profileId, fetchProfileData]);
+
+  // Load only after Auth is ready; invalidate responses from prior routes/users.
+  useEffect(() => {
+    if (authLoading) { setLoading(true); return; }
+    if (!profileId) { setLoading(false); setProfile(null); setUserPosts([]); return; }
+    void loadProfileData();
+    return () => { requestRevision.current += 1; };
+  }, [authLoading, profileId, loadProfileData]);
 
   // Render loading state
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <div role="status" aria-label="Loading profile" className="flex flex-col items-center justify-center min-h-screen p-4">
         <div className="gaming-card p-8 w-full max-w-md">
           <div className="flex flex-col items-center space-y-4">
             <div className="w-24 h-24 rounded-full bg-gaming-800 animate-pulse"></div>
@@ -262,6 +202,7 @@ const Profile = () => {
           <UserX className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">Profile Error</h2>
           <p className="text-gray-400 mb-4">{error}</p>
+          <Button onClick={() => { setLoading(true); void loadProfileData(); }}>Retry profile</Button>
           <Button onClick={() => navigate('/')}>
             Go Home
           </Button>
@@ -288,36 +229,32 @@ const Profile = () => {
 
   // Main profile content
   return (
-    <ProfileContent>
+    <ProfileContent className="clipt-profile mx-auto max-w-6xl px-4 py-6">
       {/* Profile Header */}
-      <div className="gaming-card p-6 mb-6">
+      <div className="clipt-profile-header gaming-card p-6 mb-6">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           {/* Avatar */}
           <div className="relative">
             <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gaming-800 overflow-hidden border-4 border-gaming-500">
-              {profile.avatar_url ? (
-                <img 
-                  src={profile.avatar_url} 
-                  alt={profile.username || 'User'} 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gaming-700 text-4xl font-bold text-gaming-300">
+              <Avatar className="w-full h-full">
+                <AvatarImage src={profile.avatar_url || undefined} alt={profile.username || 'User'} className="object-cover" />
+                <AvatarFallback className="bg-gaming-700 text-4xl font-bold text-gaming-300">
                   {(profile.username?.[0] || profile.display_name?.[0] || 'U').toUpperCase()}
-                </div>
-              )}
+                </AvatarFallback>
+              </Avatar>
             </div>
           </div>
           
           {/* Profile Info */}
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <div className="flex flex-col md:flex-row gap-4 items-center md:items-start justify-between">
               <div className="text-center md:text-left">
-                <h1 className="text-2xl font-bold text-gaming-200 mb-1">
+                <h1 className="text-2xl font-bold text-gaming-200 mb-1 break-words [overflow-wrap:anywhere]">
                   {profile.display_name || profile.username || 'User'}
                 </h1>
                 <UserLink username={profile.username} />
-                <p className="text-gaming-300 max-w-md mb-4">{profile.bio || 'No bio provided'}</p>
+                {profile.location && <p className="flex items-center gap-1 text-sm text-purple-200"><MapPin size={14} aria-hidden="true" />{profile.location}</p>}
+                <p className="text-gaming-300 max-w-md mb-4 break-words [overflow-wrap:anywhere]">{profile.bio || 'No bio provided'}</p>
               </div>
               
               <div className="flex justify-end gap-2">
@@ -327,10 +264,11 @@ const Profile = () => {
                     variant="outline" 
                     className="flex items-center gap-2 bg-[#1a1b4b] border border-white/10 text-white hover:bg-[#272a5b] px-4 py-1 rounded-sm"
                   >
-                    <Settings className="w-4 h-4" />
-                    <span>Settings</span>
+                    <Pencil className="w-4 h-4" />
+                    <span>Edit Profile</span>
                   </Button>
                 )}
+                {isOwnProfile && <Button variant="outline" aria-label="Account settings" onClick={() => navigate('/settings')}><Settings className="w-4 h-4" /></Button>}
                 {!isOwnProfile && (
                   <Button
                     onClick={() => navigate(`/messages/${profileId}`)}
@@ -345,28 +283,30 @@ const Profile = () => {
             </div>
             
             {/* Stats */}
-            <div className="flex justify-center md:justify-start gap-6 mt-4">
-              <div className="text-center">
+            <div className="clipt-profile-stats grid grid-cols-3 gap-3 mt-4">
+              <button type="button" className="text-center min-h-11 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300" onClick={() => setConnections('followers')}>
                 <p className="text-gaming-200 font-bold">{stats.followers}</p>
                 <p className="text-gaming-400 text-sm">Followers</p>
-              </div>
-              <div className="text-center">
+              </button>
+              <button type="button" className="text-center min-h-11 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300" onClick={() => setConnections('following')}>
                 <p className="text-gaming-200 font-bold">{stats.following}</p>
                 <p className="text-gaming-400 text-sm">Following</p>
-              </div>
-              <div className="text-center">
-                <p className="text-gaming-200 font-bold">{stats.achievements}</p>
+              </button>
+              <button type="button" className="text-center min-h-11 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300" onClick={() => setActiveTab('achievements')}>
+                <p className="text-gaming-200 font-bold">{isOwnProfile ? stats.achievements : 'Private'}</p>
                 <p className="text-gaming-400 text-sm">Achievements</p>
-              </div>
+              </button>
             </div>
           </div>
         </div>
       </div>
       
       {/* Tabs */}
-      <div className="flex justify-center mb-6">
+      {isOwnProfile && <Button variant="outline" className="mb-4" onClick={() => navigate('/drafts')}>Your private drafts</Button>}
+      <div className="flex mb-6">
         <div className="gaming-card p-2">
-          <div className="flex gap-2">
+          <div className="clipt-profile-tabs" aria-label="Profile content">
+            <Toggle pressed={activeTab === 'posts'} onPressedChange={() => setActiveTab('posts')} variant="outline"><Grid className="w-4 h-4 mr-2" aria-hidden="true" />Posts</Toggle>
             <Toggle
               pressed={activeTab === 'clips'}
               onPressedChange={() => setActiveTab('clips')}
@@ -390,17 +330,17 @@ const Profile = () => {
       </div>
       
       {/* Tab Content */}
-      {activeTab === 'clips' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {userPosts.length > 0 ? (
-            userPosts.map(post => (
-              <PostItem key={post.id} post={post} />
+      {activeTab !== 'achievements' ? (
+        <div className="clipt-profile-grid">
+          {userPosts.filter(post => activeTab === 'posts' || post.post_type === 'clipt').length > 0 ? (
+            userPosts.filter(post => activeTab === 'posts' || post.post_type === 'clipt').map(post => (
+              <ProfilePostTile key={post.id} post={post} likes={post.likes_count ?? 0} comments={post.comments_count ?? 0} />
             ))
           ) : (
             <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60">
               <Gamepad2 className="w-12 h-12 text-gaming-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Clips Yet</h3>
-              <p className="text-gaming-400">User hasn't posted any gaming clips</p>
+              <h3 className="text-xl font-semibold text-gaming-200 mb-2">No {activeTab === 'clips' ? 'Clipts' : 'Posts'} Yet</h3>
+              <p className="text-gaming-400">No visible content in this category.</p>
             </Card>
           )}
         </div>
@@ -409,6 +349,7 @@ const Profile = () => {
           <AchievementList userId={profileId} />
         </div>
       )}
+      {connections && profileId && <ProfileConnectionsDialog key={`${profileId}:${connections}`} profileId={profileId} kind={connections} onClose={() => setConnections(null)} />}
     </ProfileContent>
   );
 };

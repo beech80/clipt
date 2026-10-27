@@ -54,7 +54,7 @@ const PostForm = ({ onPostCreated, onClose }: PostFormProps) => {
       if (error) throw error;
 
       if (matches && matches.length > 0) {
-        const violations = matches.map((m: any) => m.category).join(', ');
+        const violations = matches.map(m => m.category).join(', ');
         setError(`Content contains inappropriate material (${violations}). Please revise.`);
         return false;
       }

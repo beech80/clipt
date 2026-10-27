@@ -1,5 +1,5 @@
-import { serve } from 'https://deno.fresh.run/std@v9.6.1/http/server.ts';
-import { corsHeaders } from '../_shared/cors.ts';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { authenticatedUser, errorResponse, requestMethod, serverEnv, jsonResponse } from '../_shared/request.ts';
 
 interface AnnotateImageRequest {
   image: {
@@ -17,16 +17,12 @@ interface VisionAnalysisRequest {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
+  const method = requestMethod(req);
+  if (method) return method;
 
   try {
-    const apiKey = Deno.env.get('GOOGLE_CLOUD_VISION_API_KEY');
-    if (!apiKey) {
-      throw new Error('Missing Google Cloud Vision API Key');
-    }
+    await authenticatedUser(req);
+    const apiKey = serverEnv('GOOGLE_CLOUD_VISION_API_KEY');
 
     const { imageBase64, features = ['LABEL_DETECTION', 'SAFE_SEARCH_DETECTION', 'TEXT_DETECTION'] } = await req.json() as VisionAnalysisRequest;
 
@@ -41,7 +37,6 @@ serve(async (req) => {
       })),
     };
 
-    console.log('Sending request to Google Cloud Vision API...');
 
     // Call Google Cloud Vision API
     const response = await fetch(
@@ -58,35 +53,13 @@ serve(async (req) => {
     );
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('Google Vision API error:', error);
       throw new Error('Failed to analyze image');
     }
 
     const data = await response.json();
-    console.log('Vision API response:', JSON.stringify(data, null, 2));
-    
-    return new Response(
-      JSON.stringify(data.responses[0]),
-      { 
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return jsonResponse(data.responses[0]);
 
   } catch (error) {
-    console.error('Error:', error.message);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return errorResponse(error);
   }
 });

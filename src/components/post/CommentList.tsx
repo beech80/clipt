@@ -4,60 +4,69 @@ import { CommentItem, Comment } from './comment/CommentItem';
 import { Button } from '@/components/ui/button';
 import { Loader2, MessageCircle, AlertCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getComments, getCommentCount } from '@/services/commentService';
-import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { getComments, getCommentCount, type CommentRecord } from '@/services/commentService';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
 interface CommentListProps {
   postId: string;
   onCommentAdded?: () => void;
+  onBack?: () => void;
   autoFocus?: boolean;
   className?: string;
+  bottomComposer?: boolean;
+  hideReactions?: boolean;
 }
 
 export const CommentList = ({ 
   postId, 
   onCommentAdded,
+  onBack,
   autoFocus = false,
-  className = ''
+  className = '',
+  bottomComposer = false
 }: CommentListProps) => {
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
   const commentsContainerRef = useRef<HTMLDivElement>(null);
-  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const { user } = useAuth();
 
   // Normalized post ID (always string)
   const normalizedPostId = typeof postId === 'string' ? postId : String(postId);
 
   // Query comments for the post
-  const { data: comments, isLoading, error, refetch } = useQuery({
-    queryKey: ['comments', normalizedPostId],
-    queryFn: async () => {
-      const result = await getComments(normalizedPostId);
+  const { data, isLoading, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError } = useInfiniteQuery({
+    queryKey: ['comments', normalizedPostId, user?.id, 'paged'],
+    initialPageParam: undefined as Pick<CommentRecord,'id'|'created_at'> | undefined,
+    queryFn: async ({pageParam}) => {
+      const result = await getComments(normalizedPostId,0,50,pageParam);
+      if (result.error) throw result.error;
       return result.data || [];
     },
+    getNextPageParam:last=>last.length===50?last[last.length-1]:undefined,
+    retry:false,
     enabled: !!normalizedPostId,
     staleTime: 10000, // 10 seconds
   });
+  const comments=useMemo(()=>[...new Map((data?.pages.flat()??[]).map(comment=>[comment.id,comment])).values()],[data]);
 
   // Get comment count
   const { data: commentCount = 0 } = useQuery({
-    queryKey: ['comments-count', normalizedPostId],
+    queryKey: ['comments-count', normalizedPostId, user?.id],
     queryFn: () => getCommentCount(normalizedPostId),
     enabled: !!normalizedPostId,
     staleTime: 10000,
   });
 
   // Handle adding a new comment or reply
-  const handleCommentAdded = useCallback(() => {
-    refetch();
+  const handleCommentAdded = useCallback(async () => {
+    await Promise.all([refetch(), queryClient.invalidateQueries({ queryKey: ['comments-count', normalizedPostId] })]);
     if (onCommentAdded) {
       onCommentAdded();
     }
     setReplyToCommentId(null);
-  }, [refetch, onCommentAdded]);
+  }, [refetch, onCommentAdded, queryClient, normalizedPostId]);
 
   // Handle clicks on reply button
   const handleReplyClick = useCallback((commentId: string) => {
@@ -71,12 +80,6 @@ export const CommentList = ({
       }
     }, 100);
   }, []);
-
-  const handleEmojiSelect = (emoji: string) => {
-    setSelectedEmoji(emoji);
-    // Here you would typically send the emoji reaction to the backend
-    toast.success(`Reacted with ${emoji}`);
-  };
 
   // Organize comments into threaded view
   const organizedComments = useMemo(() => {
@@ -125,7 +128,7 @@ export const CommentList = ({
   }
 
   // Error state
-  if (error) {
+  if (error && !data) {
     console.error('Error loading comments:', error);
     return (
       <div className="py-6 text-center">
@@ -145,13 +148,14 @@ export const CommentList = ({
 
   return (
     <div 
-      className={`w-full ${className}`}
+      className={`w-full ${bottomComposer ? 'flex flex-col' : ''} ${className}`}
       ref={commentsContainerRef}
     >
       {/* Comments Header */}
+      {onBack && <Button variant="ghost" onClick={onBack}>Back to post</Button>}
       <div className="flex items-center justify-between py-3 px-4 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">Comments</h3>
+          <h3 className="font-semibold text-violet-50">Comments</h3>
           {commentCount > 0 && (
             <Badge variant="secondary" className="rounded-full">
               {commentCount}
@@ -171,7 +175,7 @@ export const CommentList = ({
       </div>
       
       {/* Comment input form */}
-      <div className="px-4 py-3">
+      <div className={bottomComposer ? "order-last px-4 py-3 border-t border-violet-400/20" : "px-4 py-3"}>
         <CommentForm 
           postId={normalizedPostId}
           onReplyComplete={handleCommentAdded}
@@ -183,11 +187,13 @@ export const CommentList = ({
       <Separator className="my-1" />
 
       {/* Comments list */}
-      <div className="px-4 pt-2 pb-4 space-y-4">
+      <div className="clipt-comment-history px-4 pt-2 pb-4 space-y-4">
         {organizedComments && organizedComments.length > 0 ? (
           organizedComments.map(comment => (
             <div key={comment.id} className="py-1">
               <CommentItem 
+                postId={normalizedPostId}
+                replyingId={replyToCommentId}
                 comment={comment} 
                 onReply={handleReplyClick}
                 isReplying={replyToCommentId === comment.id}
@@ -198,7 +204,7 @@ export const CommentList = ({
           ))
         ) : (
           <div className="py-8 text-center">
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+            <div className="bg-[#19152b] rounded-xl p-6">
               <MessageCircle className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
               <p className="text-sm text-gray-500 dark:text-gray-400">No comments yet</p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Be the first to share your thoughts!</p>
@@ -206,30 +212,11 @@ export const CommentList = ({
           </div>
         )}
       </div>
-
-      {/* Quick reaction buttons */}
-      {organizedComments && organizedComments.length > 0 && (
-        <>
-          <Separator />
-          <div className="px-4 py-3 flex items-center justify-center">
-            <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-full p-1">
-              {['❤️', '👍', '🔥', '👏', '😂'].map(emoji => (
-                <button 
-                  key={emoji}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                    selectedEmoji === emoji 
-                      ? 'bg-white dark:bg-gray-700 shadow-sm transform scale-110' 
-                      : 'hover:bg-gray-200 dark:hover:bg-gray-700'
-                  }`}
-                  onClick={() => handleEmojiSelect(emoji)}
-                >
-                  <span className="text-lg">{emoji}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+      <div className="px-4 pb-4 space-y-2">
+        {isFetchNextPageError && <p role="alert">Older comments could not be loaded. Your current comments are unchanged.</p>}
+        {hasNextPage && <Button variant="outline" disabled={isFetchingNextPage} onClick={()=>void fetchNextPage()}>{isFetchingNextPage?'Loading older comments…':isFetchNextPageError?'Retry older comments':'Load older comments'}</Button>}
+        {error && data && !isFetchNextPageError && <div role="alert"><p>Comments could not be refreshed.</p><Button variant="outline" onClick={()=>void refetch()}>Retry refresh</Button></div>}
+      </div>
     </div>
   );
 };

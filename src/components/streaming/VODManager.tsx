@@ -88,25 +88,10 @@ export const VODManager = ({ streamId }: VODManagerProps) => {
   };
 
   const createClip = async (recordingId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('clip_editing_sessions')
-        .insert({
-          recording_id: recordingId,
-          status: 'draft',
-          effects: []
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      toast.success('Clip editor opened');
-      // Navigate to clip editor or open modal
-    } catch (error) {
-      console.error('Error creating clip:', error);
-      toast.error('Failed to create clip');
-    }
+    if (!recordings.some(recording => recording.id === recordingId)) return;
+    // Editing sessions reference posts, not recordings. Do not create an orphan
+    // draft or claim an editor opened before a recording processor exists.
+    toast.error('Recording-to-clip processing is not configured yet.');
   };
 
   const addChapter = async () => {

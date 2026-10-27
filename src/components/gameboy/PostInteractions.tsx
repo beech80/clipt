@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface PostInteractionsProps {
   currentPostId: string | null;
   setCurrentPostId: (id: string | null) => void;
 }
 
-const PostInteractions: React.FC<PostInteractionsProps> = ({ 
+const usePostInteractions = ({
   currentPostId, 
   setCurrentPostId 
-}) => {
+}: PostInteractionsProps) => {
   // Set up scroll detection for posts
   useEffect(() => {
     const detectCurrentPost = () => {
@@ -55,20 +55,11 @@ const PostInteractions: React.FC<PostInteractionsProps> = ({
       }
     };
 
-    // Debounce function to prevent too many calls
-    const debounce = (func: Function, wait: number) => {
-      let timeout: number | null = null;
-      return function(...args: any) {
-        const context = this;
-        if (timeout) window.clearTimeout(timeout);
-        timeout = window.setTimeout(() => {
-          func.apply(context, args);
-        }, wait);
-      };
+    let timeout: ReturnType<typeof setTimeout>;
+    const handleScroll = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(detectCurrentPost, 200);
     };
-
-    // Debounced scroll handler
-    const handleScroll = debounce(detectCurrentPost, 200);
     
     // Initial detection
     detectCurrentPost();
@@ -77,6 +68,7 @@ const PostInteractions: React.FC<PostInteractionsProps> = ({
     window.addEventListener('scroll', handleScroll);
     
     return () => {
+      clearTimeout(timeout);
       window.removeEventListener('scroll', handleScroll);
     };
   }, [currentPostId, setCurrentPostId]);
@@ -363,4 +355,4 @@ const PostInteractions: React.FC<PostInteractionsProps> = ({
   };
 };
 
-export default PostInteractions;
+export default usePostInteractions;

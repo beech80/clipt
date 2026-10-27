@@ -28,7 +28,13 @@ export function ContentRecommendations() {
       });
 
       if (error) throw error;
-      return data;
+      if (!data?.length) return [];
+      const { data: posts, error: postsError } = await supabase.from('posts')
+        .select('id, content, image_url, video_url, user_id, created_at, profiles(username, avatar_url, display_name)')
+        .in('id', data.map(item => item.post_id));
+      if (postsError) throw postsError;
+      const byId = new Map((posts ?? []).map(post => [post.id, post]));
+      return data.flatMap(item => { const post = byId.get(item.post_id); return post ? [post] : []; });
     },
     enabled: !!user
   });
@@ -43,9 +49,9 @@ export function ContentRecommendations() {
       </div>
 
       <div className="space-y-4">
-        {recommendations?.map((recommendation: any) => (
+        {recommendations?.map((recommendation) => (
           <PostItem
-            key={recommendation.post_id}
+            key={recommendation.id}
             post={recommendation}
           />
         ))}
