@@ -1,0 +1,32 @@
+name: CLIPT independent production monitor
+
+on:
+  schedule:
+    - cron: '7,17,27,37,47,57 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: clipt-independent-production-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    if: github.repository == 'beech80/clipt'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Read the reviewed monitor source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # official v4
+        with:
+          persist-credentials: false
+      - name: Verify alert behavior without contacting production
+        run: node --test tests/operations/external-monitor.test.mjs
+      - name: Check production and deliver incident or recovery notifications
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/check-production-availability.mjs
+

@@ -1,43 +1,18 @@
-name: Deploy to Vercel
+name: Production release hold
 
+# Production deployment is intentionally not triggered by pushes or pull requests.
+# Restore deployment only after owner approval and verified release gates.
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  deploy:
+  release-hold:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - name: Install Dependencies
-        run: npm ci
-      
-      - name: Create vercel.json
+      - name: Explain release hold
         run: |
-          echo '{
-            "framework": "vite",
-            "buildCommand": "npm run build",
-            "outputDirectory": "dist",
-            "rewrites": [
-              { "source": "/(.*)", "destination": "/index.html" }
-            ]
-          }' > vercel.json
-      
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-      
-      - name: Deploy to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          vercel --token ${VERCEL_TOKEN} --prod --debug
+          echo "Production deployment is disabled pending owner approval and completed release verification."
+          exit 1
