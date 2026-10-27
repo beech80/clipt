@@ -32,8 +32,8 @@ by those fixtures. It cannot use a customer's account or hosted project. No
 production secret is supplied. Physical-device and live signed-in acceptance
 remain separate gates. The full unrelated browser suite is not claimed here.
 
-Validation: PENDING the isolated branch's actual CI run. Do not claim passing
-checks or merge this restoration until its results are reviewed.
+Initial checkpoint: validation was pending. Verified candidate results below
+supersede that state; earlier failed attempts remain recorded.
 
 Supabase's current Pro support acknowledgment is SU-526512 (owner supplied). It
 confirms receipt only; pg_net repair guidance remains pending. Backup/private-media
@@ -68,3 +68,17 @@ assertions passed before a strict selector matched both the conversation header
 and page-controller Back actions. The test now scopes the header control to its
 conversation region and separately verifies the controller action, preserving all
 existing data/layout assertions. A complete three-case rerun is required.
+
+## Verified candidate results
+
+Candidate 0c773af497242b4cc25d98e0cae8eddf75a00dc1 passed GitHub run
+https://github.com/beech80/clipt/actions/runs/40509688736 : 702 unit tests and
+12 monitor tests (zero failures/skips/cancellations), both typechecks, zero audit
+vulnerabilities, CSS verification and Vite build. All three Chromium fixtures
+passed in 7.6 seconds, including message layouts at 320/390/1440 CSS pixels.
+These use local mocked services, not real phones or owner sessions. All 894
+planned files matched the passing tree. A metadata-only update refreshes overlay
+hashes and records beta gates; application code is unchanged. CI reruns before merge.
+
+Automatic monitor run 40468721763 also passed all live probes and sent no duplicate
+notification. Current owner-submitted Pro request SU-526512 is acknowledged, not repaired.

@@ -5361,7 +5361,7 @@
     },
     {
       "path": "docs/SOURCE-RECONCILIATION-2026-10-27.md",
-      "gitBlobSha": "7fa8e470d7b1d6fd91cc8fc9428e5ce712926df0"
+      "gitBlobSha": "e37c8d6e04288219cc5b52215ffa5e9d26e22273"
     },
     {
       "path": "tests/create-clip.spec.ts",
@@ -5372,6 +5372,11 @@
       "path": "tests/messages-history.spec.ts",
       "gitBlobSha": "3d8063d74261abafaabb491fcc0c5c56275c49cb",
       "reason": "Scope the conversation back control to its labeled region and independently verify the matching page-controller action; retain all history, retry, read-state and layout assertions."
+    },
+    {
+      "path": "docs/BETA-STATUS-2026-10-27.md",
+      "gitBlobSha": "94398d132863dfb7904458c6a99afd263146ce1f",
+      "reason": "Current verified beta gates and remaining provider/media/device work."
     }
   ]
 }
