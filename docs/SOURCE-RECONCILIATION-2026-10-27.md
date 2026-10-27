@@ -46,3 +46,10 @@ legitimate safety alerts; message-history did not run due to max-failures=1. The
 fixture now selects publishing/duplicate alerts by message and retains all original
 content, cleanup, request-count and duplicate-prevention checks. A new run is
 required before claiming browser acceptance. No application code was changed.
+
+Second CI run 40505206645: all release checks passed again. The 403 posting
+case passed. The 503 fixture reached the expected safety state but tried to use
+a collapsed controller. Its captured accessibility snapshot exposes Show controls.
+The fixture now uses that public recovery action before navigation, retains the
+duplicate-blocking assertion and additionally verifies no second post/upload or
+cleanup occurred. No timeouts or application behavior were changed.

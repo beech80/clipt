@@ -63,12 +63,18 @@ for (const failure of [403,503]) {
     } else {
       await expect(page.getByRole('link',{name:'Open posting',exact:true})).toHaveCount(0);
       await expect(page.getByRole('link',{name:'Check my posts before retrying'})).toBeVisible();
-      await page.getByRole('button',{name:'CLIPT — Open navigation',exact:true}).click();
+      // Restore the controller through its public recovery action if collapsed.
+      const showControls=page.getByRole('button',{name:'Show controls',exact:true});
+      if(await showControls.isVisible()) await showControls.click();
+      const navigation=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});
+      await expect(navigation).toBeVisible();
+      await navigation.click();
       await page.getByRole('link',{name:'Post / Create',exact:true}).click();
       const duplicateWarning=page.getByRole('alert').filter({hasText:'duplicate posting is blocked'});
       await expect(duplicateWarning).toHaveCount(1);
       await expect(duplicateWarning).toContainText('duplicate posting is blocked');
       await expect(publish).toBeDisabled();
+      expect(postAttempts).toBe(1);expect(uploadAttempts).toBe(1);expect(cleanups).toBe(0);
     }
   });
 }

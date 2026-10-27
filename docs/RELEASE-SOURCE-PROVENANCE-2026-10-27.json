@@ -5365,8 +5365,8 @@
     },
     {
       "path": "tests/create-clip.spec.ts",
-      "gitBlobSha": "f8b11259697c27b33aba5b29351615701a39fd02",
-      "reason": "Disambiguate the publishing status and duplicate-safety alerts; retain content, request-count, cleanup and duplicate-blocking assertions."
+      "gitBlobSha": "f1ffd9d284ec99efada8b3f1d81ed445a37cc0de",
+      "reason": "Disambiguate the publishing status and duplicate-safety alerts; retain content, request-count, cleanup and duplicate-blocking assertions. Recover intentionally collapsed controls using the public Show controls button, and reassert no duplicate post/upload/cleanup."
     }
   ]
 }
