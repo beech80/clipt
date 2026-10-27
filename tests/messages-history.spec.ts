@@ -48,6 +48,8 @@ test('DM history loads newest first, retries older pages, and preserves read sta
     await expect(page.getByLabel('Conversations',{exact:true})).toBeHidden();
     const conversation=await page.locator('.clipt-dm-panel').boundingBox();
     expect(conversation && conversation.width>width-60).toBeTruthy();
-    await expect(page.getByRole('button',{name:'Back to conversations'})).toBeVisible();
+    const conversationRegion=page.getByRole('region',{name:'Conversation with peer',exact:true});
+    await expect(conversationRegion.getByRole('button',{name:'Back to conversations',exact:true})).toBeVisible();
+    await expect(page.getByRole('navigation',{name:'Clipt game controls'}).getByRole('button',{name:'Back to conversations',exact:true})).toBeVisible();
   }
 });

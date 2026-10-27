@@ -61,3 +61,10 @@ submit is correctly disabled with its busy label while blocked. It now asserts
 exactly one native form submit and that it is disabled, retaining network/cleanup
 checks. Browser CI now runs all three independent fixtures even if one fails;
 assertion timeouts and checks are unchanged. No app code was changed.
+
+Fourth CI run 40508743570: all release checks passed and both posting cases
+passed. Message-history error/retry, pagination, read-state and first-width layout
+assertions passed before a strict selector matched both the conversation header
+and page-controller Back actions. The test now scopes the header control to its
+conversation region and separately verifies the controller action, preserving all
+existing data/layout assertions. A complete three-case rerun is required.
