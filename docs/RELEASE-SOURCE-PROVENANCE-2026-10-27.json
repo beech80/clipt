@@ -5362,6 +5362,11 @@
     {
       "path": "docs/SOURCE-RECONCILIATION-2026-10-27.md",
       "gitBlobSha": "7fa8e470d7b1d6fd91cc8fc9428e5ce712926df0"
+    },
+    {
+      "path": "tests/create-clip.spec.ts",
+      "gitBlobSha": "f8b11259697c27b33aba5b29351615701a39fd02",
+      "reason": "Disambiguate the publishing status and duplicate-safety alerts; retain content, request-count, cleanup and duplicate-blocking assertions."
     }
   ]
 }

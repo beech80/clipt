@@ -45,7 +45,9 @@ for (const failure of [403,503]) {
     const publish=page.getByRole('button',{name:'Post Clipt',exact:true});
     await expect(publish).toBeEnabled();
     await publish.click();
-    await expect(page.getByRole('alert')).toContainText(failure===403?'rejected':'uncertain');
+    const publishingAlert=page.getByRole('alert').filter({hasText:failure===403?'rejected':'Publishing status is uncertain.'});
+    await expect(publishingAlert).toHaveCount(1);
+    await expect(publishingAlert).toContainText(failure===403?'rejected':'uncertain');
     await expect(page).toHaveURL(/\/clipts$/);
     expect(postAttempts).toBe(1); expect(uploadAttempts).toBe(1);
     expect(cleanups).toBe(failure===403?1:0);
@@ -63,7 +65,9 @@ for (const failure of [403,503]) {
       await expect(page.getByRole('link',{name:'Check my posts before retrying'})).toBeVisible();
       await page.getByRole('button',{name:'CLIPT — Open navigation',exact:true}).click();
       await page.getByRole('link',{name:'Post / Create',exact:true}).click();
-      await expect(page.getByRole('alert')).toContainText('duplicate posting is blocked');
+      const duplicateWarning=page.getByRole('alert').filter({hasText:'duplicate posting is blocked'});
+      await expect(duplicateWarning).toHaveCount(1);
+      await expect(duplicateWarning).toContainText('duplicate posting is blocked');
       await expect(publish).toBeDisabled();
     }
   });

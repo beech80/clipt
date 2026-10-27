@@ -39,3 +39,10 @@ Supabase's current Pro support acknowledgment is SU-526512 (owner supplied). It
 confirms receipt only; pg_net repair guidance remains pending. Backup/private-media
 cutover and real-device acceptance remain open. Domain work remains deferred and
 payments remain disabled.
+
+First CI run 40504070133: release checks passed. Chromium installed and the 403
+posting case passed. The 503 case stopped on a strict selector matching two
+legitimate safety alerts; message-history did not run due to max-failures=1. The
+fixture now selects publishing/duplicate alerts by message and retains all original
+content, cleanup, request-count and duplicate-prevention checks. A new run is
+required before claiming browser acceptance. No application code was changed.
