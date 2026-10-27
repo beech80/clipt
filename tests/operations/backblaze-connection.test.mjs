@@ -122,3 +122,32 @@ test('bucket-read authorization failure is distinguished from initial authentica
   assert.equal(r.code, 'unauthorized'); assert.equal(r.stage, 'read-private-bucket-metadata');
   assert.equal(r.authenticated, true); assert.equal(r.privateBucket, null); noDisclosure(r);
 });
+
+for (const [field, suffix, expected] of [
+  ['CLIPT_B2_KEY_ID', ' ', ['leading-or-trailing-whitespace']],
+  ['CLIPT_B2_APPLICATION_KEY', '\n', ['leading-or-trailing-whitespace', 'control-character']],
+  ['CLIPT_B2_APPLICATION_KEY', '\u200b', ['non-ascii-character']],
+  ['CLIPT_B2_KEY_ID', ':', ['colon-in-key-id']],
+  ['CLIPT_B2_APPLICATION_KEY', '\u0000', ['control-character']],
+]) {
+  test('format diagnostic identifies only field and category: ' + field + '/' + expected.join(','), async () => {
+    let requests = 0;
+    const r = await inspectBackblazeConnection({
+      keyId: field === 'CLIPT_B2_KEY_ID' ? keyId + suffix : keyId,
+      applicationKey: field === 'CLIPT_B2_APPLICATION_KEY' ? applicationKey + suffix : applicationKey,
+      fetchImpl: async () => { requests++; throw Error('must not run'); },
+    });
+    assert.deepEqual(r.invalidCredentialFields, [{ field, issues: expected }]);
+    assert.equal(requests, 0); noDisclosure(r);
+  });
+}
+test('both invalid fields are identified without exposing values', async () => {
+  let requests = 0;
+  const r = await inspectBackblazeConnection({ keyId: keyId + ' x', applicationKey: applicationKey + ' y',
+    fetchImpl: async () => { requests++; throw Error('must not run'); } });
+  assert.deepEqual(r.invalidCredentialFields, [
+    { field: 'CLIPT_B2_KEY_ID', issues: ['whitespace-inside-value'] },
+    { field: 'CLIPT_B2_APPLICATION_KEY', issues: ['whitespace-inside-value'] },
+  ]);
+  assert.equal(requests, 0); noDisclosure(r);
+});
