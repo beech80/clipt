@@ -3,8 +3,18 @@ name: Clipt CI/CD
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - '.github/workflows/production-monitor.yml'
+      - 'scripts/check-production-availability.mjs'
+      - 'tests/operations/external-monitor.test.mjs'
+      - 'docs/EXTERNAL-MONITOR-2026-10-26.md'
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - '.github/workflows/production-monitor.yml'
+      - 'scripts/check-production-availability.mjs'
+      - 'tests/operations/external-monitor.test.mjs'
+      - 'docs/EXTERNAL-MONITOR-2026-10-26.md'
   workflow_dispatch:
 
 jobs:
