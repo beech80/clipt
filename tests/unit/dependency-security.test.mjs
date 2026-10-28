@@ -1,3 +1,4 @@
+import {profileWebsite} from '../../src/lib/profile-website.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -12,7 +13,7 @@ function schema(path,name) {
   const end=source.indexOf('\ntype ',start);
   assert.ok(end>start);
   const output=ts.transpileModule(source.slice(start,end),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
-  return new Function('z',`${output}; return ${name};`)(z);
+  return new Function('z','profileWebsite',`${output}; return ${name};`)(z,profileWebsite);
 }
 
 test('security fixes are pinned in manifest and lockfile',()=>{

@@ -1,3 +1,4 @@
+import { HashtagText } from '@/components/post/HashtagText';
 import React, { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import { supabase } from "@/lib/supabase";
@@ -927,7 +928,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
               {username}
             </button>
             {' '}
-            <span className="text-gaming-200">{post.content}</span>
+            <span className="text-gaming-200"><HashtagText text={post.content} /></span>
           </p>
         </div>
       )}

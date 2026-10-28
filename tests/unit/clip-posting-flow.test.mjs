@@ -10,7 +10,7 @@ function load(path,deps) {
   const mod={exports:{}};new Function('require','module','exports',output)(name=>deps[name]??require(name),mod,mod.exports);return mod.exports;
 }
 const clipTools=load('lib/clip-upload.ts',{});
-function harness({destination='clipts',draftId=null,draft=null,uploadError=null,postError=null,status=201,capability=true,kind='video',authenticated=true,caption='Real caption'}={}) {
+function harness({destination='clipts',draftId=null,draft=null,uploadError=null,postError=null,status=201,capability=true,kind='video',authenticated=true,caption='Real caption',reward=()=>Promise.resolve({})}={}) {
   let stateIndex=0,queryIndex=0;
   const calls=[],states=[],notices=[],jobs=[];
   const user={id:'disposable-owner'};
@@ -28,7 +28,7 @@ function harness({destination='clipts',draftId=null,draft=null,uploadError=null,
     '@/lib/supabase':{supabase:{auth:{getUser:async()=>({data:{user:authenticated?user:null}})},from:()=>builder,storage:{from:()=>({upload:async(path)=>{calls.push(['upload',path]);return {error:uploadError};},getPublicUrl:path=>({data:{publicUrl:'https://development.example/storage/v1/object/public/media/'+path}}),remove:async paths=>{calls.push(['cleanup',paths]);return {error:null};}})}}},
     '@/lib/photo-upload':{preparePhoto:()=>{},photoUploadError:()=> 'Photo upload denied; no new draft was saved.'},
     '@/lib/community-text':load('lib/community-text.ts',{}),
-    '@/lib/clip-upload':clipTools,'@/lib/clip-reward':{checkClipReward:async()=>{calls.push(['reward']);return {};},clipRewardMessage:()=> 'Reward not confirmed'},
+    '@/lib/clip-upload':clipTools,'@/lib/clip-reward':{checkClipReward:()=>{calls.push(['reward']);return reward();},clipRewardMessage:()=> 'Reward not confirmed'},
     sonner:{toast:message=>notices.push(message)},
     '@/components/ui/button':{Button:()=>null},'@/components/ui/input':{Input:()=>null},'@/components/ui/textarea':{Textarea:()=>null},'@/components/ui/back-button':{BackButton:()=>null},
   };
@@ -92,4 +92,17 @@ test('private photo draft publishing reuses its locator and preserves owner-only
 test('photo uploads require fresh authentication and rejected writes never announce success',async()=>{
   const h=harness({kind:'photo',authenticated:false});await h.submit();assert.deepEqual(h.calls,[]);assert.deepEqual(h.notices,[]);
   const denied=harness({kind:'photo',uploadError:{statusCode:403}});await denied.submit();assert.equal(denied.calls.filter(c=>c[0]==='insert').length,0);assert.deepEqual(denied.notices,[]);
+});
+
+test('confirmed publication completes while its separate reward request is still pending',async()=>{
+ const h=harness({reward:()=>new Promise(()=>{})});await h.submit();
+ assert.ok(h.jobs.some(job=>job.stage==='complete'&&job.postId==='confirmed-post'));
+ assert.ok(h.calls.some(call=>call[0]==='invalidate'&&call[1]==='clipts-feed'));
+ assert.ok(h.calls.some(call=>call[0]==='reward'));assert.equal(h.jobs.some(job=>job.stage==='error'),false);
+});
+test('reward failure does not reverse a confirmed post or delete its video',async()=>{
+ const h=harness({reward:()=>Promise.reject(new Error('reward service unavailable'))});
+ await h.submit();await new Promise(resolve=>setImmediate(resolve));
+ assert.ok(h.jobs.some(job=>job.stage==='complete'));assert.equal(h.jobs.some(job=>job.stage==='error'),false);
+ assert.equal(h.calls.some(call=>call[0]==='cleanup'),false);assert.ok(h.notices.some(notice=>/published/i.test(notice)));
 });

@@ -1,3 +1,4 @@
+import ProfileWebsite from '@/components/profile/ProfileWebsite';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,7 @@ import ProfileConnectionsDialog from '@/components/profile/ProfileConnectionsDia
 import type { ConnectionKind } from '@/lib/profile-connections';
 import { BlockUserButton } from '@/components/BlockUserButton';
 import { MuteUserButton } from '@/components/profile/MuteUserButton';
-type ProfilePost = Tables<'posts'> & { likes: { count: number }[]; comments: { count: number }[] };
+type ProfilePost = Tables<'posts'> & { games?: { id: string; name: string } | null; likes: { count: number }[]; comments: { count: number }[] };
 
 interface ProfileData {
   id: string;
@@ -25,6 +26,7 @@ interface ProfileData {
   avatar_url?: string;
   banner_url?: string;
   bio?: string;
+  website?: string | null;
   followers_count?: number;
   following_count?: number;
   achievements_count?: number;
@@ -85,7 +87,7 @@ const UserProfile = () => {
       // Fetch posts
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select('*, likes(count), comments(count)')
+        .select('*, games(id,name), likes(count), comments(count)')
         .eq('user_id', profileId)
         .eq('post_type', 'post')
         .order('created_at', { ascending: false });
@@ -95,7 +97,7 @@ const UserProfile = () => {
       // Fetch clips
       const { data: clipsData, error: clipsError } = await supabase
         .from('posts')
-        .select('*, likes(count), comments(count)')
+        .select('*, games(id,name), likes(count), comments(count)')
         .eq('user_id', profileId)
         .eq('post_type', 'clipt')
         .order('created_at', { ascending: false });
@@ -110,6 +112,7 @@ const UserProfile = () => {
         display_name: profileData.display_name,
         avatar_url: profileData.avatar_url,
         bio: profileData.bio,
+        website: profileData.website,
         followers_count: followersCount,
         following_count: followingCount,
         is_following: isFollowing
@@ -271,6 +274,7 @@ const UserProfile = () => {
                   {profileData?.display_name || profileData?.username || 'User'}
                 </h2>
                 <p className="text-gray-300 text-sm mb-4 [overflow-wrap:anywhere]">@{profileData.username}</p>
+                <ProfileWebsite value={profileData.website} />
                 {profileData?.bio && (
                   <p className="text-gray-200 text-sm mb-4 [overflow-wrap:anywhere]">{profileData.bio}</p>
                 )}

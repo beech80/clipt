@@ -24,6 +24,7 @@ const PostPage = React.lazy(() => import('./pages/PostPage'));
 const EditProfile = React.lazy(() => import('./pages/EditProfile'));
 const TopGames = React.lazy(() => import('./pages/TopGames'));
 const Game = React.lazy(() => import('./pages/Game'));
+const Hashtag = React.lazy(() => import('./pages/Hashtag'));
 const Clipts = React.lazy(() => import('./pages/Clipts'));
 const TopClipts = React.lazy(() => import('./pages/TopClipts'));
 const Boosts = React.lazy(() => import('./pages/Boosts'));
@@ -131,9 +132,12 @@ const App = () => {
           <Route path="/profile/edit" element={<Navigate to="/edit-profile" replace />} />
           <Route path="/top-games" element={<TopGames />} />
           <Route path="/game/:id" element={<Game />} />
+          <Route path="/game/:id/clips" element={<Game />} />
+          <Route path="/hashtag/:tag" element={<Hashtag />} />
           <Route path="/clipts" element={<Clipts />} />
           <Route path="/top-clipts" element={<TopClipts />} />
           <Route path="/user/:id" element={<UserProfile />} />
+          <Route path="/profile/:id" element={<UserProfile />} />
           <Route path="/new-post" element={<AuthGuard><NewPost /></AuthGuard>} />
           <Route path="/drafts" element={<AuthGuard><Drafts /></AuthGuard>} />
           <Route path="/post/:id/comments" element={<CommentsPage />} />

@@ -1,3 +1,4 @@
+import { HashtagText } from '@/components/post/HashtagText';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Eye, Heart, MessageSquare, Share2, Trophy, X } from 'lucide-react';
@@ -11,7 +12,7 @@ import { AdjustablePanel } from '@/components/AdjustablePanel';
 
 export function CaptionText({ text }: { text: string }) {
   return <>{text.split(/(https?:\/\/[^\s<>]+)/g).map((part, index) =>
-    /^https?:\/\//.test(part) ? <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="underline">{part}</a> : part)}</>;
+    /^https?:\/\//.test(part) ? <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="underline">{part}</a> : <HashtagText key={index} text={part} />)}</>;
 }
 
 export function EngagementHud({ postId, username, caption, avatarUrl, followFeed = false }: {
@@ -66,7 +67,7 @@ export function EngagementHud({ postId, username, caption, avatarUrl, followFeed
     {(username || caption) && <div className="clipt-comment-post-details" aria-live="polite" aria-atomic="true">
       <Avatar className="clipt-portrait-comment-avatar" aria-hidden="true"><AvatarImage src={avatarUrl || undefined} alt="" /><AvatarFallback>{username?.slice(0, 1).toUpperCase() || '?'}</AvatarFallback></Avatar>
       {username && <p className="clipt-comment-author">@{username}</p>}
-      {caption && <p className="clipt-comment-caption"><span className="clipt-original-caption">{caption}</span><span className="clipt-portrait-caption"><CaptionText text={caption} /></span></p>}
+      {caption && <p className="clipt-comment-caption"><span className="clipt-original-caption"><CaptionText text={caption} /></span><span className="clipt-portrait-caption"><CaptionText text={caption} /></span></p>}
     </div>}
     {isPending && !error && <p role="status" className="text-sm text-violet-200">Loading engagement totals…</p>}
     <div className="clipt-engagement-metrics">

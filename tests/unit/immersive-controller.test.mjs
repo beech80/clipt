@@ -8,7 +8,7 @@ import * as pageController from '../../src/lib/page-controller.ts';
 const nativeRequire=createRequire(import.meta.url);
 const require=name=>name==='@/lib/page-controller'?pageController:nativeRequire(name);
 const read=path=>readFileSync(new URL('../../src/'+path,import.meta.url),'utf8');
-function load(path,deps={}) {const imports={'@/hooks/useMobileControlsPreferences':{useMobileControlsPreferences:()=>({preferences:{hand:'right',trail:true},update(){},saved:true})},'./accessibility/HandPreferenceSettings':{HandPreferenceSettings:()=>null},'./AdjustablePanel':{AdjustablePanel:()=>null},'@/components/AdjustablePanel':{AdjustablePanel:()=>null},'@/pages/Menu':{default:()=>null,__esModule:true},...deps};const mod={exports:{}};new Function('require','module','exports',ts.transpileModule(read(path),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText)(name=>imports[name]??require(name),mod,mod.exports);return mod.exports;}
+function load(path,deps={}) {const imports={'@/components/post/HashtagText':{HashtagText:({text})=>text},'@/hooks/useMobileControlsPreferences':{useMobileControlsPreferences:()=>({preferences:{hand:'right',trail:true},update(){},saved:true})},'./accessibility/HandPreferenceSettings':{HandPreferenceSettings:()=>null},'./AdjustablePanel':{AdjustablePanel:()=>null},'@/components/AdjustablePanel':{AdjustablePanel:()=>null},'@/pages/Menu':{default:()=>null,__esModule:true},...deps};const mod={exports:{}};new Function('require','module','exports',ts.transpileModule(read(path),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText)(name=>imports[name]??require(name),mod,mod.exports);return mod.exports;}
 const policy=load('lib/controller-layout.ts');
 test('folding, orientation and resumed-page measurements follow available space and clean up listeners',()=>{
   const keys=['document','window','matchMedia','ResizeObserver'];const saved=Object.fromEntries(keys.map(k=>[k,globalThis[k]]));
@@ -80,7 +80,7 @@ test('caption renderer retains original text, hashtags, mentions and safe HTTP l
   });
   const caption='Hello @matthew #clipt\nhttps://example.com/path javascript:alert(1) <img>';
   const parts=CaptionText({text:caption}).props.children;
-  assert.equal(parts.map(p=>typeof p==='string'?p:p.props.children).join(''),caption);
+  assert.equal(parts.map(p=>typeof p==='string'?p:(p.props.text??p.props.children)).join(''),caption);
   const anchors=parts.filter(p=>p?.type==='a');assert.equal(anchors.length,1);
   assert.equal(anchors[0].props.href,'https://example.com/path');assert.equal(anchors[0].props.rel,'noopener noreferrer');
 });
@@ -197,13 +197,11 @@ test('controller social actions, primary navigation and joystick reuse existing 
     for(const action of ['like','comment','trophy','follow'])nodes.find(n=>n.props?.['data-controller-action']===action).props.onClick();
     assert.deepEqual(activated,['like','comment','trophy','follow']);
     for(const name of ['Open menu','CLIPT — Open navigation'])nodes.find(n=>n.props?.['aria-label']===name).props.onClick();
-    const postButton=nodes.find(n=>n.type==='button'&&n.props?.['aria-label']==='POST');
-    assert.ok(postButton,'camera-only button retains an accessible Post label');
+    assert.equal(nodes.filter(n=>n.type==='button'&&n.props?.['aria-label']==='POST').length,0,'landscape Post is available through navigation');
     const actionGroup=nodes.find(n=>n.props?.className==='clipt-controller-actions');
-    assert.ok(React.Children.toArray(actionGroup.props.children).some(n=>n.props?.['aria-label']==='POST'),'landscape camera is in the social-action area');
-    assert.equal(nodes.filter(n=>n.type==='button'&&n.props?.['aria-label']==='POST').length,1,'one Post action, no duplicate');
-    postButton.props.onClick();
-    assert.deepEqual(routes,['/menu','/new-post'],'CLIPT opens mounted navigation instead of navigating away from the player');
+    assert.ok(React.Children.toArray(actionGroup.props.children).some(n=>n.props?.['aria-label']==='CLIPT — Open navigation'),'CLIPT occupies the former camera slot');
+    assert.equal(nodes.filter(n=>n.props?.['aria-label']==='CLIPT — Open navigation').length,1);
+    assert.deepEqual(routes,['/menu']);
     const joystick=nodes.find(n=>n.props?.role==='slider');
     joystick.props.onKeyDown({key:'ArrowRight',preventDefault(){}});assert.equal(events.at(-1).detail.direction,1);
     let captured=false;joystick.props.onPointerDown({pointerId:3,button:0,clientX:100,clientY:26,preventDefault(){},currentTarget:{getBoundingClientRect:()=>({left:0,top:0,width:52,height:52}),setPointerCapture(){captured=true;}}});
