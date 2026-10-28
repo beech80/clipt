@@ -844,3 +844,6 @@ button.clipt-bottom-swipe-zone:active > span { color: #e9d5ff; }
 .page-content :is(a,button,input,textarea,select):focus-visible { outline: 2px solid #c4b5fd; outline-offset: 3px; }
 html.high-contrast .clipt-masthead.clipt-masthead { background: #000; border-bottom-color: #fff; }
 html.high-contrast button.clipt-bottom-swipe-zone > span { color: #fff; text-shadow: none; }
+
+/* Keep recovery controls stationary even when decorative desktop cards float. */
+.clipt-fyp-slide > article:has(.clipt-video-frame [role="alert"]) { animation-play-state: paused !important; }

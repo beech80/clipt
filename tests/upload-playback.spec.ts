@@ -59,7 +59,7 @@ async function setup(page:Page,{denied=false,holdRendition=false}={}) {
     if(path.startsWith('/storage/v1/object/public/')) {publicReads++;return route.fulfill({status:403,body:'Private bucket'});}
     if(path.startsWith('/storage/v1/object/sign/')) {
       const object=path.slice('/storage/v1/object/sign/'.length);
-      expect(object).toBe(uploadedPath);
+      expect([uploadedPath,'media/'+owner+'/later-rendition.mp4']).toContain(object);
       if(request.method()==='POST') {
         signs++;
         if(denied){status=403;data={message:'Access denied',statusCode:'403',error:'Unauthorized'};}
@@ -133,6 +133,7 @@ test('upload to private playback, creator profile and hashtag results works whil
     await expect(page.getByText('Loading video...',{exact:true})).toHaveCount(0);
     await expect(video).toHaveAttribute('data-continuity','original');await expect(video).toHaveAttribute('src',originalSrc!);
     await expect.poll(()=>video.evaluate(element=>element.paused)).toBe(false);
+    expect(service.stats().signs).toBe(1); // The late lookup did not replace the playing source.
     await page.getByRole('button',{name:'Comment — Open engagement',exact:true}).click();
     const creator=page.getByRole('link',{name:'@upload_tester',exact:true});
     await expect(creator).toHaveAttribute('href','/user/'+owner);await creator.click();
