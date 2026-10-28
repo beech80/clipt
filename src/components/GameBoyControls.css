@@ -362,7 +362,7 @@ html.reduce-motion .clipt-feed-flip-face { animation: none; }
 .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"])[data-compact="true"] .clipt-controller-actions > .clipt-feed-flip,
 .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"])[data-emergency="true"] .clipt-controller-actions > .clipt-controller-post { display: none; }
 @media (orientation: landscape) and (max-height: 323px) {
-  .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"]):not([data-compact="true"]) .clipt-controller-actions { gap: 2px; }
+  .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"]):not([data-compact="true"]) .clipt-controller-actions { gap: 4px; }
 }
 
 /* Page-aware controls: retain the existing artwork, never modify feed rules. */
@@ -410,3 +410,12 @@ body:has(.clipt-controller[data-page-controller]) .page-content { padding-bottom
 .gameboy-controls.clipt-controller[data-mobile-v2="true"]:not([data-portrait-viewing="true"]) .clipt-controller-center { display: none; }
 .gameboy-controls.clipt-controller[data-mobile-v2="true"]:not([data-portrait-viewing="true"]) .clipt-controller-actions > .clipt-controller-home { position: fixed; left: auto; right: max(12px,env(safe-area-inset-right,0px)); bottom: calc(12px + env(safe-area-inset-bottom,0px)); width: 52px; min-width: 52px; height: 52px; border-radius: 50%; pointer-events: auto; }
 .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-hand="left"]:not([data-portrait-viewing="true"]) .clipt-controller-actions > .clipt-controller-home { left: max(12px,env(safe-area-inset-left,0px)); right: auto; }
+
+/* Landscape actions share one rail: CLIPT can never overlap the feed switch. */
+.gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"]):not([data-compact="true"]) .clipt-controller-actions { width: 52px; align-items: center; gap: 6px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"]):not([data-compact="true"]) .clipt-controller-actions > .clipt-controller-home { position: relative; inset: auto; flex: 0 0 52px; min-height: 52px; margin-top: auto; margin-bottom: 2px; }
+.clipt-feed-flip { grid-template-rows: 22px 14px; gap: 1px; padding: 3px 0; height: 44px; }
+.clipt-feed-flip-label { font-size: 10px; line-height: 14px; font-weight: 700; letter-spacing: .02em; }
+@media (max-height: 350px) {
+  .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"]):not([data-compact="true"]) .clipt-controller-actions { gap: 4px; }
+}

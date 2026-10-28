@@ -46,6 +46,9 @@ export default function Clipts() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [engagementOpen, setEngagementOpen] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
+  const activeIndexRef = useRef(activeIndex);
+  activeIndexRef.current = activeIndex;
+  const swipeZoneRef = useRef<HTMLButtonElement>(null);
   const { data, error, isPending, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } = useInfiniteQuery({
     queryKey: ['clipts-feed', user?.id, feed, following.data, muted.data],
     enabled: (!user || muted.isSuccess) && (feed === 'clipts' || Boolean(user && following.isSuccess)),
@@ -74,7 +77,7 @@ export default function Clipts() {
   const posts = user && !muted.isSuccess ? [] : [...new Map((ownUploaded?[ownUploaded,...basePosts]:basePosts).map(post => [post.id, post])).values()];
   useEffect(()=>{if(publishing?.stage==='complete'){setFeed(publishing.destination);setActiveIndex(0);trackRef.current?.scrollTo({left:0,behavior:'instant'});}},[publishing?.id,publishing?.stage]);
   const activePost = posts[activeIndex];
-  const swipePath = usePortraitSwipe(trackRef, posts.length > 0);
+  const swipePath = usePortraitSwipe(swipeZoneRef, posts.length > 0);
   useEffect(() => {
     setActiveIndex(0);
     setEngagementOpen(false);
@@ -96,6 +99,22 @@ export default function Clipts() {
     window.addEventListener('clipt:navigate', navigate);
     return () => window.removeEventListener('clipt:navigate', navigate);
   }, [activeIndex, posts.length]);
+  // Preserve the visible clip through rotation, folding and viewport changes.
+  // Scroll only the carousel; keep its keyed players and playback state intact.
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || !posts.length) return;
+    const recenter = () => {
+      const slide = track.querySelector<HTMLElement>('[data-slide-index="' + activeIndexRef.current + '"]');
+      if (!slide) return;
+      track.scrollTo({ left: slide.offsetLeft - track.offsetLeft - (track.clientWidth - slide.clientWidth) / 2, behavior: 'instant' });
+    };
+    const observer = new ResizeObserver(recenter);
+    observer.observe(track);
+    window.addEventListener('resize', recenter);
+    window.visualViewport?.addEventListener('resize', recenter);
+    return () => { observer.disconnect(); window.removeEventListener('resize', recenter); window.visualViewport?.removeEventListener('resize', recenter); };
+  }, [posts.length]);
   useEffect(() => {
     if (posts.length && activeIndex >= posts.length - 3 && hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [activeIndex, posts.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
@@ -137,6 +156,7 @@ export default function Clipts() {
           const candidate = Math.abs(rect.left + rect.width / 2 - midpoint);
           if (candidate < distance) { distance = candidate; closest = Number(slide.dataset.slideIndex); }
         });
+        activeIndexRef.current = closest;
         setActiveIndex(closest);
       }}>
       {posts.map((post, index) => <section key={post.id} className="clipt-fyp-slide" data-slide-index={index}
@@ -145,8 +165,10 @@ export default function Clipts() {
           ? <PostItem post={post} cinematic active={index === activeIndex} onOpenEngagement={() => setEngagementOpen(true)} />
           : <div className="clipt-fyp-placeholder">Clipt {index + 1}</div>}
       </section>)}
-      <div className="clipt-bottom-swipe-zone" aria-hidden="true" />
     </div>}
+    <button ref={swipeZoneRef} type="button" className="clipt-bottom-swipe-zone" data-swipe-menu
+      aria-label="CLIPT — Open navigation" aria-haspopup="dialog" aria-controls="clipt-navigation-panel"
+      onClick={() => window.dispatchEvent(new CustomEvent('clipt:open-navigation'))}><span>CLIPT</span></button>
     <svg className="clipt-swipe-trail" aria-hidden="true"><path ref={swipePath} /></svg>
     <Dialog open={engagementOpen && Boolean(activePost)} onOpenChange={setEngagementOpen} modal={false}>
       {engagementOpen && activePost && <EngagementHud postId={activePost.id}
