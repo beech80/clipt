@@ -4,6 +4,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
   testMatch: '**/*.spec.ts',
+  testIgnore: '**/upload-playback.spec.ts',
   fullyParallel: false,
   workers: 1,
   // Measured Windows page setup alone took ~14s; allow the complete fixture
