@@ -417,5 +417,5 @@ body:has(.clipt-controller[data-page-controller]) .page-content { padding-bottom
 .clipt-feed-flip { grid-template-rows: 22px 14px; gap: 1px; padding: 3px 0; height: 44px; }
 .clipt-feed-flip-label { font-size: 10px; line-height: 14px; font-weight: 700; letter-spacing: .02em; }
 @media (max-height: 350px) {
-  .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"]):not([data-compact="true"]) .clipt-controller-actions { gap: 2px; }
+  .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"]):not([data-compact="true"]) .clipt-controller-actions { gap: 4px; }
 }
