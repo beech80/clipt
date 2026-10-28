@@ -1,3 +1,4 @@
+import {createServer} from 'node:http';
 import {test,expect,type Page} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
@@ -17,6 +18,23 @@ async function setup(page:Page,{denied=false,holdRendition=false}={}) {
     localStorage.setItem('clipt-controller-preferences-v1',JSON.stringify({layout:'auto',autoHide:false}));
   },{user});
   let post:any=null,uploadedPath='',uploads=0,signs=0,reads=0,publicReads=0;
+  let uploadedBytesMatch=false;
+  // Receive the real multipart body: browser routing APIs omit file bytes.
+  const receiver=createServer((request,response)=>{
+    response.setHeader('Access-Control-Allow-Origin','*');
+    response.setHeader('Access-Control-Allow-Methods','POST, OPTIONS');
+    response.setHeader('Access-Control-Allow-Headers',request.headers['access-control-request-headers']||'*');
+    if(request.method==='OPTIONS'){response.writeHead(204);response.end();return;}
+    if(request.method!=='POST'||!request.url?.startsWith('/storage/v1/object/media/')){response.writeHead(404);response.end();return;}
+    const chunks:Buffer[]=[];request.on('data',chunk=>chunks.push(Buffer.from(chunk)));
+    request.on('end',()=>{
+      uploads++;uploadedPath=request.url!.slice('/storage/v1/object/'.length);
+      uploadedBytesMatch=Buffer.concat(chunks).includes(bytes);
+      response.writeHead(uploadedBytesMatch?200:400,{'Content-Type':'application/json'});
+      response.end(JSON.stringify(uploadedBytesMatch?{Key:uploadedPath}:{message:'Invalid fixture upload'}));
+    });
+  });
+  await new Promise<void>((resolve,reject)=>{receiver.once('error',reject);receiver.listen(54321,'127.0.0.1',resolve);});
   let renditionRequested=false,rewardRequested=false,newestFirst=false,hashtagRequested=false;
   let releaseRendition!:()=>void,releaseReward!:()=>void;
   const renditionGate=new Promise<void>(resolve=>{releaseRendition=resolve;});
@@ -30,12 +48,7 @@ async function setup(page:Page,{denied=false,holdRendition=false}={}) {
     const path=url.pathname;
     if(path==='/auth/v1/user')data=user;
     if(path==='/rest/v1/profiles'||path==='/rest/v1/rpc/get_own_profile')data=profile;
-    if(path.startsWith('/storage/v1/object/media/')&&request.method()==='POST') {
-      uploads++;uploadedPath=path.slice('/storage/v1/object/'.length);
-      expect(uploadedPath).toMatch(new RegExp('^media/'+owner+'/.+\\.mp4$'));
-      expect(request.postDataBuffer()?.includes(bytes)).toBe(true);
-      data={Key:uploadedPath};
-    }
+    if(path.startsWith('/storage/v1/object/media/'))return route.continue();
     if(path.startsWith('/storage/v1/object/public/')) {publicReads++;return route.fulfill({status:403,body:'Private bucket'});}
     if(path.startsWith('/storage/v1/object/sign/')) {
       const object=path.slice('/storage/v1/object/sign/'.length);
@@ -80,8 +93,9 @@ async function setup(page:Page,{denied=false,holdRendition=false}={}) {
     await route.fulfill({status,contentType:'application/json',headers:{'content-range':'0-0/0'},body:JSON.stringify(data)});
   });
   return {
-    stats:()=>({uploads,signs,reads,publicReads,renditionRequested,rewardRequested,newestFirst,hashtagRequested}),
+    stats:()=>({uploads,uploadedBytesMatch,signs,reads,publicReads,renditionRequested,rewardRequested,newestFirst,hashtagRequested}),
     allowSigning:()=>{denied=false;},releaseRendition,releaseReward,
+    close:async()=>{receiver.closeAllConnections();await new Promise<void>(resolve=>receiver.close(()=>resolve()));},
   };
 }
 async function publish(page:Page) {
@@ -103,7 +117,7 @@ test('upload to private playback, creator profile and hashtag results works whil
     await video.evaluate(async element=>{element.loop=true;element.muted=true;element.dataset.continuity='original';await element.play();});
     await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
     const originalSrc=await video.getAttribute('src');
-    expect(service.stats().uploads).toBe(1);expect(service.stats().reads).toBeGreaterThan(0);
+    expect(service.stats().uploads).toBe(1);expect(service.stats().uploadedBytesMatch).toBe(true);expect(service.stats().reads).toBeGreaterThan(0);
     expect(service.stats().publicReads).toBe(0);expect(service.stats().renditionRequested).toBe(true);
     expect(service.stats().rewardRequested).toBe(true);expect(service.stats().newestFirst).toBe(true);
     service.releaseRendition();
@@ -124,7 +138,7 @@ test('upload to private playback, creator profile and hashtag results works whil
     await expect(page).toHaveURL(/\/hashtag\/gaming$/);
     await expect(page.getByRole('link',{name:'Open Clipt',exact:true})).toHaveCount(1);
     expect(service.stats().hashtagRequested).toBe(true);
-  } finally {service.releaseRendition();service.releaseReward();}
+  } finally {service.releaseRendition();service.releaseReward();await service.close();}
 });
 test('denied private playback never falls back to public URLs and a successful access retry plays',async({page})=>{
   const service=await setup(page,{denied:true});
@@ -137,5 +151,5 @@ test('denied private playback never falls back to public URLs and a successful a
     await video.evaluate(async element=>{element.muted=true;await element.play();});
     await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
     expect(service.stats().signs).toBe(2);expect(service.stats().publicReads).toBe(0);
-  } finally {service.releaseRendition();service.releaseReward();}
+  } finally {service.releaseRendition();service.releaseReward();await service.close();}
 });
