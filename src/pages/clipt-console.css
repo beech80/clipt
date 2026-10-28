@@ -45,13 +45,13 @@
 .clipt-fyp-brand { grid-column: 2; }
 .clipt-watch-page { color: #f5f3ff; background: radial-gradient(ellipse at 15% 5%,#7e22ce55,transparent 60%),linear-gradient(145deg,#1b102d99,#090510cc); }
 .clipt-watch-content { width: 100%; max-width: 960px; min-width: 0; }
-.clipt-watch-media .clipt-video-frame { aspect-ratio: auto !important; height: clamp(160px,calc(100dvh - var(--clipt-page-controller-space,160px) - 192px),640px); }
+.clipt-watch-media .clipt-video-frame { aspect-ratio: auto !important; height: clamp(160px,calc(100dvh - var(--clipt-page-controller-space,160px) - 272px),640px); }
 @media (max-height: 600px) {
   .clipt-watch-page > .clipt-watch-topbar { padding: 8px 12px; min-height: 60px; }
   .clipt-watch-page .clipt-watch-content { padding: 8px 12px calc(var(--clipt-page-controller-space,160px) + 24px); }
   .clipt-watch-page .gaming-card { display: flex; flex-direction: column; }
   .clipt-watch-page .clipt-watch-media { order: -1; }
-  .clipt-watch-media .clipt-video-frame { height: max(96px,calc(100dvh - var(--clipt-page-controller-space,160px) - 80px)); }
+  .clipt-watch-media .clipt-video-frame { height: max(96px,calc(100dvh - var(--clipt-page-controller-space,160px) - 104px)); }
 }
 .clipt-watch-page .gaming-card { border: 1px solid #a855f780; border-radius: 14px; overflow: hidden; }
 html.high-contrast .clipt-watch-page { background: #000; }

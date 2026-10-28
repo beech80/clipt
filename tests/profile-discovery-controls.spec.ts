@@ -171,6 +171,7 @@ test('hashtag collections preserve pagination, profile routes and narrow readabl
   await page.getByRole('button',{name:'Load more Clipts',exact:true}).click();await expect(open).toHaveCount(51);
   await expect(page.getByText('51 Clipts loaded',{exact:true})).toBeVisible();
   await expect(page.getByRole('button',{name:'Load more Clipts',exact:true})).toHaveCount(0);
+  await page.evaluate(()=>scrollTo(0,0));
   await page.screenshot({path:info.outputPath('hashtag-portrait-collection.png')});
   await page.setViewportSize({width:195,height:422});await page.goto('/hashtag/'+ 'a'.repeat(40));
   await expect(page.getByRole('heading',{name:'#'+'a'.repeat(40),exact:true})).toBeVisible();

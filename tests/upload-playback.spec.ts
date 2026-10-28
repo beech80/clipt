@@ -12,7 +12,7 @@ const owner='00000000-0000-4000-8000-000000000077';
 const postId='00000000-0000-4000-8000-000000000078';
 const fixturePath=fileURLToPath(new URL('./fixtures/clip-test-h264.mp4',import.meta.url));
 const bytes=readFileSync(fixturePath);
-async function setup(page:Page,{denied=false,holdRendition=false}={}) {
+async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false}={}) {
   const user={id:owner,aud:'authenticated',role:'authenticated',email:'fixture@example.invalid',app_metadata:{},user_metadata:{},created_at:'2026-09-19T00:00:00Z',factors:[]};
   const profile={id:owner,username:'upload_tester',display_name:'Upload Tester',avatar_url:null,bio:'Recorded test profile'};
   await page.addInitScript(({user})=>{
@@ -74,7 +74,7 @@ async function setup(page:Page,{denied=false,holdRendition=false}={}) {
         const input=request.postDataJSON();
         expect(input.user_id).toBe(owner);expect(input.is_published).toBe(true);
         expect(input.video_url).toBe('https://127.0.0.1:54322/storage/v1/object/public/'+uploadedPath);
-        post={...input,id:postId,created_at:'2026-10-28T00:00:00Z',profiles:profile,games:null,likes:[{count:0}],comments:[{count:0}]};
+        post={...input,id:postId,created_at:'2026-10-28T00:00:00Z',profiles:profile,games:gameLabel?{id:'00000000-0000-4000-8000-000000000080',name:'Recorded game with a longer name'}:null,likes:[{count:0}],comments:[{count:0}]};
         status=201;data={id:postId};
       } else if(url.searchParams.has('id'))data=post;
       else {
@@ -165,7 +165,7 @@ test('denied private playback never falls back to public URLs and a successful a
 });
 
 test('the uploaded post plays in a visible frame in portrait, landscape and constrained viewports',async({page},info)=>{
-  const service=await setup(page);
+  const service=await setup(page,{gameLabel:true});
   try {
     await page.setViewportSize({width:390,height:844});await publish(page);
     await page.goto('/post/'+postId);
