@@ -120,7 +120,9 @@ test('upload to private playback, creator profile and hashtag results works whil
     expect(service.stats().uploads).toBe(1);expect(service.stats().uploadedBytesMatch).toBe(true);expect(service.stats().reads).toBeGreaterThan(0);
     expect(service.stats().publicReads).toBe(0);expect(service.stats().renditionRequested).toBe(true);
     expect(service.stats().rewardRequested).toBe(true);expect(service.stats().newestFirst).toBe(true);
-    service.releaseRendition();
+    const renditionResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/rest/v1/post_video_renditions');
+    service.releaseRendition();await (await renditionResponse).finished();
+    await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
     await expect(page.getByText('Loading video...',{exact:true})).toHaveCount(0);
     await expect(video).toHaveAttribute('data-continuity','original');await expect(video).toHaveAttribute('src',originalSrc!);
     await expect.poll(()=>video.evaluate(element=>element.paused)).toBe(false);
