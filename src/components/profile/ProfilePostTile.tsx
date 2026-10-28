@@ -5,7 +5,7 @@ import { usePrivateMediaUrl } from '@/hooks/usePrivateMedia';
 import { postImageReferences } from '@/lib/post-image-references';
 
 interface ProfilePostTileProps {
-  post: { id: string; content?: string | null; image_url?: string | null; video_url?: string | null; games?: { id: string; name: string } | null };
+  post: { id: string; content?: string | null; image_url?: string | null; video_url?: string | null; games?: { id: string | number; name: string } | null };
   likes: number;
   comments: number;
 }
