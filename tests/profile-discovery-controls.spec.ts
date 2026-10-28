@@ -37,6 +37,8 @@ for(const hand of ['right','left']) {
     await fixture(page,hand);await page.setViewportSize({width:390,height:844});await page.goto('/clipts');
     const home=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});
     await expect(home).toBeVisible();
+    await expect(page.locator('[data-active-clip="true"] video')).toBeVisible();
+    await expect(page.getByText('Loading page…',{exact:true})).toHaveCount(0);
     await expect(page.locator('.clipt-controller')).toHaveAttribute('data-portrait-viewing','true');
     await expect.poll(async()=>Math.round((await home.boundingBox())!.y)).toBeGreaterThan(740);
     await page.screenshot({path:info.outputPath(`portrait-${hand}.png`)});
@@ -71,4 +73,34 @@ test('profile website, Playing game link and hashtag results remain reachable wi
   await page.getByRole('link',{name:'#Gaming',exact:true}).first().click();
   await expect(page).toHaveURL(/\/hashtag\/gaming$/);await expect(page.getByRole('heading',{name:'#gaming',exact:true})).toBeVisible();
   await expect(open).toHaveCount(24);await page.screenshot({path:info.outputPath('hashtag-results.png')});
+});
+
+test('Safari PNG encoder fallback uploads the actual format and confirms the profile update',async({page})=>{
+  await fixture(page);
+  await page.addInitScript(()=>{
+    const original=HTMLCanvasElement.prototype.toBlob;
+    HTMLCanvasElement.prototype.toBlob=function(callback,_mime,quality){original.call(this,callback,'image/png',quality);};
+  });
+  await page.route('**/rest/v1/rpc/get_own_profile',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({id:owner,username:'fixture_owner',display_name:'Fixture Owner',website:'https://cliptgaming.com/',bio:'Recorded profile'})}));
+  let uploaded=false,updated=false;
+  await page.route('**/storage/v1/object/avatars/**',async route=>{
+    expect(route.request().method()).toBe('POST');
+    expect(new URL(route.request().url()).pathname).toMatch(new RegExp('/avatars/'+owner+'/.+\\.png$'));
+    expect(route.request().postDataBuffer()?.toString('latin1')).toContain('Content-Type: image/png');
+    uploaded=true;
+    await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({Key:'fixture.png'})});
+  });
+  await page.route('**/rest/v1/profiles?**',async route=>{
+    if(route.request().method()!=='PATCH')return route.fallback();
+    expect(uploaded).toBe(true);
+    expect(route.request().postDataJSON().avatar_url).toMatch(new RegExp('/avatars/'+owner+'/.+\\.png$'));
+    updated=true;
+    await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({id:owner})});
+  });
+  await page.goto('/edit-profile');
+  await expect(page.getByRole('button',{name:'Upload New Picture',exact:true})).toBeVisible();
+  const png=await page.evaluate(()=>{const canvas=document.createElement('canvas');canvas.width=2;canvas.height=2;canvas.getContext('2d')!.fillRect(0,0,2,2);return canvas.toDataURL('image/png').split(',')[1];});
+  await page.locator('input[type="file"]').setInputFiles({name:'phone.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
+  await expect(page.getByText('Profile picture updated successfully!',{exact:true})).toBeVisible();
+  expect(uploaded).toBe(true);expect(updated).toBe(true);
 });
