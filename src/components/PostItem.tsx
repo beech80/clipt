@@ -304,8 +304,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
     // Navigate to game-specific page when a game is clicked
     if (gameId) {
       console.log(`Navigating to game: ${gameName} (${gameId})`);
-      // Use window.location for more reliable navigation
-      window.location.href = `/game/${gameId}`;
+      navigate(`/game/${encodeURIComponent(gameId)}`);
     }
   };
 
@@ -791,8 +790,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
       data-active-clip={cinematic ? String(active) : undefined}
     >
       {/* User Header */}
-      <div className="clipt-cinematic-header flex items-center justify-between p-4 border-b border-gaming-400/20">
-        <div className="flex items-center space-x-3">
+      <div className={`${cinematic ? "clipt-cinematic-header" : "clipt-post-header"} flex items-center justify-between p-4 border-b border-gaming-400/20`}>
+        <div className="flex min-w-0 flex-1 items-center space-x-3">
           <button type="button" aria-label={`View ${username}'s profile`} onClick={() => handleProfileClick(post.user_id)} className="min-h-11 min-w-11 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300">
           <Avatar
             className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200"
@@ -801,17 +800,17 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
             <AvatarFallback>{username[0]?.toUpperCase() || '?'}</AvatarFallback>
           </Avatar>
           </button>
-          <div className="flex flex-col">
+          <div className="flex min-w-0 flex-col">
             <button type="button"
               onClick={() => handleProfileClick(post.user_id)}
-              className="min-h-11 text-left text-base font-semibold text-gaming-100 hover:text-gaming-200 transition-all duration-200 cursor-pointer"
+              className="min-h-11 truncate text-left text-base font-semibold text-gaming-100 hover:text-gaming-200 transition-all duration-200 cursor-pointer"
             >
               {username}
             </button>
             {gameName && gameId && (
               <div className="mb-1">
                 <button type="button"
-                  className="min-h-11 text-left text-gaming-300 hover:text-gaming-100 cursor-pointer text-sm"
+                  className="min-h-11 max-w-full truncate text-left text-gaming-300 hover:text-gaming-100 cursor-pointer text-sm"
                   onClick={(e) => handleGameClick(e, gameId, gameName)} 
                 >
                   Playing {gameName}
@@ -839,7 +838,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
       </div>
 
       {/* Post Content */}
-      <div className={cinematic ? "clipt-cinematic-media w-full" : "w-full"}>
+      <div className={cinematic ? "clipt-cinematic-media w-full" : watchPage ? "clipt-watch-media w-full" : "w-full"}>
         <PostContent
           imageUrl={post.image_url}
           videoUrl={post.video_url}
@@ -923,7 +922,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
 
       {/* Caption */}
       {post.content && (
-        <div className="clipt-cinematic-caption px-4 py-3 border-t border-gaming-400/20">
+        <div className={`${cinematic ? "clipt-cinematic-caption" : "clipt-post-caption"} px-4 py-3 border-t border-gaming-400/20`}>
           <p className="text-base text-gaming-100">
             <button type="button" className="min-h-6 font-semibold hover:text-gaming-200 cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
               {username}

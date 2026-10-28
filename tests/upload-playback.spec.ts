@@ -12,7 +12,7 @@ const owner='00000000-0000-4000-8000-000000000077';
 const postId='00000000-0000-4000-8000-000000000078';
 const fixturePath=fileURLToPath(new URL('./fixtures/clip-test-h264.mp4',import.meta.url));
 const bytes=readFileSync(fixturePath);
-async function setup(page:Page,{denied=false,holdRendition=false}={}) {
+async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false}={}) {
   const user={id:owner,aud:'authenticated',role:'authenticated',email:'fixture@example.invalid',app_metadata:{},user_metadata:{},created_at:'2026-09-19T00:00:00Z',factors:[]};
   const profile={id:owner,username:'upload_tester',display_name:'Upload Tester',avatar_url:null,bio:'Recorded test profile'};
   await page.addInitScript(({user})=>{
@@ -74,7 +74,7 @@ async function setup(page:Page,{denied=false,holdRendition=false}={}) {
         const input=request.postDataJSON();
         expect(input.user_id).toBe(owner);expect(input.is_published).toBe(true);
         expect(input.video_url).toBe('https://127.0.0.1:54322/storage/v1/object/public/'+uploadedPath);
-        post={...input,id:postId,created_at:'2026-10-28T00:00:00Z',profiles:profile,games:null,likes:[{count:0}],comments:[{count:0}]};
+        post={...input,id:postId,created_at:'2026-10-28T00:00:00Z',profiles:profile,games:gameLabel?{id:'00000000-0000-4000-8000-000000000080',name:'Recorded game with a longer name'}:null,likes:[{count:0}],comments:[{count:0}]};
         status=201;data={id:postId};
       } else if(url.searchParams.has('id'))data=post;
       else {
@@ -161,5 +161,34 @@ test('denied private playback never falls back to public URLs and a successful a
     await video.evaluate(async element=>{element.muted=true;await element.play();});
     await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
     expect(service.stats().signs).toBe(2);expect(service.stats().publicReads).toBe(0);
+  } finally {service.releaseRendition();service.releaseReward();await service.close();}
+});
+
+test('the uploaded post plays in a visible frame in portrait, landscape and constrained viewports',async({page},info)=>{
+  const service=await setup(page,{gameLabel:true});
+  try {
+    await page.setViewportSize({width:390,height:844});await publish(page);
+    await page.goto('/post/'+postId);
+    const video=page.locator('.clipt-watch-media video');
+    await expect(video).toBeVisible();
+    const oldRule=await page.addStyleTag({content:'.clipt-watch-content{max-width:min(520px,calc((100dvh - 420px) * 16 / 19 + 66px)) !important}.clipt-watch-media .clipt-video-frame{height:auto !important;aspect-ratio:16 / 19 !important}'});
+    await page.setViewportSize({width:740,height:320});
+    await page.screenshot({path:info.outputPath('post-short-before-sizing-fix.png')});
+    await oldRule.evaluate(element=>element.remove());
+    for(const size of [{width:390,height:844},{width:844,height:390},{width:740,height:320},{width:320,height:568},{width:195,height:422}]) {
+      await page.setViewportSize(size);await page.evaluate(()=>scrollTo(0,0));
+      await expect(video).toBeVisible();
+      await expect.poll(()=>video.evaluate(element=>Math.round(element.getBoundingClientRect().width))).toBeGreaterThan(140);
+      await expect.poll(()=>video.evaluate(element=>Math.round(element.getBoundingClientRect().height))).toBeGreaterThanOrEqual(96);
+      await expect.poll(async()=>{const player=(await video.boundingBox())!;const dock=(await page.locator('.clipt-controller').boundingBox())!;return player.y+player.height-dock.y;}).toBeLessThanOrEqual(1);
+      const playerRect=(await video.boundingBox())!,creatorRect=(await page.locator('.clipt-post-header').boundingBox())!;
+      if(size.height<=600)expect(creatorRect.y).toBeGreaterThanOrEqual(playerRect.y+playerRect.height-1);
+      else expect(playerRect.y).toBeGreaterThanOrEqual(creatorRect.y+creatorRect.height-1);
+      await video.evaluate(async element=>{element.loop=true;element.muted=true;element.currentTime=0;await element.play();});
+      await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+      await page.screenshot({path:info.outputPath('post-'+size.width+'x'+size.height+'.png')});
+    }
+    expect(service.stats().uploadedBytesMatch).toBe(true);expect(service.stats().publicReads).toBe(0);
   } finally {service.releaseRendition();service.releaseReward();await service.close();}
 });

@@ -20,7 +20,7 @@ export default function PostPage() {
     enabled: Boolean(id),
   });
   return <main className="clipt-watch-page min-h-screen">
-    <header className="p-4 bg-black/40 border-b border-white/10 flex items-center gap-4">
+    <header className="clipt-watch-topbar p-4 bg-black/40 border-b border-white/10 flex items-center gap-4">
       <BackButton /><h1 className="text-3xl font-bold text-white">Post</h1>
     </header>
     <div className="clipt-watch-content mx-auto px-4 py-6 pb-40">

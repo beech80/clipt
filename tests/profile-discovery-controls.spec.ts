@@ -157,3 +157,84 @@ test('Safari PNG encoder fallback uploads the actual format and confirms the pro
   await expect(page.getByText('Profile picture updated successfully!',{exact:true})).toBeVisible();
   expect(uploaded).toBe(true);expect(updated).toBe(true);
 });
+
+test('hashtag collections preserve pagination, profile routes and narrow readable cards',async({page},info)=>{
+  await fixture(page);await page.setViewportSize({width:390,height:844});await page.goto('/hashtag/Gaming');
+  await expect(page.getByRole('heading',{name:'#gaming',exact:true})).toBeVisible();
+  await expect(page.getByText('Newest first',{exact:true})).toBeVisible();
+  const collection=page.getByRole('region',{name:'Hashtag Clipts',exact:true});
+  const open=collection.getByRole('link',{name:'Open Clipt',exact:true});
+  await expect(open).toHaveCount(24);
+  await expect(collection.getByRole('link',{name:'@RecordedCreator',exact:true}).first()).toHaveAttribute('href','/user/'+creator);
+  await expect(collection.getByRole('link',{name:'Watch Clipt by @RecordedCreator',exact:true}).first()).toHaveAttribute('href','/post/'+records[0].id);
+  await page.getByRole('button',{name:'Load more Clipts',exact:true}).click();await expect(open).toHaveCount(48);
+  await page.getByRole('button',{name:'Load more Clipts',exact:true}).click();await expect(open).toHaveCount(51);
+  await expect(page.getByText('51 Clipts loaded',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Load more Clipts',exact:true})).toHaveCount(0);
+  await page.evaluate(()=>scrollTo(0,0));
+  await page.screenshot({path:info.outputPath('hashtag-portrait-collection.png')});
+  await page.setViewportSize({width:195,height:422});await page.goto('/hashtag/'+ 'a'.repeat(40));
+  await expect(page.getByRole('heading',{name:'#'+'a'.repeat(40),exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:info.outputPath('hashtag-constrained.png')});
+  await page.setViewportSize({width:390,height:844});await page.goto('/hashtag/gaming');
+  await collection.getByRole('link',{name:'@RecordedCreator',exact:true}).first().click();
+  await expect(page).toHaveURL(new RegExp('/user/'+creator+'$'));
+});
+test('hashtag collections recover from errors and explain empty and invalid tags',async({page})=>{
+  await fixture(page);
+  let failed=true,empty=false,requests=0;
+  await page.route('**/rest/v1/public_clipt_discovery?**',async route=>{
+    requests++;expect(new URL(route.request().url()).searchParams.get('order')).toBe('created_at.desc,id.desc');
+    await route.fulfill({status:failed?503:200,contentType:'application/json',body:JSON.stringify(failed?{message:'Recorded temporary failure'}:empty?[]:records.slice(0,1))});
+  });
+  await page.goto('/hashtag/gaming');await expect(page.getByText('Could not load this hashtag.',{exact:true})).toBeVisible();
+  failed=false;await page.getByRole('button',{name:'Retry hashtag',exact:true}).click();
+  await expect(page.getByRole('link',{name:'Open Clipt',exact:true})).toHaveCount(1);
+  empty=true;await page.goto('/hashtag/empty');
+  await expect(page.getByRole('heading',{name:'No published Clipts with this hashtag yet.',exact:true})).toBeVisible();
+  const before=requests;await page.goto('/hashtag/invalid-tag');
+  await expect(page.getByRole('heading',{name:'Hashtag unavailable',exact:true})).toBeVisible();
+  await expect(page.getByText('Choose a hashtag of 1–40 letters, numbers or underscores.',{exact:true})).toBeVisible();
+  expect(requests).toBe(before);
+});
+
+test('post Like, Follow, Trophy and comment actions use the current post and preserve failed drafts',async({page})=>{
+  await fixture(page);await page.setViewportSize({width:1024,height:900});
+  const post=records[0];let liked=false,following=false,voted=false,commentFailure=true;
+  const comments:any[]=[],writes:string[]=[];
+  await page.route('**/rest/v1/**',async route=>{
+    const request=route.request(),url=new URL(request.url()),table=url.pathname.split('/').pop();
+    if(table==='posts'&&url.searchParams.has('id'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(post)});
+    if(!['likes','follows','clip_votes','comments'].includes(table!))return route.fallback();
+    const method=request.method(),isWrite=['POST','DELETE'].includes(method);
+    if(isWrite) {
+      if(method==='POST') {const input=request.postDataJSON();if(table==='follows'){expect(input.follower_id).toBe(owner);expect(input.following_id).toBe(creator);}else{expect(input.user_id).toBe(owner);expect(input.post_id).toBe(post.id);}}
+      else {expect(url.searchParams.get(table==='follows'?'follower_id':'user_id')).toBe('eq.'+owner);expect(url.searchParams.get(table==='follows'?'following_id':'post_id')).toBe('eq.'+(table==='follows'?creator:post.id));}
+      writes.push(table+':'+method);
+      if(table==='likes')liked=method==='POST';if(table==='follows')following=method==='POST';if(table==='clip_votes')voted=method==='POST';
+      if(table==='comments') {
+        if(commentFailure)return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({message:'Recorded temporary comment failure'})});
+        comments.push({...request.postDataJSON(),id:'00000000-0000-4000-8000-000000000099',created_at:'2026-10-28T00:00:00Z',likes_count:0,profiles:{username:'Fixture Owner',avatar_url:null}});
+      }
+    }
+    const rows=table==='comments'?comments:(table==='likes'?liked:table==='follows'?following:voted)?[{id:'recorded',post_id:post.id,user_id:owner}]:[];
+    const single=(request.headers()['accept']||'').includes('vnd.pgrst.object');
+    const count=rows.length;await route.fulfill({status:200,contentType:'application/json',headers:{'content-range':count?'0-0/'+count:'*/0'},body:method==='HEAD'?'':JSON.stringify(single?rows[0]??null:rows)});
+  });
+  await page.goto('/post/'+post.id);
+  const card=page.locator('article[data-post-id="'+post.id+'"]');
+  await card.getByRole('button',{name:'Like post',exact:true}).evaluate(element=>element.scrollIntoView({block:'center'}));
+  await card.getByRole('button',{name:'Like post',exact:true}).click();await expect(card.getByRole('button',{name:'Unlike post',exact:true})).toBeVisible();
+  await card.getByRole('button',{name:'Unlike post',exact:true}).click();await expect(card.getByRole('button',{name:'Like post',exact:true})).toBeEnabled();
+  await card.getByRole('button',{name:'Follow',exact:true}).click();await expect(card.getByRole('button',{name:'Following',exact:true})).toBeVisible();
+  await card.getByRole('button',{name:'Following',exact:true}).click();await expect(card.getByRole('button',{name:'Follow',exact:true})).toBeVisible();
+  await card.getByRole('button',{name:'Award trophy',exact:true}).click();await expect(page.getByText('Trophy awarded!',{exact:true})).toBeVisible();
+  await expect(card.getByRole('button',{name:'Award trophy',exact:true})).toBeEnabled();await card.getByRole('button',{name:'Award trophy',exact:true}).click();await expect(page.getByText('Trophy removed',{exact:true})).toBeVisible();
+  await card.getByRole('button',{name:'Comment on post',exact:true}).click();
+  const draft=page.getByRole('textbox',{name:'Add a comment...',exact:true});await draft.fill('Recorded useful feedback');
+  await page.getByRole('button',{name:'Post',exact:true}).click();await expect(page.getByText('Comment was not posted. Your draft has been kept; please try again.',{exact:true}).first()).toBeVisible();await expect(draft).toHaveValue('Recorded useful feedback');
+  commentFailure=false;await page.getByRole('button',{name:'Post',exact:true}).click();await expect(draft).toHaveValue('');await expect(page.getByText('Recorded useful feedback',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Back to controls',exact:true}).click();
+  expect(writes).toEqual(['likes:POST','likes:DELETE','follows:POST','follows:DELETE','clip_votes:POST','clip_votes:DELETE','comments:POST','comments:POST']);
+});
