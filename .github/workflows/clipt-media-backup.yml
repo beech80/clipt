@@ -1,0 +1,54 @@
+name: CLIPT private media backup and restore verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/clipt-media-backup.yml'
+      - 'operations/media-backup-envelope.json'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/clipt-media-backup.yml'
+      - 'scripts/lib/media-backup.mjs'
+      - 'scripts/run-media-backup.mjs'
+      - 'tests/operations/media-backup.test.mjs'
+      - 'operations/media-backup-envelope.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: clipt-private-media-backup
+  cancel-in-progress: false
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --test tests/operations/backblaze-connection.test.mjs tests/operations/media-backup.test.mjs
+  backup:
+    if: github.event_name != 'pull_request' && github.repository == 'beech80/clipt' && github.ref == 'refs/heads/main'
+    needs: offline-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Private backup with full isolated restore; aggregate logs only
+        env:
+          CLIPT_B2_KEY_ID: ${{ secrets.CLIPT_B2_KEY_ID }}
+          CLIPT_B2_APPLICATION_KEY: ${{ secrets.CLIPT_B2_APPLICATION_KEY }}
+        run: node scripts/run-media-backup.mjs
