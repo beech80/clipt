@@ -53,7 +53,7 @@
   .clipt-watch-page .clipt-watch-media { order: -1; }
   .clipt-watch-media .clipt-video-frame { height: max(96px,calc(100dvh - var(--clipt-page-controller-space,160px) - 104px)); }
 }
-.clipt-watch-page .gaming-card { border: 1px solid #a855f780; border-radius: 14px; overflow: hidden; }
+.clipt-watch-page .gaming-card { padding: 0; border: 1px solid #a855f780; border-radius: 14px; overflow: hidden; }
 html.high-contrast .clipt-watch-page { background: #000; }
 .clipt-feed-tabs [role="tablist"] { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); width: min(100%,108px); height: auto; padding: 4px; border: 1px solid #a855f780; border-radius: 12px; background: linear-gradient(160deg,#282238,#080b16); box-shadow: inset 0 1px 0 #ffffff20,0 4px 12px #0009; }
 .clipt-feed-tabs [role="tab"] { min-height: 44px; color: #d8cfee; border-radius: 8px; }
