@@ -171,7 +171,7 @@ export default function Clipts() {
       onClick={() => window.dispatchEvent(new CustomEvent('clipt:open-navigation'))}><span>CLIPT</span></button>
     <svg className="clipt-swipe-trail" aria-hidden="true"><path ref={swipePath} /></svg>
     <Dialog open={engagementOpen && Boolean(activePost)} onOpenChange={setEngagementOpen} modal={false}>
-      {engagementOpen && activePost && <EngagementHud postId={activePost.id}
+      {engagementOpen && activePost && <EngagementHud postId={activePost.id} creatorId={activePost.user_id}
         username={activePost.profiles?.username} caption={activePost.content} avatarUrl={activePost.profiles?.avatar_url} followFeed />}
     </Dialog>
     {hasNextPage && <Button className="m-4" onClick={() => void fetchNextPage()} disabled={isFetchingNextPage}>

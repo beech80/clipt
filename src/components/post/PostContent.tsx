@@ -17,7 +17,11 @@ interface PostContentProps {
 }
 
 const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullscreen = true }: PostContentProps) => {
-  const { data: rendition, isPending: isRenditionPending } = useQuery({
+  const lastVideoTime = useRef(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const photoTriggerRef = useRef<HTMLButtonElement>(null);
+  const playingSource = useRef<{ postId: string; source: string | null | undefined; reference: string | null | undefined } | null>(null);
+  const { data: rendition } = useQuery({
     queryKey: ['post-video-rendition', postId, videoUrl],
     enabled: !!videoUrl && !!postId,
     staleTime: 300_000,
@@ -30,7 +34,10 @@ const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullsc
       return data;
     },
   });
-  const playbackReference = rendition?.playback_url || videoUrl;
+  // Optional rendition discovery must neither delay nor interrupt original playback.
+  const locked = playingSource.current;
+  const playbackReference = locked?.postId === postId && locked.source === videoUrl
+    ? locked.reference : rendition?.playback_url || videoUrl;
   const videoAccess = usePrivateMediaUrl(playbackReference, false);
   const playbackUrl = videoAccess.src;
   const [isMediaLoaded, setIsMediaLoaded] = useState(false);
@@ -45,10 +52,6 @@ const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullsc
   const imageAccess = usePrivateMediaUrls(videoUrl ? [] : imageUrls);
   const imageSources = imageAccess.map(image => image.src ?? '');
   const imageSourceKey = imageSources.join('|');
-  const lastVideoTime = useRef(0);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const photoTriggerRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     const urls = postImageReferences(imageUrl);
     setImageUrls(urls);
@@ -86,7 +89,7 @@ const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullsc
     observer.observe(video);
     document.addEventListener('visibilitychange', pause);
     return () => { observer.disconnect(); document.removeEventListener('visibilitychange', pause); video.pause(); };
-  }, [playbackUrl, isMediaError, isRenditionPending]);
+  }, [playbackUrl, isMediaError]);
 
   const handleMediaLoad = () => {
     setIsMediaLoaded(true);
@@ -184,14 +187,17 @@ const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullsc
                   <div role="status" className="animate-pulse">Loading video...</div>
                 </div>
               )}
-              {!isRenditionPending && !videoAccess.isLoading && playbackUrl && <video
+              {!videoAccess.isLoading && playbackUrl && <video
                 key={postId + ":" + playbackUrl + ":" + mediaRetryRevision}
                 ref={videoRef}
                 src={playbackUrl || undefined}
                 className="w-full h-full object-contain"
                 controls
                 playsInline
-                onPlay={() => document.querySelectorAll("video").forEach(video => { if (video !== videoRef.current) video.pause(); })}
+                onPlay={() => {
+                  playingSource.current = { postId, source: videoUrl, reference: playbackReference };
+                  document.querySelectorAll('video').forEach(video => { if (video !== videoRef.current) video.pause(); });
+                }}
                 preload="metadata"
                 onLoadedData={handleMediaLoad}
                 onTimeUpdate={event => { if (event.currentTarget.readyState >= 2 && event.currentTarget.currentTime > 0) lastVideoTime.current = event.currentTarget.currentTime; }}

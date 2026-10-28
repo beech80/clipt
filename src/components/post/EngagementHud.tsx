@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { HashtagText } from '@/components/post/HashtagText';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -15,8 +16,8 @@ export function CaptionText({ text }: { text: string }) {
     /^https?:\/\//.test(part) ? <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="underline">{part}</a> : <HashtagText key={index} text={part} />)}</>;
 }
 
-export function EngagementHud({ postId, username, caption, avatarUrl, followFeed = false }: {
-  postId: string; username?: string | null; caption?: string | null; avatarUrl?: string | null; followFeed?: boolean;
+export function EngagementHud({ postId, creatorId, username, caption, avatarUrl, followFeed = false }: {
+  postId: string; creatorId?: string | null; username?: string | null; caption?: string | null; avatarUrl?: string | null; followFeed?: boolean;
 }) {
   const { user } = useAuth();
   const [returnFocusTo] = useState<HTMLElement | null>(() =>
@@ -66,7 +67,9 @@ export function EngagementHud({ postId, username, caption, avatarUrl, followFeed
     <DialogDescription className="clipt-hud-description text-violet-200">The conversation behind this Clipt.</DialogDescription>
     {(username || caption) && <div className="clipt-comment-post-details" aria-live="polite" aria-atomic="true">
       <Avatar className="clipt-portrait-comment-avatar" aria-hidden="true"><AvatarImage src={avatarUrl || undefined} alt="" /><AvatarFallback>{username?.slice(0, 1).toUpperCase() || '?'}</AvatarFallback></Avatar>
-      {username && <p className="clipt-comment-author">@{username}</p>}
+      {username && <p className="clipt-comment-author">{creatorId
+        ? <Link className="inline-flex min-h-11 items-center underline" to={'/user/' + encodeURIComponent(creatorId)}>@{username}</Link>
+        : '@' + username}</p>}
       {caption && <p className="clipt-comment-caption"><span className="clipt-original-caption"><CaptionText text={caption} /></span><span className="clipt-portrait-caption"><CaptionText text={caption} /></span></p>}
     </div>}
     {isPending && !error && <p role="status" className="text-sm text-violet-200">Loading engagement totals…</p>}

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { HashtagText } from '@/components/post/HashtagText';
 import React, { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
@@ -59,6 +60,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
   const [trophyLoading, setTrophyLoading] = useState(false);
   const [postDeleted, setPostDeleted] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isOwner = user?.id === post.user_id;
   const trophyUnavailable = trophyIneligibility(post);
   const queryClient = useQueryClient();
@@ -288,8 +290,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
     }
     try {
       console.log(`Navigating to profile: ${userId}`);
-      // Use window.location for more reliable navigation
-      window.location.href = `/user/${userId}`;
+      navigate(`/user/${encodeURIComponent(userId)}`);
     } catch (error) {
       console.error('Error navigating to profile:', error);
       toast.error('Could not navigate to profile');
@@ -881,7 +882,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
               </span>
             </button>
           </DialogTrigger>
-          {!onOpenEngagement && isDialogOpen ? <EngagementHud postId={postId} username={post.profiles?.username} caption={post.content} /> : null}
+          {!onOpenEngagement && isDialogOpen ? <EngagementHud postId={postId} creatorId={post.user_id} username={post.profiles?.username} caption={post.content} /> : null}
         </Dialog>
         <button 
           className="trophy-button flex items-center text-sm font-medium text-gray-400 hover:text-yellow-500 transition-all duration-200 group"
