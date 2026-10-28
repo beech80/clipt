@@ -25,7 +25,7 @@ test('late Profile requests cannot replace a newly selected profile',async()=>{
     '@/components/ui/button':{},'@/components/ui/toggle':{},'@/components/ui/card':{},
     '@/components/achievements/AchievementList':{},'@/components/user/UserLink':{},
     '@/components/profile/ProfilePostTile':{},'@/components/ui/avatar':{},
-    '@/components/profile/ProfileConnectionsDialog':{},
+    '@/components/profile/ProfileConnectionsDialog':{},'@/components/profile/ProfileWebsite':{},
   };
   const output=ts.transpileModule(readFileSync(new URL('../../src/pages/Profile.tsx',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
   const mod={exports:{}};new Function('require','module','exports',output)(name=>dependencies[name]??require(name),mod,mod.exports);

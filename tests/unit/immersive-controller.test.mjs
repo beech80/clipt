@@ -80,7 +80,7 @@ test('caption renderer retains original text, hashtags, mentions and safe HTTP l
   });
   const caption='Hello @matthew #clipt\nhttps://example.com/path javascript:alert(1) <img>';
   const parts=CaptionText({text:caption}).props.children;
-  assert.equal(parts.map(p=>typeof p==='string'?p:p.props.children).join(''),caption);
+  assert.equal(parts.map(p=>typeof p==='string'?p:(p.props.text??p.props.children)).join(''),caption);
   const anchors=parts.filter(p=>p?.type==='a');assert.equal(anchors.length,1);
   assert.equal(anchors[0].props.href,'https://example.com/path');assert.equal(anchors[0].props.rel,'noopener noreferrer');
 });
