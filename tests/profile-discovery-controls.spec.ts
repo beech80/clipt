@@ -103,6 +103,7 @@ test('portrait menu remains reachable on an empty feed and narrow accessibility 
 test('profile website, Playing game link and hashtag results remain reachable with pagination',async({page},info)=>{
   await fixture(page);await page.goto('/user/'+creator);
   await expect(page.getByRole('link',{name:'cliptgaming.com',exact:true})).toHaveAttribute('href','https://cliptgaming.com/');
+  await page.screenshot({path:info.outputPath('profile-shared-chrome.png')});
   await page.getByRole('button',{name:'Clipts',exact:true}).click();
   await page.getByRole('link',{name:'Playing Recorded Game',exact:true}).click();
   await expect(page).toHaveURL(new RegExp('/game/'+gameId+'$'));

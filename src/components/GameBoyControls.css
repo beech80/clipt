@@ -362,7 +362,7 @@ html.reduce-motion .clipt-feed-flip-face { animation: none; }
 .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"])[data-compact="true"] .clipt-controller-actions > .clipt-feed-flip,
 .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"])[data-emergency="true"] .clipt-controller-actions > .clipt-controller-post { display: none; }
 @media (orientation: landscape) and (max-height: 323px) {
-  .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"]):not([data-compact="true"]) .clipt-controller-actions { gap: 2px; }
+  .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"]):not([data-compact="true"]) .clipt-controller-actions { gap: 4px; }
 }
 
 /* Page-aware controls: retain the existing artwork, never modify feed rules. */

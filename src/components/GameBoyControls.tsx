@@ -285,7 +285,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
 
   const landscapeFeed = horizontal && !portraitZoom;
   const postControl = <button type="button" className="clipt-controller-post" aria-label="POST" title="Create a post" onClick={() => navigate('/new-post')}><Camera size={16} aria-hidden="true" /><span className="clipt-post-label">POST</span></button>;
-  const homeControl = <button ref={homeButtonRef} type="button" className="clipt-controller-home" aria-label="CLIPT — Open navigation" aria-describedby={!horizontal ? 'clipt-page-controls-guide' : undefined} title="Navigation and page controls" onClick={() => setMenuOpen(true)} onPointerDown={event => {
+  const homeControl = <button ref={homeButtonRef} type="button" className="clipt-controller-home" aria-label="CLIPT — Open navigation" onClick={() => setMenuOpen(true)} aria-describedby={!horizontal ? 'clipt-page-controls-guide' : undefined} title="Navigation and page controls" onPointerDown={event => {
         // Keep the typing layout stable through pointer-up. Otherwise the
         // input blurs on pointer-down and the home button moves before click.
         if (!horizontal && immersive.viewport.height < 500 && document.activeElement?.matches('input, textarea, [contenteditable="true"]')) event.preventDefault();
@@ -328,7 +328,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
     </div>
     <div className="clipt-controller-center">
       {!horizontal && homeControl}
-      {!horizontal && <span id="clipt-page-controls-guide" className="sr-only">Open CLIPT for navigation and a guide to this page’s four actions.</span>}
+      {!horizontal && <span id="clipt-page-controls-guide" className="sr-only">Press CLIPT for guide. Navigation and this page’s four actions are available there.</span>}
       {horizontal && <div className="clipt-controller-secondary">
         <button type="button" aria-label="Open menu" onClick={() => navigate('/menu')}><Menu size={16} /> MENU</button>
         {!landscapeFeed && postControl}
