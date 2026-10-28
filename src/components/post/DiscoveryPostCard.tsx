@@ -24,7 +24,7 @@ export default function DiscoveryPostCard({ post }: { post: {
     </Link>
     <div className="space-y-3 p-4">
       {post.user_id && post.username && <Link className="inline-flex min-h-11 max-w-full items-center gap-2 font-semibold text-purple-100" to={`/user/${post.user_id}`}>
-        <Avatar className="h-8 w-8 shrink-0"><AvatarImage src={avatar.src} alt="" /><AvatarFallback>{post.username.slice(0, 1).toUpperCase()}</AvatarFallback></Avatar>
+        <Avatar className="h-8 w-8 shrink-0" aria-hidden="true"><AvatarImage src={avatar.src} alt="" /><AvatarFallback>{post.username.slice(0, 1).toUpperCase()}</AvatarFallback></Avatar>
         <span className="min-w-0 break-all">@{post.username}</span>
       </Link>}
       <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-200 [overflow-wrap:anywhere]"><HashtagText text={post.content || 'Untitled Clipt'} /></p>
