@@ -181,6 +181,9 @@ test('the uploaded post plays in a visible frame in portrait, landscape and cons
       await expect.poll(()=>video.evaluate(element=>Math.round(element.getBoundingClientRect().width))).toBeGreaterThan(140);
       await expect.poll(()=>video.evaluate(element=>Math.round(element.getBoundingClientRect().height))).toBeGreaterThanOrEqual(96);
       await expect.poll(async()=>{const player=(await video.boundingBox())!;const dock=(await page.locator('.clipt-controller').boundingBox())!;return player.y+player.height-dock.y;}).toBeLessThanOrEqual(1);
+      const playerRect=(await video.boundingBox())!,creatorRect=(await page.locator('.clipt-post-header').boundingBox())!;
+      if(size.height<=600)expect(creatorRect.y).toBeGreaterThanOrEqual(playerRect.y+playerRect.height-1);
+      else expect(playerRect.y).toBeGreaterThanOrEqual(creatorRect.y+creatorRect.height-1);
       await video.evaluate(async element=>{element.loop=true;element.muted=true;element.currentTime=0;await element.play();});
       await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);

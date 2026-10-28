@@ -790,7 +790,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
       data-active-clip={cinematic ? String(active) : undefined}
     >
       {/* User Header */}
-      <div className="clipt-cinematic-header flex items-center justify-between p-4 border-b border-gaming-400/20">
+      <div className={`${cinematic ? "clipt-cinematic-header" : "clipt-post-header"} flex items-center justify-between p-4 border-b border-gaming-400/20`}>
         <div className="flex min-w-0 flex-1 items-center space-x-3">
           <button type="button" aria-label={`View ${username}'s profile`} onClick={() => handleProfileClick(post.user_id)} className="min-h-11 min-w-11 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300">
           <Avatar
@@ -922,7 +922,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
 
       {/* Caption */}
       {post.content && (
-        <div className="clipt-cinematic-caption px-4 py-3 border-t border-gaming-400/20">
+        <div className={`${cinematic ? "clipt-cinematic-caption" : "clipt-post-caption"} px-4 py-3 border-t border-gaming-400/20`}>
           <p className="text-base text-gaming-100">
             <button type="button" className="min-h-6 font-semibold hover:text-gaming-200 cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
               {username}
