@@ -66,6 +66,11 @@ for(const hand of ['right','left']) {
       await page.setViewportSize(size);
       await expect(page.locator('.clipt-controller')).toHaveAttribute('data-portrait-viewing','false');
       await expect(home).toBeVisible();
+      await expect.poll(()=>page.locator('[data-active-clip="true"]').evaluate(element=>{
+        const slide=element.closest('[data-slide-index]')!.getBoundingClientRect();
+        const track=element.closest('.clipt-fyp-track')!.getBoundingClientRect();
+        return Math.abs((slide.left+slide.width/2)-(track.left+track.width/2));
+      })).toBeLessThan(2);
       await expect(page.getByRole('button',{name:'POST',exact:true})).toHaveCount(0);
       const rect=(await home.boundingBox())!;
       expect(rect.y+rect.height).toBeLessThanOrEqual(size.height);
