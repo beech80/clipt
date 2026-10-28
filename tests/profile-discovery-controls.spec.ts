@@ -62,6 +62,10 @@ for(const hand of ['right','left']) {
     await expect(page.locator('[data-slide-index="1"] [data-active-clip="true"]')).toBeVisible();
     await expect(page.getByRole('dialog',{name:'CLIPT navigation'})).toHaveCount(0);
     await cdp.detach();
+    const currentVideo=page.locator('[data-active-clip="true"] video');
+    await currentVideo.evaluate(async element=>{element.muted=true;await element.play();element.dataset.viewportProbe='kept';});
+    await expect.poll(()=>currentVideo.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
+    await currentVideo.evaluate(element=>element.pause());
     for(const size of [{width:844,height:390},{width:740,height:320}]) {
       await page.setViewportSize(size);
       await expect(page.locator('.clipt-controller')).toHaveAttribute('data-portrait-viewing','false');
@@ -71,6 +75,8 @@ for(const hand of ['right','left']) {
         const track=element.closest('.clipt-fyp-track')!.getBoundingClientRect();
         return Math.abs((slide.left+slide.width/2)-(track.left+track.width/2));
       })).toBeLessThan(2);
+      await expect(page.locator('[data-active-clip="true"]')).toHaveAttribute('data-post-id',records[1].id);
+      await expect(currentVideo).toHaveAttribute('data-viewport-probe','kept');
       await expect(page.getByRole('button',{name:'POST',exact:true})).toHaveCount(0);
       const rect=(await home.boundingBox())!;
       expect(rect.y+rect.height).toBeLessThanOrEqual(size.height);
