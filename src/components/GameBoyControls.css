@@ -330,7 +330,7 @@ html.reduce-motion .clipt-feed-flip-face { animation: none; }
 .gameboy-controls.clipt-controller[data-portrait-viewing="true"] .clipt-controller-follow { bottom: calc(122px + env(safe-area-inset-bottom,0px)); }
 .gameboy-controls.clipt-controller[data-portrait-viewing="true"] .clipt-controller-trophy { bottom: calc(70px + env(safe-area-inset-bottom,0px)); }
 .gameboy-controls.clipt-controller[data-portrait-viewing="true"] .clipt-controller-home,
-.gameboy-controls.clipt-controller[data-portrait-viewing="true"][data-compact="true"] .clipt-controller-home { left: calc(50% - 22px); right: auto; bottom: calc(100px + env(safe-area-inset-bottom,0px)); }
+.gameboy-controls.clipt-controller[data-portrait-viewing="true"][data-compact="true"] .clipt-controller-home { left: calc(50% - 22px); right: auto; bottom: calc(20px + env(safe-area-inset-bottom,0px)); }
 .gameboy-controls.clipt-controller[data-portrait-viewing="true"][data-hand="left"] .clipt-controller-home { left: calc(50% - 22px); right: auto; }
 .gameboy-controls.clipt-controller[data-portrait-viewing="true"] .clipt-post-label { display: none; }
 .gameboy-controls.clipt-controller[data-portrait-viewing="true"] .clipt-controller-post { justify-content: center; align-items: center; }
@@ -405,3 +405,8 @@ body:has(.clipt-controller[data-page-controller]) .page-content { padding-bottom
   .gameboy-controls.clipt-controller[data-page-controller] .clipt-controller-center { grid-column: 1 / -1; grid-row: 2; }
   body:has(.clipt-controller[data-page-controller]) .page-content { padding-bottom: calc(224px + env(safe-area-inset-bottom,0px)); }
 }
+
+/* Feed only: put the original navigation button in the former camera slot. */
+.gameboy-controls.clipt-controller[data-mobile-v2="true"]:not([data-portrait-viewing="true"]) .clipt-controller-center { display: none; }
+.gameboy-controls.clipt-controller[data-mobile-v2="true"]:not([data-portrait-viewing="true"]) .clipt-controller-actions > .clipt-controller-home { position: fixed; left: auto; right: max(12px,env(safe-area-inset-right,0px)); bottom: calc(12px + env(safe-area-inset-bottom,0px)); width: 52px; min-width: 52px; height: 52px; border-radius: 50%; pointer-events: auto; }
+.gameboy-controls.clipt-controller[data-mobile-v2="true"][data-hand="left"]:not([data-portrait-viewing="true"]) .clipt-controller-actions > .clipt-controller-home { left: max(12px,env(safe-area-inset-left,0px)); right: auto; }

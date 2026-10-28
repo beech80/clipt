@@ -1,3 +1,4 @@
+import ProfileWebsite from '@/components/profile/ProfileWebsite';
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -255,6 +256,7 @@ const Profile = () => {
                 <UserLink username={profile.username} />
                 {profile.location && <p className="flex items-center gap-1 text-sm text-purple-200"><MapPin size={14} aria-hidden="true" />{profile.location}</p>}
                 <p className="text-gaming-300 max-w-md mb-4 break-words [overflow-wrap:anywhere]">{profile.bio || 'No bio provided'}</p>
+                <ProfileWebsite value={profile.website} />
               </div>
               
               <div className="flex justify-end gap-2">

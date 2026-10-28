@@ -26,7 +26,19 @@ export async function prepareAvatar(file: File): Promise<Blob> {
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Image processing is unavailable in this browser.');
     context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    return await new Promise<Blob>((resolve, reject) => canvas.toBlob(
+    const encoded = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
       blob => blob ? resolve(blob) : reject(new Error('Could not process this image.')), 'image/webp', 0.85));
+    avatarUploadTarget(encoded);
+    validateAvatarHeader(new Uint8Array(await encoded.slice(0, 12).arrayBuffer()), encoded.type, encoded.size);
+    return encoded;
   } finally { bitmap.close(); }
+}
+
+export function avatarUploadTarget(avatar: Blob) {
+  if (avatar.type === 'image/webp') return { bucket: 'clipt-avatars', extension: 'webp', contentType: 'image/webp' } as const;
+  // Safari may return a re-encoded PNG when WebP encoding is unavailable.
+  // This private bucket already accepts raster formats under the same owner/read boundaries.
+  if (avatar.type === 'image/png') return { bucket: 'avatars', extension: 'png', contentType: 'image/png' } as const;
+  if (avatar.type === 'image/jpeg') return { bucket: 'avatars', extension: 'jpg', contentType: 'image/jpeg' } as const;
+  throw new Error('This browser could not create a supported profile image.');
 }

@@ -23,13 +23,14 @@ import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import type { Profile } from "@/types/profile"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { prepareAvatar } from '@/lib/avatar-upload'
+import { prepareAvatar, avatarUploadTarget } from '@/lib/avatar-upload'
+import { profileWebsite } from '@/lib/profile-website'
 
 const profileFormSchema = z.object({
   username: z.string().regex(/^[A-Za-z0-9_]{3,50}$/, 'Use 3-50 letters, numbers, or underscores'),
   displayName: z.string().min(2).max(50),
   bioDescription: z.string().max(500).optional(),
-  website: z.string().url().optional().or(z.literal("")),
+  website: z.string().trim().refine(value => value === '' || profileWebsite(value) !== null, 'Enter a valid http or https website.').transform(value => value ? profileWebsite(value)! : '').optional(),
 })
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
@@ -200,18 +201,21 @@ export function ProfileEditForm() {
     
     uploadInProgress.current = true;
     let uploadedPath: string | null = null;
+    let uploadedBucket: 'avatars' | 'clipt-avatars' = 'clipt-avatars';
     try {
       setUploading(true);
       toast.loading('Uploading profile picture...');
       
       const avatar = await prepareAvatar(file);
-      const path = `${user.id}/${crypto.randomUUID()}.webp`;
-      const { error: uploadError } = await supabase.storage.from('clipt-avatars').upload(path, avatar, {
-        contentType: 'image/webp', upsert: false, cacheControl: '3600',
+      const target = avatarUploadTarget(avatar);
+      uploadedBucket = target.bucket;
+      const path = `${user.id}/${crypto.randomUUID()}.${target.extension}`;
+      const { error: uploadError } = await supabase.storage.from(target.bucket).upload(path, avatar, {
+        contentType: target.contentType, upsert: false, cacheControl: '3600',
       });
       if (uploadError) throw uploadError;
       uploadedPath = path;
-      const { data: { publicUrl: imageUrl } } = supabase.storage.from('clipt-avatars').getPublicUrl(path);
+      const { data: { publicUrl: imageUrl } } = supabase.storage.from(uploadedBucket).getPublicUrl(path);
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: imageUrl })
@@ -235,7 +239,7 @@ export function ProfileEditForm() {
       
     } catch (error: unknown) {
       if (uploadedPath) {
-        const { error: cleanupError } = await supabase.storage.from('clipt-avatars').remove([uploadedPath]);
+        const { error: cleanupError } = await supabase.storage.from(uploadedBucket).remove([uploadedPath]);
         if (cleanupError) toast.error('The unused image could not be removed. Contact support for cleanup.');
       }
       console.error('Avatar upload/update error:', error);
@@ -312,7 +316,7 @@ export function ProfileEditForm() {
                 <input 
                   type="file" 
                   ref={avatarFileInputRef}
-                  accept="image/*" 
+                  accept="image/png,image/jpeg,image/webp" 
                   onChange={handleAvatarFileChange} 
                   hidden 
                 />

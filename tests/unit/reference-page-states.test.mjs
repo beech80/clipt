@@ -35,7 +35,7 @@ test('narrow Token navigation stacks icons without breaking label words',()=>{
   for(const rule of ['flex-direction: column','overflow-wrap: normal','word-break: normal']) assert.ok(narrow.includes(rule));
 });
 function load(path, replacements={}) {
-  replacements = {'@/lib/page-controller':pageController,'@/lib/publishing-status':publishingStatus,'@/lib/trophy-eligibility':trophyEligibility, ...replacements};
+  replacements = {'@/components/post/HashtagText':{HashtagText:({text})=>text},'@/lib/page-controller':pageController,'@/lib/publishing-status':publishingStatus,'@/lib/trophy-eligibility':trophyEligibility, ...replacements};
   replacements={'@/hooks/useMobileControlsPreferences':{useMobileControlsPreferences:()=>({preferences:{hand:'right',trail:true},update(){},saved:true})},'./accessibility/HandPreferenceSettings':{HandPreferenceSettings:()=>null},'./AdjustablePanel':{AdjustablePanel:()=>null},'@/components/AdjustablePanel':{AdjustablePanel:()=>null},'@/pages/Menu':{default:()=>null,__esModule:true},...replacements};
   const output=ts.transpileModule(readFileSync(new URL(`../../src/${path}`,import.meta.url),'utf8'),{
     compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}
@@ -324,7 +324,7 @@ test('shared controller preserves analog, center guide and four icon actions',()
   assert.match(html,/<button(?=[^>]*aria-expanded="true")(?=[^>]*aria-controls="clipt-feed-extra-controls")(?=[^>]*aria-label="Hide controls")[^>]*>/);
   assert.match(html,/lucide-x/);
   assert.match(html,/id="clipt-feed-extra-controls"/);
-  assert.match(html,/Open menu/);assert.match(html,/aria-label="POST"/);assert.match(html,/clipt-post-label/);
+  assert.match(html,/Open menu/);assert.doesNotMatch(html,/aria-label="POST"/);
   assert.equal((html.match(/data-controller-action=/g)||[]).length,4);
   for(const label of ['Trophy — Rank this Clipt','Comment — Open engagement','Like','Follow creator'])assert.ok(html.includes(`aria-label="${label}"`));
   assert.doesNotMatch(html,/d-pad|>A<|>B<|>X<|>Y</i);

@@ -278,6 +278,11 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
 
   const landscapeFeed = horizontal && !portraitZoom;
   const postControl = <button type="button" className="clipt-controller-post" aria-label="POST" title="Create a post" onClick={() => navigate('/new-post')}><Camera size={16} aria-hidden="true" /><span className="clipt-post-label">POST</span></button>;
+  const homeControl = <button ref={homeButtonRef} type="button" className="clipt-controller-home" aria-label="CLIPT — Open navigation" onClick={() => setMenuOpen(true)} onPointerDown={event => {
+        // Keep the typing layout stable through pointer-up. Otherwise the
+        // input blurs on pointer-down and the home button moves before click.
+        if (!horizontal && immersive.viewport.height < 500 && document.activeElement?.matches('input, textarea, [contenteditable="true"]')) event.preventDefault();
+      }}>CLIPT</button>;
   return <><nav ref={immersive.rootRef} aria-label="Clipt game controls" data-expanded={controlsExpanded}
     data-mobile-v2={horizontal} data-portrait-viewing={portraitZoom} data-hand={mobilePreferences.hand} data-page-controller={!horizontal ? (mediaContext ? liveContext ? 'live-viewer' : 'post-viewer' : currentPage.pageId) : undefined} data-page-media={mediaContext}
     data-layout={immersive.immersive ? 'immersive' : 'classic'} data-portrait-zoom={portraitZoom} data-hidden={immersive.hidden} data-compact={compact} data-emergency={emergency}
@@ -315,11 +320,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
       <div className="clipt-controller-stick" style={{ transform: 'translate(' + position.x + 'px,' + position.y + 'px)' }} />
     </div>
     <div className="clipt-controller-center">
-      <button ref={homeButtonRef} type="button" className="clipt-controller-home" aria-label="CLIPT — Open navigation" onClick={() => setMenuOpen(true)} onPointerDown={event => {
-        // Keep the typing layout stable through pointer-up. Otherwise the
-        // input blurs on pointer-down and the home button moves before click.
-        if (!horizontal && immersive.viewport.height < 500 && document.activeElement?.matches('input, textarea, [contenteditable="true"]')) event.preventDefault();
-      }}>CLIPT</button>
+      {!landscapeFeed && homeControl}
       {!horizontal && <span className="clipt-page-controls-guide">Page actions<br/>Press CLIPT for guide</span>}
       {horizontal && <div className="clipt-controller-secondary">
         <button type="button" aria-label="Open menu" onClick={() => navigate('/menu')}><Menu size={16} /> MENU</button>
@@ -334,7 +335,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
         aria-describedby={mediaContext && immersive.immersive && counts[action] ? `clipt-controller-count-${action}` : undefined}
         disabled={!actionEnabled(action)} onClick={() => activate(action)}><Icon key={mediaContext ? action : pageAction(action)?.id} size={18} aria-hidden="true" />{!mediaContext && <span className="clipt-controller-action-label">{label}</span>}{mediaContext && immersive.immersive && counts[action] && <span id={`clipt-controller-count-${action}`} className="clipt-controller-count">{counts[action]}</span>}</button>)}
       {horizontal && immersive.immersive && (portraitZoom ? <PortraitFeedToggle feed={selectedFeed} onToggle={toggleFeed} /> : <FeedFlipButton feed={selectedFeed} onToggle={toggleFeed} />)}
-      {landscapeFeed && postControl}
+      {landscapeFeed && homeControl}
     </div>
     </div>
   </nav>

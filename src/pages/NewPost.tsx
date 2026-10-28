@@ -153,19 +153,21 @@ export default function NewPost() {
         throw new Error(communityErrorMessage(postError, 'Publishing was rejected. No new draft was saved. Return to posting to select your media again.'));
       }
       uploadedPath = null;
-      await queryClient.invalidateQueries({ queryKey: ['clipt-drafts'] });
+      void queryClient.invalidateQueries({ queryKey: ['clipt-drafts'] });
       if (destination === 'draft') { toast('Draft saved privately. Only you can open it.'); navigate('/drafts'); return; }
-      if(kind === 'video' && destination === 'clipts' && (file?.type==='video/mp4' || (!file && mediaUrl.endsWith('.mp4')))){
-        reportStage('reward');
-        try{toast(clipRewardMessage(await checkClipReward(post.id)));}
-        catch{toast('Clipt published. Token reward is not confirmed; you can retry from Token Store.');}
-        void queryClient.invalidateQueries({queryKey:['token-wallet']});
-        void queryClient.invalidateQueries({queryKey:['token-ledger']});
-        void queryClient.invalidateQueries({queryKey:['boost-economy']});
-      }
-      await queryClient.invalidateQueries({ queryKey: ['clipts-feed'] });
+      // Publication is confirmed now. Rewards must never delay feed visibility.
+      void queryClient.invalidateQueries({ queryKey: ['clipts-feed'] });
       if(publishingId)updatePublishing(publishingId,{stage:'complete',postId:post.id});
       else navigate('/clipts');
+      if(kind === 'video' && destination === 'clipts' && (file?.type==='video/mp4' || (!file && mediaUrl.endsWith('.mp4')))){
+        void checkClipReward(post.id).then(result => toast(clipRewardMessage(result)))
+          .catch(() => toast('Clipt published. Token reward is not confirmed; you can retry from Token Store.'))
+          .finally(() => {
+            void queryClient.invalidateQueries({queryKey:['token-wallet']});
+            void queryClient.invalidateQueries({queryKey:['token-ledger']});
+            void queryClient.invalidateQueries({queryKey:['boost-economy']});
+          });
+      }
     } catch (cause) {
       let message = cause instanceof Error ? cause.message : 'The Clipt could not be published.';
       if (uploadedPath) {
