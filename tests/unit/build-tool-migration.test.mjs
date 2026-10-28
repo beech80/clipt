@@ -78,3 +78,13 @@ test('build migration preserves classic landscape and explicit opt-in vertical a
   assert.equal(controllerLayout(844,390,true,'auto'),'classic');
   assert.equal(controllerLayout(675,312,true,'classic'),'immersive');
 });
+
+test('unused PWA tooling cannot reintroduce the deepmerge advisory chain',()=>{
+  assert.equal(manifest.devDependencies['vite-plugin-pwa'],undefined);
+  assert.equal(lock.packages[''].devDependencies['vite-plugin-pwa'],undefined);
+  for(const path of Object.keys(lock.packages)){
+    const name=path.split('node_modules/').at(-1);
+    assert(!['vite-plugin-pwa','workbox-build','deepmerge'].includes(name),'Unused vulnerable build chain: '+path);
+  }
+  assert.doesNotMatch(read('vite.config.ts'),/VitePWA|vite-plugin-pwa/);
+});
