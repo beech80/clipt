@@ -116,6 +116,8 @@ test('portrait gesture routes one swipe, cancels media click and does not attach
     handlers.get('pointerdown')({pointerType:'touch',isPrimary:true,pointerId:3,clientX:150,clientY:300,target:new Element()});
     handlers.get('pointerup')({pointerId:3,clientX:60,clientY:300});
     assert.equal(events.length,2);assert.equal(events[1].detail.direction,1,'sideways navigation also starts only in bottom zone');
+    let keyboardCancelled=false;handlers.get('click')({detail:0,preventDefault(){keyboardCancelled=true;},stopPropagation(){}});
+    assert.equal(keyboardCancelled,false,'keyboard activation works even if the prior swipe had no click');
     handlers.get('pointerdown')({pointerType:'touch',isPrimary:true,pointerId:4,clientX:100,clientY:300,target:new Element(true,true)});
     handlers.get('pointerup')({pointerId:4,clientX:101,clientY:301});
     let tapCancelled=false;handlers.get('click')({preventDefault(){tapCancelled=true;},stopPropagation(){}});

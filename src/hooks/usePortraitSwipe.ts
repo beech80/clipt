@@ -29,7 +29,8 @@ export function usePortraitSwipe(track: RefObject<HTMLElement>, enabled: boolean
       path.current.style.opacity = '1';
     };
     const down = (event: PointerEvent) => {
-      if (!matchMedia('(orientation: portrait)').matches || event.pointerType === 'mouse' || !event.isPrimary || origin) { cancel(); return; }
+      if (event.pointerType === 'mouse') { suppressClick = false; cancel(); return; }
+      if (!matchMedia('(orientation: portrait)').matches || !event.isPrimary || origin) { cancel(); return; }
       const target = event.target;
       const zone = target instanceof Element ? target.closest<HTMLElement>('.clipt-bottom-swipe-zone') : null;
       if (!zone) return;
@@ -62,7 +63,13 @@ export function usePortraitSwipe(track: RefObject<HTMLElement>, enabled: boolean
       if (path.current) path.current.style.opacity = '0';
       fade = setTimeout(clear, 450);
     };
-    const click = (event: MouseEvent) => { if (suppressClick) { event.preventDefault(); event.stopPropagation(); suppressClick = false; } };
+    const click = (event: MouseEvent) => {
+      if (!suppressClick) return;
+      suppressClick = false;
+      // Keyboard and assistive-technology activation must still open navigation.
+      if (event.detail === 0) return;
+      event.preventDefault(); event.stopPropagation();
+    };
     surface.addEventListener('pointerdown', down, { passive: true }); surface.addEventListener('pointermove', move, { passive: true });
     surface.addEventListener('pointerup', up); surface.addEventListener('pointercancel', cancel); surface.addEventListener('click', click, true);
     window.addEventListener('blur', cancel);
