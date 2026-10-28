@@ -22,7 +22,7 @@ async function fixture(page:Page,hand='right') {
     if(url.pathname==='/rest/v1/profiles')data={id:creator,username:'RecordedCreator',display_name:'Recorded Creator',bio:'A recorded profile',website:'https://cliptgaming.com/'};
     if(url.pathname==='/rest/v1/games')data={id:gameId,name:'Recorded Game',cover_url:null};
     if(url.pathname==='/rest/v1/posts') {
-      data=url.searchParams.has('user_id')?records.slice(0,1):records.slice(0,1);
+      data=url.searchParams.has('user_id')?records.slice(0,1):records.slice(0,2);
     }
     if(url.pathname==='/rest/v1/public_clipt_discovery') {
       const offset=Number(url.searchParams.get('offset')||0);
@@ -33,10 +33,12 @@ async function fixture(page:Page,hand='right') {
   });
 }
 for(const hand of ['right','left']) {
-  test(`feed CLIPT stays low in portrait and replaces landscape camera (${hand} hand)`,async({page},info)=>{
+  test(`portrait swipe-menu and landscape rail remain usable (${hand} hand)`,async({page},info)=>{
     await fixture(page,hand);await page.setViewportSize({width:390,height:844});await page.goto('/clipts');
     const home=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});
     await expect(home).toBeVisible();
+    await expect(home).toHaveClass(/clipt-bottom-swipe-zone/);
+    await expect(page.locator('.clipt-controller-home')).toHaveCount(0);
     const video=page.locator('[data-active-clip="true"] video');
     await expect(video).toBeVisible();
     await video.evaluate(async element=>{element.muted=true;await element.play();});
@@ -47,6 +49,19 @@ for(const hand of ['right','left']) {
     await expect(page.locator('.clipt-controller')).toHaveAttribute('data-portrait-viewing','true');
     await expect.poll(async()=>Math.round((await home.boundingBox())!.y)).toBeGreaterThan(740);
     await page.screenshot({path:info.outputPath(`portrait-${hand}.png`)});
+    await home.click();
+    await expect(page.getByRole('dialog',{name:'CLIPT navigation'})).toBeVisible();
+    await page.getByRole('button',{name:'Close',exact:true}).click();
+    await expect(home).toBeFocused();
+    const cdp=await page.context().newCDPSession(page);
+    const pad=(await home.boundingBox())!;
+    const x=pad.x+pad.width/2, y=pad.y+pad.height-12;
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-64}]});
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    await expect(page.locator('[data-slide-index="1"] [data-active-clip="true"]')).toBeVisible();
+    await expect(page.getByRole('dialog',{name:'CLIPT navigation'})).toHaveCount(0);
+    await cdp.detach();
     for(const size of [{width:844,height:390},{width:740,height:320}]) {
       await page.setViewportSize(size);
       await expect(page.locator('.clipt-controller')).toHaveAttribute('data-portrait-viewing','false');
@@ -56,6 +71,12 @@ for(const hand of ['right','left']) {
       expect(rect.y+rect.height).toBeLessThanOrEqual(size.height);
       expect(rect.y).toBeGreaterThan(size.height-100);
       if(hand==='right')expect(rect.x).toBeGreaterThan(size.width-100);else expect(rect.x).toBeLessThan(100);
+      const feedSwitch=page.getByRole('switch',{name:'Squad feed',exact:true});
+      if(await feedSwitch.isVisible()) {
+        const toggle=(await feedSwitch.boundingBox())!;
+        expect(toggle.y+toggle.height+4).toBeLessThanOrEqual(rect.y);
+        await expect(feedSwitch).toContainText('FYP');
+      }
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     }
     await page.screenshot({path:info.outputPath(`landscape-${hand}.png`)});
@@ -64,6 +85,21 @@ for(const hand of ['right','left']) {
     await expect(page.getByRole('link',{name:'Post / Create',exact:true})).toBeVisible();
   });
 }
+test('portrait menu remains reachable on an empty feed and narrow accessibility viewport',async({page})=>{
+  await fixture(page);
+  await page.route('**/rest/v1/posts?**',route=>route.fulfill({status:200,contentType:'application/json',body:'[]'}));
+  await page.setViewportSize({width:195,height:422});await page.goto('/clipts');
+  await expect(page.getByText('No clips yet. Be the first to share one.',{exact:true})).toBeVisible();
+  const menu=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});
+  await expect(menu).toBeVisible();
+  const rect=(await menu.boundingBox())!;
+  expect(rect.width).toBeGreaterThanOrEqual(44);expect(rect.height).toBeGreaterThanOrEqual(44);
+  expect(rect.x).toBeGreaterThanOrEqual(0);expect(rect.x+rect.width).toBeLessThanOrEqual(195);
+  expect(rect.y+rect.height).toBeLessThanOrEqual(422);
+  await menu.focus();await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog',{name:'CLIPT navigation'})).toBeVisible();
+  await page.getByRole('button',{name:'Close',exact:true}).click();await expect(menu).toBeFocused();
+});
 test('profile website, Playing game link and hashtag results remain reachable with pagination',async({page},info)=>{
   await fixture(page);await page.goto('/user/'+creator);
   await expect(page.getByRole('link',{name:'cliptgaming.com',exact:true})).toHaveAttribute('href','https://cliptgaming.com/');

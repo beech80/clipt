@@ -46,6 +46,7 @@ export default function Clipts() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [engagementOpen, setEngagementOpen] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
+  const swipeZoneRef = useRef<HTMLButtonElement>(null);
   const { data, error, isPending, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } = useInfiniteQuery({
     queryKey: ['clipts-feed', user?.id, feed, following.data, muted.data],
     enabled: (!user || muted.isSuccess) && (feed === 'clipts' || Boolean(user && following.isSuccess)),
@@ -74,7 +75,7 @@ export default function Clipts() {
   const posts = user && !muted.isSuccess ? [] : [...new Map((ownUploaded?[ownUploaded,...basePosts]:basePosts).map(post => [post.id, post])).values()];
   useEffect(()=>{if(publishing?.stage==='complete'){setFeed(publishing.destination);setActiveIndex(0);trackRef.current?.scrollTo({left:0,behavior:'instant'});}},[publishing?.id,publishing?.stage]);
   const activePost = posts[activeIndex];
-  const swipePath = usePortraitSwipe(trackRef, posts.length > 0);
+  const swipePath = usePortraitSwipe(swipeZoneRef, posts.length > 0);
   useEffect(() => {
     setActiveIndex(0);
     setEngagementOpen(false);
@@ -145,8 +146,10 @@ export default function Clipts() {
           ? <PostItem post={post} cinematic active={index === activeIndex} onOpenEngagement={() => setEngagementOpen(true)} />
           : <div className="clipt-fyp-placeholder">Clipt {index + 1}</div>}
       </section>)}
-      <div className="clipt-bottom-swipe-zone" aria-hidden="true" />
     </div>}
+    <button ref={swipeZoneRef} type="button" className="clipt-bottom-swipe-zone" data-swipe-menu
+      aria-label="CLIPT — Open navigation" aria-haspopup="dialog" aria-controls="clipt-navigation-panel"
+      onClick={() => window.dispatchEvent(new CustomEvent('clipt:open-navigation'))}><span>CLIPT</span></button>
     <svg className="clipt-swipe-trail" aria-hidden="true"><path ref={swipePath} /></svg>
     <Dialog open={engagementOpen && Boolean(activePost)} onOpenChange={setEngagementOpen} modal={false}>
       {engagementOpen && activePost && <EngagementHud postId={activePost.id}

@@ -2,7 +2,7 @@ import { useEffect, useRef, type RefObject } from 'react';
 import { portraitSwipeDirection } from '@/lib/mobile-controls';
 import { useMobileControlsPreferences } from '@/hooks/useMobileControlsPreferences';
 
-/** No React updates per pointer move; a bounded SVG path follows real input. */
+/** The bottom menu pad accepts taps and swipes; no React updates per pointer move. */
 export function usePortraitSwipe(track: RefObject<HTMLElement>, enabled: boolean) {
   const path = useRef<SVGPathElement>(null);
   const { preferences: { trail } } = useMobileControlsPreferences();
@@ -34,7 +34,7 @@ export function usePortraitSwipe(track: RefObject<HTMLElement>, enabled: boolean
       const zone = target instanceof Element ? target.closest<HTMLElement>('.clipt-bottom-swipe-zone') : null;
       if (!zone) return;
       if (!(target instanceof Element) || target.closest('input,textarea,select,a,[contenteditable="true"],[role="slider"]') ||
-        (target.closest('button') && !target.closest('.clipt-cinematic-media')) || document.querySelector('[data-sliding-panel][data-panel-size="full"]')) return;
+        (target.closest('button') && !target.closest('[data-swipe-menu]')) || document.querySelector('[data-sliding-panel][data-panel-size="full"]')) return;
       // Native player controls are retargeted to VIDEO by the shadow DOM. Keep
       // their bottom strip available for scrubbing, volume and fullscreen taps.
       if (target.tagName === 'VIDEO' && (target as HTMLVideoElement).controls && event.clientY > target.getBoundingClientRect().bottom - 48) return;
@@ -45,7 +45,7 @@ export function usePortraitSwipe(track: RefObject<HTMLElement>, enabled: boolean
     };
     const move = (event: PointerEvent) => {
       if (origin?.id !== event.pointerId || !trail || motion.matches || document.documentElement.classList.contains('reduce-motion')) return;
-      const bounds = surface.querySelector('.clipt-bottom-swipe-zone')?.getBoundingClientRect();
+      const bounds = surface.getBoundingClientRect();
       if (!bounds) return;
       points.push(`${Math.max(bounds.left, Math.min(bounds.right, event.clientX))},${Math.max(bounds.top, Math.min(bounds.bottom, event.clientY))}`);
       if (points.length > 32) points.shift();
