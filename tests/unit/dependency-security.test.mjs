@@ -25,7 +25,10 @@ test('security fixes are pinned in manifest and lockfile',()=>{
   }
   for(const [name,version] of Object.entries({'fast-uri':'3.1.9','serialize-javascript':'7.1.3','undici':'7.30.1'})) {
     assert.equal(manifest.overrides[name],version);
-    assert.equal(lock.packages[`node_modules/${name}`].version,version);
+    // An unused dependency can disappear entirely; every retained instance must stay patched.
+    for(const [path,pkg] of Object.entries(lock.packages)) {
+      if(path.split('node_modules/').at(-1)===name) assert.equal(pkg.version,version);
+    }
   }
 });
 
