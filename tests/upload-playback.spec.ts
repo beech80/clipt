@@ -1,4 +1,8 @@
-import {createServer} from 'node:http';
+import {createServer} from 'node:https';
+import {execFileSync} from 'node:child_process';
+import {mkdtempSync,rmSync,rmdirSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {test,expect,type Page} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
@@ -20,7 +24,10 @@ async function setup(page:Page,{denied=false,holdRendition=false}={}) {
   let post:any=null,uploadedPath='',uploads=0,signs=0,reads=0,publicReads=0;
   let uploadedBytesMatch=false;
   // Receive the real multipart body: browser routing APIs omit file bytes.
-  const receiver=createServer((request,response)=>{
+  const certificateDir=mkdtempSync(join(tmpdir(),'clipt-media-tls-'));
+  const keyPath=join(certificateDir,'key.pem'),certPath=join(certificateDir,'cert.pem');
+  execFileSync('openssl',['req','-x509','-newkey','rsa:2048','-nodes','-days','1','-subj','/CN=localhost','-keyout',keyPath,'-out',certPath],{stdio:'ignore'});
+  const receiver=createServer({key:readFileSync(keyPath),cert:readFileSync(certPath)},(request,response)=>{
     response.setHeader('Access-Control-Allow-Origin','*');
     response.setHeader('Access-Control-Allow-Methods','POST, OPTIONS');
     response.setHeader('Access-Control-Allow-Headers',request.headers['access-control-request-headers']||'*');
@@ -34,7 +41,7 @@ async function setup(page:Page,{denied=false,holdRendition=false}={}) {
       response.end(JSON.stringify(uploadedBytesMatch?{Key:uploadedPath}:{message:'Invalid fixture upload'}));
     });
   });
-  await new Promise<void>((resolve,reject)=>{receiver.once('error',reject);receiver.listen(54321,'127.0.0.1',resolve);});
+  await new Promise<void>((resolve,reject)=>{receiver.once('error',reject);receiver.listen(54322,'127.0.0.1',resolve);});
   let renditionRequested=false,rewardRequested=false,newestFirst=false,hashtagRequested=false;
   let releaseRendition!:()=>void,releaseReward!:()=>void;
   const renditionGate=new Promise<void>(resolve=>{releaseRendition=resolve;});
@@ -42,8 +49,8 @@ async function setup(page:Page,{denied=false,holdRendition=false}={}) {
   if(!holdRendition)releaseRendition();
   await page.route('**/*',async route=>{
     const request=route.request();const url=new URL(request.url());
-    if(url.origin==='http://127.0.0.1:8081')return route.continue();
-    if(url.origin!=='http://127.0.0.1:54321')return route.abort();
+    if(url.origin==='http://127.0.0.1:8082')return route.continue();
+    if(url.origin!=='https://127.0.0.1:54322')return route.abort();
     let status=200,data:unknown=[];
     const path=url.pathname;
     if(path==='/auth/v1/user')data=user;
@@ -66,7 +73,7 @@ async function setup(page:Page,{denied=false,holdRendition=false}={}) {
       if(request.method()==='POST') {
         const input=request.postDataJSON();
         expect(input.user_id).toBe(owner);expect(input.is_published).toBe(true);
-        expect(input.video_url).toBe('http://127.0.0.1:54321/storage/v1/object/public/'+uploadedPath);
+        expect(input.video_url).toBe('https://127.0.0.1:54322/storage/v1/object/public/'+uploadedPath);
         post={...input,id:postId,created_at:'2026-10-28T00:00:00Z',profiles:profile,games:null,likes:[{count:0}],comments:[{count:0}]};
         status=201;data={id:postId};
       } else if(url.searchParams.has('id'))data=post;
@@ -79,7 +86,7 @@ async function setup(page:Page,{denied=false,holdRendition=false}={}) {
     }
     if(path==='/rest/v1/post_video_renditions') {
       renditionRequested=true;await renditionGate;
-      data=holdRendition?{playback_url:'http://127.0.0.1:54321/storage/v1/object/public/media/'+owner+'/later-rendition.mp4'}:null;
+      data=holdRendition?{playback_url:'https://127.0.0.1:54322/storage/v1/object/public/media/'+owner+'/later-rendition.mp4'}:null;
     }
     if(path==='/functions/v1/verify-clip-reward') {
       rewardRequested=true;await rewardGate;data={status:'not_eligible'};
@@ -95,7 +102,7 @@ async function setup(page:Page,{denied=false,holdRendition=false}={}) {
   return {
     stats:()=>({uploads,uploadedBytesMatch,signs,reads,publicReads,renditionRequested,rewardRequested,newestFirst,hashtagRequested}),
     allowSigning:()=>{denied=false;},releaseRendition,releaseReward,
-    close:async()=>{receiver.closeAllConnections();await new Promise<void>(resolve=>receiver.close(()=>resolve()));},
+    close:async()=>{receiver.closeAllConnections();await new Promise<void>(resolve=>receiver.close(()=>resolve()));rmSync(keyPath,{force:true});rmSync(certPath,{force:true});rmdirSync(certificateDir);},
   };
 }
 async function publish(page:Page) {
