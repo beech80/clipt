@@ -37,7 +37,12 @@ for(const hand of ['right','left']) {
     await fixture(page,hand);await page.setViewportSize({width:390,height:844});await page.goto('/clipts');
     const home=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});
     await expect(home).toBeVisible();
-    await expect(page.locator('[data-active-clip="true"] video')).toBeVisible();
+    const video=page.locator('[data-active-clip="true"] video');
+    await expect(video).toBeVisible();
+    await video.evaluate(async element=>{element.muted=true;await element.play();});
+    await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
+    await video.evaluate(element=>element.pause());
+    await expect(page.getByText('Loading video...',{exact:true})).toHaveCount(0);
     await expect(page.getByText('Loading page…',{exact:true})).toHaveCount(0);
     await expect(page.locator('.clipt-controller')).toHaveAttribute('data-portrait-viewing','true');
     await expect.poll(async()=>Math.round((await home.boundingBox())!.y)).toBeGreaterThan(740);
