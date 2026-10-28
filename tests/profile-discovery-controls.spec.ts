@@ -222,10 +222,10 @@ test('post Like, Follow, Trophy and comment actions use the current post and pre
     const count=rows.length;await route.fulfill({status:200,contentType:'application/json',headers:{'content-range':count?'0-0/'+count:'*/0'},body:method==='HEAD'?'':JSON.stringify(single?rows[0]??null:rows)});
   });
   await page.goto('/post/'+post.id);
-  await page.getByRole('button',{name:'Like post',exact:true}).evaluate(element=>element.scrollIntoView({block:'center'}));
-  await page.getByRole('button',{name:'Like post',exact:true}).click();await expect(page.getByRole('button',{name:'Unlike post',exact:true})).toBeVisible();
-  await page.getByRole('button',{name:'Unlike post',exact:true}).click();await expect(page.getByRole('button',{name:'Like post',exact:true})).toBeEnabled();
   const card=page.locator('article[data-post-id="'+post.id+'"]');
+  await card.getByRole('button',{name:'Like post',exact:true}).evaluate(element=>element.scrollIntoView({block:'center'}));
+  await card.getByRole('button',{name:'Like post',exact:true}).click();await expect(card.getByRole('button',{name:'Unlike post',exact:true})).toBeVisible();
+  await card.getByRole('button',{name:'Unlike post',exact:true}).click();await expect(card.getByRole('button',{name:'Like post',exact:true})).toBeEnabled();
   await card.getByRole('button',{name:'Follow',exact:true}).click();await expect(card.getByRole('button',{name:'Following',exact:true})).toBeVisible();
   await card.getByRole('button',{name:'Following',exact:true}).click();await expect(card.getByRole('button',{name:'Follow',exact:true})).toBeVisible();
   await card.getByRole('button',{name:'Award trophy',exact:true}).click();await expect(page.getByText('Trophy awarded!',{exact:true})).toBeVisible();
