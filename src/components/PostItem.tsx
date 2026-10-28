@@ -839,7 +839,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
       </div>
 
       {/* Post Content */}
-      <div className={cinematic ? "clipt-cinematic-media w-full" : "w-full"}>
+      <div className={cinematic ? "clipt-cinematic-media w-full" : watchPage ? "clipt-watch-media w-full" : "w-full"}>
         <PostContent
           imageUrl={post.image_url}
           videoUrl={post.video_url}

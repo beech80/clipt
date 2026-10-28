@@ -163,3 +163,29 @@ test('denied private playback never falls back to public URLs and a successful a
     expect(service.stats().signs).toBe(2);expect(service.stats().publicReads).toBe(0);
   } finally {service.releaseRendition();service.releaseReward();await service.close();}
 });
+
+test('the uploaded post plays in a visible frame in portrait, landscape and constrained viewports',async({page},info)=>{
+  const service=await setup(page);
+  try {
+    await page.setViewportSize({width:390,height:844});await publish(page);
+    await page.goto('/post/'+postId);
+    const video=page.locator('.clipt-watch-media video');
+    await expect(video).toBeVisible();
+    const oldRule=await page.addStyleTag({content:'.clipt-watch-content{max-width:min(520px,calc((100dvh - 420px) * 16 / 19 + 66px)) !important}.clipt-watch-media .clipt-video-frame{height:auto !important;aspect-ratio:16 / 19 !important}'});
+    await page.setViewportSize({width:740,height:320});
+    await page.screenshot({path:info.outputPath('post-short-before-sizing-fix.png')});
+    await oldRule.evaluate(element=>element.remove());
+    for(const size of [{width:390,height:844},{width:844,height:390},{width:740,height:320},{width:320,height:568},{width:195,height:422}]) {
+      await page.setViewportSize(size);await page.evaluate(()=>scrollTo(0,0));
+      await expect(video).toBeVisible();
+      await expect.poll(()=>video.evaluate(element=>Math.round(element.getBoundingClientRect().width))).toBeGreaterThan(140);
+      await expect.poll(()=>video.evaluate(element=>Math.round(element.getBoundingClientRect().height))).toBeGreaterThanOrEqual(96);
+      await expect.poll(async()=>{const player=(await video.boundingBox())!;const dock=(await page.locator('.clipt-controller').boundingBox())!;return player.y+player.height-dock.y;}).toBeLessThanOrEqual(1);
+      await video.evaluate(async element=>{element.loop=true;element.muted=true;element.currentTime=0;await element.play();});
+      await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+      await page.screenshot({path:info.outputPath('post-'+size.width+'x'+size.height+'.png')});
+    }
+    expect(service.stats().uploadedBytesMatch).toBe(true);expect(service.stats().publicReads).toBe(0);
+  } finally {service.releaseRendition();service.releaseReward();await service.close();}
+});

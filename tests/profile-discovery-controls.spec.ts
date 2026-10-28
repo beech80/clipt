@@ -157,3 +157,43 @@ test('Safari PNG encoder fallback uploads the actual format and confirms the pro
   await expect(page.getByText('Profile picture updated successfully!',{exact:true})).toBeVisible();
   expect(uploaded).toBe(true);expect(updated).toBe(true);
 });
+
+test('hashtag collections preserve pagination, profile routes and narrow readable cards',async({page},info)=>{
+  await fixture(page);await page.setViewportSize({width:390,height:844});await page.goto('/hashtag/Gaming');
+  await expect(page.getByRole('heading',{name:'#gaming',exact:true})).toBeVisible();
+  await expect(page.getByText('Newest first',{exact:true})).toBeVisible();
+  const collection=page.getByRole('region',{name:'Hashtag Clipts',exact:true});
+  const open=collection.getByRole('link',{name:'Open Clipt',exact:true});
+  await expect(open).toHaveCount(24);
+  await expect(collection.getByRole('link',{name:'@RecordedCreator',exact:true}).first()).toHaveAttribute('href','/user/'+creator);
+  await expect(collection.getByRole('link',{name:'Watch Clipt by @RecordedCreator',exact:true}).first()).toHaveAttribute('href','/post/'+records[0].id);
+  await page.getByRole('button',{name:'Load more Clipts',exact:true}).click();await expect(open).toHaveCount(48);
+  await page.getByRole('button',{name:'Load more Clipts',exact:true}).click();await expect(open).toHaveCount(51);
+  await expect(page.getByText('51 Clipts loaded',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Load more Clipts',exact:true})).toHaveCount(0);
+  await page.screenshot({path:info.outputPath('hashtag-portrait-collection.png')});
+  await page.setViewportSize({width:195,height:422});await page.goto('/hashtag/'+ 'a'.repeat(40));
+  await expect(page.getByRole('heading',{name:'#'+'a'.repeat(40),exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:info.outputPath('hashtag-constrained.png')});
+  await page.setViewportSize({width:390,height:844});await page.goto('/hashtag/gaming');
+  await collection.getByRole('link',{name:'@RecordedCreator',exact:true}).first().click();
+  await expect(page).toHaveURL(new RegExp('/user/'+creator+'$'));
+});
+test('hashtag collections recover from errors and explain empty and invalid tags',async({page})=>{
+  await fixture(page);
+  let failed=true,empty=false,requests=0;
+  await page.route('**/rest/v1/public_clipt_discovery?**',async route=>{
+    requests++;expect(new URL(route.request().url()).searchParams.get('order')).toBe('created_at.desc,id.desc');
+    await route.fulfill({status:failed?503:200,contentType:'application/json',body:JSON.stringify(failed?{message:'Recorded temporary failure'}:empty?[]:records.slice(0,1))});
+  });
+  await page.goto('/hashtag/gaming');await expect(page.getByText('Could not load this hashtag.',{exact:true})).toBeVisible();
+  failed=false;await page.getByRole('button',{name:'Retry hashtag',exact:true}).click();
+  await expect(page.getByRole('link',{name:'Open Clipt',exact:true})).toHaveCount(1);
+  empty=true;await page.goto('/hashtag/empty');
+  await expect(page.getByRole('heading',{name:'No published Clipts with this hashtag yet.',exact:true})).toBeVisible();
+  const before=requests;await page.goto('/hashtag/invalid-tag');
+  await expect(page.getByRole('heading',{name:'Hashtag unavailable',exact:true})).toBeVisible();
+  await expect(page.getByText('Choose a hashtag of 1–40 letters, numbers or underscores.',{exact:true})).toBeVisible();
+  expect(requests).toBe(before);
+});
