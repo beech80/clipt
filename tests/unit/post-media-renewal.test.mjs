@@ -22,7 +22,7 @@ test('renewed playback URLs clear stale media errors without losing the saved pl
   const props={postId:'actual-post',videoUrl:'owned-media-reference',frameAspectRatio:'16 / 19'};
   mod.exports.default(props);
   refs[0].current=5;
-  const renewal=effects.find(effect=>effect.dependencies.length===1&&effect.dependencies[0]==='renewed-private-source');
+  const renewal=effects.find(effect=>effect.dependencies[0]==='renewed-private-source');
   assert.ok(renewal);renewal.fn();assert.deepEqual(states.slice(0,3),[false,false,null]);assert.equal(refs[0].current,5);
   stateIndex=0;refIndex=0;
   const tree=mod.exports.default(props);

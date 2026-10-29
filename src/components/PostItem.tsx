@@ -844,6 +844,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
           videoUrl={post.video_url}
           postId={postId}
           allowFullscreen={!cinematic}
+          active={active}
+          autoPlay={cinematic}
           frameAspectRatio={watchPage ? '16 / 19' : undefined}
         />
       </div>
