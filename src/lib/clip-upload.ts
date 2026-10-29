@@ -20,10 +20,15 @@ export function clipUploadError(error: { statusCode?: string | number; message?:
   return 'The video upload failed. Check your connection and retry.' + retained;
 }
 
+export class ClipConversionRequired extends Error {
+  constructor(format: 'HEVC' | 'MOV' = 'HEVC') { super(`This ${format} video needs a compatible MP4 copy before uploading.`); this.name = 'ClipConversionRequired'; }
+}
+
 export async function validateClipFile(file: File) {
-  if (!['video/mp4', 'video/webm'].includes(file.type)) throw new Error('Choose an MP4 or WebM video.');
+  if (!['video/mp4', 'video/webm', 'video/quicktime'].includes(file.type)) throw new Error('Choose an MP4, MOV or WebM video.');
   if (!Number.isSafeInteger(file.size) || file.size <= 0) throw new Error('This video is empty or could not be read. Download it to your device first if it is stored in iCloud or another cloud drive, then choose it again.');
   if (file.size > MAX_CLIP_BYTES) throw new Error(`This video is ${formatClipSize(file.size)}. The upload limit is ${formatClipSize(MAX_CLIP_BYTES)}. Trim it or export a smaller copy, then choose it again.`);
+  if (file.type === 'video/quicktime') throw new ClipConversionRequired('MOV');
   if (file.type === 'video/mp4') {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -33,7 +38,7 @@ export async function validateClipFile(file: File) {
       if (bytes[i] !== 104 || bytes[i + 3] !== 49) continue;
       const hevc = (bytes[i + 1] === 118 && bytes[i + 2] === 99) || (bytes[i + 1] === 101 && bytes[i + 2] === 118);
       if (hevc && view.getUint32(i - 4) >= 8 && view.getUint32(i - 4) <= bytes.length - i + 4) {
-        throw new Error('HEVC video needs conversion. Export H.264 MP4 or WebM before uploading; automatic transcoding is not configured yet.');
+        throw new ClipConversionRequired();
       }
     }
   }

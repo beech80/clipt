@@ -95,7 +95,8 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",
     "zod": "4.6.6",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "mediabunny": "1.63.0"
   },
   "overrides": {
     "postcss-selector-parser": "7.1.6",

@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { BackButton } from '@/components/ui/back-button';
 import { supabase } from '@/lib/supabase';
-import { clipCaption, validateClipFile, formatClipSize, MAX_CLIP_BYTES } from '@/lib/clip-upload';
+import { clipCaption, formatClipSize, MAX_CLIP_BYTES } from '@/lib/clip-upload';
+import { prepareClipFile } from '@/lib/prepare-clip';
 import { preparePhoto, photoUploadError } from '@/lib/photo-upload';
 import { completeGameCatalog } from '@/lib/game-catalog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,8 +33,11 @@ export default function NewPost() {
   const [hashtags, setHashtags] = useState('');
   const [gameId, setGameId] = useState('');
   const [gameSearch, setGameSearch] = useState('');
-  const [stage, setStage] = useState<'idle' | 'checking' | 'uploading' | 'publishing' | 'reward'>('idle');
+  const [stage, setStage] = useState<'idle' | 'checking' | 'converting' | 'uploading' | 'publishing' | 'reward'>('idle');
   const [playable, setPlayable] = useState(false);
+  const [conversionProgress, setConversionProgress] = useState<number | null>(null);
+  const [converted, setConverted] = useState(false);
+  const prepareAbort = useRef<AbortController | null>(null);
   const [error, setError] = useState('');
   const [uncertain, setUncertain] = useState(false);
   const [kind, setKind] = useState<'video' | 'photo'>('video');
@@ -43,10 +47,13 @@ export default function NewPost() {
   const cameraInput = useRef<HTMLInputElement>(null);
   const initializedDraft = useRef<string | null>(null);
   useEffect(() => {
+    prepareAbort.current?.abort();
     selection.current += 1;
     initializedDraft.current = null;
+    setConversionProgress(null); setConverted(false); setStage('idle');
     setFile(null); setCaption(''); setHashtags(''); setGameId(''); setGameSearch('');
     setDestination('clipts'); setKind('video'); setPlayable(false); setError(''); setUncertain(false);
+    return () => { selection.current += 1; prepareAbort.current?.abort(); };
   }, [draftId, user?.id]);
   const draft = useQuery({
     queryKey: ['clipt-draft', user?.id, draftId], enabled: Boolean(user && draftId), retry: false,
@@ -89,17 +96,23 @@ export default function NewPost() {
   }, [file]);
   async function chooseFile(candidate?: File) {
     if (busy.current || !candidate) return;
+    prepareAbort.current?.abort();
+    const controller = new AbortController(); prepareAbort.current = controller;
     const revision = ++selection.current;
+    setConversionProgress(null); setConverted(false);
     setError(''); setStage('checking');
     // A rejected replacement must not leave the previous video ready to publish.
     setFile(null); setPlayable(false);
     try {
-      const prepared = kind === 'photo' ? await preparePhoto(candidate) : candidate;
-      if (kind === 'video') await validateClipFile(candidate);
-      if (revision === selection.current) { setPlayable(false); setFile(prepared); }
+      const prepared = kind === 'photo' ? await preparePhoto(candidate) : await prepareClipFile(candidate, {
+        signal: controller.signal, onProgress: progress => {
+          if (revision === selection.current) { setStage('converting'); setConversionProgress(Math.min(95, Math.floor(progress * 20) * 5)); }
+        },
+      });
+      if (revision === selection.current) { setPlayable(false); setFile(prepared); setConverted(kind === 'video' && prepared !== candidate); }
     } catch (cause) {
       if (revision === selection.current) setError(cause instanceof Error ? cause.message : 'This media could not be checked.');
-    } finally { if (revision === selection.current) setStage('idle'); }
+    } finally { if (revision === selection.current) { prepareAbort.current = null; setStage('idle'); setConversionProgress(null); } }
   }
   async function publish(event: React.FormEvent) {
     event.preventDefault();
@@ -180,24 +193,27 @@ export default function NewPost() {
       if(publishingId)updatePublishing(publishingId,{stage:'error',message});
     } finally { busy.current = false; setStage('idle'); }
   }
+  const preparing = stage === 'checking' || stage === 'converting';
   const submitting = stage === 'uploading' || stage === 'publishing' || stage === 'reward' || publishingBlocked(user?.id);
   return <main className="clipt-create clipt-auth mx-auto min-h-screen max-w-6xl p-4 pb-44 space-y-5">
     <header className="flex items-center gap-3"><BackButton /><h1 className="flex items-center gap-2 text-2xl font-bold"><Camera aria-hidden="true" />Create Clipt</h1></header>
     <nav aria-label="Create content" className="flex flex-wrap gap-2">
       {(['video', 'photo'] as const).map(value => <Button key={value} type="button" variant={kind === value ? 'default' : 'outline'} aria-pressed={kind === value}
-        disabled={Boolean(draftId) || submitting || stage === 'checking'} onClick={() => { selection.current += 1; setKind(value); setFile(null); setPlayable(false); setError(''); }}>{value === 'video' ? 'Video' : 'Photo'}</Button>)}
+        disabled={Boolean(draftId) || submitting || preparing} onClick={() => { selection.current += 1; setKind(value); setFile(null); setPlayable(false); setError(''); }}>{value === 'video' ? 'Video' : 'Photo'}</Button>)}
       <Button asChild variant="outline"><Link to="/stream-setup">Live stream</Link></Button>
     </nav>
     <form onSubmit={publish} className="clipt-create-layout">
       <section className="clipt-create-media space-y-5" aria-label="Media preview and upload">
-      <Button type="button" variant="outline" className="w-full min-h-24" disabled={submitting || stage === 'checking'} onClick={() => input.current?.click()}>
+      <Button type="button" variant="outline" className="w-full min-h-24" disabled={submitting || preparing} onClick={() => input.current?.click()}>
         <Upload className="mr-2" aria-hidden="true" />{file ? `Replace ${kind}` : `Choose ${kind}`}
       </Button>
-      <input ref={input} type="file" aria-describedby="clip-media-help" aria-label={kind === 'photo' ? 'Clipt photo' : 'Clipt video'} accept={kind === 'photo' ? 'image/jpeg,image/png,image/webp' : 'video/mp4,video/webm'} className="sr-only" disabled={submitting}
+      <input ref={input} type="file" aria-describedby="clip-media-help" aria-label={kind === 'photo' ? 'Clipt photo' : 'Clipt video'} accept={kind === 'photo' ? 'image/jpeg,image/png,image/webp' : 'video/mp4,video/quicktime,video/webm'} className="sr-only" disabled={submitting || preparing}
         onChange={event => { void chooseFile(event.target.files?.[0]); event.target.value = ''; }} />
-      {kind === 'photo' ? <><Button type="button" variant="outline" disabled={submitting || stage === 'checking'} onClick={() => cameraInput.current?.click()}><Camera className="mr-2" aria-hidden="true" />Take photo</Button>
-        <input ref={cameraInput} type="file" aria-label="Take a Clipt photo" accept="image/jpeg,image/png,image/webp" capture="environment" className="sr-only" disabled={submitting} onChange={event => { void chooseFile(event.target.files?.[0]); event.target.value = ''; }} />
-        <p id="clip-media-help" className="text-sm text-slate-300">One JPEG, PNG or WebP photo, up to 5 MB. Photos are processed to remove embedded metadata. Camera capture depends on your device/browser; otherwise choose a photo. HEIC, SVG and animated files are not supported.</p></> : <p id="clip-media-help" className="text-sm text-slate-300">One MP4 or WebM video, up to {formatClipSize(MAX_CLIP_BYTES)}. For iPhone videos, choose Settings → Camera → Formats → Most Compatible before recording, or export an existing clip as H.264 MP4. MOV/HEVC conversion is not configured.</p>}
+      {kind === 'photo' ? <><Button type="button" variant="outline" disabled={submitting || preparing} onClick={() => cameraInput.current?.click()}><Camera className="mr-2" aria-hidden="true" />Take photo</Button>
+        <input ref={cameraInput} type="file" aria-label="Take a Clipt photo" accept="image/jpeg,image/png,image/webp" capture="environment" className="sr-only" disabled={submitting || preparing} onChange={event => { void chooseFile(event.target.files?.[0]); event.target.value = ''; }} />
+        <p id="clip-media-help" className="text-sm text-slate-300">One JPEG, PNG or WebP photo, up to 5 MB. Photos are processed to remove embedded metadata. Camera capture depends on your device/browser; otherwise choose a photo. HEIC, SVG and animated files are not supported.</p></> : <p id="clip-media-help" className="text-sm text-slate-300">One MP4, MOV or WebM video, up to {formatClipSize(MAX_CLIP_BYTES)}. HEVC/MOV videos are converted on supported devices before upload. Your original stays unchanged.</p>}
+      {stage === 'converting' && <div className="space-y-3"><p role="status">Converting video… {conversionProgress ?? 0}% · Keep this page open.</p><progress className="w-full" aria-label="Video conversion progress" max={100} value={conversionProgress ?? 0} /><Button type="button" variant="outline" className="min-h-11" onClick={() => { selection.current += 1; prepareAbort.current?.abort(); prepareAbort.current = null; setStage('idle'); setConversionProgress(null); setError('Conversion cancelled. Your caption has been kept.'); }}>Cancel conversion</Button></div>}
+      {converted && file && <p className="text-sm text-violet-200">Converted to a compatible MP4 on your device. Your original is unchanged.</p>}
       {file && kind === 'video' && <p role="status" className="break-all text-sm text-violet-200">Selected video: {file.name} · {formatClipSize(file.size)}</p>}
       {draftId && draft.isPending && <p role="status">Opening your draft…</p>}
       {draftId && draft.isError && <p role="alert">This draft could not be opened. <Button type="button" onClick={() => void draft.refetch()}>Retry draft</Button></p>}
@@ -224,8 +240,8 @@ export default function NewPost() {
       <Link to="/drafts" className="inline-flex">Open saved drafts</Link>
       {error && <p role="alert" className="text-red-200">{error}</p>}
       {publishingUncertain(user?.id) && <p role="alert">An earlier post has an uncertain result. Check your profile before retrying; duplicate posting is blocked in this session.</p>}
-      {stage !== 'idle' && <p role="status">{stage === 'checking' ? 'Checking media…' : stage === 'uploading' ? 'Uploading media…' : stage === 'reward' ? 'Clipt published. Checking Token reward…' : 'Publishing Clipt…'}</p>}
-      <Button type="submit" className="w-full" disabled={uncertain || submitting || (!file && !savedReference) || !playable || stage === 'checking' || Boolean(draftId && !draft.isSuccess)}>{submitting ? 'Please wait…' : destination === 'draft' ? 'Save Draft' : destination === 'squad' ? 'Post to Squad' : 'Post Clipt'}</Button>
+      {stage !== 'idle' && stage !== 'converting' && <p role="status">{stage === 'checking' ? 'Checking media…' : stage === 'uploading' ? 'Uploading media…' : stage === 'reward' ? 'Clipt published. Checking Token reward…' : 'Publishing Clipt…'}</p>}
+      <Button type="submit" className="w-full" disabled={uncertain || submitting || (!file && !savedReference) || !playable || preparing || Boolean(draftId && !draft.isSuccess)}>{submitting ? 'Please wait…' : destination === 'draft' ? 'Save Draft' : destination === 'squad' ? 'Post to Squad' : 'Post Clipt'}</Button>
       {uncertain && <Button type="button" variant="outline" onClick={() => navigate('/profile')}>Check my profile</Button>}
       </section>
     </form>

@@ -6,13 +6,14 @@ import {join} from 'node:path';
 import {test,expect,type Page} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
+import {inspectH264Mp4} from '../supabase/functions/_shared/mp4-proof';
 
 // All traffic is confined to the local fixture; no real account/session is used.
 const owner='00000000-0000-4000-8000-000000000077';
 const postId='00000000-0000-4000-8000-000000000078';
 const fixturePath=fileURLToPath(new URL('./fixtures/clip-test-h264.mp4',import.meta.url));
 const bytes=readFileSync(fixturePath);
-async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false}={}) {
+async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false,converted=false}={}) {
   const user={id:owner,aud:'authenticated',role:'authenticated',email:'fixture@example.invalid',app_metadata:{},user_metadata:{},created_at:'2026-09-19T00:00:00Z',factors:[]};
   const profile={id:owner,username:'upload_tester',display_name:'Upload Tester',avatar_url:null,bio:'Recorded test profile'};
   await page.addInitScript(({user})=>{
@@ -23,6 +24,7 @@ async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false
   },{user});
   let post:any=null,uploadedPath='',uploads=0,signs=0,reads=0,publicReads=0;
   let uploadedBytesMatch=false;
+  let playbackBytes=bytes,convertedProof:ReturnType<typeof inspectH264Mp4>|null=null,convertedAudio=false;
   // Receive the real multipart body: browser routing APIs omit file bytes.
   const certificateDir=mkdtempSync(join(tmpdir(),'clipt-media-tls-'));
   const keyPath=join(certificateDir,'key.pem'),certPath=join(certificateDir,'cert.pem');
@@ -36,7 +38,18 @@ async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false
     const chunks:Buffer[]=[];request.on('data',chunk=>chunks.push(Buffer.from(chunk)));
     request.on('end',()=>{
       uploads++;uploadedPath=request.url!.slice('/storage/v1/object/'.length);
-      uploadedBytesMatch=Buffer.concat(chunks).includes(bytes);
+      const body=Buffer.concat(chunks);
+      if(converted) {
+        try {
+          const boundary=String(request.headers['content-type']).match(/boundary=(?:"([^"]+)"|([^;]+))/);
+          const marker=body.indexOf(Buffer.from('Content-Type: video/mp4'));
+          const start=body.indexOf(Buffer.from('\r\n\r\n'),marker)+4;
+          const end=body.indexOf(Buffer.from('\r\n--'+(boundary?.[1]||boundary?.[2])),start);
+          if(marker<0||start<4||end<=start)throw Error('Invalid multipart video');
+          playbackBytes=body.subarray(start,end);convertedProof=inspectH264Mp4(playbackBytes);
+          convertedAudio=playbackBytes.includes(Buffer.from('mp4a'));uploadedBytesMatch=true;
+        } catch {uploadedBytesMatch=false;}
+      } else uploadedBytesMatch=body.includes(bytes);
       response.writeHead(uploadedBytesMatch?200:400,{'Content-Type':'application/json'});
       response.end(JSON.stringify(uploadedBytesMatch?{Key:uploadedPath}:{message:'Invalid fixture upload'}));
     });
@@ -66,7 +79,7 @@ async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false
         else data={signedURL:'/object/sign/'+object+'?token=fixture'};
       } else {
         reads++;
-        return route.fulfill({status:200,contentType:'video/mp4',headers:{'accept-ranges':'bytes'},body:bytes});
+        return route.fulfill({status:200,contentType:'video/mp4',headers:{'accept-ranges':'bytes'},body:playbackBytes});
       }
     }
     if(path==='/rest/v1/posts') {
@@ -100,7 +113,7 @@ async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false
     await route.fulfill({status,contentType:'application/json',headers:{'content-range':'0-0/0'},body:JSON.stringify(data)});
   });
   return {
-    stats:()=>({uploads,uploadedBytesMatch,signs,reads,publicReads,renditionRequested,rewardRequested,newestFirst,hashtagRequested}),
+    stats:()=>({uploads,uploadedBytesMatch,signs,reads,publicReads,renditionRequested,rewardRequested,newestFirst,hashtagRequested,convertedProof,convertedAudio}),
     allowSigning:()=>{denied=false;},releaseRendition,releaseReward,
     close:async()=>{receiver.closeAllConnections();await new Promise<void>(resolve=>receiver.close(()=>resolve()));rmSync(keyPath,{force:true});rmSync(certPath,{force:true});rmdirSync(certificateDir);},
   };
@@ -190,5 +203,64 @@ test('the uploaded post plays in a visible frame in portrait, landscape and cons
       await page.screenshot({path:info.outputPath('post-'+size.width+'x'+size.height+'.png')});
     }
     expect(service.stats().uploadedBytesMatch).toBe(true);expect(service.stats().publicReads).toBe(0);
+  } finally {service.releaseRendition();service.releaseReward();await service.close();}
+});
+
+for(const format of ['mov','hevc'] as const) {
+  test('native conversion '+format+' uploads verified H.264 and plays the resulting post',async({page},info)=>{
+    test.skip(format==='hevc'&&process.env.CLIPT_REQUIRE_HEVC!=='1','HEVC decoding is required in the macOS WebKit job.');
+    const service=await setup(page,{converted:true});
+    try {
+      await page.setViewportSize({width:390,height:844});await page.goto('/new-post');
+      await page.getByLabel('Caption',{exact:true}).fill('Converted iPhone recording');
+      const candidate=format==='hevc'?readFileSync(fileURLToPath(new URL('./fixtures/clip-test-hevc.mp4',import.meta.url))):bytes;
+      await page.getByLabel('Clipt video',{exact:true}).setInputFiles({name:format==='hevc'?'iphone.mp4':'iphone.mov',mimeType:format==='hevc'?'video/mp4':'video/quicktime',buffer:candidate});
+      await expect(page.getByText('Converted to a compatible MP4 on your device. Your original is unchanged.',{exact:true})).toBeVisible({timeout:60000});
+      const submit=page.getByRole('button',{name:'Post Clipt',exact:true});await expect(submit).toBeEnabled();
+      await page.screenshot({path:info.outputPath('converted-'+format+'-ready.png')});
+      await submit.click();await expect(page).toHaveURL(/\/clipts$/);
+      await expect(page.getByText('Your post is ready below.',{exact:true})).toBeVisible();
+      expect(service.stats().convertedProof?.codec).toMatch(/^avc[13]$/);
+      if(format==='hevc')expect(service.stats().convertedAudio).toBe(true);
+      expect(service.stats().uploads).toBe(1);expect(service.stats().publicReads).toBe(0);
+      await page.goto('/post/'+postId);
+      const video=page.locator('.clipt-watch-media video');await expect(video).toBeVisible();
+      await video.evaluate(async element=>{element.muted=true;element.loop=true;await element.play();});
+      await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
+      await page.screenshot({path:info.outputPath('converted-'+format+'-playing.png')});
+    } finally {service.releaseRendition();service.releaseReward();await service.close();}
+  });
+}
+test('an unsupported HEVC decoder gives a recovery message without uploading',async({page})=>{
+  const service=await setup(page,{converted:true});
+  try {
+    await page.addInitScript(()=>{
+      if(typeof VideoDecoder==='undefined')return;
+      const check=VideoDecoder.isConfigSupported.bind(VideoDecoder);
+      VideoDecoder.isConfigSupported=async config=>/^(hvc1|hev1)/.test(config.codec)?{supported:false,config}:check(config);
+    });
+    await page.goto('/new-post');await page.getByLabel('Caption',{exact:true}).fill('Keep this caption');
+    await page.getByLabel('Clipt video',{exact:true}).setInputFiles(fileURLToPath(new URL('./fixtures/clip-test-hevc.mp4',import.meta.url)));
+    await expect(page.getByRole('alert')).toContainText('This browser cannot convert this iPhone video.');
+    await expect(page.getByRole('button',{name:'Post Clipt',exact:true})).toBeDisabled();
+    await expect(page.getByLabel('Caption',{exact:true})).toHaveValue('Keep this caption');
+    expect(service.stats().uploads).toBe(0);
+  } finally {service.releaseRendition();service.releaseReward();await service.close();}
+});
+test('cancelling video conversion keeps the caption and never posts',async({page})=>{
+  const service=await setup(page,{converted:true});
+  try {
+    await page.addInitScript(()=>{
+      if(typeof VideoDecoder==='undefined')return;
+      const check=VideoDecoder.isConfigSupported.bind(VideoDecoder);
+      VideoDecoder.isConfigSupported=async config=>{await new Promise(resolve=>setTimeout(resolve,1500));return check(config);};
+    });
+    await page.goto('/new-post');await page.getByLabel('Caption',{exact:true}).fill('Keep my cancelled recording caption');
+    await page.getByLabel('Clipt video',{exact:true}).setInputFiles({name:'iphone.mov',mimeType:'video/quicktime',buffer:bytes});
+    await page.getByRole('button',{name:'Cancel conversion',exact:true}).click();
+    await expect(page.getByRole('alert')).toContainText('Conversion cancelled. Your caption has been kept.');
+    await expect(page.getByRole('button',{name:'Post Clipt',exact:true})).toBeDisabled();
+    await expect(page.getByLabel('Caption',{exact:true})).toHaveValue('Keep my cancelled recording caption');
+    expect(service.stats().uploads).toBe(0);
   } finally {service.releaseRendition();service.releaseReward();await service.close();}
 });
