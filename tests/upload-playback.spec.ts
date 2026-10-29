@@ -220,6 +220,7 @@ for(const format of ['mov','hevc'] as const) {
       await expect(page.getByText('Converted to a compatible MP4 on your device. Your original is unchanged.',{exact:true})).toBeVisible({timeout:60000});
       const submit=page.getByRole('button',{name:'Post Clipt',exact:true});await expect(submit).toBeDisabled();
       await expect(page.getByText('Tap Play to check this video before posting.',{exact:true})).toBeVisible();
+      await page.locator('.clipt-create-media video').evaluate(element=>{element.loop=true;(window as any).__selectedUploadPreview=element;});
       await page.getByRole('button',{name:'Play video preview',exact:true}).click();
       await expect(submit).toBeEnabled();
       await submit.click();
@@ -232,6 +233,7 @@ for(const format of ['mov','hevc'] as const) {
       await page.screenshot({path:info.outputPath('converted-'+format+'-ready.png')});
       await submit.click();await expect(page).toHaveURL(/\/clipts$/);
       await expect(page.getByText('Your post is ready below.',{exact:true})).toBeVisible();
+      expect(await page.evaluate(()=>(window as any).__selectedUploadPreview.paused)).toBe(true);
       expect(service.stats().convertedProof?.codec).toMatch(/^avc[13]$/);
       if(format==='hevc')expect(service.stats().convertedAudio).toBe(true);
       expect(service.stats().uploads).toBe(1);expect(service.stats().publicReads).toBe(0);

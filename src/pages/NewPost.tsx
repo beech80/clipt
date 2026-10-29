@@ -97,6 +97,11 @@ export default function NewPost() {
     setPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
+  const previewSource = preview || savedMedia.src;
+  useEffect(() => {
+    const player = previewVideo.current;
+    return () => { player?.pause(); };
+  }, [previewSource]);
   async function chooseFile(candidate?: File) {
     if (busy.current || !candidate) return;
     prepareAbort.current?.abort();
@@ -154,7 +159,7 @@ export default function NewPost() {
       if(user.id!==submittingUserId)throw new Error('Your signed-in account changed. Check the current account before posting again.');
       // Continue the in-memory job while Home displays its real upload stage.
       // Drafts stay in their private workflow; no draft is injected into Home.
-      if (publishingId) navigate('/clipts');
+      if (publishingId) { previewVideo.current?.pause(); navigate('/clipts'); }
       let mediaUrl = savedReference;
       if (file) {
         reportStage('uploading');
