@@ -316,6 +316,12 @@ test('feed playback recovers through a real tap when autoplay and preload events
 test('feed playback starts only the active visible clip and pauses the previous player',async({page})=>{
   const service=await setup(page,{neighbor:true});
   try {
+    await page.addInitScript(()=>{
+      const events:any[]=[];(window as any).__feedPlaybackProbe=events;
+      const record=(video:HTMLMediaElement,type:string,reason?:string)=>{events.push({type,reason,slide:video.closest('[data-slide-index]')?.getAttribute('data-slide-index'),active:video.closest('[data-active-clip]')?.getAttribute('data-active-clip'),paused:video.paused,ready:video.readyState,time:video.currentTime,muted:video.muted,hidden:document.hidden});if(events.length>50)events.shift();};
+      for(const type of ['play','playing','pause','waiting','stalled','canplay','error'])document.addEventListener(type,event=>{if(event.target instanceof HTMLMediaElement)record(event.target,type);},true);
+      const play=HTMLMediaElement.prototype.play;HTMLMediaElement.prototype.play=function(){record(this,'play-request');return play.call(this).then(value=>{record(this,'play-resolved');return value;},error=>{record(this,'play-rejected',error.name);throw error;});};
+    });
     await page.setViewportSize({width:390,height:844});await publish(page);
     const first=page.locator('[data-slide-index="0"] video');
     const second=page.locator('[data-slide-index="1"] video');
@@ -326,7 +332,8 @@ test('feed playback starts only the active visible clip and pauses the previous 
     const track=page.getByRole('region',{name:'Clipts horizontal feed',exact:true});
     await track.focus();await track.press('ArrowRight');
     await expect(page.locator('[data-slide-index="1"] [data-active-clip="true"]')).toBeVisible();
-    await expect.poll(()=>second.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
+    try {await expect.poll(()=>second.evaluate(element=>element.currentTime)).toBeGreaterThan(0);}
+    catch(error){console.log('FEED_TRANSITION_DIAGNOSTIC',JSON.stringify(await page.evaluate(()=>({events:(window as any).__feedPlaybackProbe,players:[...document.querySelectorAll('video')].map(video=>({slide:video.closest('[data-slide-index]')?.getAttribute('data-slide-index'),rect:video.getBoundingClientRect().toJSON(),paused:video.paused,time:video.currentTime,ready:video.readyState,error:video.error?.code}))}))));throw error;}
     await expect.poll(()=>first.evaluate(element=>element.paused)).toBe(true);
     // Wait for the first smooth scroll to settle before requesting its reverse.
     await expect.poll(()=>second.evaluate(element=>{const track=element.closest('[data-horizontal-feed]')!.getBoundingClientRect();const slide=element.closest('[data-slide-index]')!.getBoundingClientRect();return Math.abs(slide.left+slide.width/2-track.left-track.width/2);})).toBeLessThan(2);
