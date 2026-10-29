@@ -58,8 +58,9 @@ for(const hand of ['right','left']) {
     const x=pad.x+pad.width/2, y=pad.y+pad.height-12;
     await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
     await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-64}]});
-    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
     await expect(page.locator('[data-slide-index="1"] [data-active-clip="true"]')).toBeVisible();
+    await expect.poll(()=>page.locator('[data-slide-index="1"]').evaluate(element=>{const item=element.getBoundingClientRect(),track=element.closest('[data-horizontal-feed]')!.getBoundingClientRect();return Math.abs(item.left+item.width/2-track.left-track.width/2);})).toBeLessThan(2);
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
     await expect(page.getByRole('dialog',{name:'CLIPT navigation'})).toHaveCount(0);
     await cdp.detach();
     const currentVideo=page.locator('[data-active-clip="true"] video');
@@ -89,11 +90,18 @@ for(const hand of ['right','left']) {
         await expect(feedSwitch).toContainText('FYP');
       }
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+      expect(await page.evaluate(()=>['html','body','#root','.app-container','.page-content'].every(selector=>{const style=getComputedStyle(document.querySelector(selector)!);return style.backgroundColor==='rgb(0, 0, 0)'&&style.backgroundImage==='none';}))).toBe(true);
+      expect(await page.locator('.app-container').evaluate(element=>getComputedStyle(element,'::before').display)).toBe('none');
     }
+    // Expose the outer canvas as on Safari devices with bottom and side safe areas.
+    await page.addStyleTag({content:'.clipt-fyp { inset: 8px 24px 20px !important; }'});
     await page.screenshot({path:info.outputPath(`landscape-${hand}.png`)});
     await home.click();
     await expect(page.getByRole('dialog',{name:'CLIPT navigation'})).toBeVisible();
     await expect(page.getByRole('link',{name:'Post / Create',exact:true})).toBeVisible();
+    await page.goto('/discovery');
+    await expect(page.getByRole('heading',{name:'Discovery',exact:true})).toBeVisible();
+    expect(await page.locator('.app-container').evaluate(element=>getComputedStyle(element).backgroundImage)).not.toBe('none');
   });
 }
 test('portrait menu remains reachable on an empty feed and narrow accessibility viewport',async({page})=>{

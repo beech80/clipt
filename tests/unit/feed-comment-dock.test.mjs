@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import ts from 'typescript';
 import React from 'react';
+import * as clipCarouselScroll from '../../src/lib/clip-carousel-scroll.ts';
 const require=createRequire(import.meta.url);
 const read=path=>readFileSync(new URL('../../src/'+path,import.meta.url),'utf8');
 function walk(node,predicate){
@@ -24,7 +25,7 @@ test('one feed-owned comment dock follows a sideways slide without closing or re
     '@/components/ui/tabs':{Tabs:()=>null,TabsList:()=>null,TabsTrigger:()=>null},'@/components/ui/button':{Button:()=>null},
     '@/components/ui/dialog':{Dialog},'@/components/post/EngagementHud':{EngagementHud:Hud},
     '@/hooks/usePortraitSwipe':{usePortraitSwipe:()=>({current:null})},
-    '@/components/PostItem':{default:Post,__esModule:true},'react-router-dom':{Link:()=>null},'./clipt-console.css':{},
+    '@/components/PostItem':{default:Post,__esModule:true},'react-router-dom':{Link:()=>null},'./clipt-console.css':{},'./clipt-feed-surface.css':{},'@/lib/clip-carousel-scroll':clipCarouselScroll,
   };
   const output=ts.transpileModule(read('pages/Clipts.tsx'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
   deps.react.useSyncExternalStore=()=>null;

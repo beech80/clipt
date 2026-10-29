@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import ts from 'typescript';
 import React from 'react';
+import * as clipCarouselScroll from '../../src/lib/clip-carousel-scroll.ts';
 const require=createRequire(import.meta.url);
 test('all collage sizes report real image loading and failure to the parent',()=>{
   const Collage=load('components/post/PhotoCollage.tsx',{});
@@ -45,7 +46,7 @@ test('photo retry reloads an unchanged authorized URL only after successful acce
 });
 function load(path,deps) {
   const source=ts.transpileModule(readFileSync(new URL('../../src/'+path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
-  const imports={'@/lib/publishing-status':{publishingSnapshot:()=>null,subscribePublishing:()=>()=>{}},...deps};
+  const imports={'./clipt-feed-surface.css':{},'@/lib/clip-carousel-scroll':clipCarouselScroll,'@/lib/publishing-status':{publishingSnapshot:()=>null,subscribePublishing:()=>()=>{}},...deps};
   if(imports.react)imports.react={...imports.react,useSyncExternalStore:()=>null};
   const mod={exports:{}};new Function('require','module','exports',source)(name=>imports[name]??require(name),mod,mod.exports);return mod.exports.default;
 }

@@ -94,7 +94,7 @@ test('blocked storage still broadcasts the selected hand to mounted controls for
 test('portrait gesture routes one swipe, cancels media click and does not attach a visible touchpad',()=>{
   const keys=['window','document','Element','matchMedia','requestAnimationFrame','cancelAnimationFrame'];const saved=Object.fromEntries(keys.map(k=>[k,globalThis[k]]));
   try{
-    const handlers=new Map(),events=[],effects=[];const surface={addEventListener:(k,v)=>handlers.set(k,v),removeEventListener:k=>handlers.delete(k)};
+    const handlers=new Map(),events=[],effects=[];const surface={addEventListener:(k,v)=>handlers.set(k,v),removeEventListener:k=>handlers.delete(k),getBoundingClientRect:()=>({left:70,right:270,top:300,bottom:396})};
     const zone={setPointerCapture(){}};
     globalThis.Element=class{constructor(inZone=true,menuButton=false){this.inZone=inZone;this.menuButton=menuButton;}closest(selector){if(selector==='.clipt-bottom-swipe-zone')return this.inZone?zone:null;if(selector==='button'||selector==='[data-swipe-menu]')return this.menuButton?this:null;return null;}};
     globalThis.document={documentElement:{classList:{contains:()=>false}},querySelector:()=>null};
@@ -110,8 +110,12 @@ test('portrait gesture routes one swipe, cancels media click and does not attach
     handlers.get('pointerup')({pointerId:2,clientX:100,clientY:150});
     assert.equal(events.length,0,'touches outside the bottom zone never navigate');
     handlers.get('pointerdown')({pointerType:'touch',isPrimary:true,pointerId:1,clientX:100,clientY:300,target:new Element(true,true)});
+    handlers.get('pointermove')({pointerId:1,clientX:100,clientY:240});
+    assert.equal(events.length,1,'deliberate swipe commits before the finger is lifted, even with the trail disabled');
+    assert.equal(events[0].detail.source,'bottom-swipe');
+    handlers.get('pointermove')({pointerId:1,clientX:100,clientY:150});
     handlers.get('pointerup')({pointerId:1,clientX:100,clientY:150});
-    assert.equal(events.length,1);assert.equal(events[0].detail.direction,1);
+    assert.equal(events.length,1,'continuing and releasing the same swipe never navigates twice');assert.equal(events[0].detail.direction,1);
     let cancelled=false;handlers.get('click')({preventDefault(){cancelled=true;},stopPropagation(){}});assert.equal(cancelled,true);
     handlers.get('pointerdown')({pointerType:'touch',isPrimary:true,pointerId:3,clientX:150,clientY:300,target:new Element()});
     handlers.get('pointerup')({pointerId:3,clientX:60,clientY:300});
@@ -148,8 +152,8 @@ test('portrait menu-pad trail follows input inside the pad and clears after the 
   const saved=Object.fromEntries(keys.map(key=>[key,globalThis[key]]));
   try {
     const handlers=new Map(),effects=[],frames=[];
-    const attributes=new Map();const path={style:{},setAttribute:(key,value)=>attributes.set(key,value)};
-    const surface={addEventListener:(key,fn)=>handlers.set(key,fn),removeEventListener:key=>handlers.delete(key),getBoundingClientRect:()=>({left:70,right:270,top:300,bottom:396}),setPointerCapture(){}};
+    let measurements=0;const attributes=new Map();const path={style:{},setAttribute:(key,value)=>attributes.set(key,value)};
+    const surface={addEventListener:(key,fn)=>handlers.set(key,fn),removeEventListener:key=>handlers.delete(key),getBoundingClientRect:()=>{measurements++;return {left:70,right:270,top:300,bottom:396};},setPointerCapture(){}};
     globalThis.Element=class {closest(selector){return selector==='.clipt-bottom-swipe-zone'?surface:null;}};
     globalThis.document={documentElement:{classList:{contains:()=>false}},querySelector:()=>null};
     globalThis.window={dispatchEvent(){},addEventListener(){},removeEventListener(){}};
@@ -165,6 +169,7 @@ test('portrait menu-pad trail follows input inside the pad and clears after the 
     assert.equal(attributes.get('d'),'M150,340');assert.equal(path.style.opacity,'1');
     handlers.get('pointermove')({pointerId:1,clientX:900,clientY:0});frames.shift()();
     assert.equal(attributes.get('d'),'M150,340 Q150,340 210,320','trail points clamp to the actual menu pad');
+    assert.equal(measurements,1,'layout is measured once at gesture start, not on each move');
     handlers.get('pointerup')({pointerId:1,clientX:150,clientY:310});assert.equal(path.style.opacity,'0');
     cleanup();assert.equal(attributes.get('d'),'');assert.equal(handlers.size,0);
   } finally {Object.assign(globalThis,saved);}

@@ -1,0 +1,11 @@
+/* Video-feed backdrop extends through the device safe areas; other pages keep their theme. */
+html:has(.clipt-fyp),
+body:has(.clipt-fyp),
+body:has(.clipt-fyp) #root,
+body:has(.clipt-fyp) .app-container.app-container,
+body:has(.clipt-fyp) .page-content,
+body:has(.clipt-fyp) .clipt-fyp { background: #000 !important; }
+body:has(.clipt-fyp) .app-container::before,
+body:has(.clipt-fyp) .app-container::after { display: none; }
+/* One restrained glow keeps the ribbon sharp without three stacked filters. */
+.clipt-fyp .clipt-swipe-trail path { filter: drop-shadow(0 0 4px #a855f7); transition: opacity 300ms ease-out; }

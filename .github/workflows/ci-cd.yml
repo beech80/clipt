@@ -72,6 +72,12 @@ jobs:
           retention-days: 1
       - name: Posting failures, safe retry and paginated message history
         run: npx playwright test tests/create-clip.spec.ts tests/messages-history.spec.ts tests/profile-discovery-controls.spec.ts --reporter=line
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: source-controller-evidence
+          path: test-results/
+          retention-days: 3
       - name: Private media upload and playback over local HTTPS
         run: npx playwright test -c playwright.media.config.ts --reporter=line
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -103,6 +109,8 @@ jobs:
       - run: npx playwright install webkit
       - name: Real HEVC and MOV conversion through private upload and playback
         run: npx playwright test -c playwright.media.config.ts --browser=webkit --grep "native conversion|feed playback" --reporter=line
+      - name: Repeat WebKit clip transitions to check the visibility race
+        run: npx playwright test -c playwright.media.config.ts --browser=webkit --grep "feed playback starts" --repeat-each=3 --output=test-results/webkit-repeat --reporter=line
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
