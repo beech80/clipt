@@ -16,5 +16,16 @@ test('canonical channels preserve duplicate IDs and content while locking catalo
  const input=[700,'Fortnite',null,2017,'PC',true];const a=await db.query('select cache_verified_game($1,$2,$3,$4,$5,$6) game',input),b=await db.query('select cache_verified_game($1,$2,$3,$4,$5,$6) game',input);assert.equal(a.rows[0].game.id,b.rows[0].game.id);assert.equal(a.rows[0].game.id,group[0]);
  await db.query("select cache_verified_game(701,'Same name',null,1993,'PC',false)");await db.query("select cache_verified_game(702,'Same name',null,2016,'Console',false)");assert.equal((await db.query("select count(*)::int count from games where name='Same name'")).rows[0].count,2);
  await assert.rejects(db.query("select cache_verified_game(703,'Bad cover','https://unrelated.example/cover.jpg',null,null)"),/Invalid verified/);
+ const publicFile=readdirSync(new URL('../../supabase/migrations/',import.meta.url)).find(name=>name.endsWith('_public_game_library.sql'));
+ await db.exec('reset role');await db.exec(readFileSync(new URL('../../supabase/migrations/'+publicFile,import.meta.url),'utf8'));
+ await db.exec('set role authenticated');await assert.rejects(db.query("select cache_verified_public_game('Q1','Fake',null,null)"),/permission denied/);
+ await db.exec('reset role;set role service_role');
+ const linked=(await db.query("select cache_verified_public_game('Q1','Fortnite',2017,'PC',700,false) game")).rows[0].game;
+ assert.equal(linked.id,group[0]);assert.equal(linked.wikidata_id,'Q1');
+ assert.equal((await db.query("select cache_verified_public_game('Q1','Fortnite',2017,'PC',700,false) game")).rows[0].game.id,linked.id);
+ const pub1=(await db.query("select cache_verified_public_game('Q2','Same title',1993,'PC',null,false) game")).rows[0].game;
+ const pub2=(await db.query("select cache_verified_public_game('Q3','Same title',2016,'Console',null,false) game")).rows[0].game;
+ assert.notEqual(pub1.id,pub2.id);assert.equal((await db.query('select game_id from posts')).rows[0].game_id,group[1]);
+ await assert.rejects(db.query("select cache_verified_public_game('https://bad','Fake',2017,null)"),/Invalid verified/);
  }finally{await db.close();}
 });

@@ -3017,6 +3017,7 @@ export type Database = {
       }
       games: {
         Row: {
+          wikidata_id: string | null
           canonical_game_id: string | null
           igdb_id: number | null
           release_year: number | null
@@ -3027,6 +3028,7 @@ export type Database = {
           name: string
         }
         Insert: {
+          wikidata_id?: string | null
           canonical_game_id?: string | null
           igdb_id?: number | null
           release_year?: number | null
@@ -3037,6 +3039,7 @@ export type Database = {
           name: string
         }
         Update: {
+          wikidata_id?: string | null
           canonical_game_id?: string | null
           igdb_id?: number | null
           release_year?: number | null

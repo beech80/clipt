@@ -19,13 +19,14 @@ export function GameCatalogLookup({term='',onChoose,disabled=false}:{term?:strin
   <Button type="button" variant="outline" onClick={()=>setOpen(value=>!value)} aria-expanded={open} disabled={disabled||choose.isPending}><Gamepad2 aria-hidden="true" className="mr-2 h-4 w-4"/>{open?'Hide full catalog':term?'Search full game catalog':'Browse full game catalog'}</Button>
   {open&&<>{!user?<p>Sign in to search the full game catalog.</p>:<>
   <p className="text-sm text-muted-foreground">Search or browse the provider catalog. Select a real game to open its Clipt channel. Availability depends on catalog coverage.</p>
+  {results.data?.pages[0].total!==undefined&&<p className="text-sm text-muted-foreground">{results.data.pages[0].total.toLocaleString()} matching game entries</p>}
   {results.isPending&&<p role="status">Loading full catalog…</p>}
   {results.isError&&<div role="alert"><p>Full catalog search is unavailable. Configured Clipt channels remain available.</p><Button type="button" onClick={()=>void results.refetch()}>Retry full catalog</Button></div>}
   {choose.isError&&<p role="alert">{choose.error.message}</p>}
   {!results.isPending&&!results.isError&&rows.length===0&&<p>No provider games match this search.</p>}
-  <ul className="space-y-2">{rows.map(game=><li key={game.id}><Button type="button" variant="outline" className="h-auto min-h-11 w-full justify-start whitespace-normal text-left" disabled={disabled||choose.isPending} onClick={()=>choose.mutate(game.id)}>{gameLabel({...game,igdb_id:game.id})}</Button></li>)}</ul>
+  <ul className="space-y-2">{rows.map(game=><li key={game.id}><Button type="button" variant="outline" className="h-auto min-h-11 w-full justify-start whitespace-normal text-left" disabled={disabled||choose.isPending} onClick={()=>choose.mutate(game.id)}>{gameLabel(game)}</Button></li>)}</ul>
   {results.hasNextPage&&<Button type="button" disabled={disabled||results.isFetching||choose.isPending} onClick={()=>void results.fetchNextPage()}>Load more provider games</Button>}
-  <a href="https://www.igdb.com/" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-sm underline">Game data from IGDB</a>
+  <a href={results.data?.pages[0].source==='wikidata'?'https://www.wikidata.org/wiki/Wikidata:Data_access':'https://www.igdb.com/'} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-sm underline">Game data from {results.data?.pages[0].source==='wikidata'?'Wikidata':'IGDB'}</a>
   </>}</>}
  </section>;
 }

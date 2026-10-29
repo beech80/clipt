@@ -1,13 +1,13 @@
-export type CatalogAction={action:'search';term:string;page:number}|{action:'resolve';id:number};
+export type CatalogAction={action:'search';term:string;page:number}|{action:'resolve';id:number|string};
 export function catalogAction(body:Record<string,unknown>):CatalogAction{
- if(body.action==='resolve'){if(!Number.isSafeInteger(body.id)||Number(body.id)<=0)throw Error('Invalid game ID');return {action:'resolve',id:Number(body.id)};}
+ if(body.action==='resolve'){if(typeof body.id==='string'&&/^Q[1-9][0-9]{0,15}$/.test(body.id))return {action:'resolve',id:body.id};if(!Number.isSafeInteger(body.id)||Number(body.id)<=0)throw Error('Invalid game ID');return {action:'resolve',id:Number(body.id)};}
  if(body.action!=='search'||typeof body.term!=='string'||body.term.length>80||/[\x00-\x1f]/.test(body.term)||!Number.isSafeInteger(body.page)||Number(body.page)<0||Number(body.page)>100000)throw Error('Invalid catalog search');
  return {action:'search',term:body.term.trim(),page:Number(body.page)};
 }
 export const CATALOG_PAGE_SIZE=20;
 const fields='fields id,name,cover.image_id,first_release_date,platforms.name;';
 export function catalogQuery(action:CatalogAction){
- if(action.action==='resolve')return fields+' where id = '+action.id+'; limit 1;';
+ if(action.action==='resolve'){if(typeof action.id!=='number')throw Error('Use the public catalog resolver.');return fields+' where id = '+action.id+'; limit 1;';}
  return fields+' '+(action.term?'search '+JSON.stringify(action.term)+';':'sort id asc;')+' limit 21; offset '+action.page*CATALOG_PAGE_SIZE+';';
 }
 export type CatalogGame={id:number;name:string;cover_url:string|null;release_year:number|null;platforms:string|null};

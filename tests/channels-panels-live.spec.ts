@@ -101,3 +101,17 @@ test('selecting a provider game on the post form preserves intentional publishin
  await page.goto('/new-post');await page.getByRole('button',{name:'Browse full game catalog',exact:true}).click();await page.getByRole('button',{name:'Game Beta',exact:true}).click();await expect(page.getByLabel('Game / category',{exact:true})).toHaveValue(gameB);expect(writes).toBe(0);
  }finally{await service.close();}
 });
+
+test('public game library shows its count and opens a selected game with a CLIPT UUID',async({page})=>{
+ const service=await fixture(page);try{
+ await page.route('**/functions/v1/game-catalog',async route=>{
+  const body=route.request().postDataJSON();
+  if(body.action==='resolve'){expect(body.id).toBe('Q49740');return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({game:{id:gameB,name:'Game Beta'}})});}
+  return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({source:'wikidata',total:178559,games:[{id:'Q49740',name:'Public game',release_year:1993,platforms:'PC',cover_url:null}],more:false})});
+ });
+ await page.goto('/top-games');await page.getByRole('button',{name:'Browse full game catalog',exact:true}).click();
+ await expect(page.getByText('178,559 matching game entries',{exact:true})).toBeVisible();
+ await expect(page.getByRole('link',{name:'Game data from Wikidata',exact:true})).toHaveAttribute('href','https://www.wikidata.org/wiki/Wikidata:Data_access');
+ await page.getByRole('button',{name:'Public game · 1993 · PC',exact:true}).click();await expect(page).toHaveURL(url=>url.pathname==='/game/'+gameB);
+ }finally{await service.close();}
+});
