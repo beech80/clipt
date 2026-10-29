@@ -2,14 +2,17 @@ import {useEffect,useRef,useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {useInfiniteQuery,useMutation,useQueryClient} from '@tanstack/react-query';
 import {Gamepad2} from 'lucide-react';
+import {Input} from '@/components/ui/input';
 import {Button} from '@/components/ui/button';
 import {providerCatalogPage,chooseProviderGame} from '@/lib/provider-game-catalog';
 import {gameLabel} from '@/lib/game-catalog';
 import {useAuth} from '@/contexts/AuthContext';
 export function GameCatalogLookup({term='',onChoose,disabled=false}:{term?:string;disabled?:boolean;onChoose?:(game:{id:string;name:string})=>void}){
- const {user}=useAuth();const navigate=useNavigate(),client=useQueryClient();const [open,setOpen]=useState(false);const alive=useRef(true);const unavailable=useRef(disabled);unavailable.current=disabled;
+ const {user}=useAuth();const navigate=useNavigate(),client=useQueryClient();const [open,setOpen]=useState(false);const [lookupTerm,setLookupTerm]=useState(term);const [queryTerm,setQueryTerm]=useState(term.trim().slice(0,80));
+ useEffect(()=>setLookupTerm(term),[term]);
+ useEffect(()=>{const timer=setTimeout(()=>setQueryTerm(lookupTerm.trim().slice(0,80)),350);return()=>clearTimeout(timer);},[lookupTerm]);const alive=useRef(true);const unavailable=useRef(disabled);unavailable.current=disabled;
  useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
- const results=useInfiniteQuery({queryKey:['provider-game-catalog',user?.id,term],enabled:open&&Boolean(user),retry:false,initialPageParam:0,queryFn:({pageParam,signal})=>providerCatalogPage(term,pageParam,signal),getNextPageParam:(last,pages)=>last.more?pages.length:undefined});
+ const results=useInfiniteQuery({queryKey:['provider-game-catalog',user?.id,queryTerm],enabled:open&&Boolean(user)&&queryTerm===lookupTerm.trim().slice(0,80),retry:false,initialPageParam:0,queryFn:({pageParam,signal})=>providerCatalogPage(queryTerm,pageParam,signal),getNextPageParam:(last,pages)=>last.more?pages.length:undefined});
  const choose=useMutation({mutationFn:chooseProviderGame,onSuccess:game=>{
   for(const key of ['channel-games','game-catalog','complete-catalog-search','create-clip-games','stream-game-catalog','live-game-catalog'])void client.invalidateQueries({queryKey:[key]});
   if(!alive.current||unavailable.current)return;if(onChoose)onChoose(game);else navigate('/game/'+game.id);
@@ -18,6 +21,7 @@ export function GameCatalogLookup({term='',onChoose,disabled=false}:{term?:strin
  return <section className="space-y-3" aria-label="Full game catalog">
   <Button type="button" variant="outline" onClick={()=>setOpen(value=>!value)} aria-expanded={open} disabled={disabled||choose.isPending}><Gamepad2 aria-hidden="true" className="mr-2 h-4 w-4"/>{open?'Hide full catalog':term?'Search full game catalog':'Browse full game catalog'}</Button>
   {open&&<>{!user?<p>Sign in to search the full game catalog.</p>:<>
+  <label className="block space-y-1"><span>Search full game catalog</span><Input type="search" aria-label="Search full game catalog" className="min-h-11" maxLength={80} value={lookupTerm} disabled={disabled||choose.isPending} onChange={event=>setLookupTerm(event.target.value)} placeholder="Find a game by name"/></label>
   <p className="text-sm text-muted-foreground">Search or browse the provider catalog. Select a real game to open its Clipt channel. Availability depends on catalog coverage.</p>
   {results.data?.pages[0].total!==undefined&&<p className="text-sm text-muted-foreground">{results.data.pages[0].total.toLocaleString()} matching game entries</p>}
   {results.isPending&&<p role="status">Loading full catalog…</p>}

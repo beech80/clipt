@@ -103,15 +103,16 @@ test('selecting a provider game on the post form preserves intentional publishin
 });
 
 test('public game library shows its count and opens a selected game with a CLIPT UUID',async({page})=>{
- const service=await fixture(page);try{
+ const service=await fixture(page);const searchTerms:string[]=[];try{
  await page.route('**/functions/v1/game-catalog',async route=>{
   const body=route.request().postDataJSON();
   if(body.action==='resolve'){expect(body.id).toBe('Q49740');return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({game:{id:gameB,name:'Game Beta'}})});}
-  return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({source:'wikidata',total:178559,games:[{id:'Q49740',name:'Public game',release_year:1993,platforms:'PC',cover_url:null}],more:false})});
+  searchTerms.push(body.term);return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({source:'wikidata',total:178559,games:[{id:'Q49740',name:'Public game',release_year:1993,platforms:'PC',cover_url:null}],more:false})});
  });
  await page.goto('/top-games');await page.getByRole('button',{name:'Browse full game catalog',exact:true}).click();
  await expect(page.getByText('178,559 matching game entries',{exact:true})).toBeVisible();
  await expect(page.getByRole('link',{name:'Game data from Wikidata',exact:true})).toHaveAttribute('href','https://www.wikidata.org/wiki/Wikidata:Data_access');
+ await page.getByRole('searchbox',{name:'Search full game catalog',exact:true}).fill('Elden Ring');await expect.poll(()=>searchTerms.at(-1)).toBe('Elden Ring');
  await page.getByRole('button',{name:'Public game · 1993 · PC',exact:true}).click();await expect(page).toHaveURL(url=>url.pathname==='/game/'+gameB);
  }finally{await service.close();}
 });

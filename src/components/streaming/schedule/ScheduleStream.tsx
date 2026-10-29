@@ -1,3 +1,4 @@
+import {GameCatalogLookup} from '@/components/GameCatalogLookup';
 import {completeGameCatalog, gameLabel} from '@/lib/game-catalog';
 import { useRef, useState } from 'react';
 import { Calendar, Clock, Tag, Info, Gamepad, Check } from 'lucide-react';
@@ -239,6 +240,7 @@ export function ScheduleStream({
                         )}
                       </SelectContent>
                     </Select>
+                    <GameCatalogLookup disabled={scheduleMutation.isPending} onChoose={game=>{setGames(current=>current.some(row=>row.id===game.id)?current:[...current,game]);field.onChange(game.id);}}/>
                     <FormMessage />
                   </FormItem>
                 )}

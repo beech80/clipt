@@ -25,7 +25,7 @@ test('canonical channels preserve duplicate IDs and content while locking catalo
  assert.equal((await db.query("select cache_verified_public_game('Q1','Fortnite',2017,'PC',700,false) game")).rows[0].game.id,linked.id);
  const pub1=(await db.query("select cache_verified_public_game('Q2','Same title',1993,'PC',null,false) game")).rows[0].game;
  const pub2=(await db.query("select cache_verified_public_game('Q3','Same title',2016,'Console',null,false) game")).rows[0].game;
- assert.notEqual(pub1.id,pub2.id);assert.equal((await db.query('select game_id from posts')).rows[0].game_id,group[1]);
+ assert.notEqual(pub1.id,pub2.id);await db.exec('reset role');assert.equal((await db.query('select game_id from posts')).rows[0].game_id,group[1]);await db.exec('set role service_role');
  await assert.rejects(db.query("select cache_verified_public_game('https://bad','Fake',2017,null)"),/Invalid verified/);
  }finally{await db.close();}
 });
