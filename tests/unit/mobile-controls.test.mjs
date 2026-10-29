@@ -138,11 +138,11 @@ test('portrait gesture routes one swipe, cancels media click and does not attach
 test('full panel temporarily disables background interaction and restores its prior inert state',()=>{
   const saved={document:globalThis.document,HTMLElement:globalThis.HTMLElement};
   try{
-    const effects=[];globalThis.HTMLElement=class{constructor(inert=false,containsPanel=false){this.inert=inert;this.containsPanel=containsPanel;this.attributes=new Map();}contains(){return this.containsPanel;}getAttribute(name){return this.attributes.get(name)??null;}setAttribute(name,value){this.attributes.set(name,value);}removeAttribute(name){this.attributes.delete(name);}};
+    let stateSlot=0;const effects=[];globalThis.HTMLElement=class{constructor(inert=false,containsPanel=false){this.inert=inert;this.containsPanel=containsPanel;this.attributes=new Map();}contains(){return this.containsPanel;}getAttribute(name){return this.attributes.get(name)??null;}setAttribute(name,value){this.attributes.set(name,value);}removeAttribute(name){this.attributes.delete(name);}};
     const app=new HTMLElement(),alreadyInert=new HTMLElement(true),portal=new HTMLElement(false,true);
     globalThis.document={body:{children:[app,alreadyInert,portal]}};
     const {AdjustablePanel}=load('components/AdjustablePanel.tsx',{
-      react:{...React,useCallback:fn=>fn,useEffect:fn=>effects.push(fn),useRef:()=>({current:{}}),useState:initial=>[initial==='half'?'full':initial,()=>{}]},
+      react:{...React,useCallback:fn=>fn,useEffect:fn=>effects.push(fn),useRef:()=>({current:{}}),useState:initial=>[stateSlot++===1?{}:initial==='half'?'full':initial,()=>{}]},
       '@/components/ui/dialog':{DialogContent:()=>null,DialogClose:()=>null},'@/lib/mobile-controls':module.exports,
       '@/hooks/useMobileControlsPreferences':{useMobileControlsPreferences:()=>({preferences:{hand:'right'}})},'./AdjustablePanel.css':{},
     });
