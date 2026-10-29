@@ -242,7 +242,8 @@ test('Create/Post distinguishes game loading, empty results and retryable errors
 test('Create/Post preserves actual game IDs, caption limit and disabled empty upload',()=>{
   const html=createMarkup({data:[{id:'recorded-game',name:'Recorded game'}]});
   assert.match(html,/<option value="recorded-game">Recorded game<\/option>/);
-  assert.match(html,/aria-describedby="clip-caption-count"/);
+  assert.match(html,/aria-describedby="clip-caption-help clip-caption-count"/);
+  assert.match(html,/id="clip-caption-help"/);assert.match(html,/Required before posting/);
   assert.match(html,/maxLength="2000"/);
   assert.match(html,/0 \/ 2,000 characters/);
   assert.match(html,/<button[^>]*disabled[^>]*>Post Clipt/);
