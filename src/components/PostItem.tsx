@@ -786,6 +786,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
       className={`relative w-full gaming-card transition-opacity duration-300 ${
         isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
       } ${highlight ? 'ring-2 ring-blue-500' : ''}`}
+      style={cinematic ? { animation: 'none' } : undefined}
       data-post-id={postId}
       data-active-clip={cinematic ? String(active) : undefined}
     >
@@ -844,6 +845,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
           videoUrl={post.video_url}
           postId={postId}
           allowFullscreen={!cinematic}
+          active={active}
+          autoPlay={cinematic}
           frameAspectRatio={watchPage ? '16 / 19' : undefined}
         />
       </div>

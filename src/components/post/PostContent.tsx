@@ -14,9 +14,11 @@ interface PostContentProps {
   postId: string;
   frameAspectRatio?: string;
   allowFullscreen?: boolean;
+  active?: boolean;
+  autoPlay?: boolean;
 }
 
-const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullscreen = true }: PostContentProps) => {
+const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullscreen = true, active = true, autoPlay = false }: PostContentProps) => {
   const lastVideoTime = useRef(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const photoTriggerRef = useRef<HTMLButtonElement>(null);
@@ -49,6 +51,8 @@ const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullsc
   const [showFullscreenGallery, setShowFullscreenGallery] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [mediaRetryRevision, setMediaRetryRevision] = useState(0);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [slowVideo, setSlowVideo] = useState(false);
   const imageAccess = usePrivateMediaUrls(videoUrl ? [] : imageUrls);
   const imageSources = imageAccess.map(image => image.src ?? '');
   const imageSourceKey = imageSources.join('|');
@@ -70,7 +74,8 @@ const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullsc
     setIsMediaLoaded(false);
     setIsMediaError(false);
     setVideoErrorCode(null);
-  }, [playbackUrl]);
+    setIsVideoPlaying(false);
+  }, [playbackUrl, mediaRetryRevision]);
 
   useEffect(() => {
     setIsMediaLoaded(false);
@@ -80,20 +85,42 @@ const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullsc
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    let visible = false;
+    let disposed = false;
+    let started = false;
     const pause = () => { if (document.hidden) video.pause(); };
     const observer = new IntersectionObserver(entries => {
-      visible = entries[0].intersectionRatio >= 0.7;
-      if (!visible || document.hidden) video.pause();
+      const visible = entries[0].intersectionRatio >= 0.7;
+      if (!visible || !active || document.hidden) { video.pause(); return; }
+      if (autoPlay && !started) {
+        started = true;
+        video.muted = true;
+        // A denied autoplay stays recoverable through the explicit Play gesture.
+        void video.play().catch(() => { if (!disposed) setIsVideoPlaying(false); });
+      }
     }, { threshold: [0, 0.7, 1] });
     observer.observe(video);
     document.addEventListener('visibilitychange', pause);
-    return () => { observer.disconnect(); document.removeEventListener('visibilitychange', pause); video.pause(); };
-  }, [playbackUrl, isMediaError]);
+    return () => { disposed = true; observer.disconnect(); document.removeEventListener('visibilitychange', pause); video.pause(); };
+  }, [playbackUrl, mediaRetryRevision, isMediaError, active, autoPlay]);
+
+  useEffect(() => {
+    setSlowVideo(false);
+    if (!videoUrl || !playbackUrl || isMediaLoaded || isMediaError || videoAccess.error) return;
+    const timer = window.setTimeout(() => setSlowVideo(true), 15_000);
+    return () => window.clearTimeout(timer);
+  }, [videoUrl, playbackUrl, mediaRetryRevision, isMediaLoaded, isMediaError, videoAccess.error]);
+
+  function playVideo() {
+    const video = videoRef.current;
+    if (!video || !active) return;
+    // Keep play() directly inside the click handler for Safari's user gesture.
+    void video.play().catch(() => setIsVideoPlaying(false));
+  }
 
   const handleMediaLoad = () => {
     setIsMediaLoaded(true);
     setIsMediaError(false);
+    setSlowVideo(false);
   };
 
   const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
@@ -182,9 +209,9 @@ const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullsc
             </div>
           ) : (
             <>
-              {!isMediaLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div role="status" className="animate-pulse">Loading video...</div>
+              {!isMediaLoaded && !slowVideo && (
+                <div className="pointer-events-none absolute inset-x-2 top-2 flex justify-center">
+                  <div role="status" className="rounded bg-black/80 px-3 py-2 text-white">Loading video...</div>
                 </div>
               )}
               {!videoAccess.isLoading && playbackUrl && <video
@@ -194,20 +221,35 @@ const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullsc
                 className="w-full h-full object-contain"
                 controls
                 playsInline
+                muted={autoPlay}
+                loop={autoPlay}
                 onPlay={() => {
+                  if (!active || document.hidden) { videoRef.current?.pause(); return; }
+                  setIsVideoPlaying(true);
                   playingSource.current = { postId, source: videoUrl, reference: playbackReference };
                   document.querySelectorAll('video').forEach(video => { if (video !== videoRef.current) video.pause(); });
                 }}
-                preload="metadata"
+                preload={autoPlay && active ? "auto" : "metadata"}
+                onPause={() => setIsVideoPlaying(false)}
+                onEnded={() => setIsVideoPlaying(false)}
+                onPlaying={() => { setIsVideoPlaying(true); handleMediaLoad(); }}
+                onCanPlay={handleMediaLoad}
                 onLoadedData={handleMediaLoad}
-                onTimeUpdate={event => { if (event.currentTarget.readyState >= 2 && event.currentTarget.currentTime > 0) lastVideoTime.current = event.currentTarget.currentTime; }}
+                onTimeUpdate={event => { if (event.currentTarget.readyState >= 2 && event.currentTarget.currentTime > 0) { lastVideoTime.current = event.currentTarget.currentTime; handleMediaLoad(); } }}
                 onLoadedMetadata={event => {
                   const video = event.currentTarget;
+                  if (video.videoWidth > 0 && video.videoHeight > 0) handleMediaLoad();
                   if (lastVideoTime.current > 0 && Number.isFinite(video.duration)) video.currentTime = Math.min(lastVideoTime.current, Math.max(0, video.duration - 0.05));
                 }}
                 onError={handleVideoError}
                 onContextMenu={(e) => e.preventDefault()}
               />}
+              {active && playbackUrl && !videoAccess.isLoading && !isVideoPlaying && <button type="button" aria-label="Play video"
+                onClick={playVideo} className="absolute left-1/2 top-1/2 z-10 min-h-11 min-w-11 -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple-300 bg-black/80 px-5 py-3 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-200">Play video</button>}
+              {slowVideo && active && <div role="status" className="absolute inset-x-2 top-2 z-10 rounded bg-black/90 p-2 text-center text-white">
+                <p>Video is taking longer to load. Tap Play video, or retry.</p>
+                <button type="button" disabled={retrying} onClick={() => void retryMedia()} className="min-h-11 px-3 underline">Retry video</button>
+              </div>}
             </>
           )}
         </div>
@@ -297,7 +339,7 @@ const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullsc
       ) : null}
 
       {/* Loading Indicator */}
-      {!isMediaLoaded && !isMediaError && !videoAccess.error && (
+      {!videoUrl && !isMediaLoaded && !isMediaError && !videoAccess.error && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/50">
           <span role="status" className="sr-only">Loading media…</span><div aria-hidden="true" className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
         </div>

@@ -13,7 +13,7 @@ const owner='00000000-0000-4000-8000-000000000077';
 const postId='00000000-0000-4000-8000-000000000078';
 const fixturePath=fileURLToPath(new URL('./fixtures/clip-test-h264.mp4',import.meta.url));
 const bytes=readFileSync(fixturePath);
-async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false,converted=false}={}) {
+async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false,converted=false,neighbor=false}={}) {
   const user={id:owner,aud:'authenticated',role:'authenticated',email:'fixture@example.invalid',app_metadata:{},user_metadata:{},created_at:'2026-09-19T00:00:00Z',factors:[]};
   const profile={id:owner,username:'upload_tester',display_name:'Upload Tester',avatar_url:null,bio:'Recorded test profile'};
   await page.addInitScript(({user})=>{
@@ -94,7 +94,7 @@ async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false
         if(!url.searchParams.has('user_id')) {
           expect(url.searchParams.get('order')).toBe('created_at.desc,id.desc');newestFirst=true;
         }
-        data=post?[post]:[];
+        data=post?(neighbor?[post,{...post,id:'00000000-0000-4000-8000-000000000079'}]:[post]):[];
       }
     }
     if(path==='/rest/v1/post_video_renditions') {
@@ -134,7 +134,7 @@ test('upload to private playback, creator profile and hashtag results works whil
     await page.setViewportSize({width:390,height:844});await publish(page);
     const video=page.locator('[data-active-clip="true"] video');
     await expect(video).toBeVisible();
-    await video.evaluate(async element=>{element.loop=true;element.muted=true;element.dataset.continuity='original';await element.play();});
+    await video.evaluate(element=>{element.dataset.continuity='original';});
     await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
     const originalSrc=await video.getAttribute('src');
     expect(service.stats().uploads).toBe(1);expect(service.stats().uploadedBytesMatch).toBe(true);expect(service.stats().reads).toBeGreaterThan(0);
@@ -237,9 +237,12 @@ for(const format of ['mov','hevc'] as const) {
       expect(service.stats().convertedProof?.codec).toMatch(/^avc[13]$/);
       if(format==='hevc')expect(service.stats().convertedAudio).toBe(true);
       expect(service.stats().uploads).toBe(1);expect(service.stats().publicReads).toBe(0);
+      const feedVideo=page.locator('[data-active-clip="true"] video');
+      await expect.poll(()=>feedVideo.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
+      await expect(page.getByText('Loading video...',{exact:true})).toHaveCount(0);
       await page.goto('/post/'+postId);
       const video=page.locator('.clipt-watch-media video');await expect(video).toBeVisible();
-      await video.evaluate(async element=>{element.muted=true;element.loop=true;await element.play();});
+      await page.getByRole('button',{name:'Play video',exact:true}).click();
       await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
       await page.screenshot({path:info.outputPath('converted-'+format+'-playing.png')});
     } finally {service.releaseRendition();service.releaseReward();await service.close();}
@@ -276,5 +279,62 @@ test('cancelling video conversion keeps the caption and never posts',async({page
     await expect(page.getByRole('button',{name:'Post Clipt',exact:true})).toBeDisabled();
     await expect(page.getByLabel('Caption',{exact:true})).toHaveValue('Keep my cancelled recording caption');
     expect(service.stats().uploads).toBe(0);
+  } finally {service.releaseRendition();service.releaseReward();await service.close();}
+});
+
+
+test('feed playback recovers through a real tap when autoplay and preload events are blocked',async({page},info)=>{
+  const service=await setup(page);
+  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+  try {
+    await page.addInitScript(()=>{
+      let allow=false;
+      const nativePlay=HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play=function(){
+        if(this.closest('.clipt-cinematic-media')&&!allow)return Promise.reject(new DOMException('Fixture requires a tap','NotAllowedError'));
+        return nativePlay.call(this);
+      };
+      document.addEventListener('click',event=>{if((event.target as Element)?.closest('button[aria-label="Play video"]'))allow=true;},true);
+      for(const type of ['loadedmetadata','loadeddata','canplay'])document.addEventListener(type,event=>{
+        if(event.target instanceof HTMLVideoElement&&event.target.closest('.clipt-cinematic-media'))event.stopImmediatePropagation();
+      },true);
+    });
+    await page.setViewportSize({width:390,height:844});await publish(page);
+    const video=page.locator('[data-active-clip="true"] video');
+    const play=page.getByRole('button',{name:'Play video',exact:true});
+    await expect(play).toBeVisible();await expect(page.getByText('Loading video...',{exact:true})).toBeVisible();
+    await page.screenshot({path:info.outputPath('feed-tap-to-play.png')});
+    await play.click();
+    await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
+    await expect(page.getByText('Loading video...',{exact:true})).toHaveCount(0);
+    await expect(play).toHaveCount(0);expect(errors).toEqual([]);
+    await page.screenshot({path:info.outputPath('feed-recovered-playing.png')});
+    expect(service.stats().publicReads).toBe(0);expect(service.stats().reads).toBeGreaterThan(0);
+  } finally {service.releaseRendition();service.releaseReward();await service.close();}
+});
+
+test('feed playback starts only the active visible clip and pauses the previous player',async({page})=>{
+  const service=await setup(page,{neighbor:true});
+  try {
+    await page.setViewportSize({width:390,height:844});await publish(page);
+    const first=page.locator('[data-slide-index="0"] video');
+    const second=page.locator('[data-slide-index="1"] video');
+    await expect.poll(()=>first.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
+    expect(await first.evaluate(element=>element.muted)).toBe(true);
+    await expect.poll(()=>second.evaluate(element=>element.paused)).toBe(true);
+    await first.evaluate(element=>{element.dataset.continuity='retained';});
+    const track=page.getByRole('region',{name:'Clipts horizontal feed',exact:true});
+    await track.focus();await track.press('ArrowRight');
+    await expect(page.locator('[data-slide-index="1"] [data-active-clip="true"]')).toBeVisible();
+    await expect.poll(()=>second.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
+    await expect.poll(()=>first.evaluate(element=>element.paused)).toBe(true);
+    // Wait for the first smooth scroll to settle before requesting its reverse.
+    await expect.poll(()=>second.evaluate(element=>{const track=element.closest('[data-horizontal-feed]')!.getBoundingClientRect();const slide=element.closest('[data-slide-index]')!.getBoundingClientRect();return Math.abs(slide.left+slide.width/2-track.left-track.width/2);})).toBeLessThan(2);
+    await track.focus();await track.press('ArrowLeft');
+    await expect(page.locator('[data-slide-index="0"] [data-active-clip="true"]')).toBeVisible();
+    await expect.poll(()=>first.evaluate(element=>element.paused)).toBe(false);
+    await expect.poll(()=>second.evaluate(element=>element.paused)).toBe(true);
+    await expect(first).toHaveAttribute('data-continuity','retained');
+    expect(service.stats().publicReads).toBe(0);
   } finally {service.releaseRendition();service.releaseReward();await service.close();}
 });

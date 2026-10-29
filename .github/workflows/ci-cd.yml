@@ -102,7 +102,7 @@ jobs:
           path: tests/fixtures/
       - run: npx playwright install webkit
       - name: Real HEVC and MOV conversion through private upload and playback
-        run: npx playwright test -c playwright.media.config.ts --browser=webkit --grep "native conversion" --reporter=line
+        run: npx playwright test -c playwright.media.config.ts --browser=webkit --grep "native conversion|feed playback" --reporter=line
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
