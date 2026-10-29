@@ -53,9 +53,11 @@ export const StreamPlayer = ({
         throw new Error('Unsupported playback URL');
       }
       const isHls = /\.m3u8$/i.test(url.pathname);
-      // Prefer tested MSE playback where supported; canPlayType is not proof
-      // that a desktop browser can successfully load a native HLS source.
-      if (isHls && Hls.isSupported()) {
+      // Safari's native HLS avoids its MSE/TS initialization stall. Chromium
+      // still uses Hls.js: its canPlayType response alone is not reliable.
+      const nativeSafari = isHls && Boolean(video.canPlayType('application/vnd.apple.mpegurl')) && navigator.vendor === 'Apple Computer, Inc.';
+      if (nativeSafari) { video.src = url.href; }
+      else if (isHls && Hls.isSupported()) {
         hls = new Hls({ maxBufferLength: 30, backBufferLength: 30 });
         hls.on(Hls.Events.ERROR, (_event, data) => {
           if (data.fatal) { hls?.destroy(); setPlaybackError(streamPlaybackError(data.type, data.response?.code)); }
