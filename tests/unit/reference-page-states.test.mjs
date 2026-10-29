@@ -226,7 +226,7 @@ function createMarkup(result) {
     '@/components/ui/textarea':{Textarea:props=>React.createElement('textarea',props)},
     '@/components/ui/back-button':{BackButton:()=>React.createElement('button',null,'Back')},
     '@/lib/supabase':{supabase:{}},
-    '@/lib/clip-upload':{}, '@/lib/photo-upload':{}, '@/lib/search-pattern':{}, '@/lib/clip-reward':{},
+    '@/lib/clip-upload':load('lib/clip-upload.ts'), '@/lib/photo-upload':{}, '@/lib/search-pattern':{}, '@/lib/clip-reward':{},
     '@/lib/community-text':load('lib/community-text.ts'),
   });
   return renderToStaticMarkup(React.createElement(Create));

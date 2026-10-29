@@ -1,5 +1,13 @@
 export const MAX_CLIP_BYTES = 50 * 1024 * 1024;
 
+export function formatClipSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} ${bytes === 1 ? "byte" : "bytes"}`;
+  const unit = bytes < 1024 * 1024 ? "KB" : "MB";
+  const divisor = unit === "KB" ? 1024 : 1024 * 1024;
+  // Round upward so a file just over the limit never reads as exactly 50 MB.
+  return `${Math.ceil(bytes / divisor * 10) / 10} ${unit}`;
+}
+
 export function clipUploadError(error: { statusCode?: string | number; message?: string }) {
   const status = Number(error.statusCode);
   const detail = error.message?.toLowerCase() ?? '';
@@ -14,7 +22,8 @@ export function clipUploadError(error: { statusCode?: string | number; message?:
 
 export async function validateClipFile(file: File) {
   if (!['video/mp4', 'video/webm'].includes(file.type)) throw new Error('Choose an MP4 or WebM video.');
-  if (!file.size || file.size > MAX_CLIP_BYTES) throw new Error('Choose a video between 1 byte and 50 MB.');
+  if (!Number.isSafeInteger(file.size) || file.size <= 0) throw new Error('This video is empty or could not be read. Download it to your device first if it is stored in iCloud or another cloud drive, then choose it again.');
+  if (file.size > MAX_CLIP_BYTES) throw new Error(`This video is ${formatClipSize(file.size)}. The upload limit is ${formatClipSize(MAX_CLIP_BYTES)}. Trim it or export a smaller copy, then choose it again.`);
   if (file.type === 'video/mp4') {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);

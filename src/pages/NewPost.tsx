@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { BackButton } from '@/components/ui/back-button';
 import { supabase } from '@/lib/supabase';
-import { clipCaption, validateClipFile } from '@/lib/clip-upload';
+import { clipCaption, validateClipFile, formatClipSize, MAX_CLIP_BYTES } from '@/lib/clip-upload';
 import { preparePhoto, photoUploadError } from '@/lib/photo-upload';
 import { completeGameCatalog } from '@/lib/game-catalog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -91,6 +91,8 @@ export default function NewPost() {
     if (busy.current || !candidate) return;
     const revision = ++selection.current;
     setError(''); setStage('checking');
+    // A rejected replacement must not leave the previous video ready to publish.
+    setFile(null); setPlayable(false);
     try {
       const prepared = kind === 'photo' ? await preparePhoto(candidate) : candidate;
       if (kind === 'video') await validateClipFile(candidate);
@@ -191,11 +193,12 @@ export default function NewPost() {
       <Button type="button" variant="outline" className="w-full min-h-24" disabled={submitting || stage === 'checking'} onClick={() => input.current?.click()}>
         <Upload className="mr-2" aria-hidden="true" />{file ? `Replace ${kind}` : `Choose ${kind}`}
       </Button>
-      <input ref={input} type="file" aria-label={kind === 'photo' ? 'Clipt photo' : 'Clipt video'} accept={kind === 'photo' ? 'image/jpeg,image/png,image/webp' : 'video/mp4,video/webm'} className="sr-only" disabled={submitting}
+      <input ref={input} type="file" aria-describedby="clip-media-help" aria-label={kind === 'photo' ? 'Clipt photo' : 'Clipt video'} accept={kind === 'photo' ? 'image/jpeg,image/png,image/webp' : 'video/mp4,video/webm'} className="sr-only" disabled={submitting}
         onChange={event => { void chooseFile(event.target.files?.[0]); event.target.value = ''; }} />
       {kind === 'photo' ? <><Button type="button" variant="outline" disabled={submitting || stage === 'checking'} onClick={() => cameraInput.current?.click()}><Camera className="mr-2" aria-hidden="true" />Take photo</Button>
         <input ref={cameraInput} type="file" aria-label="Take a Clipt photo" accept="image/jpeg,image/png,image/webp" capture="environment" className="sr-only" disabled={submitting} onChange={event => { void chooseFile(event.target.files?.[0]); event.target.value = ''; }} />
-        <p className="text-sm text-slate-300">One JPEG, PNG or WebP photo, up to 5 MB. Photos are processed to remove embedded metadata. Camera capture depends on your device/browser; otherwise choose a photo. HEIC, SVG and animated files are not supported.</p></> : <p className="text-sm text-slate-300">One MP4 or WebM video, up to 50 MB. For iPhone videos, choose Settings → Camera → Formats → Most Compatible before recording, or export an existing clip as H.264 MP4. MOV/HEVC conversion is not configured.</p>}
+        <p id="clip-media-help" className="text-sm text-slate-300">One JPEG, PNG or WebP photo, up to 5 MB. Photos are processed to remove embedded metadata. Camera capture depends on your device/browser; otherwise choose a photo. HEIC, SVG and animated files are not supported.</p></> : <p id="clip-media-help" className="text-sm text-slate-300">One MP4 or WebM video, up to {formatClipSize(MAX_CLIP_BYTES)}. For iPhone videos, choose Settings → Camera → Formats → Most Compatible before recording, or export an existing clip as H.264 MP4. MOV/HEVC conversion is not configured.</p>}
+      {file && kind === 'video' && <p role="status" className="break-all text-sm text-violet-200">Selected video: {file.name} · {formatClipSize(file.size)}</p>}
       {draftId && draft.isPending && <p role="status">Opening your draft…</p>}
       {draftId && draft.isError && <p role="alert">This draft could not be opened. <Button type="button" onClick={() => void draft.refetch()}>Retry draft</Button></p>}
       {savedMedia.error && !file && <p role="alert">Draft media access failed. <Button type="button" onClick={() => void savedMedia.retry()}>Retry media</Button></p>}
