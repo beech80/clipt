@@ -12,6 +12,8 @@ import { AdjustablePanel } from './AdjustablePanel';
 import NavigationMenu from '@/pages/Menu';
 import { pageControllerLayout, pageControllerContext, pageActionTarget, activatePageControl, type PageControllerAction, type PageControllerLayout } from '@/lib/page-controller';
 
+import {gameFeedNavigation} from '@/lib/game-feed-navigation';
+
 const pageIcons = { search: Search, games: Gamepad2, clips: Clapperboard, users: UsersRound, edit: Pencil, settings: Settings, message: MessageSquare, history: History, chart: BarChart3, coins: Coins, help: HelpCircle, shield: Shield, eye: Eye, camera: Camera, bell: Bell, check: Check, radio: Radio };
 
 type Action = 'like' | 'comment' | 'trophy' | 'follow';
@@ -72,27 +74,28 @@ function scrollContent(amount: number) {
   window.scrollBy({ top: amount, behavior: 'instant' });
 }
 
-function FeedFlipButton({ feed, onToggle }: { feed: string; onToggle: () => void }) {
-  const squad = feed === 'squad';
-  return <button type="button" role="switch" aria-label="Squad feed" aria-checked={squad}
-    title={`Showing ${squad ? 'Squad' : 'Clipts'}. Switch to ${squad ? 'Clipts' : 'Squad'}`}
+function FeedFlipButton({ feed, onToggle, channel=false }: { feed: string; onToggle: () => void; channel?: boolean }) {
+  const squad = feed === 'squad';const live=feed==='live';
+  return <button type="button" role="switch" aria-label={channel?"Live streams for this game":"Squad feed"} aria-checked={channel?live:squad}
+    title={channel?`Showing ${live?'Live streams':'FYP'}. Switch to ${live?'FYP':'Live streams'} for this game`:`Showing ${squad ? 'Squad' : 'Clipts'}. Switch to ${squad ? 'Clipts' : 'Squad'}`}
     className="clipt-feed-flip" onClick={onToggle}>
-    <span key={feed} className="clipt-feed-flip-face" aria-hidden="true">{squad ? <UsersRound size={22} /> : <Clapperboard size={22} />}</span>
-    <span className="sr-only">{squad ? 'Squad' : 'Clipts'}</span>
-    <span className="clipt-feed-flip-label" aria-hidden="true">{squad ? 'SQUAD' : 'FYP'}</span>
+    <span key={feed} className="clipt-feed-flip-face" aria-hidden="true">{channel&&live?<Radio size={22}/>:squad ? <UsersRound size={22} /> : <Clapperboard size={22} />}</span>
+    <span className="sr-only">{channel?(live?'Live streams':'FYP'):squad ? 'Squad' : 'Clipts'}</span>
+    <span className="clipt-feed-flip-label" aria-hidden="true">{channel?(live?'LIVE':'FYP'):squad ? 'SQUAD' : 'FYP'}</span>
   </button>;
 }
 
-export function PortraitFeedToggle({ feed, onToggle }: { feed: string; onToggle: () => void }) {
+export function PortraitFeedToggle({ feed, onToggle, channel=false }: { feed: string; onToggle: () => void; channel?: boolean }) {
   return <div className="clipt-portrait-feed-toggle" role="group" aria-label="Choose feed">
-    {['clipts', 'squad'].map(value => <button key={value} type="button" aria-pressed={feed === value}
-      onClick={() => { if (feed !== value) onToggle(); }}>{value === 'clipts' ? 'CLIPT' : 'SQUAD'}</button>)}
+    {(channel?['clipts','live']:['clipts', 'squad']).map(value => <button key={value} type="button" aria-pressed={feed === value}
+      onClick={() => { if (feed !== value) onToggle(); }}>{value === 'clipts' ? (channel?'FYP':'CLIPT') : channel?'LIVE':'SQUAD'}</button>)}
   </div>;
 }
 
 export default function GameBoyControls({ currentPostId }: { currentPostId?: string | null }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const gameNavigation=gameFeedNavigation(location.pathname,location.search||'');
   const activePathRef = useRef(location.pathname);
   activePathRef.current = location.pathname;
   const horizontal = location.pathname === '/' || location.pathname === '/clipts';
@@ -268,6 +271,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
     requestAnimationFrame(() => horizontal ? window.dispatchEvent(new CustomEvent('clipt:navigate',{detail:{direction}})) : scrollContent(direction * 90));
   };
   const toggleFeed = () => {
+    if(gameNavigation){navigate(gameNavigation.to);return;}
     window.dispatchEvent(new Event('clipt:toggle-feed'));
   };
 
@@ -341,7 +345,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
         title={label} aria-pressed={mediaContext ? action === 'like' ? /^unlike\b/i.test(likeLabel) : undefined : pageState.path === location.pathname ? pageState.pressed?.[pageAction(action)?.id ?? ''] : undefined}
         aria-describedby={mediaContext && immersive.immersive && counts[action] ? `clipt-controller-count-${action}` : undefined}
         disabled={!actionEnabled(action)} onClick={() => activate(action)}><Icon key={mediaContext ? action : pageAction(action)?.id} size={18} aria-hidden="true" />{!mediaContext && <span className="clipt-controller-action-label">{label}</span>}{mediaContext && immersive.immersive && counts[action] && <span id={`clipt-controller-count-${action}`} className="clipt-controller-count">{counts[action]}</span>}</button>)}
-      {horizontal && immersive.immersive && (portraitZoom ? <PortraitFeedToggle feed={selectedFeed} onToggle={toggleFeed} /> : <FeedFlipButton feed={selectedFeed} onToggle={toggleFeed} />)}
+      {horizontal && immersive.immersive && (portraitZoom ? <PortraitFeedToggle feed={gameNavigation?.feed||selectedFeed} channel={Boolean(gameNavigation)} onToggle={toggleFeed} /> : <FeedFlipButton feed={gameNavigation?.feed||selectedFeed} channel={Boolean(gameNavigation)} onToggle={toggleFeed} />)}
       {landscapeFeed && homeControl}
     </div>
     </div>
@@ -364,7 +368,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
       {!horizontal && mediaContext && <section aria-label="Current video controller actions" className="clipt-overflow-actions">{definitions.map(({action,label}) => <button key={action} type="button" disabled={!actionEnabled(action)} onClick={() => { navigationHandoffFocus.current = action === 'comment' || action === 'trophy'; setMenuOpen(false); requestAnimationFrame(() => activate(action)); }}>{label}</button>)}</section>}
       <div onClick={event => { if (event.target instanceof Element && event.target.closest('a[href]')) setMenuOpen(false); }}><NavigationMenu embedded /></div>
       {horizontal && <div className="clipt-overflow-actions">
-        <button type="button" onClick={() => { toggleFeed(); setMenuOpen(false); }}>Switch to {selectedFeed === 'squad' ? 'Clipts' : 'Squad'}</button>
+        <button type="button" onClick={() => { toggleFeed(); setMenuOpen(false); }}>Switch to {gameNavigation?(gameNavigation.live?'FYP':'Live streams for this game'):selectedFeed === 'squad' ? 'Clipts' : 'Squad'}</button>
         <button type="button" onClick={() => { setMenuOpen(false); stepFromOverflow(-1); }}>Previous Clipt</button><button type="button" onClick={() => { setMenuOpen(false); stepFromOverflow(1); }}>Next Clipt</button>
       </div>}
       <HandPreferenceSettings />
@@ -381,7 +385,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
     if(target?.isConnected && getComputedStyle(target).visibility==='visible'){event.preventDefault();target.focus();}
   }}><DialogTitle>Controller actions</DialogTitle><DialogDescription>All actions remain available when screen space is limited.</DialogDescription>
     <div className="clipt-overflow-actions">{definitions.map(({action,label,Icon})=><button type="button" key={action} disabled={!actionEnabled(action)} onClick={()=>{handoffFocus.current=action==='comment'||action==='trophy';setMoreOpen(false);activate(action);}}><Icon size={22} aria-hidden="true" />{label}{mediaContext && counts[action] && <span>{counts[action]}</span>}</button>)}
-      {horizontal && (portraitZoom ? <PortraitFeedToggle feed={selectedFeed} onToggle={toggleFeed} /> : <FeedFlipButton feed={selectedFeed} onToggle={toggleFeed} />)}
+      {horizontal && (portraitZoom ? <PortraitFeedToggle feed={gameNavigation?.feed||selectedFeed} channel={Boolean(gameNavigation)} onToggle={toggleFeed} /> : <FeedFlipButton feed={gameNavigation?.feed||selectedFeed} channel={Boolean(gameNavigation)} onToggle={toggleFeed} />)}
     </div>
     {emergency && <div className="clipt-overflow-actions"><p>Compact navigation replaces the joystick when there is too little room for separate controls.</p>
       <button onClick={()=>stepFromOverflow(-1)}>Previous Clipt</button>

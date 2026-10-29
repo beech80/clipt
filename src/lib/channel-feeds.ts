@@ -1,3 +1,4 @@
+import {gameChannelIds} from '@/lib/game-catalog';
 import {supabase} from '@/lib/supabase';
 import {storageProjectUrl} from '@/integrations/supabase/client';
 import {DISCOVERY_PAGE_SIZE} from '@/lib/discovery-feeds';
@@ -9,7 +10,7 @@ export async function channelMediaPage(kind:'clipts'|'posts',gameId:string|undef
   let query=supabase.from(kind==='clipts'?'public_clipt_discovery':'public_channel_posts')
     .select('id,content,image_url,created_at,game_id,user_id,username,avatar_url')
     .order('created_at',{ascending:false}).order('id',{ascending:false}).range(page*DISCOVERY_PAGE_SIZE,(page+1)*DISCOVERY_PAGE_SIZE);
-  if(gameId)query=query.eq('game_id',gameId);if(signal)query=query.abortSignal(signal);
+  if(gameId){const ids=await gameChannelIds(gameId,signal);query=ids.length===1?query.eq('game_id',ids[0]):query.in('game_id',ids);}if(signal)query=query.abortSignal(signal);
   const {data,error}=await query.retry(false);if(error)throw error;
   return {items:(data??[]).slice(0,DISCOVERY_PAGE_SIZE),more:(data?.length??0)>DISCOVERY_PAGE_SIZE};
 }
@@ -18,7 +19,7 @@ export async function channelLivePage(gameId:string|undefined,cursor:string|null
   if(following&&following.length===0)return {items:[],next:null};
   let query=supabase.from('streams').select('id,user_id,title,description,thumbnail_url,viewer_count,game_id')
     .eq('is_live',true).order('id',{ascending:true}).limit(24);
-  if(gameId)query=query.eq('game_id',gameId);if(cursor)query=query.gt('id',cursor);if(following)query=query.in('user_id',following);if(signal)query=query.abortSignal(signal);
+  if(gameId){const ids=await gameChannelIds(gameId,signal);query=ids.length===1?query.eq('game_id',ids[0]):query.in('game_id',ids);}if(cursor)query=query.gt('id',cursor);if(following)query=query.in('user_id',following);if(signal)query=query.abortSignal(signal);
   const {data,error}=await query.retry(false);if(error)throw error;
   const rows=data??[];
   const items=verifiedLiveBackend?await Promise.all(rows.map(async row=>{const result=await supabase.rpc('get_verified_live_status',{p_stream_id:row.id});if(result.error)throw result.error;return result.data?.[0]?.is_live?{...row,viewer_count:null}:null;})):rows;

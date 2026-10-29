@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 import React from 'react';
 import * as panelHeight from '../../src/lib/panel-height.ts';
 const require=createRequire(import.meta.url);
-function load(path,deps={}){const m={exports:{}};new Function('require','module','exports',ts.transpileModule(readFileSync(new URL('../../src/'+path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText)(name=>({'@/lib/panel-height':panelHeight,...deps})[name]??require(name),m,m.exports);return m.exports;}
+function load(path,deps={}){const m={exports:{}};new Function('require','module','exports',ts.transpileModule(readFileSync(new URL('../../src/'+path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText)(name=>({'@/lib/panel-height':panelHeight,'@/lib/game-feed-navigation':{gameFeedNavigation:()=>null},...deps})[name]??require(name),m,m.exports);return m.exports;}
 const module={exports:{}};
 new Function('module','exports',ts.transpileModule(readFileSync(new URL('../../src/lib/mobile-controls.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText)(module,module.exports);
 const {readMobileControls,portraitSwipeDirection,panelSizeAfterDrag}=module.exports;

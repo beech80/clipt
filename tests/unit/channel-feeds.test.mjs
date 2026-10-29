@@ -5,7 +5,7 @@ import ts from 'typescript';
 const game='00000000-0000-4000-8000-000000000001';
 function fixture({rows=[],development=false,verified=true,rpcError=null}={}){
  const calls=[];const supabase={from(table){const call={table,steps:[]};calls.push(call);const builder={};for(const method of ['select','eq','order','range','abortSignal','limit','gt','in'])builder[method]=(...args)=>{call.steps.push([method,...args]);return builder;};builder.retry=async()=>({data:rows,error:null});return builder;},rpc:async(name,args)=>{calls.push({rpc:name,args});return {data:[{is_live:verified}],error:rpcError};}};
- const deps={'@/lib/supabase':{supabase},'@/integrations/supabase/client':{storageProjectUrl:development?'https://akiksrlzdqvipqbbjxpw.supabase.co':'https://fixture.invalid'},'@/lib/discovery-feeds':{DISCOVERY_PAGE_SIZE:24}};
+ const deps={'@/lib/game-catalog':{gameChannelIds:async id=>[id]},'@/lib/supabase':{supabase},'@/integrations/supabase/client':{storageProjectUrl:development?'https://akiksrlzdqvipqbbjxpw.supabase.co':'https://fixture.invalid'},'@/lib/discovery-feeds':{DISCOVERY_PAGE_SIZE:24}};
  const code=ts.transpileModule(readFileSync(new URL('../../src/lib/channel-feeds.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;const mod={exports:{}};new Function('require','module','exports',code)(name=>deps[name],mod,mod.exports);
  return {...mod.exports,calls};
 }

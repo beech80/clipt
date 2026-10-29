@@ -47,3 +47,19 @@ body:has(.clipt-stream-viewer) .clipt-masthead { display: none; }
   .clipt-stream-viewer .clipt-stream-player > div:first-child > .gaming-card { padding: 0; }
   .clipt-stream-viewer .clipt-stream-player .aspect-video { aspect-ratio: auto; height: max(96px,calc(var(--clipt-portrait-visible-height,100dvh) - var(--clipt-page-controller-space,128px) - 112px)); }
 }
+
+/* Channel information occupies a real row, clear of the recovery button and video. */
+.clipt-fyp[data-game-channel] { display: grid !important; grid-template-rows: auto minmax(0,1fr); }
+.clipt-game-channel-toolbar { min-width: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; padding: 6px 10px; border: 1px solid #a78bfa66; border-radius: 12px; background: #0c0a1bee; }
+.clipt-fyp > .clipt-game-channel-toolbar { margin: 8px 78px 8px 64px; max-height: min(144px,28dvh); overflow-y: auto; overscroll-behavior: contain; z-index: 56; }
+.clipt-game-channel-toolbar strong { overflow-wrap: anywhere; }
+.clipt-channel-mode { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 8px; text-decoration: underline; }
+.clipt-channel-mode[aria-current="page"] { background: #6d28d966; text-decoration: none; }
+.clipt-game-channel-viewport { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+.clipt-game-channel-viewport > .clipt-fyp-track { height: 100%; min-height: 0; }
+.clipt-game-channel-viewport > .clipt-feed-state { margin: 0 auto; max-height: calc(100% - 144px); overflow-y: auto; background: #000; border: 0; }
+@media(max-width:300px){.clipt-fyp > .clipt-game-channel-toolbar { margin-right: 8px; padding: 4px; }.clipt-channel-mode { padding: 4px; }}
+
+.clipt-game-cover { display: flex; align-items: center; justify-content: center; width: 48px; height: 64px; flex-shrink: 0; object-fit: contain; border-radius: 8px; background: #19122e; color: #e9d5ff; font-weight: 800; }
+.clipt-search-result-image .clipt-game-cover { width: 100%; height: 100%; }
+.clipt-game-cover-fallback { letter-spacing: .04em; font-size: 14px; }

@@ -7,6 +7,7 @@ import {supabase} from '@/lib/supabase';
 import {completeGameCatalog} from '@/lib/game-catalog';
 import {channelLivePage,validChannelGame,verifiedLiveBackend} from '@/lib/channel-feeds';
 import {LiveStreamCard} from '@/components/streaming/LiveStreamCard';
+import {GameChannelToolbar} from '@/components/GameChannelToolbar';
 import {Button} from '@/components/ui/button';
 import '@/pages/clipt-channels.css';
 export default function LiveDiscovery(){
@@ -19,6 +20,7 @@ export default function LiveDiscovery(){
  const gameName=catalog.data?.find(game=>game.id===gameId)?.name;
  return <main className="clipt-live-discovery container max-w-6xl space-y-5 px-4 py-6">
  <header><h1 className="flex items-center gap-2 text-2xl font-bold"><Radio aria-hidden="true"/>Live Streams</h1><Button asChild><Link to={'/stream-setup'+(gameId&&!invalid?'?game='+gameId:'')}>Go Live</Link></Button><Button variant="outline" disabled={streams.isFetching} onClick={()=>{if(mode==='following')void following.refetch();void streams.refetch();}}>Refresh</Button></header>
+ {gameId&&!invalid&&<GameChannelToolbar gameId={gameId} name={gameName||'Game channel'} live/>}
  <p className="text-muted-foreground">Watch creators who are live now, or choose a game channel.</p>
  <div role="group" aria-label="Live discovery filter" className="clipt-filter-bar flex flex-wrap"><Button variant="outline" aria-pressed={mode==='all'} onClick={()=>setMode('all')}>Live Now</Button><Button variant="outline" aria-pressed={mode==='following'} disabled={!user} onClick={()=>setMode('following')}>Following</Button><label className="flex min-w-0 flex-col gap-1 text-sm"><span>Game channel</span><select aria-label="Filter live by game" className="clipt-live-game-filter" value={gameId??''} onChange={event=>setParams(current=>{if(event.target.value)current.set('game',event.target.value);else current.delete('game');return current;})}><option value="">All games</option>{catalog.data?.map(game=><option key={game.id} value={game.id}>{game.name}</option>)}</select></label></div>
  {gameId&&!invalid&&<Link className="inline-flex min-h-11 items-center underline" to={'/game/'+gameId+'?tab=live'}>Open {gameName||'game'} channel</Link>}

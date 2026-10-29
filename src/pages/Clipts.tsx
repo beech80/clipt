@@ -8,8 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { EngagementHud } from '@/components/post/EngagementHud';
 import { RefreshCw, Clapperboard, UsersRound } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { validChannelGame } from '@/lib/channel-feeds';
+import {gameChannel} from '@/lib/game-catalog';
+import {GameChannelToolbar} from '@/components/GameChannelToolbar';
 import './clipt-console.css';
 import './clipt-feed-surface.css';
 import './clipt-channels.css';
@@ -29,18 +31,20 @@ function centerClip(track: HTMLDivElement, slide: HTMLElement, behavior: ScrollB
 export default function Clipts() {
   const { user } = useAuth();
   const [params]=useSearchParams();
+  const navigate=useNavigate();
   const gameId=params.get('game')||null;
   const invalidGame=Boolean(gameId&&!validChannelGame(gameId));
-  const selectedGame=useQuery({queryKey:['feed-game-channel',gameId],enabled:Boolean(gameId&&!invalidGame),retry:false,queryFn:async({signal})=>{const {data,error}=await supabase.from('games').select('id,name').eq('id',gameId!).abortSignal(signal).retry(false).maybeSingle();if(error)throw error;return data;}});
+  const selectedGame=useQuery({queryKey:['feed-game-channel',gameId],enabled:Boolean(gameId&&!invalidGame),retry:false,queryFn:async({signal})=>{return gameChannel(gameId!,signal);}});
   const publishingState=useSyncExternalStore(subscribePublishing,publishingSnapshot,()=>null);
   const publishing=publishingState?.owner===user?.id?publishingState:null;
   const [hiddenPublishing,setHiddenPublishing]=useState('');
   const [feed, setFeed] = useState('clipts');
+  useEffect(()=>{if(gameId)setFeed('clipts');},[gameId]);
   useEffect(() => {
-    const toggle = () => setFeed(current => current === 'squad' ? 'clipts' : 'squad');
+    const toggle = () => {if(gameId&&!invalidGame){navigate('/live?game='+(selectedGame.data?.id||gameId));return;}setFeed(current => current === 'squad' ? 'clipts' : 'squad');};
     window.addEventListener('clipt:toggle-feed', toggle);
     return () => window.removeEventListener('clipt:toggle-feed', toggle);
-  }, []);
+  }, [gameId,invalidGame,selectedGame.data?.id,navigate]);
   const muted=useQuery({queryKey:['muted-creators',user?.id],enabled:!!user,retry:false,queryFn:async()=>{
     const ids:string[]=[];
     for(let offset=0;;offset+=500){const {data,error}=await supabase.from('user_mutes').select('muted_id').eq('owner_id',user!.id).order('muted_id').range(offset,offset+499);if(error)throw error;ids.push(...data.map(x=>x.muted_id));if(data.length<500)return ids;}
@@ -77,7 +81,7 @@ export default function Clipts() {
         .or(feed === 'squad' ? MEDIA_FILTER : `and(or(${MEDIA_FILTER}),or(post_type.is.null,post_type.neq.squad))`).eq('is_published', true)
         .order('created_at', { ascending: false }).order('id', { ascending: false })
         .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
-      if (gameId) request=request.eq('game_id',gameId).not('video_url','is',null).neq('video_url','');
+      if (gameId) {const ids=selectedGame.data?.member_ids??[gameId];request=(ids.length===1?request.eq('game_id',ids[0]):request.in('game_id',ids)).not('video_url','is',null).neq('video_url','');}
       if (feed === 'squad') request = request.in('user_id', following.data!);
       if(user && muted.data?.length) request=request.not('user_id','in',`(${muted.data.join(',')})`);
       const { data, error } = await request.retry(false);
@@ -90,7 +94,7 @@ export default function Clipts() {
     queryFn:async({signal})=>{const {data,error}=await supabase.from('posts').select('id,content,image_url,video_url,user_id,game_id,created_at,is_published,is_premium,is_subscriber_only,post_type,profiles(username,display_name,avatar_url),games(id,name)')
       .eq('id',publishing!.postId!).eq('user_id',user!.id).eq('is_published',true).abortSignal(signal).retry(false).maybeSingle();if(error)throw error;return data;}});
   const basePosts=data?.pages.flat() || [];
-  const ownUploaded=publishing?.stage==='complete' && uploadedPost.data && (!gameId||(uploadedPost.data.game_id===gameId&&Boolean(uploadedPost.data.video_url?.trim()))) && (uploadedPost.data.post_type==='squad' ? feed==='squad' : feed==='clipts') ? uploadedPost.data:null;
+  const ownUploaded=publishing?.stage==='complete' && uploadedPost.data && (!gameId||((selectedGame.data?.member_ids??[gameId]).includes(uploadedPost.data.game_id!)&&Boolean(uploadedPost.data.video_url?.trim()))) && (uploadedPost.data.post_type==='squad' ? feed==='squad' : feed==='clipts') ? uploadedPost.data:null;
   const posts = user && !muted.isSuccess ? [] : [...new Map((ownUploaded?[ownUploaded,...basePosts]:basePosts).map(post => [post.id, post])).values()];
   useEffect(()=>{if(publishing?.stage==='complete'){navigationTargetRef.current=null;setFeed(publishing.destination);setActiveIndex(0);trackRef.current?.scrollTo({left:0,behavior:'instant'});}},[publishing?.id,publishing?.stage]);
   const activePost = posts[activeIndex];
@@ -144,8 +148,7 @@ export default function Clipts() {
     if (posts.length && activeIndex >= posts.length - 3 && hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [activeIndex, posts.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  return <main className="clipt-fyp" data-feed={feed} data-game-channel={gameId||undefined}>
-    {gameId&&<aside className="clipt-game-channel-indicator"><span>{invalidGame?'Invalid game channel':selectedGame.data?.name||'Game channel'}</span><Link to="/clipts" aria-label="Clear game channel">All games</Link></aside>}
+  const content = <>
     {gameId&&selectedGame.isError&&<div role="alert" className="clipt-feed-state">Channel could not be loaded. <Button onClick={()=>void selectedGame.refetch()}>Retry channel</Button></div>}
     {gameId&&!invalidGame&&selectedGame.isPending&&<p role="status" className="clipt-feed-state">Loading game channel…</p>}
     {gameId&&!invalidGame&&selectedGame.isSuccess&&!selectedGame.data&&<p className="clipt-feed-state">Game channel not found.</p>}
@@ -163,7 +166,7 @@ export default function Clipts() {
       </Button>
       </div>
     </header>
-    <Tabs value={feed} onValueChange={setFeed} className="clipt-feed-tabs"><TabsList aria-label="Choose Clipt feed"><TabsTrigger value="clipts" aria-label="Clipts" title="Clipts"><Clapperboard size={22} aria-hidden="true" /></TabsTrigger><TabsTrigger value="squad" aria-label="Squad" title="Squad"><UsersRound size={22} aria-hidden="true" /></TabsTrigger></TabsList></Tabs>
+    {!gameId&&<Tabs value={feed} onValueChange={setFeed} className="clipt-feed-tabs"><TabsList aria-label="Choose Clipt feed"><TabsTrigger value="clipts" aria-label="Clipts" title="Clipts"><Clapperboard size={22} aria-hidden="true" /></TabsTrigger><TabsTrigger value="squad" aria-label="Squad" title="Squad"><UsersRound size={22} aria-hidden="true" /></TabsTrigger></TabsList></Tabs>}
     {feed === 'squad' && !user ? <p className="clipt-feed-state"><Link to="/login">Sign in to see your Squad.</Link></p> : following.isError && feed === 'squad' ? <div className="clipt-feed-state" role="alert">Your following list could not be loaded. <Button onClick={() => void following.refetch()}>Retry Squad</Button></div> : isPending && !invalidGame && (!gameId||Boolean(selectedGame.data)) && <p role="status" className="clipt-feed-state">Loading Clipts…</p>}
     {muted.isError && user && <div role="alert" className="clipt-feed-state"><p>Mute preferences could not be loaded. Feed paused.</p><Button onClick={()=>void muted.refetch()}>Retry mute preferences</Button></div>}
     {error && <div role="alert" className="clipt-feed-state"><p>Could not load Clipts. Please try again.</p><Button onClick={() => void refetch()}>Retry</Button></div>}
@@ -203,6 +206,10 @@ export default function Clipts() {
           : <div className="clipt-fyp-placeholder">Clipt {index + 1}</div>}
       </section>)}
     </div>}
+  </>;
+  return <main className="clipt-fyp" data-feed={feed} data-game-channel={gameId||undefined}>
+    {gameId&&<GameChannelToolbar gameId={selectedGame.data?.id||gameId} name={invalidGame?'Invalid game channel':selectedGame.data?.name||'Game channel'}>{hasNextPage&&<Button onClick={()=>void fetchNextPage()} disabled={isFetchingNextPage}>Load more clips</Button>}</GameChannelToolbar>}
+    {gameId?<div className="clipt-game-channel-viewport">{content}</div>:content}
     <button ref={swipeZoneRef} type="button" className="clipt-bottom-swipe-zone" data-swipe-menu
       aria-label="CLIPT — Open navigation" aria-haspopup="dialog" aria-controls="clipt-navigation-panel"
       onClick={() => window.dispatchEvent(new CustomEvent('clipt:open-navigation'))}><span>CLIPT</span></button>
@@ -211,7 +218,7 @@ export default function Clipts() {
       {engagementOpen && activePost && <EngagementHud postId={activePost.id} creatorId={activePost.user_id}
         username={activePost.profiles?.username} caption={activePost.content} avatarUrl={activePost.profiles?.avatar_url} followFeed />}
     </Dialog>
-    {hasNextPage && <Button className="m-4" onClick={() => void fetchNextPage()} disabled={isFetchingNextPage}>
+    {!gameId&&hasNextPage && <Button className="m-4" onClick={() => void fetchNextPage()} disabled={isFetchingNextPage}>
       {isFetchingNextPage ? 'Loading…' : 'Load more clips'}
     </Button>}
   </main>;

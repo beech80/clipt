@@ -3017,24 +3017,36 @@ export type Database = {
       }
       games: {
         Row: {
+          canonical_game_id: string | null
+          igdb_id: number | null
+          release_year: number | null
+          platforms: string | null
           cover_url: string | null
           created_at: string
           id: string
           name: string
         }
         Insert: {
+          canonical_game_id?: string | null
+          igdb_id?: number | null
+          release_year?: number | null
+          platforms?: string | null
           cover_url?: string | null
           created_at?: string
           id?: string
           name: string
         }
         Update: {
+          canonical_game_id?: string | null
+          igdb_id?: number | null
+          release_year?: number | null
+          platforms?: string | null
           cover_url?: string | null
           created_at?: string
           id?: string
           name?: string
         }
-        Relationships: []
+        Relationships: [{foreignKeyName: "games_canonical_game_id_fkey";columns: ["canonical_game_id"];isOneToOne: false;referencedRelation: "games";referencedColumns: ["id"]}]
       }
       gaming_history: {
         Row: {
@@ -9359,6 +9371,8 @@ export type Database = {
       }
     }
     Views: {
+      game_channel_catalog: { Row: {id:string;name:string;cover_url:string|null;igdb_id:number|null;release_year:number|null;platforms:string|null;member_ids:string[]};Relationships: [] }
+
       public_channel_posts: { Row: { id: string; content: string | null; image_url: string | null; created_at: string; game_id: string | null; user_id: string; username: string | null; avatar_url: string | null }; Relationships: [] }
 
       public_clipt_discovery: {

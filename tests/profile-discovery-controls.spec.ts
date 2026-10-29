@@ -20,7 +20,7 @@ async function fixture(page:Page,hand='right') {
     let data:unknown=[];
     if(url.pathname==='/auth/v1/user')data=user;
     if(url.pathname==='/rest/v1/profiles')data={id:creator,username:'RecordedCreator',display_name:'Recorded Creator',bio:'A recorded profile',website:'https://cliptgaming.com/'};
-    if(url.pathname==='/rest/v1/games')data={id:gameId,name:'Recorded Game',cover_url:null};
+    if(url.pathname==='/rest/v1/games'||url.pathname==='/rest/v1/game_channel_catalog'){const game={id:gameId,name:'Recorded Game',cover_url:null,member_ids:[gameId]};data=url.searchParams.has('id')||url.searchParams.has('member_ids')?game:[game];}
     if(url.pathname==='/rest/v1/posts') {
       data=url.searchParams.has('user_id')?records.slice(0,1):records.slice(0,2);
     }
