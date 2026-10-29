@@ -209,9 +209,9 @@ const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullsc
             </div>
           ) : (
             <>
-              {!isMediaLoaded && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <div role="status" className="animate-pulse">Loading video...</div>
+              {!isMediaLoaded && !slowVideo && (
+                <div className="pointer-events-none absolute inset-x-2 top-2 flex justify-center">
+                  <div role="status" className="rounded bg-black/80 px-3 py-2 text-white">Loading video...</div>
                 </div>
               )}
               {!videoAccess.isLoading && playbackUrl && <video
@@ -339,7 +339,7 @@ const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullsc
       ) : null}
 
       {/* Loading Indicator */}
-      {!isMediaLoaded && !isMediaError && !videoAccess.error && (
+      {!videoUrl && !isMediaLoaded && !isMediaError && !videoAccess.error && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/50">
           <span role="status" className="sr-only">Loading media…</span><div aria-hidden="true" className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
         </div>
