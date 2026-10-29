@@ -7,7 +7,7 @@ import { createStream, getUserStream, startStream, endStream, getMuxTestLiveStat
 import { useEffect, useState } from 'react';
 import {GameCatalogLookup} from '@/components/GameCatalogLookup';
 import {useSearchParams} from 'react-router-dom';
-import {completeGameCatalog} from '@/lib/game-catalog';
+import {completeGameCatalog, gameLabel} from '@/lib/game-catalog';
 import {validChannelGame} from '@/lib/channel-feeds';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -69,7 +69,7 @@ export function StreamDashboard() {
   const requestedGame=params.get('game');
   useEffect(()=>{if(stream)setGameId(stream.game_id||'');},[stream?.id,stream?.game_id,requestedGame]);
   const saveGame=useMutation({mutationFn:async()=>{if(!stream)throw new Error('Create your stream first.');const result=await updateStream(stream.id,{game_id:gameId||null});if(result.error||!result.data)throw result.error||new Error('Game was not saved.');return result.data;},onSuccess:data=>{queryClient.setQueryData(queryKey,data);void queryClient.invalidateQueries({queryKey:['live-discovery']});void queryClient.invalidateQueries({queryKey:['channel-live']});toast.success('Stream game saved');}});
-  const gamePicker=<div className="space-y-2"><Label htmlFor="stream-game">Game channel</Label><select id="stream-game" aria-label="Stream game channel" className="clipt-live-game-filter block w-full" value={gameId} disabled={games.isPending||saveGame.isPending} onChange={event=>setGameId(event.target.value)}><option value="">No game selected</option>{games.data?.map(game=><option key={game.id} value={game.id}>{game.name}</option>)}</select><GameCatalogLookup onChoose={game=>setGameId(game.id)}/>{games.isError&&<p role="alert">Games could not be loaded. <button type="button" className="underline" onClick={()=>void games.refetch()}>Retry games</button></p>}</div>;
+  const gamePicker=<div className="space-y-2"><Label htmlFor="stream-game">Game channel</Label><select id="stream-game" aria-label="Stream game channel" className="clipt-live-game-filter block w-full" value={gameId} disabled={games.isPending||saveGame.isPending} onChange={event=>setGameId(event.target.value)}><option value="">No game selected</option>{games.data?.map(game=><option key={game.id} value={game.id}>{gameLabel(game)}</option>)}</select><GameCatalogLookup onChoose={game=>setGameId(game.id)}/>{games.isError&&<p role="alert">Games could not be loaded. <button type="button" className="underline" onClick={()=>void games.refetch()}>Retry games</button></p>}</div>;
   const lifecycle = useMutation({
     mutationFn: async (action: 'start' | 'end') => {
       if (!user || !stream) throw new Error('Sign in to manage your stream');

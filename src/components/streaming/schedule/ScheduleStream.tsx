@@ -1,4 +1,4 @@
-import {completeGameCatalog} from '@/lib/game-catalog';
+import {completeGameCatalog, gameLabel} from '@/lib/game-catalog';
 import { useRef, useState } from 'react';
 import { Calendar, Clock, Tag, Info, Gamepad, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -58,6 +58,8 @@ type ScheduleFormValues = z.infer<typeof scheduleFormSchema>;
 interface Game {
   id: string;
   name: string;
+  release_year?: number | null;
+  platforms?: string | null;
 }
 
 interface ScheduleStreamProps {
@@ -231,7 +233,7 @@ export function ScheduleStream({
                         ) : (
                           games.map(game => (
                             <SelectItem key={game.id} value={game.id}>
-                              {game.name}
+                              {gameLabel(game)}
                             </SelectItem>
                           ))
                         )}

@@ -11,7 +11,7 @@ import { clipCaption, formatClipSize, MAX_CLIP_BYTES, videoPreviewReady } from '
 import { prepareClipFile } from '@/lib/prepare-clip';
 import { preparePhoto, photoUploadError } from '@/lib/photo-upload';
 import {GameCatalogLookup} from '@/components/GameCatalogLookup';
-import { completeGameCatalog } from '@/lib/game-catalog';
+import {completeGameCatalog, gameLabel} from '@/lib/game-catalog';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePrivateMediaUrl } from '@/hooks/usePrivateMedia';
 import { clipUploadError } from '@/lib/clip-upload';
@@ -260,7 +260,7 @@ export default function NewPost() {
       <label className="block space-y-2"><span>Hashtags</span><Input value={hashtags} disabled={submitting} onChange={event => setHashtags(event.target.value)} placeholder="#gaming #clipt" /></label>
       <label className="block space-y-2"><span>Find a game</span><Input value={gameSearch} disabled={submitting} onChange={event => { setGameSearch(event.target.value); setGameId(''); }} placeholder="Search games…" /></label>
       <label className="block space-y-2"><span>Game / category</span><select aria-label="Game / category" className="w-full rounded-md border border-purple-500 bg-slate-950 p-3" value={gameId} disabled={submitting || games.isPending}
-        onChange={event => setGameId(event.target.value)}><option value="">No game selected</option>{games.data?.map(game => <option key={game.id} value={game.id}>{game.name}</option>)}</select></label>
+        onChange={event => setGameId(event.target.value)}><option value="">No game selected</option>{games.data?.map(game => <option key={game.id} value={game.id}>{gameLabel(game)}</option>)}</select></label>
       <GameCatalogLookup disabled={submitting} term={gameSearch} onChoose={game=>{setGameSearch('');setGameId(game.id);}}/>
       {games.isPending && <p role="status">Loading game categories…</p>}
       {!games.isPending && !games.isError && !games.data?.length && <p role="status">{gameSearch.trim() ? 'No games match your search. Try a different name or post without a game.' : 'No game categories are available. You can post without a game.'}</p>}
