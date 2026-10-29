@@ -83,7 +83,7 @@ export default function Clipts() {
   const basePosts=data?.pages.flat() || [];
   const ownUploaded=publishing?.stage==='complete' && uploadedPost.data && (uploadedPost.data.post_type==='squad' ? feed==='squad' : feed==='clipts') ? uploadedPost.data:null;
   const posts = user && !muted.isSuccess ? [] : [...new Map((ownUploaded?[ownUploaded,...basePosts]:basePosts).map(post => [post.id, post])).values()];
-  useEffect(()=>{if(publishing?.stage==='complete'){setFeed(publishing.destination);setActiveIndex(0);trackRef.current?.scrollTo({left:0,behavior:'instant'});}},[publishing?.id,publishing?.stage]);
+  useEffect(()=>{if(publishing?.stage==='complete'){navigationTargetRef.current=null;setFeed(publishing.destination);setActiveIndex(0);trackRef.current?.scrollTo({left:0,behavior:'instant'});}},[publishing?.id,publishing?.stage]);
   const activePost = posts[activeIndex];
   const swipePath = usePortraitSwipe(swipeZoneRef, posts.length > 0);
   useEffect(() => {
