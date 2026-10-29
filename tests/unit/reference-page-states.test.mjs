@@ -1,3 +1,4 @@
+import * as gameFeedNavigation from '../../src/lib/game-feed-navigation.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -35,7 +36,7 @@ test('narrow Token navigation stacks icons without breaking label words',()=>{
   for(const rule of ['flex-direction: column','overflow-wrap: normal','word-break: normal']) assert.ok(narrow.includes(rule));
 });
 function load(path, replacements={}) {
-  replacements = {'@/components/post/HashtagText':{HashtagText:({text})=>text},'@/lib/page-controller':pageController,'@/lib/publishing-status':publishingStatus,'@/lib/trophy-eligibility':trophyEligibility, ...replacements};
+  replacements = {'@/lib/game-feed-navigation':gameFeedNavigation,'@/components/GameCatalogLookup':{GameCatalogLookup:()=>null},'@/components/post/HashtagText':{HashtagText:({text})=>text},'@/lib/page-controller':pageController,'@/lib/publishing-status':publishingStatus,'@/lib/trophy-eligibility':trophyEligibility, ...replacements};
   replacements={'@/hooks/useMobileControlsPreferences':{useMobileControlsPreferences:()=>({preferences:{hand:'right',trail:true},update(){},saved:true})},'./accessibility/HandPreferenceSettings':{HandPreferenceSettings:()=>null},'./AdjustablePanel':{AdjustablePanel:()=>null},'@/components/AdjustablePanel':{AdjustablePanel:()=>null},'@/pages/Menu':{default:()=>null,__esModule:true},...replacements};
   const output=ts.transpileModule(readFileSync(new URL(`../../src/${path}`,import.meta.url),'utf8'),{
     compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}

@@ -11,23 +11,16 @@ interface GameCardProps {
   onClick?: () => void;
 }
 
-const GameCard = ({ id, name, coverUrl, postCount = 0, onClick }: GameCardProps) => {
+const GameCard = ({ id, name, coverUrl, postCount, onClick }: GameCardProps) => {
   const [showFallback, setShowFallback] = useState(false);
   const [finalCoverUrl, setFinalCoverUrl] = useState<string | undefined>(coverUrl);
   
   useEffect(() => {
-    // If coverUrl starts with // (protocol-relative URL), add https:
-    if (coverUrl && coverUrl.startsWith('//')) {
-      setFinalCoverUrl(`https:${coverUrl}`);
-    } 
-    // If coverUrl doesn't have protocol but doesn't start with //, add https://
-    else if (coverUrl && !coverUrl.includes('://') && !coverUrl.startsWith('//')) {
-      setFinalCoverUrl(`https://${coverUrl}`);
-    }
-    // Reset showFallback when coverUrl changes
+    const candidate=coverUrl?.startsWith('//')?'https:'+coverUrl:coverUrl;
+    setFinalCoverUrl(candidate&&(/^https:\/\//i.test(candidate)||candidate.startsWith('/')&&!candidate.startsWith('//'))?candidate:undefined);
     setShowFallback(false);
   }, [coverUrl]);
-
+  
   // Ensure we format post count correctly
   const formatPostCount = (count: number) => {
     if (count === 1) return '1 clipt';
@@ -37,7 +30,8 @@ const GameCard = ({ id, name, coverUrl, postCount = 0, onClick }: GameCardProps)
   return (
     <Card 
       className="group overflow-hidden bg-indigo-950/40 border-indigo-500/30 hover:border-indigo-400 transition-all cursor-pointer relative" 
-      onClick={onClick}
+      onClick={onClick} role={onClick?"button":undefined} tabIndex={onClick?0:undefined} aria-label={onClick?`View game ${name}`:undefined}
+      onKeyDown={event=>{if(onClick&&(event.key==='Enter'||event.key===' ')){event.preventDefault();onClick();}}}
     >
       <div className="relative">
         <AspectRatio ratio={3/4}>
@@ -59,7 +53,7 @@ const GameCard = ({ id, name, coverUrl, postCount = 0, onClick }: GameCardProps)
         
         <div className="absolute bottom-0 left-0 p-3">
           <h3 className="text-md font-bold text-white truncate max-w-full">{name}</h3>
-          <p className="text-xs text-indigo-300">{formatPostCount(postCount || 0)}</p>
+          {postCount!==undefined&&<p className="text-xs text-indigo-300">{formatPostCount(postCount)}</p>}
         </div>
       </div>
     </Card>

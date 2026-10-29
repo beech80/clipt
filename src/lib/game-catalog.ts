@@ -9,7 +9,7 @@ export async function gameCatalogPage(term:string,page:number,signal?:AbortSigna
 }
 export async function completeGameCatalog(term:string,signal?:AbortSignal){
  const rows:Awaited<ReturnType<typeof gameCatalogPage>>=[];
- for(let page=0;;page++){const result=await gameCatalogPage(term,page,signal);rows.push(...result);if(result.length<40)return rows;}
+ for(let page=0;;page++){const result=await gameCatalogPage(term,page,signal);rows.push(...result);if (result.length < 40) return rows;}
 }
 export async function gameChannel(id:string,signal?:AbortSignal){
  if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id))throw new Error('Choose a game from the catalog.');

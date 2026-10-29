@@ -39,7 +39,6 @@ export default function Clipts() {
   const publishing=publishingState?.owner===user?.id?publishingState:null;
   const [hiddenPublishing,setHiddenPublishing]=useState('');
   const [feed, setFeed] = useState('clipts');
-  useEffect(()=>{if(gameId)setFeed('clipts');},[gameId]);
   useEffect(() => {
     const toggle = () => {if(gameId&&!invalidGame){navigate('/live?game='+(selectedGame.data?.id||gameId));return;}setFeed(current => current === 'squad' ? 'clipts' : 'squad');};
     window.addEventListener('clipt:toggle-feed', toggle);
@@ -100,6 +99,7 @@ export default function Clipts() {
   const activePost = posts[activeIndex];
   const swipePath = usePortraitSwipe(swipeZoneRef, posts.length > 0);
   useEffect(() => {
+    if(gameId&&feed!=='clipts')setFeed('clipts');
     navigationTargetRef.current = null;
     setActiveIndex(0);
     setEngagementOpen(false);
