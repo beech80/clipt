@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Gamepad2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { gameCatalogPage } from '@/lib/game-catalog';
+import {GameCatalogLookup} from '@/components/GameCatalogLookup';
+import {GameCatalogCover} from '@/components/GameCatalogCover';
+import { gameCatalogPage,gameLabel } from '@/lib/game-catalog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -38,10 +40,11 @@ export default function TopGames() {
     </Card> : !catalog.length ? <Card className="p-4">{term ? 'No games match this search.' : 'No games are available yet.'}</Card> :
       <ul className="grid gap-3 sm:grid-cols-2">{catalog.map(game => <li key={game.id}>
         <Card><Link to={`/game/${game.id}`} className="flex min-w-0 items-center gap-3 rounded-lg p-4 hover:bg-primary/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
-          <Gamepad2 className="h-8 w-8 shrink-0 text-primary" aria-hidden="true" />
-          <span className="min-w-0 break-words font-medium">{game.name}</span>
+          <GameCatalogCover src={game.cover_url} name={game.name}/>
+          <span className="min-w-0 break-words font-medium">{gameLabel(game)}</span>
         </Link></Card>
       </li>)}</ul>}
+    <GameCatalogLookup term={term}/>
     {games.hasNextPage && <Button disabled={games.isFetchingNextPage} onClick={() => void games.fetchNextPage()}>{games.isFetchingNextPage ? 'Loading games…' : 'Load more games'}</Button>}
     <p className="text-xs text-muted-foreground">Browse every game in the configured Clipt catalog. Search any game name; unavailable games are not fabricated.</p>
   </main>;

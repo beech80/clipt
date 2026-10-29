@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {gameFeedNavigation} from '../../src/lib/game-feed-navigation.ts';
+const id='00000000-0000-4000-8000-000000000001';
+test('game FYP and live switches preserve the same game and never switch to Squad',()=>{assert.deepEqual(gameFeedNavigation('/clipts','?game='+id),{game:id,live:false,feed:'clipts',to:'/live?game='+id});assert.equal(gameFeedNavigation('/live','?game='+id).to,'/clipts?game='+id);for(const [path,query]of [['/clipts',''],['/live','?game=bad'],['/profile','?game='+id]])assert.equal(gameFeedNavigation(path,query),null);});

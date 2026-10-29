@@ -25,7 +25,7 @@ test('one feed-owned comment dock follows a sideways slide without closing or re
     '@/components/ui/tabs':{Tabs:()=>null,TabsList:()=>null,TabsTrigger:()=>null},'@/components/ui/button':{Button:()=>null},
     '@/components/ui/dialog':{Dialog},'@/components/post/EngagementHud':{EngagementHud:Hud},
     '@/hooks/usePortraitSwipe':{usePortraitSwipe:()=>({current:null})},
-    '@/components/PostItem':{default:Post,__esModule:true},'react-router-dom':{Link:()=>null,useSearchParams:()=>[new URLSearchParams(),()=>{}]},'./clipt-console.css':{},'./clipt-feed-surface.css':{},'./clipt-channels.css':{},'@/lib/channel-feeds':{validChannelGame:()=>true},'@/lib/clip-carousel-scroll':clipCarouselScroll,
+    '@/components/PostItem':{default:Post,__esModule:true},'react-router-dom':{Link:()=>null,useSearchParams:()=>[new URLSearchParams(),()=>{}],useNavigate:()=>()=>{}},'./clipt-console.css':{},'./clipt-feed-surface.css':{},'./clipt-channels.css':{},'@/lib/game-catalog':{gameChannel:async()=>null},'@/components/GameChannelToolbar':{GameChannelToolbar:()=>null},'@/lib/channel-feeds':{validChannelGame:()=>true},'@/lib/clip-carousel-scroll':clipCarouselScroll,
   };
   const output=ts.transpileModule(read('pages/Clipts.tsx'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
   deps.react.useSyncExternalStore=()=>null;

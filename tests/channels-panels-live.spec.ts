@@ -4,21 +4,22 @@ import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 const uid=(n:number)=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
 const owner=uid(77),creator=uid(79),gameA=uid(1),gameB=uid(2),streamA=uid(300),streamB=uid(301);
-const games=[{id:gameA,name:'Game Alpha',cover_url:null},{id:gameB,name:'Game Beta',cover_url:null}];
+const games=[{id:gameA,name:'Game Alpha',cover_url:null,member_ids:[gameA]},{id:gameB,name:'Game Beta',cover_url:null,member_ids:[gameB]}];
 const profile=(id:string)=>({id,username:id===owner?'tester':'creator',display_name:id===owner?'Tester':'Creator',avatar_url:null});
 const clips=[{id:uid(100),game_id:gameA},{id:uid(101),game_id:gameA},{id:uid(102),game_id:gameB}].map((row,i)=>({...row,user_id:creator,content:'Game moment '+i+' #game',username:'creator',avatar_url:null,image_url:null,video_url:'/tests/fixtures/clip-test-h264.mp4',created_at:'2026-10-29T00:00:00Z',is_published:true,is_premium:false,is_subscriber_only:false,post_type:'clipt',profiles:profile(creator),games:games.find(game=>game.id===row.game_id)}));
-async function fixture(page:Page){
+async function fixture(page:Page,options:{aliases?:boolean;empty?:boolean;hand?:string;controllerMode?:string}={}){
+ const alias=uid(9);const catalog=games.map(game=>({...game,member_ids:options.aliases&&game.id===gameA?[gameA,alias]:[game.id]}));const catalogClips=options.empty?[]:options.aliases?[...clips,{...clips[0],id:uid(103),game_id:alias}]:clips;
  let following=false,failChat=false,stopped=false,own:any=null;const stats={chats:0,follows:0,giftPurchases:0,creates:0,updates:[] as any[],starts:0,hls:0};
  const server=createServer((request,response)=>{const name=new URL(request.url||'/','http://localhost').pathname.split('/').pop()||'';if(!/^(index.m3u8|segment-\d+.ts)$/.test(name)){response.writeHead(404);response.end();return;}try{const bytes=readFileSync(fileURLToPath(new URL('./fixtures/channel-hls/'+name,import.meta.url)));stats.hls++;response.setHeader('Access-Control-Allow-Origin','*');response.setHeader('Content-Type',name.endsWith('.m3u8')?'application/vnd.apple.mpegurl':'video/mp2t');response.setHeader('Content-Length',bytes.length);response.end(bytes);}catch{response.writeHead(404);response.end();}});
  await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));const address=server.address();if(!address||typeof address==='string')throw Error('Fixture server');const mediaOrigin='http://127.0.0.1:'+address.port;
  const user={id:owner,aud:'authenticated',role:'authenticated',email:'fixture@example.invalid',app_metadata:{},user_metadata:{},created_at:'2026-09-19T00:00:00Z',factors:[]};
- await page.addInitScript(({user})=>{const expires=Math.floor(Date.now()/1000)+3600;const enc=(value:object)=>btoa(JSON.stringify(value)).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');localStorage.setItem('sb-127-auth-token',JSON.stringify({access_token:enc({alg:'HS256'})+'.'+enc({sub:user.id,exp:expires,aal:'aal1',role:'authenticated'})+'.fixture',refresh_token:'fixture',expires_at:expires,expires_in:3600,token_type:'bearer',user}));localStorage.setItem('clipt-mobile-controls-v1',JSON.stringify({hand:'right',trail:false}));localStorage.setItem('clipt-controller-preferences-v1',JSON.stringify({layout:'auto',autoHide:false}));},{user});
- await page.route('**/*',async route=>{const request=route.request(),url=new URL(request.url()),path=url.pathname;if(url.origin==='http://127.0.0.1:8081'||url.origin===mediaOrigin)return route.continue();if(url.origin!=='http://127.0.0.1:54321')return route.abort();let data:any=[],status=200;const eq=(key:string)=>url.searchParams.get(key)?.replace(/^eq\./,'');
+ await page.addInitScript(({user,hand,controllerMode})=>{const expires=Math.floor(Date.now()/1000)+3600;const enc=(value:object)=>btoa(JSON.stringify(value)).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');localStorage.setItem('sb-127-auth-token',JSON.stringify({access_token:enc({alg:'HS256'})+'.'+enc({sub:user.id,exp:expires,aal:'aal1',role:'authenticated'})+'.fixture',refresh_token:'fixture',expires_at:expires,expires_in:3600,token_type:'bearer',user}));localStorage.setItem('clipt-mobile-controls-v1',JSON.stringify({hand,trail:false}));localStorage.setItem('clipt-controller-preferences-v1',JSON.stringify({layout:controllerMode,autoHide:false}));},{user,hand:options.hand||'right',controllerMode:options.controllerMode||'auto'});
+ await page.route('**/*',async route=>{const request=route.request(),url=new URL(request.url()),path=url.pathname;if(url.origin==='http://127.0.0.1:8081'||url.origin===mediaOrigin)return route.continue();if(url.origin!=='http://127.0.0.1:54321')return route.abort();let data:any=[],status=200;const eq=(key:string)=>url.searchParams.get(key)?.replace(/^eq\./,'');const gameMatches=(row:{game_id:string})=>{const filter=url.searchParams.get('game_id');return !filter||filter.startsWith('eq.')&&row.game_id===filter.slice(3)||filter.startsWith('in.(')&&filter.slice(4,-1).split(',').includes(row.game_id);};
  if(path==='/auth/v1/user')data=user;
  if(path==='/rest/v1/profiles')data=profile(eq('id')||owner);
  if(path==='/rest/v1/rpc/get_own_profile')data=profile(owner);
- if(path==='/rest/v1/games'){const id=eq('id');data=id?games.find(game=>game.id===id)||null:games.filter(game=>!url.searchParams.get('name')||game.name.toLowerCase().includes(url.searchParams.get('name')!.replace(/^ilike\./,'').replace(/%/g,'').toLowerCase()));}
- if(path==='/rest/v1/public_clipt_discovery'||path==='/rest/v1/posts'){let rows=clips.filter(row=>!eq('game_id')||row.game_id===eq('game_id'));if(path==='/rest/v1/posts'&&eq('game_id')){expect(url.searchParams.getAll('video_url')).toContain('neq.');}data=url.searchParams.has('id')?rows.find(row=>row.id===eq('id'))||null:rows;}
+ if(path==='/rest/v1/games'||path==='/rest/v1/game_channel_catalog'){const id=eq('id')||url.searchParams.get('member_ids')?.match(/[a-f0-9-]{36}/i)?.[0];data=id?catalog.find(game=>game.id===id||game.member_ids.includes(id))||null:catalog.filter(game=>!url.searchParams.get('name')||game.name.toLowerCase().includes(url.searchParams.get('name')!.replace(/^ilike\./,'').replace(/%/g,'').toLowerCase()));}
+ if(path==='/rest/v1/public_clipt_discovery'||path==='/rest/v1/posts'){let rows=catalogClips.filter(gameMatches);if(path==='/rest/v1/posts'&&eq('game_id')){expect(url.searchParams.getAll('video_url')).toContain('neq.');}data=url.searchParams.has('id')?rows.find(row=>row.id===eq('id'))||null:rows;}
  if(path==='/rest/v1/public_channel_posts')data=[{...clips[0],id:uid(400),content:'Alpha photo post',image_url:null},{...clips[2],id:uid(401),content:'Beta photo post',image_url:null}].filter(row=>!eq('game_id')||row.game_id===eq('game_id'));
  if(path==='/rest/v1/follows'){if(request.method()==='POST'){following=true;stats.follows++;data=null;}else if(request.method()==='DELETE'){following=false;data=null;}else data=url.searchParams.get('select')==='following_id'?(following?[{following_id:creator}]:[]):following?{follower_id:owner,following_id:creator}:null;}
  const streamRows=[{id:streamA,user_id:creator,title:'Alpha live',game_id:gameA,is_live:!stopped},{id:streamB,user_id:uid(80),title:'Beta live',game_id:gameB,is_live:true}].map(row=>({...row,description:'Recorded fixture broadcast',thumbnail_url:null,viewer_count:null,playback_url:mediaOrigin+'/index.m3u8',hls_playback_url:null}));
@@ -27,7 +28,7 @@ async function fixture(page:Page){
   else if(request.method()==='PATCH'){expect(eq('user_id')).toBe(owner);const input=request.postDataJSON();expect(Object.keys(input)).toEqual(['game_id']);stats.updates.push(input);own={...own,...input};data=own;}
   else if(eq('user_id')===owner)data=own;
   else if(eq('id'))data=streamRows.find(row=>row.id===eq('id'))||own;
-  else data=streamRows.filter(row=>row.is_live&&(!eq('game_id')||row.game_id===eq('game_id'))&&(!url.searchParams.has('user_id')||row.user_id===creator));
+  else data=streamRows.filter(row=>row.is_live&&gameMatches(row)&&(!url.searchParams.has('user_id')||row.user_id===creator));
  }
  if(path==='/rest/v1/stream_chat'&&request.method()==='POST'){stats.chats++;if(failChat){status=503;data={message:'Fixture chat write failed'};}else data=null;}
  if(path==='/rest/v1/rpc/check_chat_rate_limit'||path==='/rest/v1/rpc/is_user_timed_out')data=false;
@@ -58,5 +59,45 @@ test('live discovery filters games and the viewer plays HLS with follow chat rec
 });
 test('owner can tag an offline draft and update its game without starting a broadcast',async({page},info)=>{
  const service=await fixture(page);try{await page.setViewportSize({width:390,height:844});await page.goto('/stream-setup?game='+gameA);await page.getByLabel('Stream title',{exact:true}).fill('My channel broadcast');await expect(page.getByLabel('Stream game channel',{exact:true})).toHaveValue(gameA);await page.getByRole('button',{name:'Create stream draft',exact:true}).click();await expect(page.getByRole('heading',{name:'My channel broadcast',exact:true})).toBeVisible();expect(service.stats.creates).toBe(1);expect(service.stats.starts).toBe(0);await page.getByLabel('Stream game channel',{exact:true}).selectOption(gameB);await page.getByRole('button',{name:'Save game channel',exact:true}).click();await expect.poll(()=>service.stats.updates.length).toBe(1);expect(service.stats.updates[0]).toEqual({game_id:gameB});await expect(page.getByLabel('Stream game channel',{exact:true})).toHaveValue(gameB);await expect(page.getByText(/Offline.*Viewer count unavailable/)).toBeVisible();await page.screenshot({path:info.outputPath('stream-setup-game.png')});await page.getByRole('button',{name:'Initialize Stream',exact:true}).click();await expect.poll(()=>service.stats.starts).toBe(1);await expect(page.getByText(/Offline.*Viewer count unavailable/)).toBeVisible();
+ }finally{await service.close();}
+});
+
+for(const hand of ['right','left'])test('game toolbar never overlaps the recovery control or empty state ('+hand+')',async({page},info)=>{
+ const service=await fixture(page,{aliases:true,empty:true,hand});try{
+ for(const size of [{width:390,height:844},{width:195,height:422},{width:844,height:390}]){
+  await page.setViewportSize(size);await page.goto('/clipts?game='+uid(9));
+  const toolbar=page.getByRole('complementary',{name:'Game channel navigation',exact:true});await expect(toolbar).toContainText('Game Alpha');
+  const region=page.locator('.clipt-game-channel-viewport');const a=(await toolbar.boundingBox())!,b=(await region.boundingBox())!;expect(b.y).toBeGreaterThanOrEqual(a.y+a.height-1);
+  const recovery=page.getByRole('button',{name:/^(Show|Hide) controls$/}).first();if(await recovery.isVisible()){const r=(await recovery.boundingBox())!;expect(r.x+r.width<=a.x||r.x>=a.x+a.width||r.y+r.height<=a.y||r.y>=a.y+a.height).toBe(true);}
+  await expect(page.getByRole('switch',{name:'Squad feed',exact:true})).toHaveCount(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:info.outputPath('channel-toolbar-'+hand+'.png')});
+ }finally{await service.close();}
+});
+test('canonical game aliases share clips and FYP switches to live for the same game',async({page})=>{
+ const service=await fixture(page,{aliases:true,controllerMode:'immersive'});try{await page.setViewportSize({width:844,height:390});await page.goto('/game/'+gameA);
+ await expect(page.getByRole('link',{name:'Open Clipt',exact:true})).toHaveCount(3);await page.getByRole('link',{name:'Watch this channel',exact:true}).click();
+ await expect(page.locator('[data-slide-index]')).toHaveCount(3);await expect(page.locator('[data-post-id="'+uid(102)+'"]')).toHaveCount(0);
+ const reveal=page.getByRole('button',{name:'Show controls',exact:true});if(await reveal.isVisible())await reveal.click();const flip=page.getByRole('switch',{name:'Live streams for this game',exact:true});await expect(flip).toContainText('FYP');await expect(flip.locator('svg')).toHaveClass(/lucide-clapperboard/);await flip.click();
+ await expect(page).toHaveURL(url=>url.pathname==='/live'&&url.searchParams.get('game')===gameA);await expect(page.getByRole('link',{name:'Watch live: Alpha live',exact:true})).toBeVisible();await expect(page.getByRole('link',{name:'Watch live: Beta live',exact:true})).toHaveCount(0);
+ const nav=page.getByRole('navigation',{name:'Game viewing mode'});await expect(nav.getByRole('link',{name:'Live streams',exact:true})).toHaveAttribute('aria-current','page');await expect(nav.getByRole('link',{name:'Live streams',exact:true}).locator('svg')).toHaveClass(/lucide-radio/);
+ await nav.getByRole('link',{name:'FYP',exact:true}).click();await expect(page).toHaveURL(url=>url.pathname==='/clipts'&&url.searchParams.get('game')===gameA);await expect(page.locator('[data-slide-index]')).toHaveCount(3);
+ }finally{await service.close();}
+});
+test('full catalog search paginates and opens the resolved UUID rather than a provider numeric ID',async({page})=>{
+ const service=await fixture(page);try{
+ await page.route('**/functions/v1/game-catalog',async route=>{const body=route.request().postDataJSON();expect(body.query).toBeUndefined();expect(body.endpoint).toBeUndefined();if(body.action==='resolve'){expect(body.id).toBe(80000);return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({game:{id:gameB,name:'Game Beta'}})});}
+ expect(body.term).toBe('Remote search');const count=body.page===0?20:1;await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({games:Array.from({length:count},(_,i)=>({id:80000+body.page*20+i,name:'Provider game '+(body.page*20+i),release_year:2024,platforms:'PC',cover_url:null})),more:body.page===0})});});
+ await page.goto('/discovery');await page.getByRole('searchbox',{name:'Search Clipt Channels',exact:true}).fill('Remote search');await page.getByRole('button',{name:'Search full game catalog',exact:true}).click();await expect(page.getByRole('button',{name:/^Provider game /})).toHaveCount(20);await page.getByRole('button',{name:'Load more provider games',exact:true}).click();await expect(page.getByRole('button',{name:/^Provider game /})).toHaveCount(21);await page.getByRole('button',{name:'Provider game 0 · 2024 · PC',exact:true}).click();await expect(page).toHaveURL(new RegExp('/game/'+gameB+'$'));await expect(page.getByRole('heading',{name:'Game Beta',exact:true})).toBeVisible();
+ }finally{await service.close();}
+});
+test('an unavailable full catalog explains the problem and retains configured game channels',async({page})=>{
+ const service=await fixture(page);try{await page.route('**/functions/v1/game-catalog',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Catalog not configured'})}));await page.goto('/top-games');await page.getByRole('button',{name:'Browse full game catalog',exact:true}).click();await expect(page.getByText('Full catalog search is unavailable. Configured Clipt channels remain available.',{exact:true})).toBeVisible();await expect(page.getByRole('link',{name:'Game Alpha',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Retry full catalog',exact:true})).toBeVisible();
+ }finally{await service.close();}
+});
+test('selecting a provider game on the post form preserves intentional publishing',async({page})=>{
+ const service=await fixture(page);let writes=0;try{await page.route('**/rest/v1/posts?**',async route=>{if(route.request().method()==='POST')writes++;return route.fallback();});await page.route('**/functions/v1/game-catalog',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(route.request().postDataJSON().action==='resolve'?{game:{id:gameB,name:'Game Beta'}}:{games:[{id:700,name:'Game Beta',release_year:null,platforms:null,cover_url:null}],more:false})}));
+ await page.goto('/new-post');await page.getByRole('button',{name:'Browse full game catalog',exact:true}).click();await page.getByRole('button',{name:'Game Beta',exact:true}).click();await expect(page.getByLabel('Game / category',{exact:true})).toHaveValue(gameB);expect(writes).toBe(0);
  }finally{await service.close();}
 });

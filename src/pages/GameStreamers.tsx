@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import {gameChannel} from '@/lib/game-catalog';
 import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,10 +15,7 @@ export default function GameStreamers() {
   const game = useQuery({
     queryKey: ['game-creators-game', id, user?.id], enabled: validId, retry: false,
     queryFn: async ({ signal }) => {
-      const result = await supabase.from('games').select('id,name,cover_url')
-        .eq('id', id!).abortSignal(signal).maybeSingle().retry(false);
-      if (result.error) throw result.error;
-      return result.data;
+      return gameChannel(id!,signal);
     },
   });
   const creators = useQuery({
@@ -27,7 +25,7 @@ export default function GameStreamers() {
       // Existing RLS still filters blocked, hidden and inaccessible content.
       const result = await supabase.from('profiles')
         .select('id,username,display_name,avatar_url,posts!inner(game_id)')
-        .eq('posts.game_id', id!).eq('posts.is_published', true)
+        .in('posts.game_id', game.data!.member_ids??[game.data!.id]).eq('posts.is_published', true)
         .eq('posts.moderation_hidden', false).not('posts.video_url', 'is', null)
         .order('username').order('id').limit(20).retry(false).abortSignal(signal);
       if (result.error) throw result.error;

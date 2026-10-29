@@ -1,7 +1,9 @@
 import {useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {useQuery} from '@tanstack/react-query';
-import {completeGameCatalog} from '@/lib/game-catalog';
+import {GameCatalogLookup} from '@/components/GameCatalogLookup';
+import {GameCatalogCover} from '@/components/GameCatalogCover';
+import {completeGameCatalog,gameLabel} from '@/lib/game-catalog';
 import {Search,Gamepad2,Users,Film,LayoutGrid} from 'lucide-react';
 import {supabase} from '@/lib/supabase';
 import {useAuth} from '@/contexts/AuthContext';
@@ -42,7 +44,7 @@ export default function RetroSearchPage(){
     queryFn:async({signal})=>{let q=supabase.from('public_clipt_discovery').select('id,content,image_url').order('created_at',{ascending:false}).limit(20);
       if(term)q=q.ilike('content',pattern);const {data,error}=await q.abortSignal(signal).retry(false);if(error)throw error;return data;}});
   const sections=[
-    {id:'games',title:'Games',icon:Gamepad2,query:games,items:games.data?.map(g=>({id:g.id,label:g.name||'Game',href:`/game/${g.id}`,image:g.cover_url}))},
+    {id:'games',title:'Games',icon:Gamepad2,query:games,items:games.data?.map(g=>({id:g.id,label:gameLabel(g),href:`/game/${g.id}`,image:g.cover_url}))},
     {id:'creators',title:'Creators',icon:Users,query:creators,items:creators.data?.map(p=>({id:p.id,label:p.display_name?`${p.display_name} (@${p.username})`:`@${p.username}`,href:`/user/${p.id}`,image:p.avatar_url}))},
     {id:'clipts',title:'Clipts',icon:Film,query:clips,items:clips.data?.map(p=>({id:p.id,label:p.content||'Watch Clipt',href:`/post/${p.id}`,image:postImageReferences(p.image_url)[0]}))},
   ];
@@ -54,8 +56,9 @@ export default function RetroSearchPage(){
     <div className="space-y-6">{sections.filter(s=>category==='all'||category===s.id).map(section=><section key={section.id} aria-label={`${section.title} results`} className="space-y-3">
       <h2 className="text-lg font-semibold flex items-center gap-2"><section.icon className="h-5 w-5 text-primary" aria-hidden="true"/>{section.title}</h2>
       {section.query.isPending?<p role="status">Loading {section.title.toLowerCase()}…</p>:section.query.isError?<Card className="p-4"><p role="alert">Unable to load {section.title.toLowerCase()}. This is not an empty result.</p><Button variant="outline" className="mt-3" onClick={()=>void section.query.refetch()}>Retry {section.title.toLowerCase()}</Button></Card>:section.items?.length?<ul className="clipt-search-results" data-category={section.id}>{section.items.map(item=><li key={item.id}><Link to={item.href} className="clipt-search-result">
-        <div className="clipt-search-result-image"><SearchResultImage src={item.image} icon={section.icon}/></div><span>{item.label}</span>
+        <div className="clipt-search-result-image">{section.id==='games'?<GameCatalogCover src={item.image} name={item.label}/>:<SearchResultImage src={item.image} icon={section.icon}/>}</div><span>{item.label}</span>
       </Link></li>)}</ul>:<Card className="p-4 text-muted-foreground">No {section.title.toLowerCase()} {term?'match this search.':'available yet.'}</Card>}
+      {section.id==='games'&&<GameCatalogLookup term={term}/>}
       {section.id==='games' && games.isSuccess && <p role="status">{games.data.length} configured games{term?' matching this search':''}. Clear search to browse the entire configured catalog.</p>}
     </section>)}</div>
     <p className="text-xs text-muted-foreground">Browse all configured games or search any game name. Up to 20 creators and Clipts per search. Games and creators are alphabetical; Clipts are newest first, not Trophy rankings.</p>

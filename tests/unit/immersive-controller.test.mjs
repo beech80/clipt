@@ -1,3 +1,4 @@
+import * as gameFeedNavigation from '../../src/lib/game-feed-navigation.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -8,7 +9,7 @@ import * as pageController from '../../src/lib/page-controller.ts';
 const nativeRequire=createRequire(import.meta.url);
 const require=name=>name==='@/lib/page-controller'?pageController:nativeRequire(name);
 const read=path=>readFileSync(new URL('../../src/'+path,import.meta.url),'utf8');
-function load(path,deps={}) {const imports={'@/components/post/HashtagText':{HashtagText:({text})=>text},'@/hooks/useMobileControlsPreferences':{useMobileControlsPreferences:()=>({preferences:{hand:'right',trail:true},update(){},saved:true})},'./accessibility/HandPreferenceSettings':{HandPreferenceSettings:()=>null},'./AdjustablePanel':{AdjustablePanel:()=>null},'@/components/AdjustablePanel':{AdjustablePanel:()=>null},'@/pages/Menu':{default:()=>null,__esModule:true},...deps};const mod={exports:{}};new Function('require','module','exports',ts.transpileModule(read(path),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText)(name=>imports[name]??require(name),mod,mod.exports);return mod.exports;}
+function load(path,deps={}) {const imports={'@/lib/game-feed-navigation':gameFeedNavigation,'@/components/post/HashtagText':{HashtagText:({text})=>text},'@/hooks/useMobileControlsPreferences':{useMobileControlsPreferences:()=>({preferences:{hand:'right',trail:true},update(){},saved:true})},'./accessibility/HandPreferenceSettings':{HandPreferenceSettings:()=>null},'./AdjustablePanel':{AdjustablePanel:()=>null},'@/components/AdjustablePanel':{AdjustablePanel:()=>null},'@/pages/Menu':{default:()=>null,__esModule:true},...deps};const mod={exports:{}};new Function('require','module','exports',ts.transpileModule(read(path),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText)(name=>imports[name]??require(name),mod,mod.exports);return mod.exports;}
 const policy=load('lib/controller-layout.ts');
 test('folding, orientation and resumed-page measurements follow available space and clean up listeners',()=>{
   const keys=['document','window','matchMedia','ResizeObserver'];const saved=Object.fromEntries(keys.map(k=>[k,globalThis[k]]));
