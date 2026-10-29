@@ -81,3 +81,25 @@ for (const failure of [403,503]) {
     }
   });
 }
+
+test('Photos file-size feedback clears a rejected replacement and keeps the caption',async({page})=>{
+  const user={id:userId,aud:'authenticated',role:'authenticated',email:'fixture@example.invalid',app_metadata:{},user_metadata:{},created_at:'2026-09-19T00:00:00Z',factors:[]};
+  await page.addInitScript(({user})=>{const expires=Math.floor(Date.now()/1000)+3600;const encode=(value:object)=>btoa(JSON.stringify(value)).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');localStorage.setItem('sb-127-auth-token',JSON.stringify({access_token:encode({alg:'HS256'})+'.'+encode({sub:user.id,exp:expires,aal:'aal1',role:'authenticated'})+'.fixture',refresh_token:'fixture',expires_at:expires,expires_in:3600,token_type:'bearer',user}));},{user});
+  let uploads=0,posts=0;
+  await page.route('**/*',async route=>{const url=new URL(route.request().url());if(url.origin==='http://127.0.0.1:8081')return route.continue();if(url.origin!=='http://127.0.0.1:54321')return route.abort();if(url.pathname.startsWith('/storage/v1/object/media'))uploads++;if(url.pathname==='/rest/v1/posts'&&route.request().method()==='POST')posts++;await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(url.pathname==='/auth/v1/user'?user:[])});});
+  await page.goto('/new-post');const picker=page.getByLabel('Clipt video',{exact:true}),submit=page.getByRole('button',{name:'Post Clipt',exact:true});
+  await page.getByLabel('Caption',{exact:true}).fill('Keep my selected caption');
+  // A valid MP4 with a legal trailing free box exercises the actual 49 MB
+  // File/Photos handoff without transferring a customer's video.
+  await picker.evaluate(async(input:HTMLInputElement)=>{const original=await (await fetch('/tests/fixtures/clip-test-h264.mp4')).arrayBuffer();const free=new Uint8Array(49*1024*1024-original.byteLength);new DataView(free.buffer).setUint32(0,free.length);free.set([102,114,101,101],4);const transfer=new DataTransfer();transfer.items.add(new File([original,free],'photos-under-limit.mp4',{type:'video/mp4'}));input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));});
+  await expect(submit).toBeEnabled();await expect(page.getByRole('status').filter({hasText:'Selected video:'})).toContainText('49 MB');
+  await picker.evaluate((input:HTMLInputElement)=>{const transfer=new DataTransfer();transfer.items.add(new File([new Uint8Array(51*1024*1024)],'photos-export.mp4',{type:'video/mp4'}));input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));});
+  await expect(page.getByRole('alert')).toContainText('This video is 51 MB. The upload limit is 50 MB.');await expect(submit).toBeDisabled();
+  await picker.setInputFiles(fileURLToPath(new URL('./fixtures/clip-test-h264.mp4',import.meta.url)));await expect(submit).toBeEnabled();
+  await expect(page.getByRole('status').filter({hasText:'Selected video:'})).toContainText('clip-test-h264.mp4');
+  await picker.setInputFiles({name:'cloud-placeholder.mp4',mimeType:'video/mp4',buffer:Buffer.alloc(0)});
+  await expect(page.getByRole('alert')).toContainText('This video is empty or could not be read.');await expect(submit).toBeDisabled();await expect(page.locator('.clipt-create-media video')).toHaveCount(0);
+  await expect(page.getByLabel('Caption',{exact:true})).toHaveValue('Keep my selected caption');
+  await picker.setInputFiles(fileURLToPath(new URL('./fixtures/clip-test-h264.mp4',import.meta.url)));await expect(submit).toBeEnabled();
+  expect(uploads).toBe(0);expect(posts).toBe(0);
+});

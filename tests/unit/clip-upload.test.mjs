@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {stripTypeScriptTypes} from 'node:module';
 const source = stripTypeScriptTypes(readFileSync(new URL('../../src/lib/clip-upload.ts',import.meta.url),'utf8'));
-const {validateClipFile,clipCaption,clipUploadError} = await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const {validateClipFile,clipCaption,clipUploadError,formatClipSize,MAX_CLIP_BYTES} = await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 
 test('upload failures explain the cause without claiming an unsaved draft exists',()=>{
   for(const [error,expected] of [[{statusCode:413},/50 MB/],[{statusCode:401},/sign-in expired/],[{statusCode:403},/MFA/],[{message:'mime type denied'},/format/],[{statusCode:429},/rate limited/],[{message:'private provider error'},/connection/]]) {
@@ -28,4 +28,16 @@ test('clip caption validates and normalizes hashtags',() => {
   assert.equal(clipCaption(' Moment ','#Gaming gaming,Clipt'),'Moment\n\n#gaming #clipt');
   assert.throws(()=>clipCaption('',''));
   assert.throws(()=>clipCaption('ok','#bad-tag'));
+});
+
+test('video selection distinguishes unreadable Photos files from an oversized export',async()=>{
+  await assert.rejects(validateClipFile(new File([],'cloud-export.mp4',{type:'video/mp4'})),error=>/empty or could not be read/.test(error.message)&&/Download it to your device/.test(error.message)&&!/between 1 byte/.test(error.message));
+  await assert.rejects(validateClipFile({type:'video/mp4',size:51*1024*1024}),/This video is 51 MB.*limit is 50 MB/);
+  await assert.rejects(validateClipFile({type:'video/mp4',size:MAX_CLIP_BYTES+1}),/50\.1 MB/);
+  assert.equal(formatClipSize(MAX_CLIP_BYTES),'50 MB');
+  assert.equal(formatClipSize(0),'0 bytes');assert.equal(formatClipSize(1),'1 byte');
+});
+test('videos at and below the storage size boundary remain accepted',async()=>{
+  for(const size of [1,49*1024*1024,MAX_CLIP_BYTES])await validateClipFile({type:'video/webm',size});
+  for(const size of [-1,NaN,Infinity,0])await assert.rejects(validateClipFile({type:'video/webm',size}),/empty or could not be read/);
 });
