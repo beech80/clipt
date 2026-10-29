@@ -10,17 +10,19 @@ import { EngagementHud } from '@/components/post/EngagementHud';
 import { RefreshCw, Clapperboard, UsersRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './clipt-console.css';
+import './clipt-feed-surface.css';
+import { cancelClipScroll, scrollClipTo } from '@/lib/clip-carousel-scroll';
 import { usePortraitSwipe } from '@/hooks/usePortraitSwipe';
 import {publishingSnapshot,subscribePublishing} from '@/lib/publishing-status';
 
 const PAGE_SIZE = 20;
 const MEDIA_FILTER = 'and(video_url.not.is.null,video_url.neq.),and(image_url.not.is.null,image_url.neq.)';
-function centerClip(track: HTMLDivElement, slide: HTMLElement, behavior: ScrollBehavior) {
+function centerClip(track: HTMLDivElement, slide: HTMLElement, behavior: ScrollBehavior, quick = false) {
   // offsetLeft can use different containing blocks in WebKit. Measure both
   // elements in the same viewport coordinate space, then add the scroll offset.
   const viewport = track.getBoundingClientRect();
   const item = slide.getBoundingClientRect();
-  track.scrollTo({ left: Math.max(0, track.scrollLeft + item.left - viewport.left - (track.clientWidth - item.width) / 2), behavior });
+  scrollClipTo(track, Math.max(0, track.scrollLeft + item.left - viewport.left - (track.clientWidth - item.width) / 2), behavior, quick);
 }
 export default function Clipts() {
   const { user } = useAuth();
@@ -97,7 +99,8 @@ export default function Clipts() {
     if (!track) return;
     const navigate = (event: Event) => {
       if (document.querySelector('[data-sliding-panel][data-panel-size="full"]:not([data-state="closed"]), [role="dialog"]:not(.clipt-engagement-hud):not([data-sliding-panel]):not([data-state="closed"])')) return;
-      const direction = (event as CustomEvent<{ direction: number }>).detail?.direction;
+      const detail = (event as CustomEvent<{ direction: number; source?: string }>).detail;
+      const direction = detail?.direction;
       if (direction !== -1 && direction !== 1) return;
       const nextIndex = Math.max(0, Math.min(posts.length - 1, activeIndexRef.current + direction));
       const slide = track.querySelector<HTMLElement>('[data-slide-index="' + nextIndex + '"]');
@@ -105,11 +108,15 @@ export default function Clipts() {
       navigationTargetRef.current = nextIndex;
       activeIndexRef.current = nextIndex;
       setActiveIndex(nextIndex);
-      centerClip(track, slide, matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduce-motion') ? 'instant' : 'smooth');
+      centerClip(track, slide, matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduce-motion') ? 'instant' : 'smooth', detail?.source === 'bottom-swipe');
     };
     window.addEventListener('clipt:navigate', navigate);
     return () => window.removeEventListener('clipt:navigate', navigate);
   }, [activeIndex, posts.length]);
+  useEffect(() => {
+    const track = trackRef.current;
+    return () => { if (track) cancelClipScroll(track); };
+  }, [Boolean(posts.length)]);
   // Preserve the visible clip through rotation, folding and viewport changes.
   // Scroll only the carousel; keep its keyed players and playback state intact.
   useEffect(() => {
@@ -161,17 +168,20 @@ export default function Clipts() {
         const track = trackRef.current;
         if (!track) return;
         const midpoint = track.getBoundingClientRect().left + track.clientWidth / 2;
+        const pending = navigationTargetRef.current;
+        if (pending !== null) {
+          const target = track.querySelector<HTMLElement>('[data-slide-index="' + pending + '"]');
+          if (!target) return;
+          const rect = target.getBoundingClientRect();
+          if (Math.abs(rect.left + rect.width / 2 - midpoint) <= 2) navigationTargetRef.current = null;
+          return; // No full-list measurements or state updates during the transition.
+        }
         let closest = 0, distance = Infinity;
         track.querySelectorAll<HTMLElement>('[data-slide-index]').forEach(slide => {
           const rect = slide.getBoundingClientRect();
           const candidate = Math.abs(rect.left + rect.width / 2 - midpoint);
           if (candidate < distance) { distance = candidate; closest = Number(slide.dataset.slideIndex); }
         });
-        // Intermediate scroll events must not reactivate the outgoing video.
-        if (navigationTargetRef.current !== null) {
-          if (closest !== navigationTargetRef.current || distance > 2) return;
-          navigationTargetRef.current = null;
-        }
         activeIndexRef.current = closest;
         setActiveIndex(closest);
       }}>
