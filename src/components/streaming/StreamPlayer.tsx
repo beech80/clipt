@@ -31,11 +31,21 @@ export const StreamPlayer = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playbackError, setPlaybackError] = useState('');
   const [attempt, setAttempt] = useState(0);
+  const [needsPlay, setNeedsPlay] = useState(false);
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !playbackUrl) return;
     let hls: Hls | undefined;
-    setPlaybackError('');
+    let active = true;
+    setPlaybackError(''); setNeedsPlay(false);
+    // MSE attachment can cancel the browser's initial autoplay request. Start
+    // again after the manifest is ready, with a visible gesture fallback.
+    const requestPlayback = () => {
+      if (!active || document.hidden) return;
+      try { void video.play()?.catch(() => { if (active) setNeedsPlay(true); }); }
+      catch { if (active) setNeedsPlay(true); }
+    };
+    video.addEventListener('loadedmetadata', requestPlayback, {once: true});
     const fail = () => setPlaybackError(streamPlaybackError(video.error?.code === 2 ? 'networkError' : video.error?.code === 3 ? 'mediaError' : video.error?.code === 4 ? 'sourceError' : 'unknown'));
     try {
       const url = new URL(playbackUrl, window.location.origin);
@@ -50,6 +60,7 @@ export const StreamPlayer = ({
         hls.on(Hls.Events.ERROR, (_event, data) => {
           if (data.fatal) { hls?.destroy(); setPlaybackError(streamPlaybackError(data.type, data.response?.code)); }
         });
+        hls.on(Hls.Events.MANIFEST_PARSED, requestPlayback);
         hls.loadSource(url.href);
         hls.attachMedia(video);
       } else if (!isHls || video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -62,6 +73,8 @@ export const StreamPlayer = ({
     video.addEventListener('error', fail);
     document.addEventListener('visibilitychange', pauseWhenHidden);
     return () => {
+      active = false;
+      video.removeEventListener('loadedmetadata', requestPlayback);
       document.removeEventListener('visibilitychange', pauseWhenHidden);
       video.removeEventListener('error', fail);
       hls?.destroy();
@@ -92,9 +105,13 @@ export const StreamPlayer = ({
               playsInline
               controls
               muted
-              onPlaying={() => setPlaybackError('')}
+              onPlaying={() => {setPlaybackError('');setNeedsPlay(false);}}
             />
           </div>
+          {needsPlay && !playbackError && <Button onClick={() => {
+            const video=videoRef.current;if(!video)return;
+            void video.play().then(()=>setNeedsPlay(false)).catch(()=>setPlaybackError('Playback could not start. Please retry.'));
+          }}>Play live stream</Button>}
           {playbackError && <div className="space-y-2 p-2">
             <p role="alert">{playbackError}</p>
             <Button variant="outline" onClick={() => setAttempt(value => value + 1)}>Retry playback</Button>
