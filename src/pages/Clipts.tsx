@@ -77,7 +77,7 @@ export default function Clipts() {
         .or(feed === 'squad' ? MEDIA_FILTER : `and(or(${MEDIA_FILTER}),or(post_type.is.null,post_type.neq.squad))`).eq('is_published', true)
         .order('created_at', { ascending: false }).order('id', { ascending: false })
         .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
-      if (gameId) request=request.eq('game_id',gameId);
+      if (gameId) request=request.eq('game_id',gameId).not('video_url','is',null).neq('video_url','');
       if (feed === 'squad') request = request.in('user_id', following.data!);
       if(user && muted.data?.length) request=request.not('user_id','in',`(${muted.data.join(',')})`);
       const { data, error } = await request.retry(false);
@@ -90,7 +90,7 @@ export default function Clipts() {
     queryFn:async({signal})=>{const {data,error}=await supabase.from('posts').select('id,content,image_url,video_url,user_id,game_id,created_at,is_published,is_premium,is_subscriber_only,post_type,profiles(username,display_name,avatar_url),games(id,name)')
       .eq('id',publishing!.postId!).eq('user_id',user!.id).eq('is_published',true).abortSignal(signal).retry(false).maybeSingle();if(error)throw error;return data;}});
   const basePosts=data?.pages.flat() || [];
-  const ownUploaded=publishing?.stage==='complete' && uploadedPost.data && (!gameId||uploadedPost.data.game_id===gameId) && (uploadedPost.data.post_type==='squad' ? feed==='squad' : feed==='clipts') ? uploadedPost.data:null;
+  const ownUploaded=publishing?.stage==='complete' && uploadedPost.data && (!gameId||(uploadedPost.data.game_id===gameId&&Boolean(uploadedPost.data.video_url?.trim()))) && (uploadedPost.data.post_type==='squad' ? feed==='squad' : feed==='clipts') ? uploadedPost.data:null;
   const posts = user && !muted.isSuccess ? [] : [...new Map((ownUploaded?[ownUploaded,...basePosts]:basePosts).map(post => [post.id, post])).values()];
   useEffect(()=>{if(publishing?.stage==='complete'){navigationTargetRef.current=null;setFeed(publishing.destination);setActiveIndex(0);trackRef.current?.scrollTo({left:0,behavior:'instant'});}},[publishing?.id,publishing?.stage]);
   const activePost = posts[activeIndex];

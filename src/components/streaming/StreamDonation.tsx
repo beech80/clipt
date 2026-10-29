@@ -59,7 +59,7 @@ export const StreamDonation = ({ streamId, streamerUsername, streamerId, classNa
   };
   return <Dialog open={open} onOpenChange={value => { if (!pending) setOpen(value); }}>
     <DialogTrigger asChild><Button data-live-action="trophy" className={className}>Support with a gift</Button></DialogTrigger>
-    <DialogContent className="max-w-md"><DialogHeader><DialogTitle>Support {streamerUsername}</DialogTitle></DialogHeader>
+    <DialogContent className="clipt-stream-gift-dialog max-w-md"><DialogHeader><DialogTitle>Support {streamerUsername}</DialogTitle></DialogHeader>
       <p>Purchase a virtual gift using Clipt tokens. This does not transfer a token balance to another user.</p>
       {user ? <p>{wallet.isError ? 'Balance unavailable.' : wallet.isPending ? 'Loading balance…' : `Balance: ${(wallet.data?.balance ?? 0).toLocaleString()} tokens`}</p> : null}
       <Link className="underline" to="/tokens">View token balance and history</Link>

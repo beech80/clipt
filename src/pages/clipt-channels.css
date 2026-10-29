@@ -30,3 +30,8 @@ body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-fyp.clipt-fyp .
 .clipt-game-channel-indicator a { display: inline-flex; min-height: 44px; align-items: center; text-decoration: underline; }
 
 .clipt-bottom-swipe-zone { min-width: 44px; }
+
+/* Keep the real gift dialog and its close control reachable in short landscape viewports. */
+[role="dialog"].clipt-stream-gift-dialog { max-height: calc(var(--clipt-portrait-visible-height,100dvh) - 24px); overflow-y: auto; overscroll-behavior: contain; top: calc(var(--clipt-portrait-visible-top,0px) + var(--clipt-portrait-visible-height,100dvh) / 2); }
+.clipt-stream-gift-dialog > button:last-child { min-width: 44px; min-height: 44px; top: 4px; right: 4px; }
+.clipt-stream-gift-dialog > div:first-child { padding-right: 36px; }

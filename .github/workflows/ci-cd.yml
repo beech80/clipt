@@ -81,6 +81,12 @@ jobs:
           name: source-controller-evidence
           path: test-results/
           retention-days: 3
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: channel-ui-screenshots
+          path: test-results/**/*.png
+          retention-days: 3
       - name: Private media upload and playback over local HTTPS
         run: npx playwright test -c playwright.media.config.ts --reporter=line
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
