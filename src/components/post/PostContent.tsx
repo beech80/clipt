@@ -87,31 +87,20 @@ const PostContent = ({ imageUrl, videoUrl, postId, frameAspectRatio, allowFullsc
     if (!video) return;
     let disposed = false;
     let started = false;
-    let frame = 0;
-    let ratio = 0;
     const pause = () => { if (document.hidden) video.pause(); };
     const observer = new IntersectionObserver(entries => {
-      ratio = entries[0].intersectionRatio;
-      if (ratio < 0.7 || !active || document.hidden) {
-        if (frame) cancelAnimationFrame(frame);
-        frame = 0; video.pause(); return;
+      const visible = entries[0].intersectionRatio >= 0.7;
+      if (!visible || !active || document.hidden) { video.pause(); return; }
+      if (autoPlay && !started) {
+        started = true;
+        video.muted = true;
+        // A denied autoplay stays recoverable through the explicit Play gesture.
+        void video.play().catch(() => { if (!disposed) setIsVideoPlaying(false); });
       }
-      if (autoPlay && !started && !frame && ratio >= 0.98) {
-        // WebKit can pause a play() requested during an offscreen transition.
-        // Wait for the incoming player to be centered and painted before starting.
-        frame = requestAnimationFrame(() => {
-          frame = requestAnimationFrame(() => {
-            frame = 0;
-            if (disposed || ratio < 0.98 || document.hidden) return;
-            started = true; video.muted = true;
-            void video.play().catch(() => { if (!disposed) setIsVideoPlaying(false); });
-          });
-        });
-      }
-    }, { threshold: [0, 0.7, 0.98, 1] });
+    }, { threshold: [0, 0.7, 1] });
     observer.observe(video);
     document.addEventListener('visibilitychange', pause);
-    return () => { disposed = true; if (frame) cancelAnimationFrame(frame); observer.disconnect(); document.removeEventListener('visibilitychange', pause); video.pause(); };
+    return () => { disposed = true; observer.disconnect(); document.removeEventListener('visibilitychange', pause); video.pause(); };
   }, [playbackUrl, mediaRetryRevision, isMediaError, active, autoPlay]);
 
   useEffect(() => {
