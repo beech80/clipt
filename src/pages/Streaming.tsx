@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BackButton } from '@/components/ui/back-button';
 import { StreamDonation } from '@/components/streaming/StreamDonation';
 import { Button } from '@/components/ui/button';
-import LiveDonationHud from '@/components/streaming/LiveDonationHud';
+import '@/pages/clipt-channels.css';
 import { followService } from '@/services/followService';
 import { storageProjectUrl } from '@/integrations/supabase/client';
 
@@ -27,10 +27,10 @@ export default function Streaming() {
   const followBusy = useRef(false);
   const { data: stream, isLoading, error, refetch } = useQuery({
     queryKey: ['public-stream', id, user?.id],
-    queryFn: async () => {
+    queryFn: async ({signal}) => {
       const { data, error } = await supabase.from('streams')
-        .select('id, user_id, title, description, is_live, viewer_count, hls_playback_url, playback_url')
-        .eq('id', id).maybeSingle();
+        .select('id, user_id, title, description, is_live, viewer_count, hls_playback_url, playback_url, game_id')
+        .eq('id', id).abortSignal(signal).retry(false).maybeSingle();
       if (error) throw error;
       if (!data || !developmentLiveBackend) return data;
       const verified = await supabase.rpc('get_verified_live_status', {p_stream_id: data.id});
@@ -40,8 +40,10 @@ export default function Streaming() {
         playback_url: state?.playback_url ?? null, hls_playback_url: null, viewer_count: null};
     },
     enabled: !!id && !authLoading && (!developmentLiveBackend || !!user),
+    retry:false,
     refetchInterval: 15000,
   });
+  const game=useQuery({queryKey:['stream-game',stream?.game_id],enabled:Boolean(stream?.game_id),retry:false,queryFn:async()=>{const {data,error}=await supabase.from('games').select('id,name').eq('id',stream!.game_id!).maybeSingle();if(error)throw error;return data;}});
   const owner = !!user && user.id === stream?.user_id;
   const creator = useQuery({queryKey:['stream-creator',stream?.user_id],enabled:Boolean(stream?.user_id),retry:false,
     queryFn:async()=>{const {data,error}=await supabase.from('profiles').select('username,display_name').eq('id',stream!.user_id).maybeSingle();if(error)throw error;return data;}});
@@ -77,7 +79,8 @@ export default function Streaming() {
     <header className="flex items-center gap-3"><BackButton /><h1 className="text-2xl font-bold break-words">{stream?.title || 'Stream'}</h1></header>
     {authLoading ? <p role="status">Checking sign-in…</p> : developmentLiveBackend && !user ? <div role="alert" className="gaming-card p-6 space-y-3"><p>Sign in to view this development live stream.</p><Link className="underline" to="/login">Sign in</Link></div> : isLoading ? <p role="status">Loading stream…</p> : error ? <div role="alert" className="gaming-card p-6 space-y-3"><p>{'code' in error && error.code === '42501' ? 'Stream access requires an active authenticated account. Complete your MFA challenge if enabled, then retry.' : 'Unable to load this stream.'}</p><Button onClick={() => void refetch()}>Retry stream</Button><Link className="underline" to="/login">Check sign-in</Link></div> : !stream ? <p>This stream is unavailable or private.</p> : <>
       <p>{stream.description}</p>
-      <Link className="underline" to={`/user/${stream.user_id}`}>View creator profile</Link>
+      <Link className="inline-flex min-h-11 items-center underline" data-live-action="creator" to={`/user/${stream.user_id}`}>View creator profile</Link>
+      {game.data&&<Link className="inline-flex min-h-11 items-center underline" to={'/game/'+game.data.id+'?tab=live'}>{game.data.name} channel</Link>}
       <p role="status">{stream.is_live ? 'LIVE' : developmentLiveBackend ? 'Not currently verified LIVE' : 'OFFLINE'}</p>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex flex-wrap h-auto">
@@ -91,15 +94,13 @@ export default function Streaming() {
             showHealth={!developmentLiveBackend} offlineMessage={developmentLiveBackend ? 'Waiting for verified live playback' : undefined}
             viewerCount={stream.viewer_count} playbackUrl={stream.hls_playback_url || stream.playback_url} />
           <div className="clipt-live-actions">
-            <Button variant="outline" data-live-action="like" disabled title="Live likes are not connected yet">Live likes unavailable</Button>
             <Button variant="outline" data-live-action="comment" disabled={!stream.is_live} onClick={() => { document.querySelector<HTMLInputElement>('[data-live-chat-input]')?.focus(); document.querySelector('[data-live-chat-input]')?.scrollIntoView({block:'center'}); }}>Live Chat</Button>
-            <LiveDonationHud creator={creator.data?.display_name || creator.data?.username || 'this creator'} disabled={!stream.is_live || !user || owner} />
             <Button data-live-action="follow" variant="outline" disabled={!user || owner || followPending || following.isPending || following.isError} onClick={() => void toggleFollow()}>{followPending ? 'Updating…' : following.data ? 'Following' : 'Follow'}</Button>
           </div>
           {followError && <p role="alert">{followError}</p>}
           {following.isError && <div role="alert"><p>Follow status unavailable.</p><Button onClick={() => void following.refetch()}>Retry follow status</Button></div>}
           {stream.is_live && !owner ? <div className="mt-4 space-y-2">
-            <StreamDonation streamId={stream.id} streamerId={stream.user_id} streamerUsername="this creator" />
+            <StreamDonation streamId={stream.id} streamerId={stream.user_id} streamerUsername={creator.data?.display_name||creator.data?.username||'this creator'} />
             <p className="text-sm text-muted-foreground">Gifts use tokens. Cash donations are unavailable until payment verification is configured.</p>
           </div> : null}
         </TabsContent>

@@ -4,8 +4,9 @@ import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 import { createRequire } from 'node:module';
 import React from 'react';
+import * as panelHeight from '../../src/lib/panel-height.ts';
 const require=createRequire(import.meta.url);
-function load(path,deps={}){const m={exports:{}};new Function('require','module','exports',ts.transpileModule(readFileSync(new URL('../../src/'+path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText)(name=>deps[name]??require(name),m,m.exports);return m.exports;}
+function load(path,deps={}){const m={exports:{}};new Function('require','module','exports',ts.transpileModule(readFileSync(new URL('../../src/'+path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText)(name=>({'@/lib/panel-height':panelHeight,...deps})[name]??require(name),m,m.exports);return m.exports;}
 const module={exports:{}};
 new Function('module','exports',ts.transpileModule(readFileSync(new URL('../../src/lib/mobile-controls.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText)(module,module.exports);
 const {readMobileControls,portraitSwipeDirection,panelSizeAfterDrag}=module.exports;
@@ -52,18 +53,22 @@ test('hand preference partial updates persist across fresh mounts without touchi
     assert.equal(storage.get('clipt-controller-preferences-v1'),'unchanged');assert.deepEqual(events,['clipt:mobile-controls','clipt:mobile-controls']);
   }finally{Object.assign(globalThis,saved);}
 });
-test('panel drag and keyboard controls use the same bounded snap model',()=>{
-  let value='half';const {AdjustablePanel}=load('components/AdjustablePanel.tsx',{
-    react:{...React,useCallback:fn=>fn,useEffect(){},useRef:()=>({current:null}),useState:()=>[value,next=>{value=typeof next==='function'?next(value):next;}]},
-    '@/components/ui/dialog':{DialogContent:()=>null,DialogClose:()=>null},'@/lib/mobile-controls':module.exports,
-    '@/hooks/useMobileControlsPreferences':{useMobileControlsPreferences:()=>({preferences:{hand:'left'}})},'./AdjustablePanel.css':{},
-  });
-  const tree=AdjustablePanel.render({children:'Original content'},null),handle=tree.props.children[0].props.children[1];
-  assert.equal(tree.props['data-hand'],'left');
-  handle.props.onPointerDown({button:0,pointerId:1,clientY:300,currentTarget:{setPointerCapture(){}}});
-  handle.props.onPointerUp({pointerId:1,clientY:200});assert.equal(value,'expanded');
-  handle.props.onKeyDown({key:'End',preventDefault(){}});assert.equal(value,'full');
-  handle.props.onKeyDown({key:'Home',preventDefault(){}});assert.equal(value,'half');
+test('panel retains its released height and preset keyboard controls remain available',()=>{
+  const saved={window:globalThis.window};const values=[],refs=[];let slot=0,refSlot=0;
+  try {
+    globalThis.window={innerHeight:800,innerWidth:390,visualViewport:{height:800}};
+    const {AdjustablePanel}=load('components/AdjustablePanel.tsx',{
+      react:{...React,useCallback:fn=>fn,useEffect(){},useRef:initial=>{const i=refSlot++;return refs[i]??(refs[i]={current:initial});},useState:initial=>{const i=slot++;values[i]=initial;return [initial,value=>{values[i]=typeof value==='function'?value(values[i]):value;}];}},
+      '@/components/ui/dialog':{DialogContent:()=>null,DialogClose:()=>null},'@/lib/mobile-controls':module.exports,
+      '@/hooks/useMobileControlsPreferences':{useMobileControlsPreferences:()=>({preferences:{hand:'left'}})},'./AdjustablePanel.css':{},
+    });
+    const tree=AdjustablePanel.render({children:'Original content'},null);tree.ref({getBoundingClientRect:()=>({height:392}),style:{removeProperty(){}},setAttribute(){},removeAttribute(){}});
+    const handle=tree.props.children[0].props.children[1];assert.equal(tree.props['data-hand'],'left');
+    handle.props.onPointerDown({button:0,pointerId:1,clientY:300,currentTarget:{setPointerCapture(){}}});handle.props.onPointerUp({pointerId:1,clientX:0,clientY:200});
+    assert.equal(values[2],492/784,'the actual released height is retained, independently of a preset');
+    handle.props.onKeyDown({key:'End',preventDefault(){}});assert.equal(values[0],'full');assert.equal(values[2],null);
+    handle.props.onKeyDown({key:'Home',preventDefault(){}});assert.equal(values[0],'half');
+  } finally {Object.assign(globalThis,saved);}
 });
 test('constrained page navigation uses a real full-height modal and does not start a resize gesture',()=>{
   const {AdjustablePanel}=load('components/AdjustablePanel.tsx',{
@@ -137,7 +142,7 @@ test('full panel temporarily disables background interaction and restores its pr
     const app=new HTMLElement(),alreadyInert=new HTMLElement(true),portal=new HTMLElement(false,true);
     globalThis.document={body:{children:[app,alreadyInert,portal]}};
     const {AdjustablePanel}=load('components/AdjustablePanel.tsx',{
-      react:{...React,useCallback:fn=>fn,useEffect:fn=>effects.push(fn),useRef:()=>({current:{}}),useState:()=>['full',()=>{}]},
+      react:{...React,useCallback:fn=>fn,useEffect:fn=>effects.push(fn),useRef:()=>({current:{}}),useState:initial=>[initial==='half'?'full':initial,()=>{}]},
       '@/components/ui/dialog':{DialogContent:()=>null,DialogClose:()=>null},'@/lib/mobile-controls':module.exports,
       '@/hooks/useMobileControlsPreferences':{useMobileControlsPreferences:()=>({preferences:{hand:'right'}})},'./AdjustablePanel.css':{},
     });

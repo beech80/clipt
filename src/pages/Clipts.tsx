@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { EngagementHud } from '@/components/post/EngagementHud';
 import { RefreshCw, Clapperboard, UsersRound } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { validChannelGame } from '@/lib/channel-feeds';
 import './clipt-console.css';
 import './clipt-feed-surface.css';
+import './clipt-channels.css';
 import { cancelClipScroll, scrollClipTo } from '@/lib/clip-carousel-scroll';
 import { usePortraitSwipe } from '@/hooks/usePortraitSwipe';
 import {publishingSnapshot,subscribePublishing} from '@/lib/publishing-status';
@@ -26,6 +28,10 @@ function centerClip(track: HTMLDivElement, slide: HTMLElement, behavior: ScrollB
 }
 export default function Clipts() {
   const { user } = useAuth();
+  const [params]=useSearchParams();
+  const gameId=params.get('game')||null;
+  const invalidGame=Boolean(gameId&&!validChannelGame(gameId));
+  const selectedGame=useQuery({queryKey:['feed-game-channel',gameId],enabled:Boolean(gameId&&!invalidGame),retry:false,queryFn:async({signal})=>{const {data,error}=await supabase.from('games').select('id,name').eq('id',gameId!).abortSignal(signal).retry(false).maybeSingle();if(error)throw error;return data;}});
   const publishingState=useSyncExternalStore(subscribePublishing,publishingSnapshot,()=>null);
   const publishing=publishingState?.owner===user?.id?publishingState:null;
   const [hiddenPublishing,setHiddenPublishing]=useState('');
@@ -60,17 +66,18 @@ export default function Clipts() {
   activeIndexRef.current = activeIndex;
   const swipeZoneRef = useRef<HTMLButtonElement>(null);
   const { data, error, isPending, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } = useInfiniteQuery({
-    queryKey: ['clipts-feed', user?.id, feed, following.data, muted.data],
-    enabled: (!user || muted.isSuccess) && (feed === 'clipts' || Boolean(user && following.isSuccess)),
+    queryKey: ['clipts-feed', user?.id, gameId, feed, following.data, muted.data],
+    enabled: !invalidGame && (!gameId || Boolean(selectedGame.data)) && (!user || muted.isSuccess) && (feed === 'clipts' || Boolean(user && following.isSuccess)),
     retry: false,
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
       if (feed === 'squad' && !following.data?.length) return [];
       let request = supabase.from('posts')
-        .select('id, content, image_url, video_url, user_id, created_at, is_published, is_premium, is_subscriber_only, post_type, profiles(username, display_name, avatar_url), games(id, name)')
+        .select('id, content, image_url, video_url, user_id, game_id, created_at, is_published, is_premium, is_subscriber_only, post_type, profiles(username, display_name, avatar_url), games(id, name)')
         .or(feed === 'squad' ? MEDIA_FILTER : `and(or(${MEDIA_FILTER}),or(post_type.is.null,post_type.neq.squad))`).eq('is_published', true)
         .order('created_at', { ascending: false }).order('id', { ascending: false })
         .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
+      if (gameId) request=request.eq('game_id',gameId);
       if (feed === 'squad') request = request.in('user_id', following.data!);
       if(user && muted.data?.length) request=request.not('user_id','in',`(${muted.data.join(',')})`);
       const { data, error } = await request.retry(false);
@@ -80,10 +87,10 @@ export default function Clipts() {
     getNextPageParam: (lastPage, pages) => lastPage.length === PAGE_SIZE ? pages.length : undefined,
   });
   const uploadedPost=useQuery({queryKey:['published-home-post',user?.id,publishing?.postId],enabled:Boolean(user&&publishing?.stage==='complete'&&publishing.postId),retry:false,
-    queryFn:async({signal})=>{const {data,error}=await supabase.from('posts').select('id,content,image_url,video_url,user_id,created_at,is_published,is_premium,is_subscriber_only,post_type,profiles(username,display_name,avatar_url),games(id,name)')
+    queryFn:async({signal})=>{const {data,error}=await supabase.from('posts').select('id,content,image_url,video_url,user_id,game_id,created_at,is_published,is_premium,is_subscriber_only,post_type,profiles(username,display_name,avatar_url),games(id,name)')
       .eq('id',publishing!.postId!).eq('user_id',user!.id).eq('is_published',true).abortSignal(signal).retry(false).maybeSingle();if(error)throw error;return data;}});
   const basePosts=data?.pages.flat() || [];
-  const ownUploaded=publishing?.stage==='complete' && uploadedPost.data && (uploadedPost.data.post_type==='squad' ? feed==='squad' : feed==='clipts') ? uploadedPost.data:null;
+  const ownUploaded=publishing?.stage==='complete' && uploadedPost.data && (!gameId||uploadedPost.data.game_id===gameId) && (uploadedPost.data.post_type==='squad' ? feed==='squad' : feed==='clipts') ? uploadedPost.data:null;
   const posts = user && !muted.isSuccess ? [] : [...new Map((ownUploaded?[ownUploaded,...basePosts]:basePosts).map(post => [post.id, post])).values()];
   useEffect(()=>{if(publishing?.stage==='complete'){navigationTargetRef.current=null;setFeed(publishing.destination);setActiveIndex(0);trackRef.current?.scrollTo({left:0,behavior:'instant'});}},[publishing?.id,publishing?.stage]);
   const activePost = posts[activeIndex];
@@ -93,7 +100,7 @@ export default function Clipts() {
     setActiveIndex(0);
     setEngagementOpen(false);
     trackRef.current?.scrollTo({ left: 0, behavior: 'instant' });
-  }, [user?.id, feed]);
+  }, [user?.id, feed, gameId]);
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
@@ -137,7 +144,11 @@ export default function Clipts() {
     if (posts.length && activeIndex >= posts.length - 3 && hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [activeIndex, posts.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  return <main className="clipt-fyp" data-feed={feed}>
+  return <main className="clipt-fyp" data-feed={feed} data-game-channel={gameId||undefined}>
+    {gameId&&<aside className="clipt-game-channel-indicator"><span>{invalidGame?'Invalid game channel':selectedGame.data?.name||'Game channel'}</span><Link to="/clipts" aria-label="Clear game channel">All games</Link></aside>}
+    {gameId&&selectedGame.isError&&<div role="alert" className="clipt-feed-state">Channel could not be loaded. <Button onClick={()=>void selectedGame.refetch()}>Retry channel</Button></div>}
+    {gameId&&!invalidGame&&selectedGame.isPending&&<p role="status" className="clipt-feed-state">Loading game channel…</p>}
+    {gameId&&!invalidGame&&selectedGame.isSuccess&&!selectedGame.data&&<p className="clipt-feed-state">Game channel not found.</p>}
     {publishing && hiddenPublishing!==publishing.id && <aside className="clipt-publishing-status" role={publishing.stage==='error'?'alert':'status'}>
       {publishing.stage==='error'?<><strong>Upload needs attention</strong><p>{publishing.message}</p>{!publishing.uncertain&&<Link to="/new-post">Open posting</Link>}<Link to="/profile">Check my posts before retrying</Link></>:publishing.stage==='complete'?<><strong>{uploadedPost.data?'Your post is ready below.':'Upload saved.'}</strong>{!uploadedPost.data&&<p>It will appear after any required safety review. <button onClick={()=>void uploadedPost.refetch()}>Check again</button></p>}</>:<><strong>{publishing.stage==='uploading'?'Uploading your post…':publishing.stage==='reward'?'Post saved. Checking Token reward…':'Publishing your post…'}</strong><p>Keep CLIPT open until this finishes. You can watch while it uploads.</p></>}
       {['complete','error'].includes(publishing.stage)&&<button type="button" aria-label="Dismiss upload status" onClick={()=>setHiddenPublishing(publishing.id)}>Dismiss</button>}
@@ -153,7 +164,7 @@ export default function Clipts() {
       </div>
     </header>
     <Tabs value={feed} onValueChange={setFeed} className="clipt-feed-tabs"><TabsList aria-label="Choose Clipt feed"><TabsTrigger value="clipts" aria-label="Clipts" title="Clipts"><Clapperboard size={22} aria-hidden="true" /></TabsTrigger><TabsTrigger value="squad" aria-label="Squad" title="Squad"><UsersRound size={22} aria-hidden="true" /></TabsTrigger></TabsList></Tabs>
-    {feed === 'squad' && !user ? <p className="clipt-feed-state"><Link to="/login">Sign in to see your Squad.</Link></p> : following.isError && feed === 'squad' ? <div className="clipt-feed-state" role="alert">Your following list could not be loaded. <Button onClick={() => void following.refetch()}>Retry Squad</Button></div> : isPending && <p role="status" className="clipt-feed-state">Loading Clipts…</p>}
+    {feed === 'squad' && !user ? <p className="clipt-feed-state"><Link to="/login">Sign in to see your Squad.</Link></p> : following.isError && feed === 'squad' ? <div className="clipt-feed-state" role="alert">Your following list could not be loaded. <Button onClick={() => void following.refetch()}>Retry Squad</Button></div> : isPending && !invalidGame && (!gameId||Boolean(selectedGame.data)) && <p role="status" className="clipt-feed-state">Loading Clipts…</p>}
     {muted.isError && user && <div role="alert" className="clipt-feed-state"><p>Mute preferences could not be loaded. Feed paused.</p><Button onClick={()=>void muted.refetch()}>Retry mute preferences</Button></div>}
     {error && <div role="alert" className="clipt-feed-state"><p>Could not load Clipts. Please try again.</p><Button onClick={() => void refetch()}>Retry</Button></div>}
     {!isPending && !error && posts.length === 0 && <p className="clipt-feed-state">{feed === 'squad' ? 'No Squad clips yet. Follow creators to see their clips here.' : 'No clips yet. Be the first to share one.'}</p>}

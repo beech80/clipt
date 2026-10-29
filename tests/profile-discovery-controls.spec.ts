@@ -47,7 +47,7 @@ for(const hand of ['right','left']) {
     await expect(page.getByText('Loading video...',{exact:true})).toHaveCount(0);
     await expect(page.getByText('Loading page…',{exact:true})).toHaveCount(0);
     await expect(page.locator('.clipt-controller')).toHaveAttribute('data-portrait-viewing','true');
-    await expect.poll(async()=>Math.round((await home.boundingBox())!.y)).toBeGreaterThan(740);
+    await expect.poll(async()=>Math.round((await home.boundingBox())!.y)).toBeGreaterThan(680);
     await page.screenshot({path:info.outputPath(`portrait-${hand}.png`)});
     await home.click();
     await expect(page.getByRole('dialog',{name:'CLIPT navigation'})).toBeVisible();

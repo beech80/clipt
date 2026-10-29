@@ -7802,6 +7802,7 @@ export type Database = {
           dvr_window_seconds: number | null
           encrypted_stream_key: string | null
           ended_at: string | null
+          game_id: string | null
           health_status: string | null
           hls_playback_url: string | null
           id: string
@@ -7851,6 +7852,7 @@ export type Database = {
           dvr_window_seconds?: number | null
           encrypted_stream_key?: string | null
           ended_at?: string | null
+          game_id?: string | null
           health_status?: string | null
           hls_playback_url?: string | null
           id?: string
@@ -7900,6 +7902,7 @@ export type Database = {
           dvr_window_seconds?: number | null
           encrypted_stream_key?: string | null
           ended_at?: string | null
+          game_id?: string | null
           health_status?: string | null
           hls_playback_url?: string | null
           id?: string
@@ -7935,6 +7938,7 @@ export type Database = {
           vod_processing_status?: string | null
         }
         Relationships: [
+          { foreignKeyName: "streams_game_id_fkey"; columns: ["game_id"]; isOneToOne: false; referencedRelation: "games"; referencedColumns: ["id"] },
           {
             foreignKeyName: "streams_current_quality_preset_fkey"
             columns: ["current_quality_preset"]
@@ -9355,6 +9359,8 @@ export type Database = {
       }
     }
     Views: {
+      public_channel_posts: { Row: { id: string; content: string | null; image_url: string | null; created_at: string; game_id: string | null; user_id: string; username: string | null; avatar_url: string | null }; Relationships: [] }
+
       public_clipt_discovery: {
         Row: { id: string; content: string | null; image_url: string | null; created_at: string; game_id: string | null; user_id: string; username: string | null; avatar_url: string | null }
         Relationships: []
