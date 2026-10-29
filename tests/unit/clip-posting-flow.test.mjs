@@ -10,12 +10,13 @@ function load(path,deps) {
   const mod={exports:{}};new Function('require','module','exports',output)(name=>deps[name]??require(name),mod,mod.exports);return mod.exports;
 }
 const clipTools=load('lib/clip-upload.ts',{});
+const ERROR_STATE=11, UNCERTAIN_STATE=12;
 function harness({destination='clipts',draftId=null,draft=null,uploadError=null,postError=null,status=201,capability=true,kind='video',authenticated=true,caption='Real caption',reward=()=>Promise.resolve({})}={}) {
   let stateIndex=0,queryIndex=0;
   const calls=[],states=[],notices=[],jobs=[];
   const user={id:'disposable-owner'};
   const file=draft?null:new File(['fixture'],kind==='photo'?'fixture.jpg':'fixture.mp4',{type:kind==='photo'?'image/jpeg':'video/mp4'});
-  const values=[destination,file,'',caption,'#gaming','game-id','','idle',true,'',false,kind];
+  const values=[destination,file,'',caption,'#gaming','game-id','','idle',true,null,false,'',false,kind];
   const builder={insert(value){calls.push(['insert',value]);return this;},update(value){calls.push(['update',value]);return this;},eq(key,value){calls.push(['eq',key,value]);return this;},select(){return this;},retry(){return this;},async single(){return {data:postError?null:{id:'confirmed-post'},error:postError,status};}};
   const deps={
     react:{...React,useSyncExternalStore:()=>null,useState:initial=>{const index=stateIndex++;return [values[index]??initial,value=>states.push([index,value])];},useEffect:()=>{},useRef:value=>({current:value})},
@@ -28,7 +29,7 @@ function harness({destination='clipts',draftId=null,draft=null,uploadError=null,
     '@/lib/supabase':{supabase:{auth:{getUser:async()=>({data:{user:authenticated?user:null}})},from:()=>builder,storage:{from:()=>({upload:async(path)=>{calls.push(['upload',path]);return {error:uploadError};},getPublicUrl:path=>({data:{publicUrl:'https://development.example/storage/v1/object/public/media/'+path}}),remove:async paths=>{calls.push(['cleanup',paths]);return {error:null};}})}}},
     '@/lib/photo-upload':{preparePhoto:()=>{},photoUploadError:()=> 'Photo upload denied; no new draft was saved.'},
     '@/lib/community-text':load('lib/community-text.ts',{}),
-    '@/lib/clip-upload':clipTools,'@/lib/clip-reward':{checkClipReward:()=>{calls.push(['reward']);return reward();},clipRewardMessage:()=> 'Reward not confirmed'},
+    '@/lib/clip-upload':clipTools,'@/lib/prepare-clip':{prepareClipFile:async file=>file},'@/lib/clip-reward':{checkClipReward:()=>{calls.push(['reward']);return reward();},clipRewardMessage:()=> 'Reward not confirmed'},
     sonner:{toast:message=>notices.push(message)},
     '@/components/ui/button':{Button:()=>null},'@/components/ui/input':{Input:()=>null},'@/components/ui/textarea':{Textarea:()=>null},'@/components/ui/back-button':{BackButton:()=>null},
   };
@@ -47,7 +48,7 @@ test('saving a draft persists unpublished data and navigates only after server c
 test('rejected caption warns before photo/video upload and never invents a saved draft',async()=>{
   for(const kind of ['photo','video']) {
     const h=harness({kind,caption:'sh1t'});await h.submit();assert.deepEqual(h.calls,[]);
-    assert.match(h.states.find(state=>state[0]===9)[1],/Keep Clipt positive/);assert.deepEqual(h.notices,[]);
+    assert.match(h.states.find(state=>state[0]===ERROR_STATE)[1],/Keep Clipt positive/);assert.deepEqual(h.notices,[]);
   }
 });
 test('draft publishing reuses signed private media reference and owner-scoped update',async()=>{
@@ -59,16 +60,16 @@ test('draft publishing reuses signed private media reference and owner-scoped up
   assert.ok(h.jobs.some(job=>job.stage==='complete'&&job.postId==='confirmed-post'));
 });
 test('Squad privacy capability denial produces no uploads, writes or public fallback',async()=>{
-  const h=harness({destination:'squad',capability:false});await h.submit();assert.deepEqual(h.calls,[]);assert.match(h.states.find(s=>s[0]===9)[1],/Nothing was posted/);
+  const h=harness({destination:'squad',capability:false});await h.submit();assert.deepEqual(h.calls,[]);assert.match(h.states.find(s=>s[0]===ERROR_STATE)[1],/Nothing was posted/);
 });
 test('confirmed Squad posts use distinct type and never request public clip rewards',async()=>{
   const h=harness({destination:'squad'});await h.submit();assert.equal(h.calls.find(c=>c[0]==='insert')[1].post_type,'squad');assert.equal(h.calls.filter(c=>c[0]==='reward').length,0);
 });
 test('upload denial never inserts a post or falsely announces a saved draft',async()=>{
-  const h=harness({uploadError:{statusCode:403}});await h.submit();assert.equal(h.calls.filter(c=>c[0]==='insert').length,0);assert.deepEqual(h.notices,[]);assert.match(h.states.filter(s=>s[0]===9).at(-1)[1],/no new draft was saved/);
+  const h=harness({uploadError:{statusCode:403}});await h.submit();assert.equal(h.calls.filter(c=>c[0]==='insert').length,0);assert.deepEqual(h.notices,[]);assert.match(h.states.filter(s=>s[0]===ERROR_STATE).at(-1)[1],/no new draft was saved/);
 });
 test('uncertain publishing retains uploaded bytes and blocks false success',async()=>{
-  const h=harness({postError:{message:'lost response'},status:503});await h.submit();assert.equal(h.calls.filter(c=>c[0]==='cleanup').length,0);assert.deepEqual(h.calls.filter(c=>c[0]==='navigate'),[['navigate','/clipts']]);assert.ok(h.states.some(s=>s[0]===10&&s[1]===true));assert.ok(h.jobs.some(job=>job.uncertain===true));assert.deepEqual(h.notices,[]);
+  const h=harness({postError:{message:'lost response'},status:503});await h.submit();assert.equal(h.calls.filter(c=>c[0]==='cleanup').length,0);assert.deepEqual(h.calls.filter(c=>c[0]==='navigate'),[['navigate','/clipts']]);assert.ok(h.states.some(s=>s[0]===UNCERTAIN_STATE&&s[1]===true));assert.ok(h.jobs.some(job=>job.uncertain===true));assert.deepEqual(h.notices,[]);
 });
 test('definitively rejected insert cleans only its new unused upload',async()=>{
   const h=harness({postError:{message:'denied'},status:403});await h.submit();assert.equal(h.calls.filter(c=>c[0]==='cleanup').length,1);assert.deepEqual(h.calls.filter(c=>c[0]==='navigate'),[['navigate','/clipts']]);assert.equal(h.jobs.at(-1).stage,'error');assert.deepEqual(h.notices,[]);
