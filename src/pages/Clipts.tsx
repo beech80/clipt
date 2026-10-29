@@ -108,7 +108,7 @@ export default function Clipts() {
       navigationTargetRef.current = nextIndex;
       activeIndexRef.current = nextIndex;
       setActiveIndex(nextIndex);
-      centerClip(track, slide, matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduce-motion') ? 'instant' : 'smooth', detail?.source === 'bottom-swipe');
+      centerClip(track, slide, matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduce-motion') ? 'instant' : 'smooth', true);
     };
     window.addEventListener('clipt:navigate', navigate);
     return () => window.removeEventListener('clipt:navigate', navigate);

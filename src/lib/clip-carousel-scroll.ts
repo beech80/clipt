@@ -1,21 +1,23 @@
-type ScrollSurface = Pick<HTMLElement, 'scrollLeft' | 'scrollTo'>;
-const running = new WeakMap<ScrollSurface, { frame: number }>();
+type ScrollSurface = Pick<HTMLElement, 'scrollLeft' | 'scrollTo' | 'style'>;
+const running = new WeakMap<ScrollSurface, { frame: number; restore: () => void }>();
 export const SWIPE_SCROLL_MS = 160;
 
 export function cancelClipScroll(track: ScrollSurface) {
   const motion = running.get(track);
-  if (motion) { cancelAnimationFrame(motion.frame); running.delete(track); }
+  if (motion) { cancelAnimationFrame(motion.frame); running.delete(track); motion.restore(); }
 }
 
-/** Preserve native keyboard/joystick behavior; bottom swipes get a bounded transition. */
+/** A bounded transition avoids native smooth-scroll stalls on WebKit carousels. */
 export function scrollClipTo(track: ScrollSurface, left: number, behavior: ScrollBehavior, quick = false) {
   cancelClipScroll(track);
   if (!quick || behavior === 'instant') { track.scrollTo({ left, behavior }); return; }
   const from = track.scrollLeft;
   track.scrollTo({ left: from, behavior: 'instant' }); // Cancel any native smooth scroll.
   if (Math.abs(left - from) < 1) { track.scrollTo({ left, behavior: 'instant' }); return; }
+  const snap = track.style.scrollSnapType;
+  track.style.scrollSnapType = 'none';
   const start = performance.now();
-  const motion = { frame: 0 };
+  const motion = { frame: 0, restore: () => { track.style.scrollSnapType = snap; } };
   running.set(track, motion);
   const step = (now: number) => {
     if (running.get(track) !== motion) return;
@@ -23,7 +25,7 @@ export function scrollClipTo(track: ScrollSurface, left: number, behavior: Scrol
     const eased = 1 - (1 - progress) ** 3;
     track.scrollTo({ left: progress === 1 ? left : from + (left - from) * eased, behavior: 'instant' });
     if (progress < 1) motion.frame = requestAnimationFrame(step);
-    else running.delete(track);
+    else { running.delete(track); motion.restore(); }
   };
   motion.frame = requestAnimationFrame(step);
 }

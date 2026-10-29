@@ -59,6 +59,7 @@ for(const hand of ['right','left']) {
     await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
     await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-64}]});
     await expect(page.locator('[data-slide-index="1"] [data-active-clip="true"]')).toBeVisible();
+    await expect.poll(()=>page.locator('[data-slide-index="1"]').evaluate(element=>{const item=element.getBoundingClientRect(),track=element.closest('[data-horizontal-feed]')!.getBoundingClientRect();return Math.abs(item.left+item.width/2-track.left-track.width/2);})).toBeLessThan(2);
     await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
     await expect(page.getByRole('dialog',{name:'CLIPT navigation'})).toHaveCount(0);
     await cdp.detach();
