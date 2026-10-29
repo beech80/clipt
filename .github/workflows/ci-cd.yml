@@ -58,6 +58,18 @@ jobs:
           cache: npm
       - run: npm ci --no-fund --no-audit
       - run: npx playwright install --with-deps chromium
+      - name: Generate a synthetic HEVC recording for codec tests
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+          node scripts/generate-hevc-fixture.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: synthetic-hevc-fixture
+          path: tests/fixtures/clip-test-hevc.mp4
+          retention-days: 1
       - name: Posting failures, safe retry and paginated message history
         run: npx playwright test tests/create-clip.spec.ts tests/messages-history.spec.ts tests/profile-discovery-controls.spec.ts --reporter=line
       - name: Private media upload and playback over local HTTPS
@@ -66,5 +78,34 @@ jobs:
         if: always()
         with:
           name: source-browser-evidence
+          path: test-results/
+          retention-days: 3
+
+  iphone-codec-webkit:
+    needs: browser-local-fixtures
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      CLIPT_REQUIRE_HEVC: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-fund --no-audit
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: synthetic-hevc-fixture
+          path: tests/fixtures/
+      - run: npx playwright install webkit
+      - name: Real HEVC and MOV conversion through private upload and playback
+        run: npx playwright test -c playwright.media.config.ts --browser=webkit --grep "native conversion" --reporter=line
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: macos-webkit-codec-evidence
           path: test-results/
           retention-days: 3
