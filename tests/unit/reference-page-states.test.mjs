@@ -220,7 +220,7 @@ function createMarkup(result) {
     'react-router-dom':{useNavigate:()=>()=>{},useSearchParams:()=>[new URLSearchParams()],Link:({to,children,...props})=>React.createElement('a',{href:to,...props},children)},
     '@/contexts/AuthContext':{useAuth:()=>({user:{id:'fixture-viewer'}})},
     '@/hooks/usePrivateMedia':{usePrivateMediaUrl:()=>({})},
-    '@/lib/game-catalog':{completeGameCatalog:()=>[]},
+    '@/lib/game-catalog':{completeGameCatalog:()=>[],gameLabel:game=>game.name},
     '@tanstack/react-query':{useQuery:()=>result,useQueryClient:()=>({})},
     '@/components/ui/button':{Button},
     '@/components/ui/input':{Input:props=>React.createElement('input',props)},
