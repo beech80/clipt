@@ -28,3 +28,11 @@ test('schedule form persists tags, defaults private and prevents same-turn resub
  assert.doesNotMatch(source,/<SelectItem value=""/);
  assert.doesNotMatch(source,/created_at: new Date/);
 });
+
+test('schedule game selection preserves valid IDs and clears the not-game-specific choice',()=>{
+ for(const game_id of [undefined,'','none'])
+  assert.equal(schema.parse({...valid(),game_id}).game_id,undefined);
+ const game_id='00000000-0000-4000-8000-000000000001';
+ assert.equal(schema.parse({...valid(),game_id}).game_id,game_id);
+ assert.equal(schema.safeParse({...valid(),game_id:'not-a-game-id'}).success,false);
+});

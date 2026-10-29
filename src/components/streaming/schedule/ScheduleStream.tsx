@@ -1,3 +1,4 @@
+import {completeGameCatalog} from '@/lib/game-catalog';
 import { useRef, useState } from 'react';
 import { Calendar, Clock, Tag, Info, Gamepad, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -44,7 +45,8 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 const scheduleFormSchema = z.object({
   title: z.string().trim().min(3, 'Title must be at least 3 characters').max(100),
   description: z.string().max(500, 'Description cannot exceed 500 characters'),
-  game_id: z.string().optional(),
+  game_id: z.union([z.string().uuid(), z.literal('none'), z.literal('')])
+    .optional().transform(value => value && value !== 'none' ? value : undefined),
   scheduled_for: z.date().refine(date => date.getTime() > Date.now() && date.getTime() <= Date.now() + 366 * 86400000, 'Choose a future date within one year'),
   duration_minutes: z.coerce.number<number>().int().min(15, 'Minimum duration is 15 minutes').max(720, 'Maximum duration is 12 hours'),
   tags: z.string().max(100),
@@ -101,13 +103,7 @@ export function ScheduleStream({
     
     setIsLoadingGames(true);
     try {
-      const { data, error } = await supabase
-        .from('games')
-        .select('id, name')
-        .order('name', { ascending: true })
-        .limit(100);
-        
-      if (error) throw error;
+      const data = await completeGameCatalog('');
       setGames(data || []);
     } catch (error) {
       console.error('Error fetching games:', error);
