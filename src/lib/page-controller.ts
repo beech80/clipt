@@ -25,7 +25,7 @@ export function pageControllerLayout(pathname: string, context: PageControllerCo
   if (pathname === '/discovery') return layout('discovery', [
     route('search', 'Search games, creators and Clipts', 'search', '/retro-search'),
     route('games', 'Browse game catalog', 'games', '/top-games'),
-    route('rankings', 'Top Clipts', 'chart', '/top-clipts'),
+    target('channels', 'Search Clipt Channels', 'games', 'input[aria-label="Search Clipt Channels"]', 'focus'),
     target('recent', 'Explore recent Clipts', 'clips', '[aria-label="Organic discovery"]'),
   ]);
   if (pathname === '/retro-search') return layout('search', [
@@ -58,7 +58,7 @@ export function pageControllerLayout(pathname: string, context: PageControllerCo
   if (pathname === '/live') return layout('live-discovery', [
     button('live', 'Browse live now', 'radio', 'Live Now'),
     button('following', 'Live creators I follow', 'users', 'Following'),
-    button('refresh', 'Refresh live streams', 'history', 'Refresh'),
+    target('games', 'Choose a live game channel', 'games', 'select[aria-label="Filter live by game"]', 'focus'),
     route('setup', 'Go Live setup', 'camera', '/stream-setup'),
   ]);
   if (pathname === '/creator-dashboard') return layout('creator-dashboard', [
@@ -107,7 +107,8 @@ export function pageControllerLayout(pathname: string, context: PageControllerCo
   ]);
   if (pathname === '/top-games') return layout('games', [target('search', 'Search games', 'search', 'input[aria-label="Search games"]', 'focus'), route('discovery', 'Discovery', 'eye', '/discovery'), button('more', 'Load more games', 'games', 'Load more games')]);
   if (pathname === '/top-clipts') return layout('rankings', [target('period', 'Choose ranking period', 'history', '[aria-label="Ranking period"]'), target('rankings', 'Browse Clipt rankings', 'chart', '[aria-label="Clipt rankings"]'), route('feed', 'Watch Clipts', 'clips', '/clipts')]);
-  if (/^\/game\/[^/]+$/.test(pathname)) return layout('game', [target('creators', 'Find game creators', 'users', 'a[href^="/game-streamers/"]', 'click'), target('clips', 'Recent game Clipts', 'clips', 'h2', 'reveal', 'Recent organic Clipts'), route('catalog', 'Game catalog', 'games', '/top-games')]);
+  if (/^\/game\/[^/]+(?:\/clips)?$/.test(pathname)) return layout('game', [button('clips','Game Clipts','clips','Clipts','[role="tab"]'),button('live','Game live streams','radio','Live streams','[role="tab"]'),button('posts','Game posts','message','Posts','[role="tab"]'),target('creators','Find game creators','users','a[href^="/game-streamers/"]','click')]);
+  if (/^\/streaming\/[^/]+$/.test(pathname)) return layout('stream-viewer',[target('creator','Creator profile','users','[data-live-action="creator"]','click'),target('chat','Live chat','message','[data-live-chat-input]','focus'),target('follow','Follow creator','users','[data-live-action="follow"]','click'),target('gift','Support with a gift','coins','[data-live-action="trophy"]','click')]);
   if (/^\/game-streamers\//.test(pathname)) return layout('game-creators', [target('clips', 'Browse game Clipts', 'clips', 'a[href^="/game/"]', 'click'), route('catalog', 'Game catalog', 'games', '/top-games'), route('search', 'Search creators', 'search', '/retro-search')]);
   if (pathname === '/drafts') return layout('drafts', [route('create', 'Create a Clipt', 'camera', '/new-post'), target('draft', 'Open first saved draft', 'edit', 'a[href^="/new-post?draft="]', 'click'), button('more', 'Load more drafts', 'history', 'Load more drafts')]);
   if (pathname === '/subscription') return layout('membership', [target('status', 'Server-confirmed membership status', 'shield', '[aria-label="Server membership status"]'), button('refresh', 'Refresh membership status', 'history', 'Refresh membership status'), route('store', 'Token store', 'coins', '/tokens'), route('terms', 'Membership terms', 'help', '/terms')]);

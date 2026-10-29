@@ -1,9 +1,9 @@
 import { supabase } from '@/lib/supabase';
 import type { Tables } from '@/integrations/supabase/types';
 
-const publicFields = 'id, title, description, user_id, is_live, started_at, ended_at, thumbnail_url, viewer_count, created_at, playback_url' as const;
-export type Stream = Pick<Tables<'streams'>, 'id' | 'title' | 'description' | 'user_id' | 'is_live' | 'started_at' | 'ended_at' | 'thumbnail_url' | 'viewer_count' | 'created_at' | 'playback_url'>;
-type StreamMetadata = Pick<Stream, 'title' | 'description' | 'thumbnail_url'>;
+const publicFields = 'id, title, description, user_id, is_live, started_at, ended_at, thumbnail_url, viewer_count, created_at, playback_url, game_id' as const;
+export type Stream = Pick<Tables<'streams'>, 'id' | 'title' | 'description' | 'user_id' | 'is_live' | 'started_at' | 'ended_at' | 'thumbnail_url' | 'viewer_count' | 'created_at' | 'playback_url' | 'game_id'>;
+type StreamMetadata = Pick<Stream, 'title' | 'description' | 'thumbnail_url'> & {game_id?:string|null};
 export interface StreamResponse<T = Stream> { data: T | null; error: Error | null }
 export interface StreamCredentials { id: string; rtmp_url: string; stream_key: string }
 export interface MuxTestLiveStatus { id: string; is_live: boolean; provider_status: 'active' | 'idle' | 'disabled'; playback_url: string; provider_stream_id?: string; checked_at?: string; test: true }
@@ -51,8 +51,10 @@ async function currentUser() {
 export async function createStream(params: StreamMetadata): Promise<StreamResponse> {
   try {
     const user = await currentUser();
+    if(params.game_id!==undefined&&params.game_id!==null&&!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(params.game_id))throw new Error('Choose a game from the Clipt catalog.');
     const { data, error } = await supabase.from('streams').insert({
       user_id: user.id, title: params.title, description: params.description, thumbnail_url: params.thumbnail_url,
+      ...(params.game_id!==undefined?{game_id:params.game_id}:{}),
     }).select(publicFields).single();
     if (error) throw error;
     return { data, error: null };
@@ -105,8 +107,9 @@ export const endStream = (streamId: string) => lifecycle(streamId, 'end_stream')
 export async function updateStream(streamId: string, updates: Partial<StreamMetadata>): Promise<StreamResponse> {
   try {
     const user = await currentUser();
+    if(updates.game_id!==undefined&&updates.game_id!==null&&!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(updates.game_id))throw new Error('Choose a game from the Clipt catalog.');
     const metadata: Partial<StreamMetadata> = {};
-    for (const key of ['title', 'description', 'thumbnail_url'] as const) {
+    for (const key of ['title', 'description', 'thumbnail_url', 'game_id'] as const) {
       if (updates[key] !== undefined) metadata[key] = updates[key];
     }
     const { data, error } = await supabase.from('streams').update(metadata).eq('id', streamId).eq('user_id', user.id).select(publicFields).single();

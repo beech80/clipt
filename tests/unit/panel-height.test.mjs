@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {panelHeightFraction,readPanelHeight} from '../../src/lib/panel-height.ts';
+test('remembered panel sizes validate storage without replacing unrelated entries',()=>{assert.equal(readPanelHeight('{"menu:portrait":0.63,"other":0.9}','menu:portrait'),.63);for(const value of ['broken','null','[]','{"menu":2}','{"menu":-1}','{"menu":"0.5"}'])assert.equal(readPanelHeight(value,'menu'),null);});
+test('panel drag retains intermediate height and clamps to usable viewport bounds',()=>{assert.equal(panelHeightFraction(492,784),492/784);assert.equal(panelHeightFraction(900,500),1);assert.equal(panelHeightFraction(10,500),.36);assert.equal(panelHeightFraction(10,100),1);});

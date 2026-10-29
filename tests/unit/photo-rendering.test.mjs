@@ -46,7 +46,7 @@ test('photo retry reloads an unchanged authorized URL only after successful acce
 });
 function load(path,deps) {
   const source=ts.transpileModule(readFileSync(new URL('../../src/'+path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
-  const imports={'./clipt-feed-surface.css':{},'@/lib/clip-carousel-scroll':clipCarouselScroll,'@/lib/publishing-status':{publishingSnapshot:()=>null,subscribePublishing:()=>()=>{}},...deps};
+  const imports={'./clipt-feed-surface.css':{},'./clipt-channels.css':{},'@/lib/channel-feeds':{validChannelGame:()=>true},'@/lib/clip-carousel-scroll':clipCarouselScroll,'@/lib/publishing-status':{publishingSnapshot:()=>null,subscribePublishing:()=>()=>{}},...deps};
   if(imports.react)imports.react={...imports.react,useSyncExternalStore:()=>null};
   const mod={exports:{}};new Function('require','module','exports',source)(name=>imports[name]??require(name),mod,mod.exports);return mod.exports.default;
 }
@@ -97,7 +97,7 @@ test('horizontal FYP reads photos and videos with one combined public/Squad medi
     '@/components/ui/tabs':{Tabs:()=>null,TabsList:()=>null,TabsTrigger:()=>null},'@/components/ui/button':{Button:()=>null},
     '@/components/ui/dialog':{Dialog:()=>null},'@/components/post/EngagementHud':{EngagementHud:()=>null},
     '@/hooks/usePortraitSwipe':{usePortraitSwipe:()=>({current:null})},
-    '@/components/PostItem':{default:()=>null,__esModule:true},'react-router-dom':{Link:()=>null},'./clipt-console.css':{},
+    '@/components/PostItem':{default:()=>null,__esModule:true},'react-router-dom':{Link:()=>null,useSearchParams:()=>[new URLSearchParams(),()=>{}]},'./clipt-console.css':{},
   });
   Component();await query.queryFn({pageParam:0});
   assert.equal(filters.length,1);assert.match(filters[0],/image_url.not.is.null/);assert.match(filters[0],/video_url.not.is.null/);assert.match(filters[0],/post_type.neq.squad/);

@@ -1,47 +1,16 @@
 import {useParams,Link} from 'react-router-dom';
-import {useQuery,useInfiniteQuery} from '@tanstack/react-query';
-import {z} from 'zod';
-import {supabase} from '@/lib/supabase';
+import {useQuery} from '@tanstack/react-query';
 import {useAuth} from '@/contexts/AuthContext';
+import {supabase} from '@/lib/supabase';
+import {validChannelGame} from '@/lib/channel-feeds';
 import {Button} from '@/components/ui/button';
-import {Card} from '@/components/ui/card';
 import {BackButton} from '@/components/ui/back-button';
 import BoostedDiscovery from '@/components/BoostedDiscovery';
-import DiscoveryPostCard from '@/components/post/DiscoveryPostCard';
-import {gameVideoFeed} from '@/lib/discovery-feeds';
-
-export default function Game() {
-  const {id}=useParams();const {user}=useAuth();
-  const gameId=z.string().uuid().safeParse(id);
-  const query=useQuery({queryKey:['game-discovery',id,user?.id],enabled:gameId.success,retry:false,
-    queryFn:async({signal})=>{
-      const result=await supabase.from('games').select('id,name,cover_url').eq('id',id!).abortSignal(signal).maybeSingle();
-      if(result.error)throw result.error;
-      return result.data;
-    }});
-  const clips=useInfiniteQuery({queryKey:['game-videos',id,user?.id],enabled:gameId.success&&Boolean(query.data),retry:false,
-    initialPageParam:0,queryFn:({pageParam,signal})=>gameVideoFeed(id!,pageParam,signal),
-    getNextPageParam:(last,pages)=>last.more?pages.length:undefined});
-  const posts=[...new Map(clips.data?.pages.flatMap(page=>page.items).map(post=>[post.id,post])??[]).values()];
-  return <main className="container max-w-3xl px-4 py-6 pb-44 space-y-6">
-    <BackButton/><h1 className="text-2xl font-bold">Game discovery</h1>
-    {!gameId.success?<p role="alert">This game is not available in the Clipt catalog.</p>:<>
-      {query.isPending&&<p role="status">Loading game…</p>}
-      {query.isError&&<Card className="p-5"><p role="alert">Unable to load this game.</p><Button onClick={()=>void query.refetch()}>Retry</Button></Card>}
-      {!query.isError&&!query.isPending&&!query.data&&<p>Game not found.</p>}
-      {!query.isError&&query.data&&<>
-        <header className="flex items-center gap-4">{query.data.cover_url&&<img src={query.data.cover_url} alt="" className="w-20 rounded object-cover"/>}<h2 className="text-xl font-semibold">{query.data.name}</h2></header>
-        <BoostedDiscovery gameId={id}/>
-        <Link to={'/game-streamers/'+id} className="inline-block underline">Find creators for this game</Link>
-        <section className="space-y-3"><h2 className="text-xl font-semibold">Recent organic Clipts</h2>
-          <p className="text-sm text-muted-foreground">Newest published videos. Boost spending does not change this order.</p>
-          {clips.isPending&&<p role="status">Loading Clipts…</p>}
-          {clips.isError&&<div role="alert"><p>Unable to load this game's Clipts.</p><Button onClick={()=>void clips.refetch()}>Retry Clipts</Button></div>}
-          {!clips.isPending&&!clips.isError&&posts.length===0&&<p>No published Clipts for this game yet.</p>}
-          {posts.map(post=><DiscoveryPostCard key={post.id} post={post}/>)}
-          {clips.hasNextPage&&<Button disabled={clips.isFetchingNextPage} onClick={()=>void clips.fetchNextPage()}>{clips.isFetchingNextPage?'Loading…':'Load more Clipts'}</Button>}
-        </section>
-      </>}
-    </>}
-  </main>;
+import {GameChannelBrowser} from '@/components/GameChannelBrowser';
+export default function Game(){
+ const {id}=useParams();const {user}=useAuth();const valid=Boolean(id&&validChannelGame(id));
+ const game=useQuery({queryKey:['game-discovery',id,user?.id],enabled:valid,retry:false,queryFn:async({signal})=>{const {data,error}=await supabase.from('games').select('id,name,cover_url').eq('id',id!).abortSignal(signal).retry(false).maybeSingle();if(error)throw error;return data;}});
+ return <main className="container max-w-6xl space-y-6 px-4 py-6"><BackButton/><header className="space-y-2"><Link className="inline-flex min-h-11 items-center underline" to="/discovery">Clipt Channels</Link><h1 className="text-2xl font-bold">{game.data?.name||'Game channel'}</h1><p className="text-muted-foreground">Clipts, live streams and posts from this game only.</p></header>
+ {!valid?<p role="alert">Choose a game from the Clipt catalog.</p>:game.isPending?<p role="status">Loading game…</p>:game.isError?<div role="alert"><p>Unable to load this game.</p><Button onClick={()=>void game.refetch()}>Retry game</Button></div>:!game.data?<p>Game not found.</p>:<><Link className="inline-flex min-h-11 items-center underline" to={'/game-streamers/'+id}>Find creators for this game</Link><BoostedDiscovery gameId={id}/><GameChannelBrowser key={id} gameId={id} gameName={game.data.name}/></>}
+ </main>;
 }

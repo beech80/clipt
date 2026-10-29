@@ -38,3 +38,8 @@
 .clipt-sliding-panel[role="dialog"][data-dragging="true"].clipt-sliding-panel { height: var(--clipt-drag-height) !important; transition: none; }
 @media (prefers-reduced-motion: reduce) { .clipt-sliding-panel[role="dialog"].clipt-sliding-panel { transition: none; } }
 .reduce-motion .clipt-sliding-panel[role="dialog"].clipt-sliding-panel { transition: none; }
+
+/* A released drag retains its exact height instead of snapping to a preset. */
+.clipt-sliding-panel[role="dialog"][data-custom-height="true"] { height: calc((var(--clipt-portrait-visible-height,100dvh) - 16px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) * var(--clipt-custom-height)) !important; }
+
+.clipt-sliding-panel[role="dialog"][data-custom-height="true"] { min-height: min(180px,calc(var(--clipt-portrait-visible-height,100dvh) - 16px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))); }

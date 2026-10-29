@@ -3,8 +3,11 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { createStream, getUserStream, startStream, endStream, getMuxTestLiveStatus } from '@/services/streamService';
+import { createStream, getUserStream, startStream, endStream, getMuxTestLiveStatus, updateStream } from '@/services/streamService';
 import { useEffect, useState } from 'react';
+import {useSearchParams} from 'react-router-dom';
+import {completeGameCatalog} from '@/lib/game-catalog';
+import {validChannelGame} from '@/lib/channel-feeds';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { StreamKeyManager } from './broadcast/StreamKeyManager';
@@ -15,6 +18,9 @@ export function StreamDashboard() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
+  const [params]=useSearchParams();
+  const [gameId,setGameId]=useState(()=>{const id=params.get('game');return id&&validChannelGame(id)?id:'';});
+  const games=useQuery({queryKey:['stream-game-catalog',user?.id],enabled:Boolean(user),retry:false,queryFn:({signal})=>completeGameCatalog('',signal)});
   const [pilotFresh, setPilotFresh] = useState(false);
   const [pilotMonitorUntil, setPilotMonitorUntil] = useState(0);
   const [pilotPlayback, setPilotPlayback] = useState<{ id: string; url: string } | null>(null);
@@ -59,6 +65,10 @@ export function StreamDashboard() {
     },
     refetchInterval: 15000,
   });
+  const requestedGame=params.get('game');
+  useEffect(()=>{if(stream)setGameId(stream.game_id||'');},[stream?.id,stream?.game_id,requestedGame]);
+  const saveGame=useMutation({mutationFn:async()=>{if(!stream)throw new Error('Create your stream first.');const result=await updateStream(stream.id,{game_id:gameId||null});if(result.error||!result.data)throw result.error||new Error('Game was not saved.');return result.data;},onSuccess:data=>{queryClient.setQueryData(queryKey,data);void queryClient.invalidateQueries({queryKey:['live-discovery']});void queryClient.invalidateQueries({queryKey:['channel-live']});toast.success('Stream game saved');}});
+  const gamePicker=<div className="space-y-2"><Label htmlFor="stream-game">Game channel</Label><select id="stream-game" aria-label="Stream game channel" className="clipt-live-game-filter block w-full" value={gameId} disabled={games.isPending||saveGame.isPending} onChange={event=>setGameId(event.target.value)}><option value="">No game selected</option>{games.data?.map(game=><option key={game.id} value={game.id}>{game.name}</option>)}</select>{games.isError&&<p role="alert">Games could not be loaded. <button type="button" className="underline" onClick={()=>void games.refetch()}>Retry games</button></p>}</div>;
   const lifecycle = useMutation({
     mutationFn: async (action: 'start' | 'end') => {
       if (!user || !stream) throw new Error('Sign in to manage your stream');
@@ -77,7 +87,7 @@ export function StreamDashboard() {
     mutationFn: async () => {
       const cleanTitle = title.trim();
       if (!cleanTitle || cleanTitle.length > 120) throw new Error('Enter a stream title up to 120 characters');
-      const result = await createStream({title:cleanTitle,description:null,thumbnail_url:null});
+      const result = await createStream({title:cleanTitle,description:null,thumbnail_url:null,game_id:gameId||null});
       if (result.error || !result.data) throw result.error || new Error('Stream creation was not confirmed');
       return result.data;
     },
@@ -99,6 +109,7 @@ export function StreamDashboard() {
     <form className="space-y-3" onSubmit={event => {event.preventDefault();create.mutate();}}>
       <Label htmlFor="stream-title">Stream title</Label>
       <Input id="stream-title" value={title} onChange={event=>setTitle(event.target.value)} maxLength={120} required />
+      {gamePicker}
       <Button disabled={create.isPending || !title.trim()}>{create.isPending ? 'Saving…' : 'Create stream draft'}</Button>
     </form>
   </Card>;
@@ -108,6 +119,8 @@ export function StreamDashboard() {
       <CardHeader><CardTitle>Stream Dashboard</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         <h2 className="font-semibold">{stream.title}</h2>
+        {gamePicker}<Button variant="outline" disabled={saveGame.isPending||gameId===(stream.game_id||'')} onClick={()=>saveGame.mutate()}>{saveGame.isPending?'Saving…':'Save game channel'}</Button>
+        {saveGame.isError&&<p role="alert">{saveGame.error.message}</p>}
         {import.meta.env.DEV && <section className="gaming-card p-4 space-y-3" aria-label="Development Mux live pilot">
           <h2 className="text-xl font-semibold">In-app broadcast playback</h2>
           <p>Development test stream only. Synchronization requires the secure server pilot configuration. After a successful check, status refreshes while this page is visible for up to five minutes, including while waiting for OBS. Stop OBS to end the broadcast.</p>
