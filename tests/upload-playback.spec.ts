@@ -283,7 +283,7 @@ test('cancelling video conversion keeps the caption and never posts',async({page
 });
 
 
-test('feed playback recovers through a real tap when autoplay and preload events are blocked',async({page})=>{
+test('feed playback recovers through a real tap when autoplay and preload events are blocked',async({page},info)=>{
   const service=await setup(page);
   const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
   try {
@@ -303,10 +303,12 @@ test('feed playback recovers through a real tap when autoplay and preload events
     const video=page.locator('[data-active-clip="true"] video');
     const play=page.getByRole('button',{name:'Play video',exact:true});
     await expect(play).toBeVisible();await expect(page.getByText('Loading video...',{exact:true})).toBeVisible();
+    await page.screenshot({path:info.outputPath('feed-tap-to-play.png')});
     await play.click();
     await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
     await expect(page.getByText('Loading video...',{exact:true})).toHaveCount(0);
     await expect(play).toHaveCount(0);expect(errors).toEqual([]);
+    await page.screenshot({path:info.outputPath('feed-recovered-playing.png')});
     expect(service.stats().publicReads).toBe(0);expect(service.stats().reads).toBeGreaterThan(0);
   } finally {service.releaseRendition();service.releaseReward();await service.close();}
 });
