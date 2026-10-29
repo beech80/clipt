@@ -54,3 +54,8 @@ export function clipCaption(caption: string, hashtags: string) {
   const tags = [...new Set(words.map(word => '#' + word.replace(/^#/, '').toLowerCase()))];
   return clean + (tags.length ? '\n\n' + tags.join(' ') : '');
 }
+
+/** A decoded frame, rather than metadata alone, is required before publication. */
+export function videoPreviewReady(video: Pick<HTMLVideoElement, 'readyState' | 'videoWidth' | 'videoHeight' | 'error'>) {
+  return video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0 && !video.error;
+}

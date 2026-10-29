@@ -107,3 +107,10 @@ test('reward failure does not reverse a confirmed post or delete its video',asyn
  assert.ok(h.jobs.some(job=>job.stage==='complete'));assert.equal(h.jobs.some(job=>job.stage==='error'),false);
  assert.equal(h.calls.some(call=>call[0]==='cleanup'),false);assert.ok(h.notices.some(notice=>/published/i.test(notice)));
 });
+
+test('a missing or whitespace caption is explained before uploads or publication jobs',async()=>{
+  for(const caption of ['', '   ']) {
+    const h=harness({caption});await h.submit();assert.deepEqual(h.calls,[]);assert.deepEqual(h.jobs,[]);
+    assert.ok(h.states.some(([index,value])=>index===14&&value==='Add a caption before posting.'));
+  }
+});
