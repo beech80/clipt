@@ -328,7 +328,10 @@ test('feed playback starts only the active visible clip and pauses the previous 
     await expect(page.locator('[data-slide-index="1"] [data-active-clip="true"]')).toBeVisible();
     await expect.poll(()=>second.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
     await expect.poll(()=>first.evaluate(element=>element.paused)).toBe(true);
+    // Wait for the first smooth scroll to settle before requesting its reverse.
+    await expect.poll(()=>second.evaluate(element=>{const track=element.closest('[data-horizontal-feed]')!.getBoundingClientRect();const slide=element.closest('[data-slide-index]')!.getBoundingClientRect();return Math.abs(slide.left+slide.width/2-track.left-track.width/2);})).toBeLessThan(2);
     await track.focus();await track.press('ArrowLeft');
+    await expect(page.locator('[data-slide-index="0"] [data-active-clip="true"]')).toBeVisible();
     await expect.poll(()=>first.evaluate(element=>element.paused)).toBe(false);
     await expect.poll(()=>second.evaluate(element=>element.paused)).toBe(true);
     await expect(first).toHaveAttribute('data-continuity','retained');
