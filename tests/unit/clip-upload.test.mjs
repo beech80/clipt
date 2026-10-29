@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {stripTypeScriptTypes} from 'node:module';
 const source = stripTypeScriptTypes(readFileSync(new URL('../../src/lib/clip-upload.ts',import.meta.url),'utf8'));
-const {validateClipFile,clipCaption,clipUploadError,formatClipSize,MAX_CLIP_BYTES} = await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const {validateClipFile,clipCaption,clipUploadError,formatClipSize,MAX_CLIP_BYTES,videoPreviewReady} = await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 
 test('upload failures explain the cause without claiming an unsaved draft exists',()=>{
   for(const [error,expected] of [[{statusCode:413},/50 MB/],[{statusCode:401},/sign-in expired/],[{statusCode:403},/MFA/],[{message:'mime type denied'},/format/],[{statusCode:429},/rate limited/],[{message:'private provider error'},/connection/]]) {
@@ -40,4 +40,13 @@ test('video selection distinguishes unreadable Photos files from an oversized ex
 test('videos at and below the storage size boundary remain accepted',async()=>{
   for(const size of [1,49*1024*1024,MAX_CLIP_BYTES])await validateClipFile({type:'video/webm',size});
   for(const size of [-1,NaN,Infinity,0])await assert.rejects(validateClipFile({type:'video/webm',size}),/empty or could not be read/);
+});
+
+test('metadata alone cannot enable Post but a decoded video frame can',()=>{
+  const frame={readyState:2,videoWidth:160,videoHeight:90,error:null};
+  for(const readyState of [0,1])assert.equal(videoPreviewReady({...frame,readyState}),false);
+  for(const readyState of [2,3,4])assert.equal(videoPreviewReady({...frame,readyState}),true);
+  assert.equal(videoPreviewReady({...frame,videoWidth:0}),false);
+  assert.equal(videoPreviewReady({...frame,videoHeight:0}),false);
+  assert.equal(videoPreviewReady({...frame,error:{code:4}}),false);
 });

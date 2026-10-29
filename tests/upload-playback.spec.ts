@@ -211,12 +211,24 @@ for(const format of ['mov','hevc'] as const) {
     test.skip(format==='hevc'&&process.env.CLIPT_REQUIRE_HEVC!=='1','HEVC decoding is required in the macOS WebKit job.');
     const service=await setup(page,{converted:true});
     try {
+      // Reproduce browsers that do not deliver preloading events to React.
+      // Publishing must recover from a real, explicit play gesture instead.
+      await page.addInitScript(()=>{for(const type of ['loadedmetadata','loadeddata','canplay'])document.addEventListener(type,event=>{if(event.target instanceof HTMLVideoElement&&event.target.closest('.clipt-create-media'))event.stopImmediatePropagation();},true);});
       await page.setViewportSize({width:390,height:844});await page.goto('/new-post');
-      await page.getByLabel('Caption',{exact:true}).fill('Converted iPhone recording');
       const candidate=format==='hevc'?readFileSync(fileURLToPath(new URL('./fixtures/clip-test-hevc.mp4',import.meta.url))):bytes;
       await page.getByLabel('Clipt video',{exact:true}).setInputFiles({name:format==='hevc'?'iphone.mp4':'iphone.mov',mimeType:format==='hevc'?'video/mp4':'video/quicktime',buffer:candidate});
       await expect(page.getByText('Converted to a compatible MP4 on your device. Your original is unchanged.',{exact:true})).toBeVisible({timeout:60000});
-      const submit=page.getByRole('button',{name:'Post Clipt',exact:true});await expect(submit).toBeEnabled();
+      const submit=page.getByRole('button',{name:'Post Clipt',exact:true});await expect(submit).toBeDisabled();
+      await expect(page.getByText('Tap Play to check this video before posting.',{exact:true})).toBeVisible();
+      await page.getByRole('button',{name:'Play video preview',exact:true}).click();
+      await expect(submit).toBeEnabled();
+      await submit.click();
+      await expect(page.getByRole('alert')).toContainText('Add a caption before posting.');
+      await expect(page.getByLabel('Caption',{exact:true})).toBeFocused();
+      await expect(page.getByLabel('Caption',{exact:true})).toHaveAttribute('aria-invalid','true');
+      expect(service.stats().uploads).toBe(0);
+      await page.getByLabel('Caption',{exact:true}).fill('Converted iPhone recording');
+      await expect(page.getByLabel('Caption',{exact:true})).toHaveAttribute('aria-invalid','false');
       await page.screenshot({path:info.outputPath('converted-'+format+'-ready.png')});
       await submit.click();await expect(page).toHaveURL(/\/clipts$/);
       await expect(page.getByText('Your post is ready below.',{exact:true})).toBeVisible();
