@@ -35,3 +35,15 @@ body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-fyp.clipt-fyp .
 [role="dialog"].clipt-stream-gift-dialog { max-height: calc(var(--clipt-portrait-visible-height,100dvh) - 24px); overflow-y: auto; overscroll-behavior: contain; top: calc(var(--clipt-portrait-visible-top,0px) + var(--clipt-portrait-visible-height,100dvh) / 2); }
 .clipt-stream-gift-dialog > button:last-child { min-width: 44px; min-height: 44px; top: 4px; right: 4px; }
 .clipt-stream-gift-dialog > div:first-child { padding-right: 36px; }
+
+/* Put playback first and reserve the actual controller space in short landscape. */
+body:has(.clipt-stream-viewer) .clipt-masthead { display: none; }
+.clipt-stream-viewer > header { min-height: 44px; }
+.clipt-live-metadata p { flex-basis: 100%; }
+@media (orientation: landscape) and (max-height: 500px) {
+  .clipt-stream-viewer { padding-top: 4px; }
+  .clipt-stream-viewer > header { margin-bottom: 4px; }
+  .clipt-stream-viewer > [dir] { margin-top: 4px; }
+  .clipt-stream-viewer .clipt-stream-player > div:first-child > .gaming-card { padding: 0; }
+  .clipt-stream-viewer .clipt-stream-player .aspect-video { aspect-ratio: auto; height: max(96px,calc(var(--clipt-portrait-visible-height,100dvh) - var(--clipt-page-controller-space,128px) - 112px)); }
+}

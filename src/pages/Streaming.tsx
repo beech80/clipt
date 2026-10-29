@@ -78,10 +78,6 @@ export default function Streaming() {
   return <main data-active-stream={stream ? 'true' : 'false'} className="clipt-stream-viewer container max-w-6xl px-3 py-4 space-y-5">
     <header className="flex items-center gap-3"><BackButton /><h1 className="text-2xl font-bold break-words">{stream?.title || 'Stream'}</h1></header>
     {authLoading ? <p role="status">Checking sign-in…</p> : developmentLiveBackend && !user ? <div role="alert" className="gaming-card p-6 space-y-3"><p>Sign in to view this development live stream.</p><Link className="underline" to="/login">Sign in</Link></div> : isLoading ? <p role="status">Loading stream…</p> : error ? <div role="alert" className="gaming-card p-6 space-y-3"><p>{'code' in error && error.code === '42501' ? 'Stream access requires an active authenticated account. Complete your MFA challenge if enabled, then retry.' : 'Unable to load this stream.'}</p><Button onClick={() => void refetch()}>Retry stream</Button><Link className="underline" to="/login">Check sign-in</Link></div> : !stream ? <p>This stream is unavailable or private.</p> : <>
-      <p>{stream.description}</p>
-      <Link className="inline-flex min-h-11 items-center underline" data-live-action="creator" to={`/user/${stream.user_id}`}>View creator profile</Link>
-      {game.data&&<Link className="inline-flex min-h-11 items-center underline" to={'/game/'+game.data.id+'?tab=live'}>{game.data.name} channel</Link>}
-      <p role="status">{stream.is_live ? 'LIVE' : developmentLiveBackend ? 'Not currently verified LIVE' : 'OFFLINE'}</p>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="live">Live</TabsTrigger>
@@ -93,6 +89,11 @@ export default function Streaming() {
           <StreamPlayer streamId={stream.id} title={stream.title} isLive={!!stream.is_live}
             showHealth={!developmentLiveBackend} offlineMessage={developmentLiveBackend ? 'Waiting for verified live playback' : undefined}
             viewerCount={stream.viewer_count} playbackUrl={stream.hls_playback_url || stream.playback_url} />
+          <div className="clipt-live-metadata flex flex-wrap items-center gap-x-4">      <p>{stream.description}</p>
+      <Link className="inline-flex min-h-11 items-center underline" data-live-action="creator" to={`/user/${stream.user_id}`}>View creator profile</Link>
+      {game.data&&<Link className="inline-flex min-h-11 items-center underline" to={'/game/'+game.data.id+'?tab=live'}>{game.data.name} channel</Link>}
+      <p role="status">{stream.is_live ? 'LIVE' : developmentLiveBackend ? 'Not currently verified LIVE' : 'OFFLINE'}</p>
+</div>
           <div className="clipt-live-actions">
             <Button variant="outline" data-live-action="comment" disabled={!stream.is_live} onClick={() => { document.querySelector<HTMLInputElement>('[data-live-chat-input]')?.focus(); document.querySelector('[data-live-chat-input]')?.scrollIntoView({block:'center'}); }}>Live Chat</Button>
             <Button data-live-action="follow" variant="outline" disabled={!user || owner || followPending || following.isPending || following.isError} onClick={() => void toggleFollow()}>{followPending ? 'Updating…' : following.data ? 'Following' : 'Follow'}</Button>
