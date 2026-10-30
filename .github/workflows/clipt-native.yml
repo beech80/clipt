@@ -1,0 +1,123 @@
+name: CLIPT native broadcasting builds
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'native/**'
+      - 'src/native/**'
+      - 'scripts/prepare-native-hosts.mjs'
+      - 'capacitor.config.ts'
+      - 'package*.json'
+      - '.github/workflows/clipt-native.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-build-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  CYPRESS_INSTALL_BINARY: '0'
+  VITE_APP_ENV: development
+  VITE_SUPABASE_URL: http://127.0.0.1:54321
+  VITE_SUPABASE_ANON_KEY: sb_publishable_local_test_fixture
+jobs:
+  runtime-lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Verify exact reviewed native runtime
+        run: node -e "const p=require('./package.json'),l=require('./package-lock.json');for(const n of ['core','android','ios','cli']){const k='@capacitor/'+n;if((p.dependencies?.[k]||p.devDependencies?.[k])!=='8.6.0'||l.packages['node_modules/'+k]?.version!=='8.6.0')process.exit(1)}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: reviewed-native-runtime-lock
+          path: |
+            package.json
+            package-lock.json
+          retention-days: 3
+  android:
+    needs: runtime-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: reviewed-native-runtime-lock
+      - run: npm ci --ignore-scripts --no-fund --no-audit
+      - run: npm run build
+      - run: npx playwright install chromium
+      - run: node scripts/generate-native-brand-assets.mjs
+      - run: node scripts/prepare-native-hosts.mjs android
+      - name: Compile native engine, execute unit tests and build minified beta APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew :clipt-broadcaster:testDebugUnitTest :app:assembleRelease -PcliptNativeBroadcastEnabled=true -PcliptDevelopmentSigning=true --no-daemon --console=plain
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-native-build-evidence
+          path: |
+            android/app/build/outputs/apk/release/*.apk
+            outputs/native-brand/*.png
+            native/android/build/test-results/**
+            native/android/build/reports/tests/**
+          retention-days: 3
+  ios:
+    needs: runtime-lock
+    runs-on: xcode-27
+    timeout-minutes: 35
+    env:
+      CLIPT_IOS27_SDK: '1'
+      CLIPT_NATIVE_BACKEND_READY: 'false'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: reviewed-native-runtime-lock
+      - name: Verify actual SDK before compiling the screen capture path
+        run: |
+          xcodebuild -version
+          sdk=$(xcrun --sdk iphoneos --show-sdk-version)
+          test "${sdk%%.*}" -ge 27
+      - run: npm ci --ignore-scripts --no-fund --no-audit
+      - run: npm run build
+      - run: npx playwright install chromium
+      - run: node scripts/generate-native-brand-assets.mjs
+      - run: node scripts/prepare-native-hosts.mjs ios
+      - name: Build full app with iOS27 screen capture
+        run: xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -configuration Debug -derivedDataPath outputs/native-ios CODE_SIGNING_ALLOWED=NO build
+      - name: Test native policy and session boundary on a simulator
+        run: |
+          device=$(xcrun simctl list devices available -j | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{const d=Object.values(JSON.parse(s).devices).flat().find(v=>v.name.startsWith('iPhone'));if(!d)process.exit(1);process.stdout.write(d.udid)})")
+          xcodebuild -scheme CliptBroadcastCore-Package -destination "platform=iOS Simulator,id=$device" -resultBundlePath outputs/native-policy-tests.xcresult test
+        working-directory: native/ios
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ios-native-build-evidence
+          path: |
+            outputs/native-ios/Logs/Build/**
+            outputs/native-brand/*.png
+            native/ios/outputs/native-policy-tests.xcresult/**
+          retention-days: 3

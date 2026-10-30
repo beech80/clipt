@@ -1,0 +1,153 @@
+import { readFile, writeFile, access, mkdir, copyFile, readdir, rm } from 'node:fs/promises';
+import { resolve, dirname, relative, isAbsolute } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import { spawnSync } from 'node:child_process';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const platform = process.argv[2];
+if (!['ios', 'android'].includes(platform)) throw Error('Choose ios or android.');
+const cliPackage = resolve(root, 'node_modules/@capacitor/cli/package.json');
+const version = JSON.parse(await readFile(cliPackage, 'utf8')).version;
+if (version !== '8.6.0') throw Error('Install the locked Capacitor 8.6.0 toolchain first.');
+const host = resolve(root, platform);
+const marker = resolve(host, '.clipt-generated-host.json');
+async function exists(path) { try { await access(path); return true; } catch { return false; } }
+if (await exists(host) && !(await exists(marker))) {
+  throw Error('An existing native project was found. Preserve it and integrate manually; this generator never replaces an unmarked project.');
+}
+if (!(await exists(resolve(root, 'dist/index.html')))) throw Error('Build the web app before preparing native hosts.');
+function cap(...args) {
+  const result = spawnSync(process.execPath, [resolve(root, 'node_modules/@capacitor/cli/bin/capacitor'), ...args], {
+    cwd: root, env: { ...process.env, CI: 'true' }, stdio: 'inherit', timeout: 180000,
+  });
+  if (result.error || result.status !== 0) throw Error('Capacitor project generation/sync failed.');
+}
+if (!(await exists(host))) {
+  cap('add', platform);
+  await writeFile(marker, JSON.stringify({ generator: 'clipt-native-host-v1', capacitor: version }) + '\n');
+}
+cap('sync', platform);
+async function transform(path, change) {
+  const absolute = resolve(host, path);
+  const original = await readFile(absolute, 'utf8');
+  await writeFile(absolute, change(original));
+}
+function replaceRequired(source, search, replacement) {
+  if (!source.includes(search)) throw Error('The generated native template changed; review the integration before continuing.');
+  return source.replace(search, replacement);
+}
+if (platform === 'android') {
+  await transform('settings.gradle', source => source.includes("include ':clipt-broadcaster'") ? source : source +
+    "\ninclude ':clipt-broadcaster'\nproject(':clipt-broadcaster').projectDir = new File('../native/android')\n");
+  await transform('build.gradle', source => {
+    if (!source.includes('kotlin-gradle-plugin:2.2.21')) source = replaceRequired(source,
+      "classpath 'com.android.tools.build:gradle:8.13.0'",
+      "classpath 'com.android.tools.build:gradle:8.13.0'\n        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.21'");
+    if (!source.includes('https://jitpack.io')) source = replaceRequired(source,
+      'allprojects {\n    repositories {', "allprojects {\n    repositories {\n        maven { url 'https://jitpack.io'; content { includeGroup 'com.github.pedroSG94.RootEncoder' } }");
+    return source;
+  });
+  await transform('variables.gradle', source => source.replace('minSdkVersion = 24', 'minSdkVersion = 26'));
+  await transform('app/build.gradle', source => {
+    if (!source.includes("implementation project(':clipt-broadcaster')")) source = replaceRequired(source, 'dependencies {', "dependencies {\n    implementation project(':clipt-broadcaster')");
+    source = source.replace('minifyEnabled false', 'minifyEnabled true').replace("getDefaultProguardFile('proguard-android.txt')", "getDefaultProguardFile('proguard-android-optimize.txt')");
+    if (!source.includes('cliptDevelopmentSigning')) source = replaceRequired(source, 'release {', "release {\n            if (project.findProperty('cliptDevelopmentSigning') == 'true') signingConfig signingConfigs.debug");
+    return source;
+  });
+  const config = JSON.parse(await readFile(resolve(host, 'app/src/main/assets/capacitor.config.json'), 'utf8'));
+  const packageName = config.appId;
+  if (!/^[a-zA-Z][\w]*(\.[a-zA-Z][\w]*)+$/.test(packageName)) throw Error('Invalid native application ID.');
+  const java = resolve(host, 'app/src/main/java', packageName.replaceAll('.', '/'), 'MainActivity.java');
+  await writeFile(java, `package ${packageName};
+import android.os.Bundle;
+import com.getcapacitor.BridgeActivity;
+import com.clipt.broadcast.CliptBroadcasterPlugin;
+public class MainActivity extends BridgeActivity {
+  @Override public void onCreate(Bundle state) {
+    registerPlugin(CliptBroadcasterPlugin.class);
+    super.onCreate(state);
+    if (getBridge() != null) getBridge().getWebView().setOverScrollMode(android.view.View.OVER_SCROLL_NEVER);
+  }
+}
+`);
+  await transform('app/src/main/AndroidManifest.xml', source => source.replace('android:allowBackup="true"', 'android:allowBackup="false"'));
+} else {
+  const require = createRequire(cliPackage);
+  const plist = require('plist');
+  const xcode = require('xcode');
+  const infoPath = resolve(host, 'App/App/Info.plist');
+  const info = plist.parse(await readFile(infoPath, 'utf8'));
+  info.NSCameraUsageDescription = 'Use your camera when you choose Camera Live.';
+  info.NSMicrophoneUsageDescription = 'Include your microphone when you choose audio for a live broadcast.';
+  info.UIBackgroundModes = ['audio', 'screen-capture'];
+  info.CLIPTNativeBroadcastEnabled = process.env.CLIPT_NATIVE_BACKEND_READY === 'true';
+  info.UIApplicationSceneManifest.UIApplicationSupportsMultipleScenes = false;
+  await writeFile(infoPath, plist.build(info));
+  await transform('App/App/SceneDelegate.swift', source => source.replace('CAPBridgeViewController()', 'CliptBridgeViewController()'));
+  const controller = 'CliptBridgeViewController.swift';
+  await writeFile(resolve(host, 'App/App', controller), `import Capacitor
+import CliptBroadcaster
+final class CliptBridgeViewController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        bridge?.registerPluginInstance(CliptBroadcasterPlugin())
+        webView?.scrollView.bounces = false
+    }
+}
+`);
+  const projectPath = resolve(host, 'App/App.xcodeproj/project.pbxproj');
+  const project = xcode.project(projectPath);
+  project.parseSync();
+  const group = project.findPBXGroupKey({ path: 'App' });
+  if (!group) throw Error('App group was not found.');
+  if (!project.hasFile(controller)) project.addSourceFile(controller, { target: project.getFirstTarget().uuid }, group);
+  await writeFile(projectPath, project.writeSync());
+  // cap sync manages this file. Restore our reviewed exact/local dependencies
+  // after every sync; one resolver identity is shared by host and plugin.
+  await writeFile(resolve(host, 'App/CapApp-SPM/Package.swift'), `// swift-tools-version: 6.0
+import PackageDescription
+let package = Package(
+    name: "CapApp-SPM",
+    platforms: [.iOS(.v15)],
+    products: [.library(name: "CapApp-SPM", targets: ["CapApp-SPM"])],
+    dependencies: [
+        .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.6.0"),
+        .package(path: "../../../native/ios")
+    ],
+    targets: [.target(name: "CapApp-SPM", dependencies: [
+        .product(name: "Capacitor", package: "capacitor-swift-pm"),
+        .product(name: "Cordova", package: "capacitor-swift-pm"),
+        .product(name: "CliptBroadcaster", package: "ios")
+    ])]
+)
+`);
+}
+console.log('Prepared ' + platform + ' host. Native compilation and physical tests are separate checks.');
+
+const artwork=resolve(root,'outputs/native-brand/clipt-icon-1024.png');
+if(!(await exists(artwork)))throw Error('Render the original native brand assets before packaging.');
+if(platform==='android'){
+ const resources=resolve(host,'app/src/main/res');
+ await mkdir(resolve(resources,'drawable-nodpi'),{recursive:true});
+ await copyFile(artwork,resolve(resources,'drawable-nodpi/clipt_brand_icon.png'));
+ for(const entry of await readdir(resources,{withFileTypes:true})){
+  if(!entry.isDirectory()||!/^drawable(?:-|$)/.test(entry.name))continue;
+  const old=resolve(resources,entry.name,'splash.png');
+  const child=relative(resources,old); if(child.startsWith('..')||isAbsolute(child))throw Error('Invalid generated resource path.');
+  if(await exists(old))await rm(old);
+ }
+ await writeFile(resolve(resources,'drawable/splash.xml'),'<layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item android:drawable="@android:color/black"/><item android:width="200dp" android:height="200dp" android:gravity="center"><bitmap android:src="@drawable/clipt_brand_icon" android:gravity="fill"/></item></layer-list>');
+ const adaptive='<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@android:color/black"/><foreground android:drawable="@drawable/clipt_brand_icon"/></adaptive-icon>';
+ await writeFile(resolve(resources,'mipmap-anydpi-v26/ic_launcher.xml'),adaptive);
+ await writeFile(resolve(resources,'mipmap-anydpi-v26/ic_launcher_round.xml'),adaptive);
+}else{
+ await copyFile(artwork,resolve(host,'App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png'));
+ for(const name of ['splash-2732x2732.png','splash-2732x2732-1.png','splash-2732x2732-2.png'])await copyFile(artwork,resolve(host,'App/App/Assets.xcassets/Splash.imageset',name));
+ await writeFile(resolve(host,'App/App/Base.lproj/LaunchScreen.storyboard'),`<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23094" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="CLIPTLaunch">
+ <device id="retina6_12" orientation="portrait" appearance="dark"/>
+ <dependencies><plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23084"/><capability name="Safe area layout guides" minToolsVersion="9.0"/><capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/></dependencies>
+ <scenes><scene sceneID="CLIPTScene"><objects><viewController id="CLIPTLaunch" sceneMemberID="viewController"><view key="view" contentMode="scaleToFill" id="CLIPTBackground"><rect key="frame" x="0.0" y="0.0" width="393" height="852"/><autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/><subviews><imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="Splash" translatesAutoresizingMaskIntoConstraints="NO" id="CLIPTArtwork"><rect key="frame" x="96.5" y="326" width="200" height="200"/><constraints><constraint firstAttribute="width" constant="200" id="CLIPTWidth"/><constraint firstAttribute="height" constant="200" id="CLIPTHeight"/></constraints></imageView></subviews><viewLayoutGuide key="safeArea" id="CLIPTSafe"/><color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/><constraints><constraint firstItem="CLIPTArtwork" firstAttribute="centerX" secondItem="CLIPTBackground" secondAttribute="centerX" id="CLIPTCenterX"/><constraint firstItem="CLIPTArtwork" firstAttribute="centerY" secondItem="CLIPTBackground" secondAttribute="centerY" id="CLIPTCenterY"/></constraints></view></viewController><placeholder placeholderIdentifier="IBFirstResponder" id="CLIPTResponder" userLabel="First Responder" sceneMemberID="firstResponder"/></objects></scene></scenes><resources><image name="Splash" width="1024" height="1024"/></resources>
+</document>`);
+}
+console.log('Applied the original CLIPT identity to native icons and launch screens.');

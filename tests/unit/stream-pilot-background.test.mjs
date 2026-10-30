@@ -22,7 +22,7 @@ function fixture({hidden=true,pending=false,production=false,playback=true}={}){
   if(name==='@/lib/game-catalog')return{gameLabel:()=>'',completeGameCatalog:()=>[]};
   if(name==='@/lib/channel-feeds')return{validChannelGame:()=>false};
   if(name==='@/services/streamService')return ui;
-  if(name.startsWith('@/components/')||name==='./StreamPlayer'||name.startsWith('./broadcast/')||name.startsWith('./chat/'))return ui;
+  if(name.startsWith('@/components/')||name==='./NativeBroadcastPanel'||name==='./StreamPlayer'||name.startsWith('./broadcast/')||name.startsWith('./chat/'))return ui;
   return require(name);
  };
  const output=ts.transpileModule(readFileSync(new URL('../../src/components/streaming/StreamDashboard.tsx',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;

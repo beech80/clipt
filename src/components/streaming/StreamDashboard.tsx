@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { StreamKeyManager } from './broadcast/StreamKeyManager';
 import { StreamerDashboardChat } from './chat/StreamerDashboardChat';
 import { StreamPlayer } from './StreamPlayer';
+import {NativeBroadcastPanel} from './NativeBroadcastPanel';
 import { storageProjectUrl } from '@/integrations/supabase/client';
 import { isMuxTestProject } from '@/lib/live-test-environment';
 const testLivePilot = isMuxTestProject(storageProjectUrl);
@@ -125,6 +126,7 @@ export function StreamDashboard() {
       <CardHeader><CardTitle>Stream Dashboard</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         <h2 className="font-semibold">{stream.title}</h2>
+        <NativeBroadcastPanel streamId={stream.id}/>
         {gamePicker}<Button variant="outline" disabled={saveGame.isPending||gameId===(stream.game_id||'')} onClick={()=>saveGame.mutate()}>{saveGame.isPending?'Saving…':'Save game channel'}</Button>
         {saveGame.isError&&<p role="alert">{saveGame.error.message}</p>}
         {testLivePilot && <section className="gaming-card p-4 space-y-3" aria-label="Development Mux live pilot">

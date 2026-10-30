@@ -1,0 +1,49 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.clipt.broadcast'
+    compileSdk 36
+    defaultConfig {
+        minSdk 26
+        targetSdk 36
+        // A reviewed build must explicitly enable this after backend/device acceptance.
+        buildConfigField 'boolean', 'NATIVE_BROADCAST_ENABLED', project.findProperty('cliptNativeBroadcastEnabled') == 'true' ? 'true' : 'false'
+        buildConfigField 'String', 'BROADCAST_API_ORIGIN', '"https://akiksrlzdqvipqbbjxpw.supabase.co"'
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+    buildFeatures { buildConfig true }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    kotlinOptions { jvmTarget = '21' }
+    testOptions { unitTests.returnDefaultValues = true }
+}
+
+dependencies {
+    implementation project(':capacitor-android')
+    implementation 'androidx.core:core-ktx:1.15.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.github.pedroSG94.RootEncoder:library:2.8.1'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+}
+
+// Native publishing cannot use an unminified host: upstream command logs include
+// the RTMP publish name. R8 must apply this module's log-stripping rules.
+gradle.projectsEvaluated {
+    if (project.findProperty('cliptNativeBroadcastEnabled') == 'true') {
+        def host = rootProject.findProject(':app')
+        if (host == null || !host.plugins.hasPlugin('com.android.application')) {
+            throw new GradleException('Native broadcasting requires the reviewed CLIPT application host')
+        }
+        host.android.buildTypes.each { type ->
+            if (!type.debuggable && !type.minifyEnabled) {
+                throw new GradleException('Enable R8 minification for every nondebug native broadcasting build')
+            }
+        }
+    }
+}
