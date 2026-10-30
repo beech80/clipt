@@ -23,6 +23,7 @@ test('owner monitoring can detect idle-to-active transitions and is bounded', ()
   assert.doesNotMatch(source, /!pilot\.data\?\.is_live \|\| pilot\.isPending/);
   assert.match(source, /Date\.now\(\) >= pilotMonitorUntil/);
   assert.match(source, /setPilotMonitorUntil\(Date\.now\(\)\+300000\)/);
-  assert.match(source, /if\(!document\.hidden\)checkPilot\(id\)/);
+  assert.match(source, /checkPilot\(id\);/);
+  assert.doesNotMatch(source, /if\(!document\.hidden\)checkPilot/);
   assert.match(source, /setPilotFresh\(false\); setPilotMonitorUntil\(0\)/);
 });

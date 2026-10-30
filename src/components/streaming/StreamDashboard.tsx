@@ -54,7 +54,9 @@ export function StreamDashboard() {
     const id=pilotPlayback.id;
     const timer=setInterval(()=>{
       if (Date.now() >= pilotMonitorUntil) { setPilotMonitorUntil(0); return; }
-      if(!document.hidden)checkPilot(id);
+      // OBS may cover/minimize this page. Keep the bounded provider check running
+      // while the tab is open; visibility is not evidence that a broadcast ended.
+      checkPilot(id);
     },20000);
     return ()=>clearInterval(timer);
   },[pilotPlayback?.id,pilotMonitorUntil,pilotPending,checkPilot]);
@@ -127,7 +129,7 @@ export function StreamDashboard() {
         {saveGame.isError&&<p role="alert">{saveGame.error.message}</p>}
         {testLivePilot && <section className="gaming-card p-4 space-y-3" aria-label="Development Mux live pilot">
           <h2 className="text-xl font-semibold">In-app broadcast playback</h2>
-          <p>Development test stream only. Synchronization requires the secure server pilot configuration. After a successful check, status refreshes while this page is visible for up to five minutes, including while waiting for OBS. Stop OBS to end the broadcast.</p>
+          <p>Development test stream only. Synchronization requires the secure server pilot configuration. After a successful check, status refreshes while this page stays open for up to five minutes, including while waiting for OBS. Stop OBS to end the broadcast.</p>
           <p className="text-sm">Clipt stream ID: {stream.id}</p>
           <StreamKeyManager key={`${user.id}:${stream.id}`} streamId={stream.id} manual />
           <Button disabled={pilot.isPending} onClick={()=>{setPilotMonitorUntil(Date.now()+300000);checkPilot(stream.id);}}>{pilot.isPending?'Checking provider…':'Check Mux test status / playback'}</Button>
