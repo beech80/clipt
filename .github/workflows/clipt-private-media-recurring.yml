@@ -1,0 +1,81 @@
+name: CLIPT recurring private media backup
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * *'
+  push:
+    branches: [main]
+    paths: ['operations/private-media-backup-request.json']
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/clipt-private-media-recurring.yml'
+      - 'scripts/lib/media-backup.mjs'
+      - 'scripts/lib/private-media-backup.mjs'
+      - 'scripts/run-private-media-backup*.mjs'
+      - 'scripts/report-private-media-backup.mjs'
+      - 'scripts/check-backblaze-connection.mjs'
+      - 'supabase/functions/_shared/private-backup-*.mjs'
+      - 'supabase/functions/private-media-backup/**'
+      - 'supabase/migrations/*recurring_private_media_backup.sql'
+      - 'tests/operations/private-media-backup*.test.mjs'
+permissions:
+  contents: read
+concurrency:
+  group: clipt-private-media-backup
+  cancel-in-progress: false
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts --no-fund --no-audit
+      - run: node --test tests/operations/backblaze-connection.test.mjs tests/operations/media-backup.test.mjs tests/operations/private-media-backup*.test.mjs
+  backup:
+    if: github.event_name != 'pull_request' && github.repository == 'beech80/clipt' && github.ref == 'refs/heads/main'
+    needs: offline-tests
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Back up private bytes and verify a full isolated restore
+        env:
+          CLIPT_B2_KEY_ID: ${{ secrets.CLIPT_B2_KEY_ID }}
+          CLIPT_B2_APPLICATION_KEY: ${{ secrets.CLIPT_B2_APPLICATION_KEY }}
+          NODE_OPTIONS: ''
+        run: node scripts/run-private-media-backup.mjs
+  report:
+    if: always() && github.event_name != 'pull_request' && github.repository == 'beech80/clipt' && github.ref == 'refs/heads/main'
+    needs: [offline-tests, backup]
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Notify the existing owner alert route only on failure or recovery
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CLIPT_BACKUP_RESULT: ${{ needs.offline-tests.result == 'success' && needs.backup.result == 'success' && 'success' || 'failure' }}
+        run: node scripts/run-private-media-backup-alert.mjs

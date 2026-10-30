@@ -165,3 +165,13 @@ for (const uploadUrl of ['http://pod.backblaze.com/b2api/v4/b2_upload_file/a', '
     assert.equal(p.stored.size, 0);
   });
 }
+
+test('private recurring write scope is isolated from the original snapshot and control namespace',async()=>{
+ const p=provider(),c=await connectBackup({keyId:'synthetic-key',applicationKey:'synthetic-secret',fetchImpl:p.fetchImpl,writeScope:'private-recurring-v1'});
+ const name='recurring/v1/objects/'+hash(data);const saved=await c.put(name,data);assert.deepEqual(await c.get(saved),data);assert.deepEqual(await c.put(name,data),saved);
+ await assert.rejects(c.put(CONTROL,data));await assert.rejects(c.put('snapshots/20261027-contract-test/objects/0000',data));await assert.rejects(c.put('recurring/v1/objects/../outside',data));
+ await c.put('recurring/v1/runs/20261030-77-1/manifest.json',Buffer.from('{}'));
+});
+test('unknown backup write scopes fail before any provider request',async()=>{
+ let calls=0;await assert.rejects(connectBackup({keyId:'synthetic-key',applicationKey:'synthetic-secret',writeScope:'outside',fetchImpl:async()=>{calls++;throw Error();}}));assert.equal(calls,0);
+});
