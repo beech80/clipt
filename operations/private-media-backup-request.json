@@ -1,0 +1,9 @@
+{
+  "format": "clipt-private-media-backup-request-v1",
+  "request": "first-recurring-private-source-backup",
+  "project": "slnjliheyiiummxhrgmk",
+  "destination": "clipt-media-backup2026",
+  "restoreVerification": "all-files-isolated-sha256",
+  "sourceMutations": false,
+  "ownerApproved": true
+}

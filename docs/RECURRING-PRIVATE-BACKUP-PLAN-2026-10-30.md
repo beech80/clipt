@@ -7,7 +7,7 @@ Owner authorization: "do the back up". Existing approved destination remains the
 - Daily GitHub schedule at 03:17 UTC, manual dispatch, and an explicit reviewed main-branch request file for the initial run.
 - Verify the exact private destination and existing bucket-restricted credentials before requesting private source data.
 - Authorize only GitHub-hosted jobs from repository ID 917757980, owner ID 195324952, the exact main-branch backup workflow, supported events and a valid short-lived RS256 GitHub token.
-- Verify the SHA-256 of the workflow and all seven runner/dependency files at its immutable workflow commit. Ordinary unrelated app commits remain compatible; unreviewed backup code fails closed.
+- Verify the SHA-256 of the workflow at its immutable definition commit and executed dependencies at their exact checkout commit. Ordinary unrelated app commits remain compatible; unreviewed backup code fails closed.
 - Inventory the six approved private production buckets using service-only invoker functions. Sign each unchanged object just before download. No public bucket, owner, path or source byte is changed.
 - Copy new content to an immutable content-addressed pool under recurring/v1/. Read existing destination bytes back before reusing them. Original snapshot and control paths cannot be written by the recurring mode.
 - Every run restores every file independently to isolated temporary files and compares SHA-256 hashes. A private manifest and success receipt are written/read back only after all checks pass.
