@@ -1,74 +1,81 @@
 # Native phone broadcasting implementation — October 30, 2026
 
-This is an implementation and acceptance record. It is not a claim of a successful physical phone broadcast.
+This records implemented source and observed verification. Native broadcasting is not certified for launch: private setup and physical-device acceptance remain incomplete.
 
-## Implemented source
+## Implemented
 
-- Exact Capacitor8.6.0 runtime and reproducible native host generator with the current iOS scene lifecycle. Hosts load bundled assets, not remote Lovable content. App identity and existing React UI are retained.
-- Android native Camera2/MediaCodec H.264/AAC publishing, Screen Live via MediaProjection foreground service, conditional microphone/game audio, persistent notification/Stop, native camera preview/switch/mute/end, native heartbeats, bounded reconnect, permission revocation, thermal/expiry handling.
-- Pinned RootEncoder2.8.1 RTMPS implementation, explicit TLS hostname verification and stripped third-party Android logging. Publishing requires a minified nondebug build. Debug compilation is supported but is not a publishable beta artifact.
-- iOS native AVFoundation/VideoToolbox camera publishing and iOS27 ScreenCaptureKit picker/output/background capture, with native preview/switch/mute/end, permission/interruption handling, bounded reconnect and native expiry/heartbeats.
-- Pinned HaishinKit.swift2.2.5 source revision and licenses. iOS capture capabilities are based on native APIs and actual encoder creation, with SDK/OS gating. The iOS27 screen path is built only with an actual SDK27+ toolchain.
-- Authenticated native session creation/status/current/end; owner/invitation/MFA/current-session/account-erasure checks; one publisher per owner, creation limits and atomic hashed one-use grants. Native-only grant redemption returns scoped transport credentials. The webpage never receives a Mux API token, signing key or ingest stream key.
-- Signed provider webhook handling and reconciliation, provider-verified LIVE state, independently bounded leases, private signed playback and block checks. Native heartbeats refresh provider proof even while the WebView is backgrounded.
-- Existing Go Live adds Camera Live / Screen Live only when the installed native plugin advertises real support. Source/quality/orientation/audio options, status recovery, independent mute controls and explicit End are wired. OBS, Live Discovery, viewer, game associations, profiles/chat and navigation are retained.
-- Signed playback markers bind authorization to the exact stream. Private tokens are not persisted to browser storage.
+- Exact Capacitor8.6.0 runtime and reproducible hosts loading the reviewed bundled app. Existing CLIPT interface, controller artwork, OBS, navigation and web deployment are preserved.
+- Android Camera2/MediaCodec H.264/AAC publishing and MediaProjection Screen Live with a foreground service, explicit native Stop, conditional game/microphone audio, camera preview/switch/mute/end, expiry, heartbeats, permission revocation and bounded network reconnect.
+- Pinned RootEncoder2.8.1, explicit RTMPS hostname verification, and stripped third-party logging in the minified nondebug app. No stream key is placed in Intent extras or saved permission bundles.
+- iOS AVFoundation/VideoToolbox camera publishing and the iOS27 ScreenCaptureKit system-picker path. Capture uses the iPhone-supported lifecycle: source changes stop/recreate SCStream, queued changes accept only the latest consent, replaced-stream callbacks cannot terminate a new capture, and source-picker dismissal preserves an existing stream.
+- iOS game audio drives the mixer when the system picker disables microphone capture. Independent microphone/game mute choices and existing audio format are retained. Camera audio retains its microphone clock.
+- Pinned HaishinKit2.2.5 revision dc880cb540b8feeb98f64e8b7dcfaaf320b6b2bd and bundled licenses. SDK/OS/hardware encoder checks determine native capabilities.
+- Native Camera Live / Screen Live controls,360p/15FPS default and higher advertised presets, audio/orientation controls, owner-session recovery, background screen ownership, and account-change/sign-out capture stops. The browser does not impersonate a native screen broadcaster.
+- Authenticated session creation/current/status/stop/playback, fresh Auth session/MFA/invitation/owner checks, one publisher per owner, creation limits, atomic hashed one-use grants, fixed expiry, provider-verified LIVE state, private signed playback, signed webhook validation and scoped reconciliation.
+- Key parsing accepts raw/base64 PEM, copied whitespace and escaped PEM line breaks. It retains RSA import,2048-bit minimum,16384-character limit, nonextractable keys and redacted errors; API-token secrets/public keys/weak keys remain rejected.
 
-- Account changes/sign-out stop native capture across routes; same-owner recovery preserves owned screen capture. The native window and overscroll stay black and steady without disabling zoom.
-- Native icon/splash assets derive from the original purple CLIPT control artwork. The generated1024px opaque icon was inspected visually, and its PNG format was verified.
+The normal client flow delivers transport credentials to the native broker. This is client separation, not device attestation. Mux API/signing credentials remain server-side. Private playback tokens have bounded validity; instantaneous revocation of an already issued token is not claimed.
 
-## Source and verification
+## Source references
 
-Merged PR: https://github.com/beech80/clipt/pull/30  
-Branch: feature-native-mobile-broadcasting-20261030
+| Change | PR | Main commit |
+| --- | --- | --- |
+| Native publishing engines and secure sessions | [30](https://github.com/beech80/clipt/pull/30) | 59fb05fb90c0db17b61867e30f5db63e7d5e8f79 |
+| Android development owner package | [31](https://github.com/beech80/clipt/pull/31) | 04313eace7125ac9ac8735385871c88ad75973ab |
+| iPhone device compatibility, audio routing and owner project | [32](https://github.com/beech80/clipt/pull/32) | fd237be20027b840183d17c74da0753946406a4d |
+| Copied signing-key normalization | [33](https://github.com/beech80/clipt/pull/33) | 72afaea081a3361d60a03a83f2d399b2705f5028 |
 
-Merged commit: 59fb05fb90c0db17b61867e30f5db63e7d5e8f79. The exact validated source head was 8a8e786bc73ebab9ecdba32ce23d8a69321f12ec:
+The branches retain feature-native-mobile-broadcasting-20261030, feature-native-owner-test-package-20261030, feature-ios-owner-device-package-20261030 and fix-native-signing-key-normalization-20261030. The test runs below identify the exact source heads; merged/documentation commits have different identifiers.
 
-- Native builds: https://github.com/beech80/clipt/actions/runs/41094875803 — Android minified release APK and11 native JUnit tests; full iOS27 simulator app build and8 Swift simulator tests passed.
-- App validation: https://github.com/beech80/clipt/actions/runs/41094875666 —802 app unit tests,12 monitor tests, TypeScript, security audit, CSS, web build, 31 Chromium and18 WebKit regression checks passed; npm audit reported0 vulnerabilities.
-- Streaming: https://github.com/beech80/clipt/actions/runs/41094875808 —48 existing stream unit checks and5 browser flow tests passed. The new native browser tests simulate the Capacitor transport and intercept all hosted requests. They prove UI/protocol integration, not real capture or RTMPS.
-- PostgreSQL lifecycle tests execute the actual native SQL: ownership, grant replay, fixed expiry, signed markers, account revocation and denial of browser-role access.
-- Local13 foundation tests also ran and passed. The attached Windows computer is slow; cloud native builds provide the native compile evidence.
-- Earlier failures were investigated and fixed: Android JSONObject API mismatch, unavailable iOS hardware helper, missing explicit Cordova dependency for standalone package tests, SQL CASE expression parsing and isolated OBS test dependency mocks. No original behavioral assertion was removed to obtain a pass.
+## Automated evidence
 
-## Deployed development state
+- [Latest app/source verification](https://github.com/beech80/clipt/actions/runs/41120375177), source17928324843c451449e66135ee86d5113f63e78a:811 app tests and12 monitor tests passed;0 failures; typecheck, CSS, web build, npm audit (0 vulnerabilities), Chromium and WebKit regressions passed. Signing tests verify actual JWT signatures over8 supported key-format variants and reject unsafe inputs.
+- [Native verification](https://github.com/beech80/clipt/actions/runs/41111317236), source475864d36aeee85e1273256a3e1b12f559dd936b: Android compile/minified APK/native unit checks passed; iOS simulator and physical-iPhone-SDK builds passed;14 Swift tests passed with0 failures. The physical SDK check is now part of normal native CI.
+- [iPhone owner device archive](https://github.com/beech80/clipt/actions/runs/41111317044), same native source: actual iPhoneOS27.1 arm64 archive passed, native identity checked, development public key accepted,8 owner/configuration boundary checks passed.
+- [Android owner package](https://github.com/beech80/clipt/actions/runs/41104358378), source70afa0af6caff0229d9dfc7808899e415ff865cc:4 packaging boundary tests, development public-key acceptance, Android native tests, minified APK and APK Signature Scheme v2 verification passed. Later iPhone/backend changes do not alter that Android client's implementation.
+- [Existing streaming integration checks](https://github.com/beech80/clipt/actions/runs/41094875808):48 stream unit checks and5 browser flow cases passed. Native browser cases simulate the Capacitor transport and intercept hosted requests; they do not prove capture or real RTMPS.
+- Lifecycle SQL tests execute the actual native SQL for ownership, grant replay, fixed expiry, viewer invitation, signed markers, account revocation and browser-role denial.
+
+The device SDK caught pixelFormat/updateContentFilter/updateConfiguration calls unavailable on iPhone despite the earlier simulator pass. Those calls were removed in favor of the documented iOS lifecycle and the stronger device compile now covers them. No failing behavioral assertion was removed.
+
+## Device packages
+
+The successful Android run provides CLIPT-development-owner-test-Android: APK, BUILD-INFO.json, README and SHA256SUMS. It targets development, not localhost. Its temporary developer signing key is for owner testing; future updates can require uninstalling that development app. A stable approved signing key is required for normal upgradeable distribution.
+
+The successful iPhone run provides CLIPT-development-owner-test-iPhone: prepared Xcode project, unsigned arm64 archive, build metadata, instructions and checksums. It is not a signed installable IPA. On the owner's Mac, scripts/ios-owner-test.mjs validates the actual SDK/team/paired-device identifiers, preserves the SDK27 flags during package resolution/build, and installs only with --install. Apple signing/provisioning still requires the owner's account.
+
+Artifacts expire after7 days (November6,2026). See NATIVE-ANDROID-OWNER-TEST.md and NATIVE-IOS-OWNER-TEST.md for installation/acceptance instructions. No physical screenshot or broadcast is represented by these artifacts. The original1024px CLIPT icon was inspected; its opaque PNG format was verified.
+
+## Observed development state
 
 Project akiksrlzdqvipqbbjxpw only:
 
-- Native private tables/functions installed; both tables have RLS and no anon/authenticated SELECT access. Browser roles cannot execute the service-only RPC.
-- native-broadcast-session Edge Function version2 deployed from the reviewed source; custom per-action authentication replaces gateway JWT-only enforcement for native grants/webhooks.
-- Probes returned GET405, OPTIONS204, anonymous current/status401, disabled redeem503, invalid cleanup401 and forged webhook401. Responses use no-store/private caching.
-- No native session or provider resource was created. Native provisioning remains disabled until required Mux signing/webhook/worker configuration is present and approved.
-- SQL-only per-minute expiry is installed separately and successful scheduled executions were observed. It sends no secrets through pg_net. External reconciliation still requires its scoped worker token and scheduler.
-- Production project slnjliheyiiummxhrgmk, production frontend, billing and app stores were not changed.
+- Private native tables/functions and RLS are installed; anon/authenticated cannot SELECT the native tables or execute the service-only RPC.
+- native-broadcast-session version5 is deployed. The signing parser is the only changed file relative to the previous deployed function; all5 other dependencies were compared and preserved. Gateway verify_jwt remains false because the function performs per-action authentication for user JWTs, one-use grants, scoped cleanup and signed provider callbacks.
+- Read-only probes after that deployment returned PLAYBACK_UNAVAILABLE for unsigned playback initialization and NATIVE_DISABLED for grant redemption. The saved private signing value still cannot be imported; the copy-format fix alone did not resolve the configuration. No credential value was retrieved or logged.
+- SQL inspection found0 native sessions. The SQL-only per-minute expiry job succeeded at20:20UTC on October30. It sends no secrets through pg_net.
+- Anonymous user requests and forged webhooks were previously verified as denied with private/no-store response caching.
+- No native provider stream was created by these checks. Hosted publishing remains gated; no paid native stream was enabled.
+- The last development advisor snapshot still included its leaked-password-protection warning. No blanket Supabase security clearance is claimed; production and development settings must not be confused.
 
-## Required private configuration and installable builds
+Production project slnjliheyiiummxhrgmk, production frontend, payment gates and app stores were not deployed or enabled by this work.
 
-Do not paste credentials into chat, source code, VITE variables, screenshots or logs.
+## Private setup still required
 
-Supabase development Edge secrets:
+Do not put credentials in chat, source, VITE variables, screenshots, artifacts or logs.
 
-- CLIPT_NATIVE_TEST_OWNER_ID: the confirmed development auth user for the approved owner email. Test publishing is restricted to that account; other viewers require explicit beta membership even when ordinary development access is open.
-- Existing MUX_TOKEN_ID / MUX_TOKEN_SECRET must have the required video permissions in the intended Mux environment.
-- MUX_SIGNING_KEY_ID and MUX_SIGNING_PRIVATE_KEY: matching private playback signing pair in that same environment. The server accepts the provider's base64 PEM or PEM format.
-- MUX_NATIVE_WEBHOOK_SECRET: signing secret for the dedicated callback /functions/v1/native-broadcast-session?hook=mux. Keep the existing OBS webhook intact.
-- External worker: store that same scoped token in the GitHub encrypted repository secret CLIPT_NATIVE_RECONCILE_TOKEN, run the native cleanup workflow manually and verify success, then set repository variable CLIPT_NATIVE_RECONCILE_ENABLED=true. The worker runs every5 minutes after merging; failure email follows the existing verified Actions notification setup. Keep the SQL expiry job as well.
-- CLIPT_NATIVE_RECONCILE_TOKEN: independent high-entropy URL-safe worker token,64–256 characters. This authorizes only the cleanup endpoint.
-- Enable test mode only after those checks: CLIPT_NATIVE_BROADCAST_ENABLED=true, CLIPT_NATIVE_MUX_CREATE_ENABLED=true, CLIPT_NATIVE_MUX_MODE=test, CLIPT_NATIVE_MAX_DURATION_SECONDS=300, CLIPT_NATIVE_MUX_PAID_APPROVED=false.
-- Paid/general production streaming is a separate approval and release decision. The default five-minute test limit is not a launch-ready unlimited streaming service.
+1. Validate the saved MUX_SIGNING_KEY_ID / MUX_SIGNING_PRIVATE_KEY pair in development. It must be the signing-key ID and complete matching private key, from the same Mux environment as the configured Video API token. An Access Token Secret is a different credential. User confirmed the correct Supabase development project, but the service still rejects the private-key value.
+2. Configure the dedicated Mux webhook at /functions/v1/native-broadcast-session?hook=mux and save its endpoint-specific secret as MUX_NATIVE_WEBHOOK_SECRET. Keep the OBS webhook. Real signed delivery is untested; the reported download_failed video-import error did not confirm webhook creation.
+3. Create a separate high-entropy64–256-character URL-safe cleanup token. Store it as CLIPT_NATIVE_RECONCILE_TOKEN in both development Supabase Secrets and GitHub encrypted repository Secrets. Verify the cleanup workflow manually before enabling repository variable CLIPT_NATIVE_RECONCILE_ENABLED=true. Its5-minute worker supplements, rather than replaces, SQL expiry.
+4. Set CLIPT_NATIVE_TEST_OWNER_ID to the confirmed development Auth owner for beecher@cliptgaming.com. Existing MUX_TOKEN_ID / MUX_TOKEN_SECRET must retain required Video permissions in the same environment.
+5. Only after configuration/delivery checks, enable the bounded test gates: CLIPT_NATIVE_BROADCAST_ENABLED=true, CLIPT_NATIVE_MUX_CREATE_ENABLED=true, CLIPT_NATIVE_MUX_MODE=test, CLIPT_NATIVE_MAX_DURATION_SECONDS=300 and CLIPT_NATIVE_MUX_PAID_APPROVED=false. Paid/general production streaming is a separate approval/release decision.
 
-A real device build must bundle the actual reviewed development Supabase URL/publishable key. CI uses isolated HTTP fixtures: its compile-only APK is not a configured end-user app.
+## Outstanding physical acceptance
 
-iOS: use Xcode27+, verify the SDK, set CLIPT_IOS27_SDK=1 and CLIPT_NATIVE_BACKEND_READY=true only for a configured development build, run the host generator and sign the App target with the owner's Apple setup. An unsigned simulator app cannot be installed on a physical iPhone. No App Store/TestFlight upload has been authorized or performed.
+Use the configured signed native builds on the actual iPhone and Android phone and view from a second device. Verify camera image/audio, camera switching, microphone and game-audio mute, system screen consent, switching to a game, denied permissions, OS Stop, backgrounding/lock/interruption, network recovery, orientation, thermal/battery behavior, current video/chat/profile/game-channel behavior, account sign-out, expiry and complete provider/discovery teardown.
 
-Android: use Java21/SDK36, run the host generator, then build a minified nondebug beta/release with the explicit native flag. A local debug signing key can be selected only for an owner test build with cliptDevelopmentSigning=true; it is not a store signing configuration. Current native engine requires Android8/API26+.
+iOS Screen Live requires iOS27+ in this increment; there is no older-iOS ReplayKit extension fallback. Android game audio is conditional on OS/source-app permissions. Protected media cannot be promised capture. Camera backgrounding stops camera capture; screen capture is OS/service owned.
 
-## Outstanding acceptance gates
+No physical-device pass, production rollout, store approval, zero-bug guarantee or full beta certification is claimed. Private configuration, signing and the physical matrix remain acceptance gates.
 
-- Private Mux configuration, actual authenticated native session creation/redemption/playback, signed webhook delivery and scoped external cleanup-worker delivery.
-- Real configured/signable iPhone and Android builds. Owner has confirmed both phones and iOS27+. Apple signing setup is pending confirmation.
-- Physical Camera Live and Screen Live on both platforms: actual image/audio playback from a second device, switch to a game, microphone/game-audio permissions, camera switch, mute, denied consent, backgrounding, screen lock, OS Stop, interruptions, Wi-Fi/cellular recovery, process termination, orientation, thermal/battery behavior and provider/discovery/chat teardown.
-- Android game audio is conditional on OS/source-app permissions. Protected media is not captured. Camera backgrounding ends camera capture; screen sharing is service/OS-capture owned.
-- No native physical pass, production rollout, store compliance approval, guaranteed zero bugs or complete beta certification is claimed here.
-
-Primary references: [Capacitor8.5 scene migration](https://capacitorjs.com/docs/updating/8-5), [Apple ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit), [Android MediaProjection](https://developer.android.com/media/grow/media-projection), [Mux signed playback](https://www.mux.com/docs/guides/secure-video-playback).
+Primary references: [Apple iOS capture sample](https://developer.apple.com/documentation/screencapturekit/capturing-screen-content-on-ios), [Android MediaProjection](https://developer.android.com/media/grow/media-projection), [Mux signed playback](https://www.mux.com/docs/guides/secure-video-playback), [Capacitor8.5 scene migration](https://capacitorjs.com/docs/updating/8-5).
