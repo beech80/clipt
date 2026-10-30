@@ -37,8 +37,18 @@ export function NativeBroadcastPanel({streamId}:{streamId:string}){
  },[]);
  const refresh=useCallback(async()=>{
   try{
-   const status=await nativeBroadcastBridge.getStatus();setTransport(status);
-   if(sessionId.current)setSession(await nativeSessionStatus(sessionId.current));
+   const watched=sessionId.current;
+   const status=await nativeBroadcastBridge.getStatus();
+   if(watched!==sessionId.current)return;
+   setTransport(status);
+   if(watched){
+    const verified=await nativeSessionStatus(watched);
+    if(watched!==sessionId.current)return;
+    setSession(verified);
+    if(['ended','failed'].includes(verified.state)&&['idle','ended','failed'].includes(status)){
+     sessionId.current=null;requestId.current=null;setStarted(false);setSession(null);
+    }
+   }
   }catch{setError('Broadcast status is temporarily unavailable. Native capture can still be ended from its broadcast controls.');}
  },[]);
  useEffect(()=>{
@@ -112,10 +122,11 @@ export function NativeBroadcastPanel({streamId}:{streamId:string}){
    {selection.mode==='screen'&&cap.systemAudio!=='unsupported'&&<Label className="flex items-center gap-3 min-h-11"><input type="checkbox" checked={selection.systemAudio} disabled={pending} onChange={e=>setSelection(s=>({...s,systemAudio:e.target.checked}))}/>Include game audio where permitted</Label>}
   </div>}
   <p className="text-sm">{selection.mode==='screen'?'Your phone will ask what to share. Screen Live can continue when you switch to a game. Some games block audio or protected video.':'Camera Live uses a native preview. Leaving CLIPT ends camera capture.'}</p>
-  {started&&<p role="status">{session?.isLive?'LIVE — confirmed by the streaming provider.': 'Phone transport: '+transport+'. Waiting for verified live video.'}</p>}
+  {!started&&transport==='ended'&&<p role="status">Broadcast ended.</p>}
+  {started&&<p role="status">{['ended','failed'].includes(transport)?'Phone capture stopped. End this session to confirm server cleanup.':session?.isLive?'LIVE — confirmed by the streaming provider.': 'Phone transport: '+transport+'. Waiting for verified live video.'}</p>}
   {error&&<p role="alert">{error}</p>}
   <div className="flex flex-wrap gap-3">
-   {!active?<Button disabled={pending||!user} onClick={()=>void begin()}>{pending?'Preparing…':'Start '+(selection.mode==='camera'?'Camera Live':'Screen Live')}</Button>:<>
+   {!active?<Button disabled={pending||!user||Boolean(sessionId.current)} onClick={()=>void begin()}>{pending?'Preparing…':'Start '+(selection.mode==='camera'?'Camera Live':'Screen Live')}</Button>:<>
     {selection.microphone&&<Button variant="outline" disabled={pending} aria-pressed={microphoneMuted} onClick={()=>void mute('microphone')}>{microphoneMuted?'Unmute microphone':'Mute microphone'}</Button>}
     {selection.systemAudio&&<Button variant="outline" disabled={pending} aria-pressed={gameMuted} onClick={()=>void mute('game')}>{gameMuted?'Unmute game audio':'Mute game audio'}</Button>}
     {selection.mode==='camera'&&cap.cameraSwitch&&<Button variant="outline" disabled={pending} onClick={()=>void nativeBroadcastBridge.switchCamera().catch(()=>setError('Camera could not be changed.'))}>Switch camera</Button>}

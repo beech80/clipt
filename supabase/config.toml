@@ -19,3 +19,6 @@ verify_jwt = true
 [[functions]]
 [functions.cdn-config]
 verify_jwt = true
+# Owner JWT, one-use grants, scoped stop tokens and Mux signatures are verified in the function.
+[functions.native-broadcast-session]
+verify_jwt = false

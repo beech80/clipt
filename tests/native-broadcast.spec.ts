@@ -1,12 +1,12 @@
 import {test,expect,type Page} from '@playwright/test';
 const api='https://akiksrlzdqvipqbbjxpw.supabase.co';
 const owner='10000000-0000-4000-8000-000000000003',stream='10000000-0000-4000-8000-000000000002',session='10000000-0000-4000-8000-000000000001';
-async function fixture(page:Page,{native=true,deny=false}={}){
+async function fixture(page:Page,{native=true,deny=false,restored=false}={}){
  const user={id:owner,aud:'authenticated',role:'authenticated',email:'fixture@example.invalid',app_metadata:{},user_metadata:{},created_at:'2026-09-19T00:00:00Z',factors:[]};
- await page.addInitScript(({user,native,deny})=>{
+ await page.addInitScript(({user,native,deny,restored})=>{
   const exp=Math.floor(Date.now()/1000)+3600,enc=(v:object)=>btoa(JSON.stringify(v)).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
   localStorage.setItem('sb-akiksrlzdqvipqbbjxpw-auth-token',JSON.stringify({access_token:enc({alg:'HS256'})+'.'+enc({sub:user.id,exp,aal:'aal1',role:'authenticated'})+'.fixture',refresh_token:'fixture',expires_at:exp,expires_in:3600,token_type:'bearer',user}));
-  (window as any).__nativeCalls=[];(window as any).__nativeState='idle';
+  (window as any).__nativeCalls=[];(window as any).__nativeState=restored?'publishing':'idle';
   if(native){
    (window as any).CapacitorCustomPlatform={name:'android'};
    (window as any).Capacitor={
@@ -20,9 +20,9 @@ async function fixture(page:Page,{native=true,deny=false}={}){
     },
    };
   }
- },{user,native,deny});
+ },{user,native,deny,restored});
  await page.routeWebSocket('**',socket=>socket.close());
- const stats={creates:0,stops:0,statuses:0,live:false,selection:null as any};
+ const stats={creates:0,stops:0,statuses:0,live:false,selection:restored?{mode:'screen',quality:'360p15',orientation:'landscape',microphone:true,systemAudio:false,cameraPosition:'back'}:null as any};
  await page.route('**/*',async route=>{
   const req=route.request(),url=new URL(req.url());
   if(url.origin==='http://127.0.0.1:8082')return route.continue();
@@ -34,7 +34,7 @@ async function fixture(page:Page,{native=true,deny=false}={}){
   if(url.pathname==='/rest/v1/rpc/clipt_beta_access')data=true;
   if(url.pathname==='/functions/v1/native-broadcast-session'){
    const body=req.postDataJSON();expect(body.protocolVersion).toBe(1);
-   if(body.action==='current')data={protocolVersion:1,session:null};
+   if(body.action==='current')data={protocolVersion:1,session:restored?{protocolVersion:1,sessionId:session,streamId:stream,state:'active',isLive:true,selection:stats.selection,expiresAt:new Date(Date.now()+300000).toISOString(),maxDurationSeconds:300}:null};
    else if(body.action==='create'){
     stats.creates++;stats.selection=body.selection;expect(body.streamId).toBe(stream);
     expect(body.selection.quality).toBe('360p15');
@@ -84,4 +84,14 @@ test('denied native capture revokes the prepared session and permits a fresh ret
  expect(stats.creates).toBe(1);expect(stats.stops).toBe(1);
  await panel.getByRole('button',{name:'Start Camera Live',exact:true}).click();
  await expect.poll(()=>stats.creates).toBe(2);await expect.poll(()=>stats.stops).toBe(2);
+});
+
+test('returning from another app restores broadcast controls without creating or restarting the session',async({page})=>{
+ const stats=await fixture(page,{restored:true});stats.live=true;await page.goto('/stream-setup');
+ const panel=page.getByRole('region',{name:'Phone broadcasting'});
+ await expect(panel.getByRole('button',{name:'End broadcast',exact:true})).toBeVisible();
+ expect(stats.creates).toBe(0);
+ expect(await page.evaluate(()=>(window as any).__nativeCalls.filter((v:any)=>v.method==='start').length)).toBe(0);
+ await panel.getByRole('button',{name:'End broadcast',exact:true}).click();
+ await expect.poll(()=>stats.stops).toBe(1);
 });

@@ -1,4 +1,5 @@
 import React from 'react';
+import {installNativeBroadcastAccountGuard} from '@/native/broadcast/accountGuard';
 import './pages/clipt-console.css';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -66,6 +67,7 @@ import ConsoleMasthead from './components/ConsoleMasthead';
 
 // Main App component
 const App = () => {
+  React.useEffect(installNativeBroadcastAccountGuard, []);
   useApplyAccessibilityPreferences();
   const location = useLocation();
   const [currentPostId, setCurrentPostId] = React.useState<string | null>(null);
