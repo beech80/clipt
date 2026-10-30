@@ -14,6 +14,9 @@ import { Label } from '@/components/ui/label';
 import { StreamKeyManager } from './broadcast/StreamKeyManager';
 import { StreamerDashboardChat } from './chat/StreamerDashboardChat';
 import { StreamPlayer } from './StreamPlayer';
+import { storageProjectUrl } from '@/integrations/supabase/client';
+import { isMuxTestProject } from '@/lib/live-test-environment';
+const testLivePilot = isMuxTestProject(storageProjectUrl);
 
 export function StreamDashboard() {
   const { user } = useAuth();
@@ -47,7 +50,7 @@ export function StreamDashboard() {
   },[pilotFresh,pilot.data]);
   const { mutate: checkPilot, isPending: pilotPending } = pilot;
   useEffect(()=>{
-    if (!import.meta.env.DEV || !pilotPlayback?.id || !pilotMonitorUntil || pilotPending) return;
+    if (!testLivePilot || !pilotPlayback?.id || !pilotMonitorUntil || pilotPending) return;
     const id=pilotPlayback.id;
     const timer=setInterval(()=>{
       if (Date.now() >= pilotMonitorUntil) { setPilotMonitorUntil(0); return; }
@@ -122,17 +125,18 @@ export function StreamDashboard() {
         <h2 className="font-semibold">{stream.title}</h2>
         {gamePicker}<Button variant="outline" disabled={saveGame.isPending||gameId===(stream.game_id||'')} onClick={()=>saveGame.mutate()}>{saveGame.isPending?'Saving…':'Save game channel'}</Button>
         {saveGame.isError&&<p role="alert">{saveGame.error.message}</p>}
-        {import.meta.env.DEV && <section className="gaming-card p-4 space-y-3" aria-label="Development Mux live pilot">
+        {testLivePilot && <section className="gaming-card p-4 space-y-3" aria-label="Development Mux live pilot">
           <h2 className="text-xl font-semibold">In-app broadcast playback</h2>
           <p>Development test stream only. Synchronization requires the secure server pilot configuration. After a successful check, status refreshes while this page is visible for up to five minutes, including while waiting for OBS. Stop OBS to end the broadcast.</p>
           <p className="text-sm">Clipt stream ID: {stream.id}</p>
+          <StreamKeyManager key={`${user.id}:${stream.id}`} streamId={stream.id} manual />
           <Button disabled={pilot.isPending} onClick={()=>{setPilotMonitorUntil(Date.now()+300000);checkPilot(stream.id);}}>{pilot.isPending?'Checking provider…':'Check Mux test status / playback'}</Button>
           {pilot.isError&&<p role="alert">{pilot.error.message}</p>}
           {pilot.data?.id===stream.id&&pilot.data.provider_stream_id&&/^[A-Za-z0-9]+$/.test(pilot.data.provider_stream_id)&&<p className="text-sm break-all">Mux stream checked: {pilot.data.provider_stream_id}. Compare this with the stream ID in your Active Mux monitor. Different IDs mean OBS and Clipt are using different streams.</p>}
           {pilotPlayback?.id===stream.id&&<><p role="status">{pilotFresh&&pilot.data?.id===stream.id?`Last verified provider status: ${pilot.data.provider_status}.`:'Provider status is unverified or expired.'} Refresh after connecting or disconnecting OBS. Status checks expire after 30 seconds; playback stays open. An idle live stream is not a replay.</p>
             <StreamPlayer streamId={stream.id} title={stream.title||'Development stream'} isLive={pilotFresh&&pilot.data?.id===stream.id&&pilot.data.is_live} playbackUrl={pilotPlayback.url} compact showHealth={false}/></>}
         </section>}
-        {!(import.meta.env.DEV && pilotPlayback?.id===stream.id) && <>
+        {!testLivePilot && <>
         <p role="status">{stream.is_live ? 'Live' : 'Offline'} · {stream.viewer_count == null ? 'Viewer count unavailable' : `${stream.viewer_count} viewers`}</p>
         <StreamKeyManager key={`${user.id}:${stream.id}`} streamId={stream.id} />
         <p className="text-sm text-muted-foreground">

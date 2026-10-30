@@ -11,15 +11,20 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface StreamKeyManagerProps {
   streamId: string;
+  manual?: boolean;
 }
 
-export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
+export const StreamKeyManager = ({ streamId, manual = false }: StreamKeyManagerProps) => {
   const { user } = useAuth();
   const [showKey, setShowKey] = useState(false);
+  const [requested, setRequested] = useState(false);
 
   const { data: streamData, refetch, isLoading, error } = useQuery({
     queryKey: ['stream-key', user?.id, streamId],
-    enabled: Boolean(user && streamId),
+    enabled: Boolean(user && streamId && (!manual || requested)),
+    staleTime: manual ? Infinity : 0,
+    refetchOnWindowFocus: !manual,
+    refetchOnReconnect: !manual,
     gcTime: 0,
     retry: false,
     queryFn: async () => {
@@ -37,6 +42,11 @@ export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
       toast.error('Clipboard access failed');
     }
   };
+
+  if (manual && !requested) return <Card className="p-4 space-y-3">
+    <p>Load the existing five-minute test stream credentials only when you are ready to connect OBS. Keep the stream key private.</p>
+    <Button disabled={!user} onClick={() => setRequested(true)}>Load OBS test credentials</Button>
+  </Card>;
 
   if (isLoading) {
     return (

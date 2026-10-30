@@ -21,5 +21,6 @@ test('HLS uses MSE when available and retains native fallback for browsers witho
 test('pilot does not show unsynchronized health or legacy credentials and chat is not squeezed beside video',()=>{
   const dashboard=readFileSync(new URL('../../src/components/streaming/StreamDashboard.tsx',import.meta.url),'utf8');
   assert.match(dashboard,/compact showHealth=\{false\}/);
-  assert.match(dashboard,/!\(import\.meta\.env\.DEV && pilotPlayback\?\.id===stream\.id\)/);
+  assert.match(dashboard,/\{!testLivePilot && <>/);
+  assert.match(dashboard,/streamId=\{stream\.id\} manual/);
 });
