@@ -1,0 +1,76 @@
+name: CLIPT iPhone owner device build
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/clipt-ios-owner-test.yml'
+      - 'scripts/ios-owner-test.mjs'
+      - 'tests/unit/ios-owner-test.test.mjs'
+      - 'docs/NATIVE-IOS-OWNER-TEST.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ios-owner-device-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  CYPRESS_INSTALL_BINARY: '0'
+  CLIPT_IOS27_SDK: '1'
+  CLIPT_NATIVE_BACKEND_READY: 'true'
+jobs:
+  iphone-device-build:
+    runs-on: xcode-27
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Verify exact native runtime
+        run: node -e "const p=require('./package.json'),l=require('./package-lock.json');for(const n of ['core','android','ios','cli']){const k='@capacitor/'+n;if((p.dependencies?.[k]||p.devDependencies?.[k])!=='8.6.0'||l.packages['node_modules/'+k]?.version!=='8.6.0')process.exit(1)}"
+      - name: Verify the physical-device SDK and installation command
+        run: |
+          xcodebuild -version
+          sdk=$(xcrun --sdk iphoneos --show-sdk-version)
+          test "${sdk%%.*}" -ge 27
+          xcrun devicectl device install app --help
+      - run: npm ci --ignore-scripts --no-fund --no-audit
+      - name: Test owner build and configuration boundaries
+        run: node --experimental-strip-types --test tests/unit/ios-owner-test.test.mjs tests/unit/native-device-environment.test.mjs
+      - run: node --experimental-strip-types scripts/native-device-environment.mjs
+      - run: npm run build
+      - run: npx playwright install chromium
+      - run: node scripts/generate-native-brand-assets.mjs
+      - run: node scripts/prepare-native-hosts.mjs ios
+      - name: Compile and archive for an actual iPhone architecture without signing
+        run: xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphoneos -destination generic/platform=iOS -configuration Release -derivedDataPath outputs/native-ios-arm64 -archivePath outputs/native-ios-unsigned/CLIPT.xcarchive CODE_SIGNING_ALLOWED=NO archive
+      - name: Verify native identity and physical-device architecture
+        run: |
+          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' outputs/native-ios-unsigned/CLIPT.xcarchive/Products/Applications/App.app/Info.plist)" = 'com.slnjliheyiiummxhrgmk.clip'
+          test "$(/usr/libexec/PlistBuddy -c 'Print CLIPTNativeBroadcastEnabled' outputs/native-ios-unsigned/CLIPT.xcarchive/Products/Applications/App.app/Info.plist)" = 'true'
+          lipo -archs outputs/native-ios-unsigned/CLIPT.xcarchive/Products/Applications/App.app/App | tr ' ' '\n' | grep -x arm64
+      - name: Package the prepared Xcode project and unsigned archive
+        run: |
+          mkdir -p outputs/native-ios-owner-test/project/scripts outputs/native-ios-owner-test/project/native
+          cp scripts/ios-owner-test.mjs outputs/native-ios-owner-test/project/scripts/
+          cp docs/NATIVE-IOS-OWNER-TEST.md outputs/native-ios-owner-test/project/README.md
+          cp -R ios outputs/native-ios-owner-test/project/
+          cp -R native/ios outputs/native-ios-owner-test/project/native/
+          tar --exclude='.build' --exclude='.swiftpm' --exclude='build' --exclude='xcuserdata' -czf outputs/native-ios-owner-test/CLIPT-prepared-iPhone-project.tar.gz -C outputs/native-ios-owner-test/project .
+          ditto -c -k --sequesterRsrc --keepParent outputs/native-ios-unsigned/CLIPT.xcarchive outputs/native-ios-owner-test/CLIPT-unsigned-device-archive.zip
+          cp docs/NATIVE-IOS-OWNER-TEST.md outputs/native-ios-owner-test/README.md
+          node --input-type=module -e "import{writeFile}from'node:fs/promises';await writeFile('outputs/native-ios-owner-test/BUILD-INFO.json',JSON.stringify({commit:process.env.GITHUB_SHA,stage:'staging',supabaseProject:'akiksrlzdqvipqbbjxpw',architecture:'arm64',signed:false,physicalDeviceVerified:false,hostedBroadcastingEnabledByBuild:false},null,2)+'\n')"
+          cd outputs/native-ios-owner-test
+          shasum -a 256 CLIPT-prepared-iPhone-project.tar.gz CLIPT-unsigned-device-archive.zip > SHA256SUMS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: CLIPT-development-owner-test-iPhone
+          path: |
+            outputs/native-ios-owner-test/*.gz
+            outputs/native-ios-owner-test/*.zip
+            outputs/native-ios-owner-test/*.md
+            outputs/native-ios-owner-test/*.json
+            outputs/native-ios-owner-test/SHA256SUMS
+          retention-days: 7
