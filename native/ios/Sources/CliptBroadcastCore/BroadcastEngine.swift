@@ -97,7 +97,7 @@ public final class CliptBroadcastEngine {
     }
 
     private func supportsHardwareH264(width: Int32, height: Int32) -> Bool {
-        let cacheKey = "\(width)x\(height)"
+        let cacheKey = String(width) + "x" + String(height)
         if let supported = encoderSupport[cacheKey] { return supported }
         guard #available(iOS 17.4, *) else { return false }
         var session: VTCompressionSession?

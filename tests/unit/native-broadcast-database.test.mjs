@@ -1,0 +1,64 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+const owner='10000000-0000-4000-8000-000000000003',other='10000000-0000-4000-8000-000000000004',stream='10000000-0000-4000-8000-000000000002',authSession='10000000-0000-4000-8000-000000000005',request='10000000-0000-4000-8000-000000000006';
+const selection={mode:'screen',quality:'360p15',orientation:'landscape',microphone:true,systemAudio:false,cameraPosition:'back'};
+test('real native lifecycle SQL enforces one-use grants, ownership, fixed leases and signed-playback markers',async()=>{
+ const db=new PGlite();
+ try{
+ await db.exec(`
+ create role anon; create role authenticated; create role service_role;
+ create schema auth;create schema clipt_private;
+ create function auth.role() returns text language sql as $$select current_setting('request.jwt.claim.role',true)$$;
+ create table auth.users(id uuid primary key,email_confirmed_at timestamptz,is_anonymous boolean default false,deleted_at timestamptz,banned_until timestamptz);
+ create table auth.sessions(id uuid primary key,user_id uuid,not_after timestamptz);
+ create table auth.mfa_factors(user_id uuid,status text);
+ create table public.profiles(id uuid primary key);
+ create table public.streams(id uuid primary key,user_id uuid,is_live boolean default false,playback_url text,hls_playback_url text,ended_at timestamptz);
+ create table public.user_blocks(blocker_id uuid,blocked_id uuid);
+ create table clipt_private.beta_access_config(singleton boolean primary key,enabled boolean);
+ create table clipt_private.beta_members(user_id uuid,revoked_at timestamptz,expires_at timestamptz);
+ create table clipt_private.erasure_jobs(user_id uuid,state text);
+ create table clipt_private.live_provider_state(stream_id uuid,verified_until timestamptz);
+ create function clipt_private.apply_live_provider_snapshot(s uuid,o uuid,p text,status text,url text,observed timestamptz) returns void language plpgsql as $$
+ begin update public.streams set is_live=(status='active'),playback_url=url where id=s and user_id=o;end;$$;
+ insert into auth.users(id,email_confirmed_at)values('${owner}',now()),('${other}',now());
+ insert into public.profiles values('${owner}'),('${other}');
+ insert into auth.sessions(id,user_id)values('${authSession}','${owner}');
+ insert into public.streams(id,user_id)values('${stream}','${owner}');
+ insert into clipt_private.beta_access_config values(true,true);
+ insert into clipt_private.beta_members(user_id)values('${owner}');
+ select set_config('request.jwt.claim.role','service_role',false);
+ `);
+ await db.exec(await readFile(new URL('../../database/native_broadcast_sessions.sql',import.meta.url),'utf8'));
+ const command=async(action,args)=> (await db.query('select public.native_broadcast_admin($1,$2::jsonb) as value',[action,JSON.stringify(args)])).rows[0].value;
+ const reserveArgs={ownerId:owner,authSessionId:authSession,aal:'aal1',streamId:stream,requestId:request,selection,providerMode:'test',maxDurationSeconds:300,grantHash:'a'.repeat(64)};
+ await assert.rejects(command('reserve',{...reserveArgs,ownerId:other}));
+ const reserved=await command('reserve',reserveArgs);assert.equal(reserved.needsProvision,true);assert.equal(reserved.state,'provisioning');
+ assert.equal((await command('reserve',reserveArgs)).needsProvision,false);
+ await assert.rejects(command('reserve',{...reserveArgs,requestId:other}));
+ await command('attach',{sessionId:reserved.sessionId,providerId:'providerfixture',playbackId:'playbackfixture'});
+ const started=await command('redeem',{grantHash:'a'.repeat(64),stopHash:'b'.repeat(64)});
+ assert.equal(started.state,'starting');
+ await assert.rejects(command('redeem',{grantHash:'a'.repeat(64),stopHash:'c'.repeat(64)}));
+ const pulse=await command('heartbeat',{sessionId:started.sessionId,stopHash:'b'.repeat(64)});
+ assert.equal(pulse.expiresAt,started.expiresAt);
+ await assert.rejects(command('heartbeat',{sessionId:started.sessionId,stopHash:'c'.repeat(64)}));
+ const live=await command('snapshot',{sessionId:started.sessionId,providerId:'providerfixture',playbackId:'playbackfixture',status:'active',observedAt:new Date().toISOString(),eventId:'eventfixture'});
+ assert.equal(live.state,'active');
+ const row=(await db.query('select * from public.streams where id=$1',[stream])).rows[0];
+ assert.equal(row.is_live,true);assert.equal(row.playback_url,'clipt-native:'+stream);
+ assert.equal((await command('current',{ownerId:owner,authSessionId:authSession})).sessionId,started.sessionId);
+ await assert.rejects(command('current',{ownerId:other,authSessionId:authSession}));
+ await db.query('update clipt_private.beta_members set revoked_at=now() where user_id=$1',[owner]);
+ await assert.rejects(command('heartbeat',{sessionId:started.sessionId,stopHash:'b'.repeat(64)}));
+ await command('stop',{sessionId:started.sessionId,stopHash:'b'.repeat(64)});
+ await assert.rejects(command('finish_stop',{sessionId:started.sessionId}));
+ await command('finish_stop',{sessionId:started.sessionId,providerId:'providerfixture',observedAt:new Date().toISOString()});
+ assert.equal((await db.query('select is_live from public.streams where id=$1',[stream])).rows[0].is_live,false);
+ await db.exec("set role authenticated");
+ await assert.rejects(db.query('select public.native_broadcast_admin($1,$2::jsonb)',['reconcile_list','{}']));
+ await assert.rejects(db.query('select * from clipt_private.native_broadcast_sessions'));
+ }finally{await db.close();}
+});

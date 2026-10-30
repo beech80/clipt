@@ -1,6 +1,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
+import {useQuery} from '@tanstack/react-query';
+import {useAuth} from '@/contexts/AuthContext';
+import {isNativePlaybackMarker,resolveNativePlayback} from '@/native/broadcast/session';
 import { Button } from '@/components/ui/button';
 import { Card } from "@/components/ui/card";
 import { StreamHealthIndicator } from "./health/StreamHealthIndicator";
@@ -23,11 +26,21 @@ export const StreamPlayer = ({
   title = 'Live Stream',
   isLive = false,
   viewerCount,
-  playbackUrl,
+  playbackUrl: suppliedPlaybackUrl,
   compact = false,
   showHealth = true,
   offlineMessage = 'Stream is offline'
 }: StreamPlayerProps) => {
+  const {user}=useAuth();
+  const privateStream=isNativePlaybackMarker(suppliedPlaybackUrl,streamId);
+  const privatePlayback=useQuery({
+    queryKey:['native-live-playback',streamId,user?.id],
+    enabled:privateStream&&isLive&&Boolean(user),retry:false,staleTime:60000,gcTime:0,
+    queryFn:()=>resolveNativePlayback(streamId),
+    refetchInterval:query=>query.state.data?Math.max(10000,query.state.data.expiresAt-Date.now()-60000):false,
+    refetchIntervalInBackground:false,
+  });
+  const playbackUrl=privateStream?privatePlayback.data?.url:suppliedPlaybackUrl;
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playbackError, setPlaybackError] = useState('');
   const [attempt, setAttempt] = useState(0);
@@ -89,7 +102,7 @@ export const StreamPlayer = ({
   if (!playbackUrl) {
     return (
       <div className="clipt-stream-player grid grid-cols-1 lg:grid-cols-4 gap-4"><Card className="gaming-card aspect-video w-full lg:col-span-3 flex items-center justify-center p-6 text-center">
-        <p role="status" className="text-purple-200">{isLive ? 'The broadcast is live, but playback is not available yet.' : offlineMessage}</p>
+        <div className="space-y-3"><p role={privatePlayback.isError?'alert':'status'} className="text-purple-200">{privateStream&&!user?'Sign in to watch this private beta broadcast.':privatePlayback.isError?'Authorized live playback could not be loaded.':isLive ? 'The broadcast is live, but playback is not available yet.' : offlineMessage}</p>{privatePlayback.isError&&<Button variant="outline" onClick={()=>void privatePlayback.refetch()}>Retry authorized playback</Button>}</div>
       </Card><div className="lg:col-span-1"><StreamChat streamId={streamId} isLive={isLive} /></div></div>
     );
   }

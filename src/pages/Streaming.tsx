@@ -13,6 +13,7 @@ import { StreamDonation } from '@/components/streaming/StreamDonation';
 import { Button } from '@/components/ui/button';
 import '@/pages/clipt-channels.css';
 import { followService } from '@/services/followService';
+import {isNativePlaybackMarker} from '@/native/broadcast/session';
 import { storageProjectUrl } from '@/integrations/supabase/client';
 
 const developmentLiveBackend = storageProjectUrl === 'https://akiksrlzdqvipqbbjxpw.supabase.co';
@@ -37,7 +38,7 @@ export default function Streaming() {
       if (verified.error) throw verified.error;
       const state = verified.data?.[0];
       return {...data, is_live: state?.is_live === true,
-        playback_url: state?.playback_url ?? null, hls_playback_url: null, viewer_count: null};
+        playback_url: isNativePlaybackMarker(data.playback_url,data.id)?data.playback_url:state?.playback_url ?? null, hls_playback_url: null, viewer_count: null};
     },
     enabled: !!id && !authLoading && (!developmentLiveBackend || !!user),
     retry:false,

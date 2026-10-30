@@ -105,7 +105,7 @@ jobs:
       - name: Test native policy and session boundary on a simulator
         run: |
           device=$(xcrun simctl list devices available -j | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{const d=Object.values(JSON.parse(s).devices).flat().find(v=>v.name.startsWith('iPhone'));if(!d)process.exit(1);process.stdout.write(d.udid)})")
-          xcodebuild -scheme CliptBroadcastCore -destination "platform=iOS Simulator,id=$device" -resultBundlePath outputs/native-policy-tests.xcresult test
+          xcodebuild -scheme CliptBroadcastCore-Package -destination "platform=iOS Simulator,id=$device" -resultBundlePath outputs/native-policy-tests.xcresult test
         working-directory: native/ios
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
