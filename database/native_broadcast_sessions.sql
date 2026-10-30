@@ -104,7 +104,7 @@ create or replace function clipt_private.native_broadcast_admin(p_action text,p_
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare
  s clipt_private.native_broadcast_sessions%rowtype; owner uuid; sid uuid; aid uuid; rid uuid; sel jsonb;
- mode text; max_seconds integer; granted text; alive boolean; id_hash text; event_id text;
+ mode text; max_seconds integer; granted text; alive boolean; existed boolean; id_hash text; event_id text;
 begin
  if coalesce(auth.role(),'')<>'service_role' then raise exception 'Native service authorization required' using errcode='42501'; end if;
  if p_args is null or jsonb_typeof(p_args)<>'object' then raise exception 'Invalid native operation' using errcode='22023'; end if;
@@ -130,10 +130,13 @@ begin
   -- Account lock closes concurrent requests across different stream rows.
   perform pg_advisory_xact_lock(42125,1);
   perform pg_advisory_xact_lock(hashtextextended(owner::text,42125));
+  -- Match snapshot/expiry lock order: session first, then its public stream.
+  -- Otherwise an idempotent reserve can deadlock with a provider observation.
+  select * into s from clipt_private.native_broadcast_sessions where owner_id=owner and request_id=rid for update;
+  existed:=found;
   perform 1 from public.streams where id=sid and user_id=owner for update;
   if not found then raise exception 'Owned stream unavailable' using errcode='42501'; end if;
-  select * into s from clipt_private.native_broadcast_sessions where owner_id=owner and request_id=rid for update;
-  if found then
+  if existed then
    if s.stream_id is distinct from sid or s.selection is distinct from sel or s.provider_mode is distinct from mode then
     raise exception 'Idempotency conflict' using errcode='22023'; end if;
    if s.state='ready' and s.expires_at>clock_timestamp() then

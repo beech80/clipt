@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createPrivateKey} from 'node:crypto';
 import {nativeCommand,nativeRequestBody,nativeError,providerSnapshot,NATIVE_DEVELOPMENT_ORIGIN} from '../../supabase/functions/native-broadcast-session/protocol.ts';
 import {nativeRandomToken,nativeTokenHash,nativePlaybackUrl,importNativeSigningKey} from '../../supabase/functions/native-broadcast-session/crypto.ts';
 import {reconcileNativeBroadcasts} from '../../supabase/functions/native-broadcast-session/reconcile.ts';
@@ -84,5 +85,9 @@ test('private Mux playback tokens have verifiable RS256 signatures, bounded audi
  const token=url.searchParams.get('token'),parts=token.split('.'),claims=JSON.parse(Buffer.from(parts[1],'base64url'));
  assert.equal(claims.aud,'v');assert.equal(claims.sub,'playbackfixture');assert.equal(claims.kid,'keyfixture');
  assert.ok(await crypto.subtle.verify('RSASSA-PKCS1-v1_5',keys.publicKey,Buffer.from(parts[2],'base64url'),new TextEncoder().encode(parts[0]+'.'+parts[1])));
+ const providerPem=createPrivateKey(pem).export({type:'pkcs1',format:'pem'});
+ const providerKey=await importNativeSigningKey(Buffer.from(providerPem).toString('base64'));
+ const providerParts=new URL(await nativePlaybackUrl('playbackfixture',now+60000,'keyfixture',providerKey,now)).searchParams.get('token').split('.');
+ assert.ok(await crypto.subtle.verify('RSASSA-PKCS1-v1_5',keys.publicKey,Buffer.from(providerParts[2],'base64url'),new TextEncoder().encode(providerParts[0]+'.'+providerParts[1])));
  await assert.rejects(nativePlaybackUrl('playbackfixture',now+3600000,'keyfixture',imported,now));
 });
