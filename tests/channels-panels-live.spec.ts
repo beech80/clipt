@@ -53,7 +53,9 @@ test('larger bottom pad and menu keep an arbitrary released height through close
  }finally{await service.close();}
 });
 test('live discovery filters games and the viewer plays HLS with follow chat recovery and guarded gifts',async({page},info)=>{
- const service=await fixture(page);try{await page.setViewportSize({width:844,height:390});await page.goto('/live');await page.getByLabel('Filter live by game',{exact:true}).selectOption(gameA);await expect(page.getByRole('link',{name:'Watch live: Alpha live',exact:true})).toBeVisible();await expect(page.getByRole('link',{name:'Watch live: Beta live',exact:true})).toHaveCount(0);await page.getByRole('link',{name:'Watch live: Alpha live',exact:true}).click();const video=page.locator('.clipt-stream-player video');await expect(video).toBeVisible();await video.scrollIntoViewIfNeeded();await expect(video).toBeInViewport();await expect.poll(()=>video.evaluate(element=>element.currentTime),{timeout:10000}).toBeGreaterThan(0).catch(async failure=>{console.log('HLS diagnostic',JSON.stringify({stats:service.stats,video:await video.evaluate(element=>({ready:element.readyState,network:element.networkState,paused:element.paused,source:element.currentSrc,error:element.error?.message,muted:element.muted})),alerts:await page.getByRole('alert').allTextContents()}));throw failure;});expect(service.stats.hls).toBeGreaterThan(0);await expect(page.getByRole('link',{name:'Game Alpha channel',exact:true})).toBeVisible();await page.getByRole('button',{name:'Follow',exact:true}).click();await expect(page.getByRole('button',{name:'Following',exact:true})).toBeVisible();expect(service.stats.follows).toBe(1);
+ const service=await fixture(page);try{await page.setViewportSize({width:844,height:390});await page.goto('/live');await page.getByLabel('Filter live by game',{exact:true}).selectOption(gameA);await expect(page.getByRole('link',{name:'Watch live: Alpha live',exact:true})).toBeVisible();await expect(page.getByRole('link',{name:'Watch live: Beta live',exact:true})).toHaveCount(0);await page.getByRole('link',{name:'Watch live: Alpha live',exact:true}).click();const video=page.locator('.clipt-stream-player video');await expect(video).toBeVisible();
+ // This short recording represents an ongoing broadcast throughout the chat/gift checks.
+ await video.evaluate(element=>{(element as HTMLVideoElement).loop=true;});await video.scrollIntoViewIfNeeded();await expect(video).toBeInViewport();await expect.poll(()=>video.evaluate(element=>element.currentTime),{timeout:10000}).toBeGreaterThan(0).catch(async failure=>{console.log('HLS diagnostic',JSON.stringify({stats:service.stats,video:await video.evaluate(element=>({ready:element.readyState,network:element.networkState,paused:element.paused,source:element.currentSrc,error:element.error?.message,muted:element.muted})),alerts:await page.getByRole('alert').allTextContents()}));throw failure;});expect(service.stats.hls).toBeGreaterThan(0);await expect(page.getByRole('link',{name:'Game Alpha channel',exact:true})).toBeVisible();await page.getByRole('button',{name:'Follow',exact:true}).click();await expect(page.getByRole('button',{name:'Following',exact:true})).toBeVisible();expect(service.stats.follows).toBe(1);
  const chat=page.getByRole('textbox',{name:'Chat message',exact:true});await chat.fill('My live draft');service.failChat(true);await page.getByRole('button',{name:'Send',exact:true}).click();await expect(page.getByText('Message was not sent. Your draft is preserved; please retry.',{exact:true})).toBeVisible();await expect(chat).toHaveValue('My live draft');service.failChat(false);await page.getByRole('button',{name:'Send',exact:true}).click();await expect(chat).toHaveValue('');expect(service.stats.chats).toBe(2);await page.getByRole('button',{name:'Support with a gift',exact:true}).click();await page.getByLabel('Gift',{exact:true}).selectOption(uid(500));await expect(page.getByRole('button',{name:'Purchase gift',exact:true})).toBeDisabled();expect(service.stats.giftPurchases).toBe(0);await page.getByRole('button',{name:'Close',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);await video.scrollIntoViewIfNeeded();await page.screenshot({path:info.outputPath('live-viewer-landscape.png')});service.stop();await page.reload();await expect(chat).toBeDisabled();await expect(page.getByRole('button',{name:'Support with a gift',exact:true})).toHaveCount(0);
  }finally{await service.close();}
 });
@@ -98,6 +100,27 @@ test('an unavailable full catalog explains the problem and retains configured ga
 });
 test('selecting a provider game on the post form preserves intentional publishing',async({page})=>{
  const service=await fixture(page);let writes=0;try{await page.route('**/rest/v1/posts?**',async route=>{if(route.request().method()==='POST')writes++;return route.fallback();});await page.route('**/functions/v1/game-catalog',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(route.request().postDataJSON().action==='resolve'?{game:{id:gameB,name:'Game Beta'}}:{games:[{id:700,name:'Game Beta',release_year:null,platforms:null,cover_url:null}],more:false})}));
- await page.goto('/new-post');await page.getByRole('button',{name:'Browse full game catalog',exact:true}).click();await page.getByRole('button',{name:'Game Beta',exact:true}).click();await expect(page.getByLabel('Game / category',{exact:true})).toHaveValue(gameB);expect(writes).toBe(0);
+ await page.goto('/new-post');
+ await expect(page.getByPlaceholder('Search games…',{exact:true})).toBeVisible();
+ await page.evaluate(()=>{const form=document.querySelector('form')!;form.noValidate=true;(window as any).__catalogSubmitCount=0;form.addEventListener('submit',()=>{(window as any).__catalogSubmitCount++;});});
+ await page.getByPlaceholder('Search games…',{exact:true}).press('Enter');expect(await page.evaluate(()=>(window as any).__catalogSubmitCount)).toBe(0);
+ await page.getByRole('button',{name:'Browse full game catalog',exact:true}).click();
+ await page.getByRole('searchbox',{name:'Search full game catalog',exact:true}).press('Enter');expect(await page.evaluate(()=>(window as any).__catalogSubmitCount)).toBe(0);
+ await page.getByRole('button',{name:'Game Beta',exact:true}).click();await expect(page.getByLabel('Game / category',{exact:true})).toHaveValue(gameB);expect(writes).toBe(0);
+ }finally{await service.close();}
+});
+
+test('public game library shows its count and opens a selected game with a CLIPT UUID',async({page})=>{
+ const service=await fixture(page);const searchTerms:string[]=[];try{
+ await page.route('**/functions/v1/game-catalog',async route=>{
+  const body=route.request().postDataJSON();
+  if(body.action==='resolve'){expect(body.id).toBe('Q49740');return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({game:{id:gameB,name:'Game Beta'}})});}
+  searchTerms.push(body.term);return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({source:'wikidata',total:178559,games:[{id:'Q49740',name:'Public game',release_year:1993,platforms:'PC',cover_url:null}],more:false})});
+ });
+ await page.goto('/top-games');await page.getByRole('button',{name:'Browse full game catalog',exact:true}).click();
+ await expect(page.getByText('178,559 matching game entries',{exact:true})).toBeVisible();
+ await expect(page.getByRole('link',{name:'Game data from Wikidata',exact:true})).toHaveAttribute('href','https://www.wikidata.org/wiki/Wikidata:Data_access');
+ await page.getByRole('searchbox',{name:'Search full game catalog',exact:true}).fill('Elden Ring');await expect.poll(()=>searchTerms.at(-1)).toBe('Elden Ring');
+ await page.getByRole('button',{name:'Public game · 1993 · PC',exact:true}).click();await expect(page).toHaveURL(url=>url.pathname==='/game/'+gameB);
  }finally{await service.close();}
 });
