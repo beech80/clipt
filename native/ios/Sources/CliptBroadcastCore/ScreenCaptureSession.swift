@@ -16,12 +16,13 @@ final class ScreenCaptureSession: NSObject, NativeScreenCapture, SCContentSharin
     private var stream: SCStream?
     private var pending: CheckedContinuation<Void, Error>?
     private var timer: Task<Void, Never>?
+    private var updates: Task<Void, Never>?
+    private var revision = ScreenCaptureRevision()
     private var selection: BroadcastSelection?
     private var encoder: BroadcastEncoder?
     private var mixer: MediaMixer?
     private var stopped = false
-    private var microphoneOutputAttached = false
-    // Drop excess incoming frames rather than accumulating native Tasks/buffers.
+    private var acceptingSamples = false
     private nonisolated let slots = DispatchSemaphore(value: 4)
     private nonisolated let sampleQueue = DispatchQueue(label: "com.clipt.broadcast.screen", qos: .userInitiated)
 
@@ -31,9 +32,10 @@ final class ScreenCaptureSession: NSObject, NativeScreenCapture, SCContentSharin
         self.encoder = encoder
         self.mixer = mixer
         stopped = false
+        acceptingSamples = false
+        revision.begin()
         var config = SCContentSharingPickerConfiguration()
         config.showsMicrophoneControl = selection.microphone
-        // Full display is the only path here. No camera overlay silently added.
         config.showsCameraControl = false
         picker.defaultConfiguration = config
         picker.add(self)
@@ -56,13 +58,15 @@ final class ScreenCaptureSession: NSObject, NativeScreenCapture, SCContentSharin
 
     func stop() async {
         stopped = true
+        acceptingSamples = false
+        revision.stop()
+        updates?.cancel(); updates = nil
         timer?.cancel(); timer = nil
         picker.remove(self)
         picker.isActive = false
         failPending(BroadcastFailure.cancelled)
         let previous = stream
         stream = nil
-        microphoneOutputAttached = false
         try? await previous?.stopCapture()
         mixer = nil
         selection = nil
@@ -75,78 +79,93 @@ final class ScreenCaptureSession: NSObject, NativeScreenCapture, SCContentSharin
         current?.resume(throwing: error)
     }
 
+    private func failCapture(_ error: Error) {
+        acceptingSamples = false
+        revision.stop()
+        failPending(error)
+        onTermination?()
+    }
+
     nonisolated func contentSharingPicker(_ picker: SCContentSharingPicker, didCancelFor stream: SCStream?) {
         Task { @MainActor [weak self] in
-            guard let self else { return }
-            if self.pending != nil { self.failPending(BroadcastFailure.cancelled) }
-            else { self.onTermination?() }
+            guard let self, !self.stopped else { return }
+            // Dismissing a source-change picker does not revoke the existing
+            // stream. An OS Stop is handled by the stream delegate below.
+            if self.pending != nil {
+                self.failPending(BroadcastFailure.cancelled)
+                await self.stop()
+            }
         }
     }
     nonisolated func contentSharingPickerStartDidFailWithError(_ error: Error) {
-        Task { @MainActor [weak self] in
-            self?.failPending(BroadcastFailure.permissionDenied)
-            self?.onTermination?()
-        }
+        Task { @MainActor [weak self] in self?.failCapture(BroadcastFailure.permissionDenied) }
     }
     nonisolated func contentSharingPicker(_ picker: SCContentSharingPicker, didUpdateWith filter: SCContentFilter, for stream: SCStream?) {
-        Task { @MainActor [weak self] in await self?.use(filter: filter, updating: stream) }
+        Task { @MainActor [weak self] in self?.queue(filter: filter) }
     }
 
-    private func use(filter: SCContentFilter, updating previous: SCStream?) async {
-        guard !stopped, let requested = selection, let encoder else { return }
-        let configuration = SCStreamConfiguration()
-        // Keep the captured source's aspect ratio. Letterboxing into the chosen
-        // encoder dimensions happens in VideoToolbox, never by stretching a HUD.
+    private func queue(filter: SCContentFilter) {
+        guard !stopped, pending != nil || stream != nil || updates != nil,
+              let current = revision.requestChange() else { return }
+        // Stop forwarding the prior source immediately. Serialize native stop /
+        // start operations, and let only the latest picker decision take effect.
+        acceptingSamples = false
+        let earlier = updates
+        updates = Task { @MainActor [weak self] in
+            await earlier?.value
+            guard let self, self.revision.accepts(current), !Task.isCancelled else { return }
+            await self.use(filter: filter, revision: current)
+            if self.revision.accepts(current) { self.updates = nil }
+        }
+    }
+
+    private func use(filter: SCContentFilter, revision current: UUID) async {
+        guard !stopped, revision.accepts(current), let requested = selection, let encoder else { return }
+        let previous = stream
+        stream = nil
+        try? await previous?.stopCapture()
+        guard !stopped, revision.accepts(current), !Task.isCancelled else { return }
         let bounds = filter.contentRect
-        guard bounds.width > 0, bounds.height > 0 else { failPending(BroadcastFailure.capture); return }
+        guard bounds.width > 0, bounds.height > 0 else { failCapture(BroadcastFailure.capture); return }
+        let configuration = SCStreamConfiguration()
         let scale = min(CGFloat(encoder.width) / bounds.width, CGFloat(encoder.height) / bounds.height)
         configuration.width = max(2, Int(bounds.width * scale) / 2 * 2)
         configuration.height = max(2, Int(bounds.height * scale) / 2 * 2)
-        configuration.pixelFormat = kCVPixelFormatType_32BGRA
+        // iOS chooses its supported sample format. Pixel-format overrides and
+        // in-place stream/filter updates are macOS APIs, not iPhone APIs.
         configuration.capturesAudio = requested.systemAudio
         configuration.sampleRate = encoder.audioSampleRate
         configuration.channelCount = 2
         configuration.excludesCurrentProcessAudio = true
+        let capture = SCStream(filter: filter, configuration: configuration, delegate: self)
+        stream = capture
         do {
-            if let previous, previous === self.stream {
-                try await previous.updateContentFilter(filter)
-                try await previous.updateConfiguration(configuration)
-                let enableMicrophone = requested.microphone && filter.isMicrophoneEnabled
-                if enableMicrophone && !microphoneOutputAttached {
-                    try previous.addStreamOutput(self, type: .microphone, sampleHandlerQueue: sampleQueue)
-                    microphoneOutputAttached = true
-                } else if !enableMicrophone && microphoneOutputAttached {
-                    try previous.removeStreamOutput(self, type: .microphone)
-                    microphoneOutputAttached = false
-                }
-                return
-            }
-            guard pending != nil, stream == nil else { return }
-            let capture = SCStream(filter: filter, configuration: configuration, delegate: self)
-            stream = capture
             try capture.addStreamOutput(self, type: .screen, sampleHandlerQueue: sampleQueue)
             if requested.systemAudio { try capture.addStreamOutput(self, type: .audio, sampleHandlerQueue: sampleQueue) }
             if requested.microphone && filter.isMicrophoneEnabled {
                 try capture.addStreamOutput(self, type: .microphone, sampleHandlerQueue: sampleQueue)
-                microphoneOutputAttached = true
             }
             try await capture.startCapture()
-            guard !stopped else { try? await capture.stopCapture(); return }
+            guard !stopped, revision.accepts(current), !Task.isCancelled else {
+                if stream === capture { stream = nil }
+                try? await capture.stopCapture()
+                return
+            }
+            acceptingSamples = true
             timer?.cancel(); timer = nil
             let continuation = pending
             pending = nil
             continuation?.resume()
         } catch {
-            failPending(BroadcastFailure.capture)
-            onTermination?()
+            guard revision.accepts(current), !stopped else { return }
+            failCapture(BroadcastFailure.capture)
         }
     }
 
     nonisolated func stream(_ stream: SCStream, didStopWithError error: Error) {
         Task { @MainActor [weak self] in
-            guard let self, !self.stopped else { return }
-            self.failPending(BroadcastFailure.capture)
-            self.onTermination?()
+            guard let self, !self.stopped, self.stream === stream else { return }
+            self.failCapture(BroadcastFailure.capture)
         }
     }
 
@@ -154,7 +173,7 @@ final class ScreenCaptureSession: NSObject, NativeScreenCapture, SCContentSharin
         guard CMSampleBufferDataIsReady(sampleBuffer), slots.wait(timeout: .now()) == .success else { return }
         Task { @MainActor [weak self, slots] in
             defer { slots.signal() }
-            guard let self, !self.stopped, self.stream === stream, let mixer = self.mixer else { return }
+            guard let self, !self.stopped, self.acceptingSamples, self.stream === stream, let mixer = self.mixer else { return }
             switch type {
             case .screen: await mixer.append(sampleBuffer)
             case .audio: if self.selection?.systemAudio == true { await mixer.append(sampleBuffer, track: 1) }
