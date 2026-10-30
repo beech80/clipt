@@ -14,16 +14,19 @@ This is an implementation and acceptance record. It is not a claim of a successf
 - Existing Go Live adds Camera Live / Screen Live only when the installed native plugin advertises real support. Source/quality/orientation/audio options, status recovery, independent mute controls and explicit End are wired. OBS, Live Discovery, viewer, game associations, profiles/chat and navigation are retained.
 - Signed playback markers bind authorization to the exact stream. Private tokens are not persisted to browser storage.
 
+- Account changes/sign-out stop native capture across routes; same-owner recovery preserves owned screen capture. The native window and overscroll stay black and steady without disabling zoom.
+- Native icon/splash assets derive from the original purple CLIPT control artwork. The generated1024px opaque icon was inspected visually, and its PNG format was verified.
+
 ## Source and verification
 
-Draft PR: https://github.com/beech80/clipt/pull/30  
+Merged PR: https://github.com/beech80/clipt/pull/30  
 Branch: feature-native-mobile-broadcasting-20261030
 
-Validated source head a6ab6abdf5ad8eebeb7be6e08a12bc3946c59427:
+Merged commit: 59fb05fb90c0db17b61867e30f5db63e7d5e8f79. The exact validated source head was 8a8e786bc73ebab9ecdba32ce23d8a69321f12ec:
 
-- Native builds: https://github.com/beech80/clipt/actions/runs/41083842239 — Android minified release APK plus native JUnit tests; full iOS27 simulator app build and8 Swift tests passed.
-- App validation: https://github.com/beech80/clipt/actions/runs/41083842261 —794 app unit tests,12 monitor tests, TypeScript, security audit, CSS, web build, Chromium/WebKit regression checks passed.
-- Streaming: https://github.com/beech80/clipt/actions/runs/41083842242 —48 existing stream unit checks and4 browser flow tests passed. The new native browser tests simulate the Capacitor transport and intercept all hosted requests. They prove UI/protocol integration, not real capture or RTMPS.
+- Native builds: https://github.com/beech80/clipt/actions/runs/41094875803 — Android minified release APK and11 native JUnit tests; full iOS27 simulator app build and8 Swift simulator tests passed.
+- App validation: https://github.com/beech80/clipt/actions/runs/41094875666 —802 app unit tests,12 monitor tests, TypeScript, security audit, CSS, web build, 31 Chromium and18 WebKit regression checks passed; npm audit reported0 vulnerabilities.
+- Streaming: https://github.com/beech80/clipt/actions/runs/41094875808 —48 existing stream unit checks and5 browser flow tests passed. The new native browser tests simulate the Capacitor transport and intercept all hosted requests. They prove UI/protocol integration, not real capture or RTMPS.
 - PostgreSQL lifecycle tests execute the actual native SQL: ownership, grant replay, fixed expiry, signed markers, account revocation and denial of browser-role access.
 - Local13 foundation tests also ran and passed. The attached Windows computer is slow; cloud native builds provide the native compile evidence.
 - Earlier failures were investigated and fixed: Android JSONObject API mismatch, unavailable iOS hardware helper, missing explicit Cordova dependency for standalone package tests, SQL CASE expression parsing and isolated OBS test dependency mocks. No original behavioral assertion was removed to obtain a pass.
@@ -33,10 +36,10 @@ Validated source head a6ab6abdf5ad8eebeb7be6e08a12bc3946c59427:
 Project akiksrlzdqvipqbbjxpw only:
 
 - Native private tables/functions installed; both tables have RLS and no anon/authenticated SELECT access. Browser roles cannot execute the service-only RPC.
-- native-broadcast-session Edge Function version1 deployed from the reviewed source; custom per-action authentication replaces gateway JWT-only enforcement for native grants/webhooks.
+- native-broadcast-session Edge Function version2 deployed from the reviewed source; custom per-action authentication replaces gateway JWT-only enforcement for native grants/webhooks.
 - Probes returned GET405, OPTIONS204, anonymous current/status401, disabled redeem503, invalid cleanup401 and forged webhook401. Responses use no-store/private caching.
 - No native session or provider resource was created. Native provisioning remains disabled until required Mux signing/webhook/worker configuration is present and approved.
-- SQL-only per-minute expiry is installed separately. It sends no secrets through pg_net. External reconciliation still requires its scoped worker token and scheduler.
+- SQL-only per-minute expiry is installed separately and successful scheduled executions were observed. It sends no secrets through pg_net. External reconciliation still requires its scoped worker token and scheduler.
 - Production project slnjliheyiiummxhrgmk, production frontend, billing and app stores were not changed.
 
 ## Required private configuration and installable builds
