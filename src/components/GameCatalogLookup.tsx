@@ -21,7 +21,7 @@ export function GameCatalogLookup({term='',onChoose,disabled=false}:{term?:strin
  return <section className="space-y-3" aria-label="Full game catalog">
   <Button type="button" variant="outline" onClick={()=>setOpen(value=>!value)} aria-expanded={open} disabled={disabled||choose.isPending}><Gamepad2 aria-hidden="true" className="mr-2 h-4 w-4"/>{open?'Hide full catalog':term?'Search full game catalog':'Browse full game catalog'}</Button>
   {open&&<>{!user?<p>Sign in to search the full game catalog.</p>:<>
-  <label className="block space-y-1"><span>Search full game catalog</span><Input type="search" aria-label="Search full game catalog" className="min-h-11" maxLength={80} value={lookupTerm} disabled={disabled||choose.isPending} onChange={event=>setLookup({parent:term,value:event.target.value})} placeholder="Find a game by name"/></label>
+  <label className="block space-y-1"><span>Search full game catalog</span><Input type="search" aria-label="Search full game catalog" className="min-h-11" maxLength={80} value={lookupTerm} onKeyDown={event=>{if(event.key==='Enter'&&!event.nativeEvent.isComposing)event.preventDefault();}} disabled={disabled||choose.isPending} onChange={event=>setLookup({parent:term,value:event.target.value})} placeholder="Find a game by name"/></label>
   <p className="text-sm text-muted-foreground">Search or browse the provider catalog. Select a real game to open its Clipt channel. Availability depends on catalog coverage.</p>
   {results.data?.pages[0].total!==undefined&&<p className="text-sm text-muted-foreground">{results.data.pages[0].total.toLocaleString()} matching game entries</p>}
   {results.isPending&&<p role="status">Loading full catalog…</p>}
