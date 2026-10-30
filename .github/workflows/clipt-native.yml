@@ -107,6 +107,8 @@ jobs:
       - run: node scripts/prepare-native-hosts.mjs ios
       - name: Build full app with iOS27 screen capture
         run: xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -configuration Debug -derivedDataPath outputs/native-ios CODE_SIGNING_ALLOWED=NO build
+      - name: Compile against the physical iPhone SDK too
+        run: xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphoneos -destination generic/platform=iOS -configuration Release -derivedDataPath outputs/native-ios-device CODE_SIGNING_ALLOWED=NO build
       - name: Test native policy and session boundary on a simulator
         run: |
           device=$(xcrun simctl list devices available -j | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{const d=Object.values(JSON.parse(s).devices).flat().find(v=>v.name.startsWith('iPhone'));if(!d)process.exit(1);process.stdout.write(d.udid)})")
