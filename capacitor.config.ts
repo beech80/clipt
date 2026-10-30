@@ -1,39 +1,17 @@
-import { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from '@capacitor/cli';
 
+// Native code must be reachable only from the reviewed, bundled application.
+// Preserve the existing application identifier; never load an old remote builder
+// site into a WebView that can invoke privileged capture plugins.
 const config: CapacitorConfig = {
   appId: 'com.slnjliheyiiummxhrgmk.clip',
-  appName: 'Clip',
+  appName: 'CLIPT',
   webDir: 'dist',
-  bundledWebRuntime: false,
-  server: {
-    androidScheme: 'https',
-    // Use production URL for production builds
-    url: process.env.NODE_ENV === 'production' 
-      ? undefined 
-      : 'https://slnjliheyiiummxhrgmk.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  },
-  ios: {
-    contentInset: 'automatic',
-    backgroundColor: '#1A1F2C',
-    limitsNavigationsToAppBoundDomains: true
-  },
-  android: {
-    contentInset: 'automatic',
-    backgroundColor: '#1A1F2C'
-  },
-  plugins: {
-    SplashScreen: {
-      launchShowDuration: 2000,
-      launchAutoHide: true,
-      backgroundColor: "#1A1F2C",
-      androidSplashResourceName: "splash",
-      androidScaleType: "CENTER_CROP",
-      showSpinner: false,
-      splashFullScreen: true,
-      splashImmersive: true
-    }
-  }
+  loggingBehavior: 'none',
+  zoomEnabled: true,
+  server: { androidScheme: 'https', cleartext: false },
+  ios: { contentInset: 'automatic', backgroundColor: '#1A1F2C' },
+  android: { backgroundColor: '#1A1F2C', allowMixedContent: false },
 };
 
 export default config;
