@@ -80,6 +80,7 @@ public class MainActivity extends BridgeActivity {
   const info = plist.parse(await readFile(infoPath, 'utf8'));
   info.NSCameraUsageDescription = 'Use your camera when you choose Camera Live.';
   info.NSMicrophoneUsageDescription = 'Include your microphone when you choose audio for a live broadcast.';
+  info.NSScreenCaptureUsageDescription = 'Share the screen you select when you choose Screen Live.';
   info.UIBackgroundModes = ['audio', 'screen-capture'];
   info.CLIPTNativeBroadcastEnabled = process.env.CLIPT_NATIVE_BACKEND_READY === 'true';
   info.UIApplicationSceneManifest.UIApplicationSupportsMultipleScenes = false;
