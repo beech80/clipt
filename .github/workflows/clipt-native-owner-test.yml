@@ -1,0 +1,68 @@
+name: CLIPT Android owner phone test
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/clipt-native-owner-test.yml'
+      - 'scripts/native-device-environment.mjs'
+      - 'native/development-client.json'
+      - 'tests/unit/native-device-environment.test.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-owner-test-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  CYPRESS_INSTALL_BINARY: '0'
+jobs:
+  android-owner-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify reviewed runtime before installing
+        run: node -e "const p=require('./package.json'),l=require('./package-lock.json');for(const n of ['core','android','ios','cli']){const k='@capacitor/'+n;if((p.dependencies?.[k]||p.devDependencies?.[k])!=='8.6.0'||l.packages['node_modules/'+k]?.version!=='8.6.0')process.exit(1)}"
+      - run: npm ci --ignore-scripts --no-fund --no-audit
+      - name: Test development-only packaging guard
+        run: node --experimental-strip-types --test tests/unit/native-device-environment.test.mjs
+      - name: Verify actual development public key and select build environment
+        run: node --experimental-strip-types scripts/native-device-environment.mjs
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/generate-native-brand-assets.mjs
+      - run: node scripts/prepare-native-hosts.mjs android
+      - name: Test and build the owner-test Android app
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew :clipt-broadcaster:testDebugUnitTest :app:assembleRelease -PcliptNativeBroadcastEnabled=true -PcliptDevelopmentSigning=true --no-daemon --console=plain
+      - name: Package and verify the installable APK
+        run: |
+          mkdir -p outputs/native-owner-test
+          cp android/app/build/outputs/apk/release/app-release.apk outputs/native-owner-test/CLIPT-development-owner-test.apk
+          cp docs/NATIVE-ANDROID-OWNER-TEST.md outputs/native-owner-test/README.md
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose outputs/native-owner-test/CLIPT-development-owner-test.apk
+          node --input-type=module -e "import{writeFile}from'node:fs/promises';await writeFile('outputs/native-owner-test/BUILD-INFO.json',JSON.stringify({commit:process.env.GITHUB_SHA,stage:'staging',supabaseProject:'akiksrlzdqvipqbbjxpw',signing:'ephemeral developer key; owner test only',physicalDeviceVerified:false,hostedBroadcastingEnabledByBuild:false},null,2)+'\n')"
+          cd outputs/native-owner-test
+          sha256sum CLIPT-development-owner-test.apk > SHA256SUMS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: CLIPT-development-owner-test-Android
+          path: outputs/native-owner-test/*
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: owner-test-native-unit-evidence
+          path: native/android/build/test-results/**
+          retention-days: 7
