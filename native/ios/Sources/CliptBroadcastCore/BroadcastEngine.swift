@@ -265,7 +265,7 @@ public final class CliptBroadcastEngine {
         heartbeatTask = Task { [weak self] in
             var failures = 0
             while !Task.isCancelled {
-                do { try await Task.sleep(nanoseconds: 30_000_000_000) } catch { return }
+                do { try await Task.sleep(nanoseconds: 20_000_000_000) } catch { return }
                 guard let self, self.operation == current, let session = self.credential else { return }
                 do { try await self.api.heartbeat(session); self.heartbeatLastSucceeded = Date(); failures = 0 }
                 catch BroadcastFailure.unauthorized { await self.stop(finalState: "failed"); return }

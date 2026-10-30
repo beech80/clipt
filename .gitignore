@@ -34,3 +34,11 @@ test-results/
 .supabase/
 supabase/.temp/
 *.tsbuildinfo
+
+# Reproducible native hosts and build products (source lives under native/)
+/ios/
+/android/
+/native/**/build/
+/native/**/.gradle/
+/native/**/.build/
+/native/**/.swiftpm/

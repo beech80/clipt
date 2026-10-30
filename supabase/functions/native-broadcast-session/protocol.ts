@@ -167,8 +167,10 @@ export async function nativeCommand(req: Request, body: Record<string,unknown>, 
   }
   if(action==='heartbeat') {
     const s=assertSession(await d.db('heartbeat',{sessionId:validUuid(body.sessionId),stopHash:await d.hashToken(opaque(body.stopToken))}));
-    // Keepalive reports no LIVE claim and cannot extend the fixed maximum.
-    return {protocolVersion:1,ok:true,expiresAt:s.expiresAt};
+    // The native service owns this heartbeat while the WebView is backgrounded.
+    // Re-read Mux before refreshing discovery; client keepalive alone is never LIVE proof.
+    const observed=await observe(d,s);
+    return {protocolVersion:1,ok:true,expiresAt:observed.expiresAt};
   }
   if(action==='stop') {
     const sessionId=validUuid(body.sessionId);

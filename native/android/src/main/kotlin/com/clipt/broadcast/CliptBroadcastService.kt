@@ -78,7 +78,7 @@ class CliptBroadcastService : Service(), ConnectChecker {
                     heartbeatFailures = if (success) 0 else heartbeatFailures + 1
                     if (success) lastHeartbeatAt = SystemClock.elapsedRealtime()
                     if (revoked || heartbeatFailures >= 3) finishBroadcast(true)
-                    else main.postDelayed(this, 30_000)
+                    else main.postDelayed(this, 20_000)
                 }
             }
         }
@@ -192,7 +192,7 @@ class CliptBroadcastService : Service(), ConnectChecker {
         }
         main.postDelayed({ finishBroadcast(false) },
             (native.expiresAtMillis - System.currentTimeMillis()).coerceAtLeast(1))
-        main.postDelayed(heartbeat, 30_000)
+        main.postDelayed(heartbeat, 20_000)
         engine.startStream(native.ingestUrl + "/" + native.streamKey)
     }
     internal fun attachPreview(view: SurfaceView) {

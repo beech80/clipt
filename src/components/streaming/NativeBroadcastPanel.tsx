@@ -2,6 +2,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {useAuth} from '@/contexts/AuthContext';
 import {Button} from '@/components/ui/button';
 import {Label} from '@/components/ui/label';
+import {validateNativeSelection} from '@/native/broadcast/policy';
 import {nativeBroadcastBridge} from '@/native/broadcast/bridge';
 import type {NativeBroadcastCapabilities,NativeBroadcastSelection,NativePublishState} from '@/native/broadcast/types';
 import {endNativeSession,nativeCurrentSession,nativeSessionStatus,prepareNativeSession,type NativeSessionStatus} from '@/native/broadcast/session';
@@ -59,6 +60,7 @@ export function NativeBroadcastPanel({streamId}:{streamId:string}){
   busy.current=true;setPending(true);setError('');
   requestId.current??=crypto.randomUUID();
   try{
+   validateNativeSelection(selection,cap);
    const prepared=await prepareNativeSession(streamId,requestId.current,selection);
    sessionId.current=prepared.sessionId;
    try{await nativeBroadcastBridge.start({grant:prepared.grant,selection:prepared.selection});}
@@ -68,7 +70,14 @@ export function NativeBroadcastPanel({streamId}:{streamId:string}){
    }
    setStarted(true);setTransport('connecting');setMicrophoneMuted(!selection.microphone);setGameMuted(!selection.systemAudio);requestId.current=null;
    await refresh();
-  }catch(failure){setError(failure instanceof Error?failure.message:'Broadcast did not start.');}
+   }catch(failure){
+   setError(failure instanceof Error?failure.message:'Broadcast did not start.');
+   try{
+    const current=await nativeCurrentSession();
+    if(current){sessionId.current=current.sessionId;setSession(current);setSelection(current.selection);setStarted(true);}
+    else{sessionId.current=null;requestId.current=null;}
+   }catch{/* Preserve idempotency when server outcome is unknown. */}
+  }
   finally{busy.current=false;setPending(false);}
  }
  async function end(){
