@@ -1,47 +1,55 @@
-# Streaming acceptance checkpoint — October 30, 2026
+# Streaming acceptance — October 30, 2026
 
-The owner explicitly reports messaging and other app flows personally tested and accepted. Preserve the approved app layout. This pass focuses on streaming, not repeating the owner's other acceptance work.
+## Result
 
-## Fixed and tested
+The owner has personally accepted messaging and other application flows. This pass verifies streaming only and preserves the approved app/controller layout.
 
-Built development previews were hiding the existing Mux test controls through import.meta.env.DEV, while credential retrieval and initialization called an oauth endpoint absent from development. The fix selects the existing test adapter only for the exact development project. Test credentials use its designated-owner authenticated action and are loaded only after an explicit click, masked and not automatically refetched on focus/reconnect. Invalid, foreign, non-test or wrong-ingest responses are refused. OBS, not a local button, starts/stops the test stream. Normal production routing and feed/controller layout are unchanged.
+**Basic real OBS → Mux → CLIPT phone playback passed by owner observation, supported by local encoder and provider records. Extended stability did not pass. General production broadcasting is not enabled by this test.**
 
-Branch: beta-stream-pilot-check-20261030. [PR28](https://github.com/beech80/clipt/pull/28). Tested source commit: b2f5fd4e8f035f4d47f7f03e1e60668528a7ac9a.
+## Real test evidence
 
-- Before fix: 31 targeted local streaming tests passed, including handler authentication/MFA/ownership, signatures, status/chat guards, player behavior and scheduling.
-- After fix:[streaming verification](https://github.com/beech80/clipt/actions/runs/41041486860) passed 44 unit/integration checks, typecheck, built preview and one Chromium idle→active→idle fixture. That fixture uses actual synthetic HLS bytes, chat writes and zero legacy calls; all HTTP/WebSocket boundaries are intercepted before navigation, and no hosted provider is contacted.
-- [Full source regression](https://github.com/beech80/clipt/actions/runs/41041486697) passed 758 app tests, 12 monitor tests, typecheck/security/CSS/build, 31 Chromium and 18 WebKit checks. These include fixture playback, not an actual OBS ingest.
-- React review: existing keyed React Query infrastructure retained, owner/stream-specific key cache, hooks unconditional, explicit credential fetch, cache removal on unmount, interval cleanup and masked labelled key field preserved. No dependencies added.
-- Preview deployment dpl_6ixMwb5xDEjworMBHtp8GDeE6vu3 is READY for exact tested source, development project, staging public configuration:
-  https://clipttest-mpmyr4sel-matthew-beechers-projects.vercel.app/stream-setup
+The owner reports seeing their live broadcast on the phone for about a minute. Picture/connection quality fluctuated and the stream later disappeared from discovery.
 
-## Actual provider/backend observations
+Sanitized local OBS log:
+- RTMPS connection succeeded at 06:20:24; streaming started at 06:20:29.
+- The log records “User stopped the stream” at 06:25:19, about 4 minutes 50 seconds later. This does not prove when or why phone playback disappeared.
+- Rendering lag: 44.3%; skipped frames due to encoding lag: 31.1%; dropped frames due to insufficient bandwidth/connection stalls: 18.0%.
+- Actual encoding was x264, CBR 6,000 kbps, 844×480 at 30 FPS. A missing Intel Quick Sync encoder had previously prevented startup; selecting the installed x264 encoder allowed the connection.
+- No stream keys, ingest URLs, raw logs or private credentials were added to this report.
 
-Development has mux-test-live and mux-live-webhook, two offline stream records and nine historical webhook receipts (latest October 15). Last provider snapshot is expired idle, not evidence of a current live stream. Unsigned webhook POST 401; unauthenticated pilot 401. Existing source handler remains Auth/MFA/designated-owner and fixed-resource guarded, refuses paid/non-test resources and durations over 300 seconds, and performs provider reads only.
+OBS times above are America/Chicago on October 30 (CDT). The corresponding current provider webhook receipts were at 11:20:42, 11:25:26 and 11:27:27 UTC. The last provider snapshot was disabled at 11:27:27.271 UTC and the stored stream was not-live. These new receipts follow signature validation and provider re-reading; they supplement the prior nine historical receipts.
 
-The existing designated test stream is a072664f-0b65-4e72-b058-cd58a61f9515, owned by the original development test profile Beeyyuu/bee102. It is not bound to the separate approved production email account. Do not broaden ownership checks or reassign the stream to work around sign-in. The service signs into the user's real account; no service key or forged user session is used for acceptance.
+The existing Mux resource is a test stream capped at five active minutes. Disabled/offline provider state is consistent with removal from live discovery; this evidence does not establish one exclusive cause for the earlier interruption. [Mux test-stream specification](https://www.mux.com/docs/api-reference/video/live-streams/create-live-stream).
 
-Production currently has zero streams and no live-provider lifecycle tables. The existing general production workflow is separate from the development pilot; successful five-minute pilot playback will not establish unrestricted, multi-creator production broadcasting. No paid streaming, provider resource creation or production live configuration was enabled.
+## Implemented fixes
 
-## Final owner-assisted OBS check — in progress
+Built previews had hidden the existing Mux pilot through import.meta.env.DEV and requested credentials/initialization from an oauth endpoint absent from development. Pilot selection now uses the exact development project. Credentials use the existing designated-owner authenticated test action, are explicitly requested, masked, isolated by owner/stream and not automatically refetched on window focus/reconnect. Invalid/non-test/foreign/wrong-ingest responses fail closed. OBS remains the actual start/stop control for this resource.
 
-Owner says OBS is available and reports the preview status check shows idle. A fresh independent database check confirmed provider idle observed2026-10-30T10:59:12.929Z, valid until11:00:42.929Z, stream offline with playback available. This confirms a real authenticated owner/provider status check and synchronization, not active ingest/playback. The browser connector itself still requires reauthentication. Vercel preview protection remains enabled. Ordinary unauthenticated preview requests reach Vercel SSO, and the connector's protected-fetch path could not access this team deployment; no protection was disabled.
+A separate app defect could contribute to early discovery disappearance: the owner monitor skipped checks when document.hidden, while verified viewer state expires after 90 seconds. OBS can cover/minimize the browser. The test monitor now continues its existing 20-second checks while the tab stays open, for the same bounded five-minute session. In-flight exclusion, timer cleanup, backend freshness expiry and provider restrictions remain. Browser timers still cannot guarantee operation during OS suspension, tab closure or tab discard; this is not server-side reconciliation for an unrestricted live service.
 
-1. Open preview stream setup; check Mux test status before starting OBS. Expect fresh idle and the exact designated stream ID.
-2. Explicitly load existing OBS test credentials and copy privately into OBS Custom/RTMPS settings. Never put keys in chat, screenshots or repository files.
-3. Keep setup visible, start a short OBS broadcast within the existing five-minute test cap, then check status. Verify active, moving video/audio as applicable, discovery/viewer playback, and chat delivery from another signed-in tab/device.
-4. Stop OBS and verify provider idle, discovery removal and disabled chat; confirm database/provider snapshot times and any new signed webhook receipt. Do not treat recorded fixture playback or stale persisted is_live as proof.
+No feed/controller redesign, backend permission expansion, provider resource creation, paid-stream activation or frontend production publication occurred.
 
-The owner-reported authenticated preflight and fresh provider/DB idle observation passed. No active OBS ingest, moving viewer playback, current signed webhook delivery or production streaming acceptance is claimed yet. App payments remain disabled; production frontend publication stays a separate release gate.
+## Automated verification
 
-## Actual OBS and phone playback — owner-confirmed
+Tested source: dfb005563532410b68434f73159a5f223d2df7f5.
+[PR28](https://github.com/beech80/clipt/pull/28) merged as f4c6c81ba778a0bea38cd15f2ba2f4d683867f16.
 
-The owner reports OBS ran and a real live broadcast played on their phone for about a minute, with quality switching between good and poor before disappearing from discovery. This is successful real ingest/viewer playback, not a long-duration stability pass or a chat-delivery observation.
+- [Focused streaming run](https://github.com/beech80/clipt/actions/runs/41049393182): 48 unit/integration checks passed; typecheck/build passed; one built-preview Chromium fixture passed with actual synthetic HLS bytes, idle → active → idle, chat and zero legacy endpoint calls. All fixture HTTP/WebSocket boundaries were intercepted before navigation.
+- Four new tests execute the actual dashboard monitoring effect under a hidden document, checking refresh, the five-minute deadline, interval cleanup, pending-request exclusion, missing playback and production exclusion.
+- [Full reviewed source run](https://github.com/beech80/clipt/actions/runs/41049393211): 762 app tests, 12 monitor tests, 31 Chromium and 18 WebKit checks passed, with typecheck/security/CSS/build.
+- Before the preview-routing fix, 31 targeted local streaming tests passed. They are historical baseline evidence, not extra tests in the final count.
+- React review retained the existing keyed React Query architecture, unconditional hooks, explicit credential request, owner/stream cache isolation and effect cleanup. No dependencies added.
 
-Sanitized local OBS log evidence: connection succeeded at06:20:24 and Streaming Start at06:20:29, then an explicit "User stopped the stream" at06:25:19 (about4m50s). Counters show rendering lag44.3%, encoding lag31.1%, and network dropped frames18.0%. These are separate computer/render/encoder and upload-connection bottlenecks. No stream keys/URLs or raw log were copied into this report.
+Updated development preview, READY:
+https://clipttest-2n4vm928g-matthew-beechers-projects.vercel.app/stream-setup
+Deployment: dpl_7GNbmBJ4wCFV1MVWnX4VpHdJJdET, target preview, exact tested source. Preview configuration was independently confirmed staging + the development Supabase project. Deployment Protection stays enabled. The connector's protected fetch lacks access to this team deployment, and Opera still requires reauthentication; no automated authenticated hosted-browser pass is claimed.
 
-Provider/backend evidence: three new signed webhook receipts at11:20:42,11:25:26 and11:27:27 UTC. The last verified snapshot is disabled, observed11:27:27.271 UTC, and stream discovery correctly sees not-live. The provider's test streams are limited to five active minutes and can then become disabled; do not assume this was a production/live-player termination or silently enable paid streaming. Reference: https://www.mux.com/docs/api-reference/video/live-streams/create-live-stream .
+## Scope and remaining limits
 
-A separate app-side issue was identified: the owner monitor skipped checks when document.hidden, while viewer proof expires after90seconds. OBS can cover/minimize the setup page. The pilot now continues its existing20-second checks for the same bounded five-minute session while the tab remains open; backend authentication, freshness expiry, provider test limit and production paths are unchanged. This mitigates browser-visibility stalls; it cannot guarantee timers during OS suspension, tab closure or discarded tabs. Additional executable component-timer tests cover hidden pages, expiry, pending-request exclusion and production exclusion.
+The owner has accepted other app flows; do not reopen general messaging/device acceptance. Real ingest and phone playback are verified within the test above. Live chat UI/server guards passed automated tests, but real cross-device chat delivery was not reported. Stable long-duration broadcasting was not verified.
 
-Basic OBS→Mux→CLIPT phone playback: passed by owner observation with supporting encoder/provider records. Extended stable streaming: not passed. Real chat send/receive and a second stable encoder run were not reported. The owner accepts other app flows; do not reopen messaging/device testing generally.
+The adapter is still limited to the original designated development owner/profile Beeyyuu/bee102 and fixed test resource. Production has no streams or provider lifecycle state; a five-minute development pilot does not enable general multi-creator production broadcasting. Current disabled provider state should be checked before a future test; do not bypass test limits or enable paid resources without authorization.
+
+For a lower-load future diagnostic run, start with x264 ultrafast, 640×360 at 15 FPS, CBR around 1,000 kbps, and a two-second keyframe interval. These are conservative troubleshooting settings, not a measured guaranteed fix for this computer/network. Do not edit an active OBS profile behind the running application's back. References: [OBS encoding performance](https://obsproject.com/kb/encoding-performance-troubleshooting), [OBS connection troubleshooting](https://obsproject.com/kb/stream-connection-troubleshooting), [Mux encoder settings](https://www.mux.com/docs/guides/configure-broadcast-software).
+
+App payments remain disabled. A production frontend release and general production streaming configuration remain separate release work.
