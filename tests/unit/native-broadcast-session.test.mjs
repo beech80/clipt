@@ -14,7 +14,7 @@ function fixture(patch={}){
   db:async(action,args)=>{calls.push({action,args});return {...base,...(action==='reserve'?{needsProvision:true}:{}),...(action==='snapshot'?{state:args.status==='active'?'active':'starting',providerStatus:args.status}:{}),...(action==='stop'?{state:'stopping'}:{})};},
   provider:{create:async()=>{calls.push({action:'provider-create'});return resource;},read:async()=>resource,disable:async()=>{calls.push({action:'provider-disable'});}},
   signPlayback:async()=> 'https://stream.mux.com/synthetic.m3u8?token=fixture',
-  config:{origin:NATIVE_DEVELOPMENT_ORIGIN,enabled:true,provisioningEnabled:true,mode:'test',paidApproved:false,maxDurationSeconds:300,signingReady:true},...patch};
+  config:{origin:NATIVE_DEVELOPMENT_ORIGIN,enabled:true,provisioningEnabled:true,mode:'test',paidApproved:false,maxDurationSeconds:300,signingReady:true,testOwnerId:owner},...patch};
  return {d,calls};
 }
 const req=new Request('https://fixture.invalid',{method:'POST'});
@@ -90,4 +90,12 @@ test('private Mux playback tokens have verifiable RS256 signatures, bounded audi
  const providerParts=new URL(await nativePlaybackUrl('playbackfixture',now+60000,'keyfixture',providerKey,now)).searchParams.get('token').split('.');
  assert.ok(await crypto.subtle.verify('RSASSA-PKCS1-v1_5',keys.publicKey,Buffer.from(providerParts[2],'base64url'),new TextEncoder().encode(providerParts[0]+'.'+providerParts[1])));
  await assert.rejects(nativePlaybackUrl('playbackfixture',now+3600000,'keyfixture',imported,now));
+});
+
+test('test publishing is restricted to the designated account, independent of ordinary development access',async()=>{
+ const {d,calls}=fixture();d.authenticate=async()=>({id:stream,authSessionId:id,aal:'aal2'});
+ await assert.rejects(nativeCommand(req,{action:'create',protocolVersion:1,streamId:stream,requestId:id,selection},d),e=>e.code==='TEST_OWNER_REQUIRED');
+ assert.deepEqual(calls,[]);
+ const missing=fixture();missing.d.config.testOwnerId='';
+ await assert.rejects(nativeCommand(req,{action:'create',protocolVersion:1,streamId:stream,requestId:id,selection},missing.d),e=>e.code==='NATIVE_DISABLED');
 });

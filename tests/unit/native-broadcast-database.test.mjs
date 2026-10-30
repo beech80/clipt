@@ -47,6 +47,11 @@ test('real native lifecycle SQL enforces one-use grants, ownership, fixed leases
  await assert.rejects(command('heartbeat',{sessionId:started.sessionId,stopHash:'c'.repeat(64)}));
  const live=await command('snapshot',{sessionId:started.sessionId,providerId:'providerfixture',playbackId:'playbackfixture',status:'active',observedAt:new Date().toISOString(),eventId:'eventfixture'});
  assert.equal(live.state,'active');
+ await db.exec("insert into auth.sessions(id,user_id)values('10000000-0000-4000-8000-000000000007','"+other+"');update clipt_private.beta_access_config set enabled=false;");
+ await assert.rejects(command('playback',{streamId:stream,viewerId:other,authSessionId:'10000000-0000-4000-8000-000000000007',aal:'aal1'}));
+ await db.query('insert into clipt_private.beta_members(user_id)values($1)',[other]);
+ assert.equal((await command('playback',{streamId:stream,viewerId:other,authSessionId:'10000000-0000-4000-8000-000000000007',aal:'aal1'})).sessionId,started.sessionId);
+ await db.exec("update clipt_private.beta_access_config set enabled=true;");
  const row=(await db.query('select * from public.streams where id=$1',[stream])).rows[0];
  assert.equal(row.is_live,true);assert.equal(row.playback_url,'clipt-native:'+stream);
  assert.equal((await command('current',{ownerId:owner,authSessionId:authSession})).sessionId,started.sessionId);

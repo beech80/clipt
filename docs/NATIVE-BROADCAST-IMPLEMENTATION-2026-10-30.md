@@ -45,6 +45,7 @@ Do not paste credentials into chat, source code, VITE variables, screenshots or 
 
 Supabase development Edge secrets:
 
+- CLIPT_NATIVE_TEST_OWNER_ID: the confirmed development auth user for the approved owner email. Test publishing is restricted to that account; other viewers require explicit beta membership even when ordinary development access is open.
 - Existing MUX_TOKEN_ID / MUX_TOKEN_SECRET must have the required video permissions in the intended Mux environment.
 - MUX_SIGNING_KEY_ID and MUX_SIGNING_PRIVATE_KEY: matching private playback signing pair in that same environment. The server accepts the provider's base64 PEM or PEM format.
 - MUX_NATIVE_WEBHOOK_SECRET: signing secret for the dedicated callback /functions/v1/native-broadcast-session?hook=mux. Keep the existing OBS webhook intact.

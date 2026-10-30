@@ -202,7 +202,9 @@ begin
     and state='active' order by created_at desc limit 1 for update;
   if not found then raise exception 'Native stream offline' using errcode='P0001'; end if;
   owner:=(p_args->>'viewerId')::uuid; aid:=(p_args->>'authSessionId')::uuid;
-  if not clipt_private.native_owner_available(owner,aid,p_args->>'aal')
+  if (s.provider_mode='test' and owner is distinct from s.owner_id and not exists(select 1 from clipt_private.beta_members m
+    where m.user_id=owner and m.revoked_at is null and (m.expires_at is null or m.expires_at>statement_timestamp())))
+   or not clipt_private.native_owner_available(owner,aid,p_args->>'aal')
    or not clipt_private.native_owner_available(s.owner_id,s.auth_session_id,s.auth_aal)
    or s.expires_at<=clock_timestamp()
    or exists(select 1 from public.user_blocks b where (b.blocker_id=owner and b.blocked_id=s.owner_id)

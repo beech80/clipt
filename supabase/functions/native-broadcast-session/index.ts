@@ -75,7 +75,7 @@ async function dependencies(needsSigning:boolean):Promise<NativeDependencies> {
   config:{origin:env('SUPABASE_URL'),enabled:env('CLIPT_NATIVE_BROADCAST_ENABLED')==='true',
    provisioningEnabled:env('CLIPT_NATIVE_MUX_CREATE_ENABLED')==='true',mode,
    paidApproved:env('CLIPT_NATIVE_MUX_PAID_APPROVED')==='true',
-   maxDurationSeconds:seconds,signingReady:!!keyId&&!!privateKey&&/^[A-Za-z0-9]{1,200}$/.test(keyId)},
+   maxDurationSeconds:seconds,testOwnerId:env('CLIPT_NATIVE_TEST_OWNER_ID'),signingReady:!!keyId&&!!privateKey&&/^[A-Za-z0-9]{1,200}$/.test(keyId)},
  };
 }
 async function readWebhook(req:Request) {

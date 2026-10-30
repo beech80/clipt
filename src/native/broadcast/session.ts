@@ -42,6 +42,7 @@ export function readPreparedNativeSession(value:unknown,streamId:string,selectio
   maxDurationSeconds:Number(v.maxDurationSeconds),selection:{...selection}};
 }
 const safeErrors:Record<string,string>={
+ TEST_OWNER_REQUIRED:'Sign in with the designated phone-test account.',
  AUTHENTICATION_REQUIRED:'Sign in and complete your authenticator challenge if enabled.',
  SESSION_FORBIDDEN:'Broadcast access expired. Check your sign-in and beta invitation.',
  SESSION_CONFLICT:'A broadcast already exists, or the broadcast limit has been reached.',

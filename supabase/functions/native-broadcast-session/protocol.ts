@@ -37,7 +37,7 @@ export type NativeDependencies = {
   signPlayback(playbackId: string, expiresAt: number): Promise<string>;
   config: { origin: string; enabled: boolean; provisioningEnabled: boolean;
     mode: 'test' | 'paid'; paidApproved: boolean; maxDurationSeconds: number;
-    signingReady: boolean; };
+    signingReady: boolean; testOwnerId: string; };
 };
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const providerIdPattern = /^[A-Za-z0-9]{1,200}$/;
@@ -89,7 +89,7 @@ export function providerSnapshot(value: unknown, session: NativeSession): Native
 }
 function enabled(d: NativeDependencies) {
   if(d.config.origin!==NATIVE_DEVELOPMENT_ORIGIN || !d.config.enabled || !d.config.provisioningEnabled
-    || !d.config.signingReady || (d.config.mode==='paid' && !d.config.paidApproved)
+    || !d.config.signingReady || (d.config.mode==='test'&&!uuidPattern.test(d.config.testOwnerId||'')) || (d.config.mode==='paid' && !d.config.paidApproved)
     || !Number.isInteger(d.config.maxDurationSeconds) || d.config.maxDurationSeconds<60
     || d.config.maxDurationSeconds>(d.config.mode==='test'?300:7200)) {
     fail(503,'NATIVE_DISABLED','Native broadcasting is not enabled for this environment');
@@ -124,6 +124,7 @@ export async function nativeCommand(req: Request, body: Record<string,unknown>, 
   if(action==='create') {
     enabled(d);
     const identity=await d.authenticate(req);
+    if(d.config.mode==='test'&&identity.id!==d.config.testOwnerId)fail(403,'TEST_OWNER_REQUIRED','The designated phone-test account is required');
     const selection=nativeSelection(body.selection);
     const streamId=validUuid(body.streamId),requestId=validUuid(body.requestId);
     const grant=d.randomToken(); opaque(grant);
@@ -152,6 +153,7 @@ export async function nativeCommand(req: Request, body: Record<string,unknown>, 
     const grant=opaque(body.grant),stopToken=d.randomToken(); opaque(stopToken);
     const s=assertSession(await d.db('redeem',{grantHash:await d.hashToken(grant),stopHash:await d.hashToken(stopToken)}));
     try {
+      if(s.providerMode==='test'&&s.ownerId!==d.config.testOwnerId)fail(403,'TEST_OWNER_REQUIRED','The designated phone-test account is required');
       const resource=providerSnapshot(await d.provider.read(s.providerId!),s);
       if(resource.status!=='idle') fail(409,'PROVIDER_BUSY','The broadcast is not ready to accept a connection');
       if(typeof resource.stream_key!=='string' || resource.stream_key.length<8 || resource.stream_key.length>256
