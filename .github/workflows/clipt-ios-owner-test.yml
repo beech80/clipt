@@ -5,6 +5,9 @@ on:
     paths:
       - '.github/workflows/clipt-ios-owner-test.yml'
       - 'scripts/ios-owner-test.mjs'
+      - 'scripts/prepare-native-hosts.mjs'
+      - 'native/ios/**'
+      - 'native/development-client.json'
       - 'tests/unit/ios-owner-test.test.mjs'
       - 'docs/NATIVE-IOS-OWNER-TEST.md'
   workflow_dispatch:
