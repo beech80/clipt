@@ -101,6 +101,7 @@ test('an unavailable full catalog explains the problem and retains configured ga
 test('selecting a provider game on the post form preserves intentional publishing',async({page})=>{
  const service=await fixture(page);let writes=0;try{await page.route('**/rest/v1/posts?**',async route=>{if(route.request().method()==='POST')writes++;return route.fallback();});await page.route('**/functions/v1/game-catalog',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(route.request().postDataJSON().action==='resolve'?{game:{id:gameB,name:'Game Beta'}}:{games:[{id:700,name:'Game Beta',release_year:null,platforms:null,cover_url:null}],more:false})}));
  await page.goto('/new-post');
+ await expect(page.getByPlaceholder('Search games…',{exact:true})).toBeVisible();
  await page.evaluate(()=>{const form=document.querySelector('form')!;form.noValidate=true;(window as any).__catalogSubmitCount=0;form.addEventListener('submit',()=>{(window as any).__catalogSubmitCount++;});});
  await page.getByPlaceholder('Search games…',{exact:true}).press('Enter');expect(await page.evaluate(()=>(window as any).__catalogSubmitCount)).toBe(0);
  await page.getByRole('button',{name:'Browse full game catalog',exact:true}).click();
