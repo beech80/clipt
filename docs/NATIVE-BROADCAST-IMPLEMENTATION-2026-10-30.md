@@ -49,6 +49,7 @@ Supabase development Edge secrets:
 - Existing MUX_TOKEN_ID / MUX_TOKEN_SECRET must have the required video permissions in the intended Mux environment.
 - MUX_SIGNING_KEY_ID and MUX_SIGNING_PRIVATE_KEY: matching private playback signing pair in that same environment. The server accepts the provider's base64 PEM or PEM format.
 - MUX_NATIVE_WEBHOOK_SECRET: signing secret for the dedicated callback /functions/v1/native-broadcast-session?hook=mux. Keep the existing OBS webhook intact.
+- External worker: store that same scoped token in the GitHub encrypted repository secret CLIPT_NATIVE_RECONCILE_TOKEN, run the native cleanup workflow manually and verify success, then set repository variable CLIPT_NATIVE_RECONCILE_ENABLED=true. The worker runs every5 minutes after merging; failure email follows the existing verified Actions notification setup. Keep the SQL expiry job as well.
 - CLIPT_NATIVE_RECONCILE_TOKEN: independent high-entropy URL-safe worker token,64–256 characters. This authorizes only the cleanup endpoint.
 - Enable test mode only after those checks: CLIPT_NATIVE_BROADCAST_ENABLED=true, CLIPT_NATIVE_MUX_CREATE_ENABLED=true, CLIPT_NATIVE_MUX_MODE=test, CLIPT_NATIVE_MAX_DURATION_SECONDS=300, CLIPT_NATIVE_MUX_PAID_APPROVED=false.
 - Paid/general production streaming is a separate approval and release decision. The default five-minute test limit is not a launch-ready unlimited streaming service.

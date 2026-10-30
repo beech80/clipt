@@ -37,7 +37,7 @@ export type NativeDependencies = {
   signPlayback(playbackId: string, expiresAt: number): Promise<string>;
   config: { origin: string; enabled: boolean; provisioningEnabled: boolean;
     mode: 'test' | 'paid'; paidApproved: boolean; maxDurationSeconds: number;
-    signingReady: boolean; testOwnerId: string; };
+    signingReady: boolean; operationsReady: boolean; testOwnerId: string; };
 };
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const providerIdPattern = /^[A-Za-z0-9]{1,200}$/;
@@ -45,7 +45,7 @@ const tokenPattern = /^[A-Za-z0-9_-]{64,256}$/;
 const selectionKeys = ['mode','quality','orientation','microphone','systemAudio','cameraPosition'];
 function fail(status: number, code: string, message: string): never { throw new NativeSessionError(status,code,message); }
 export function validUuid(value: unknown): string {
-  if(typeof value !== 'string' || !uuidPattern.test(value)) fail(400,'INVALID_REQUEST','A valid identifier is required');
+  if(typeof value !== 'string' || value.length!==36 || !uuidPattern.test(value)) fail(400,'INVALID_REQUEST','A valid identifier is required');
   return value;
 }
 export function nativeSelection(value: unknown): NativeSelection {
@@ -61,7 +61,7 @@ export function nativeSelection(value: unknown): NativeSelection {
     systemAudio:x.systemAudio,cameraPosition:x.cameraPosition} as NativeSelection;
 }
 function opaque(value: unknown): string {
-  if(typeof value!=='string' || !tokenPattern.test(value)) fail(401,'INVALID_GRANT','The broadcast authorization is invalid or expired');
+  if(typeof value!=='string' || value.trim()!==value || !tokenPattern.test(value)) fail(401,'INVALID_GRANT','The broadcast authorization is invalid or expired');
   return value;
 }
 function assertSession(value: any): NativeSession {
@@ -89,7 +89,7 @@ export function providerSnapshot(value: unknown, session: NativeSession): Native
 }
 function enabled(d: NativeDependencies) {
   if(d.config.origin!==NATIVE_DEVELOPMENT_ORIGIN || !d.config.enabled || !d.config.provisioningEnabled
-    || !d.config.signingReady || (d.config.mode==='test'&&!uuidPattern.test(d.config.testOwnerId||'')) || (d.config.mode==='paid' && !d.config.paidApproved)
+    || !d.config.signingReady || !d.config.operationsReady || (d.config.mode==='test'&&!uuidPattern.test(d.config.testOwnerId||'')) || (d.config.mode==='paid' && !d.config.paidApproved)
     || !Number.isInteger(d.config.maxDurationSeconds) || d.config.maxDurationSeconds<60
     || d.config.maxDurationSeconds>(d.config.mode==='test'?300:7200)) {
     fail(503,'NATIVE_DISABLED','Native broadcasting is not enabled for this environment');

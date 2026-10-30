@@ -1,0 +1,26 @@
+name: CLIPT native development cleanup
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-development-cleanup
+  cancel-in-progress: false
+jobs:
+  reconcile:
+    if: github.event_name == 'workflow_dispatch' || vars.CLIPT_NATIVE_RECONCILE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Reconcile expired and interrupted development streams
+        env:
+          CLIPT_NATIVE_RECONCILE_TOKEN: ${{ secrets.CLIPT_NATIVE_RECONCILE_TOKEN }}
+        run: node scripts/reconcile-native-streams.mjs

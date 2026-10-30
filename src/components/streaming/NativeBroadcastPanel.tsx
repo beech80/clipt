@@ -113,7 +113,7 @@ export function NativeBroadcastPanel({streamId}:{streamId:string}){
  return <section aria-label="Phone broadcasting" className="gaming-card p-4 space-y-4 min-w-0">
   <h2 className="text-xl font-semibold">Go live from your phone</h2>
   <div className="flex flex-wrap gap-3" role="group" aria-label="Broadcast source">
-   {cap.modes.map(mode=><Button key={mode} variant={selection.mode===mode?'default':'outline'} aria-pressed={selection.mode===mode} disabled={pending||active} onClick={()=>setSelection(s=>({...s,mode,systemAudio:false}))}>{mode==='camera'?'Camera Live':'Screen Live'}</Button>)}
+   {cap.modes.map(mode=><Button className="min-h-11" key={mode} variant={selection.mode===mode?'default':'outline'} aria-pressed={selection.mode===mode} disabled={pending||active} onClick={()=>setSelection(s=>({...s,mode,systemAudio:false}))}>{mode==='camera'?'Camera Live':'Screen Live'}</Button>)}
   </div>
   {!active&&<div className="grid gap-3 sm:grid-cols-2">
    <Label className="space-y-2">Quality<select aria-label="Broadcast quality" className="block w-full min-h-11 bg-background border rounded p-2" disabled={pending} value={selection.quality} onChange={e=>setSelection(s=>({...s,quality:e.target.value as NativeBroadcastSelection['quality']}))}>{cap.qualityIds.map(id=><option key={id} value={id}>{id.replace('p','p / ')} FPS</option>)}</select></Label>
@@ -126,12 +126,12 @@ export function NativeBroadcastPanel({streamId}:{streamId:string}){
   {started&&<p role="status">{['ended','failed'].includes(transport)?'Phone capture stopped. End this session to confirm server cleanup.':session?.isLive?'LIVE — confirmed by the streaming provider.': 'Phone transport: '+transport+'. Waiting for verified live video.'}</p>}
   {error&&<p role="alert">{error}</p>}
   <div className="flex flex-wrap gap-3">
-   {!active?<Button disabled={pending||!user||Boolean(sessionId.current)} onClick={()=>void begin()}>{pending?'Preparing…':'Start '+(selection.mode==='camera'?'Camera Live':'Screen Live')}</Button>:<>
-    {selection.microphone&&<Button variant="outline" disabled={pending} aria-pressed={microphoneMuted} onClick={()=>void mute('microphone')}>{microphoneMuted?'Unmute microphone':'Mute microphone'}</Button>}
-    {selection.systemAudio&&<Button variant="outline" disabled={pending} aria-pressed={gameMuted} onClick={()=>void mute('game')}>{gameMuted?'Unmute game audio':'Mute game audio'}</Button>}
-    {selection.mode==='camera'&&cap.cameraSwitch&&<Button variant="outline" disabled={pending} onClick={()=>void nativeBroadcastBridge.switchCamera().catch(()=>setError('Camera could not be changed.'))}>Switch camera</Button>}
+   {!active?<Button className="min-h-11" disabled={pending||!user||Boolean(sessionId.current)} onClick={()=>void begin()}>{pending?'Preparing…':'Start '+(selection.mode==='camera'?'Camera Live':'Screen Live')}</Button>:<>
+    {selection.microphone&&<Button className="min-h-11" variant="outline" disabled={pending} aria-pressed={microphoneMuted} onClick={()=>void mute('microphone')}>{microphoneMuted?'Unmute microphone':'Mute microphone'}</Button>}
+    {selection.systemAudio&&<Button className="min-h-11" variant="outline" disabled={pending} aria-pressed={gameMuted} onClick={()=>void mute('game')}>{gameMuted?'Unmute game audio':'Mute game audio'}</Button>}
+    {selection.mode==='camera'&&cap.cameraSwitch&&<Button className="min-h-11" variant="outline" disabled={pending} onClick={()=>void nativeBroadcastBridge.switchCamera().catch(()=>setError('Camera could not be changed.'))}>Switch camera</Button>}
    </>}
-   {(started||sessionId.current)&&<Button variant="destructive" disabled={pending} onClick={()=>void end()}>{pending?'Updating…':'End broadcast'}</Button>}
+   {(started||sessionId.current)&&<Button className="min-h-11" variant="destructive" disabled={pending} onClick={()=>void end()}>{pending?'Updating…':'End broadcast'}</Button>}
   </div>
  </section>;
 }

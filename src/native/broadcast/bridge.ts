@@ -32,7 +32,7 @@ export function createNativeBroadcastBridge(runtime: Runtime, plugin: CliptBroad
     },
     async start(input: NativeBroadcastStart): Promise<void> {
       const capabilities = await requireEngine();
-      if (!input || typeof input.grant !== 'string' || !/^[A-Za-z0-9_-]{64,2048}$/.test(input.grant)) throw Error('A valid broadcast grant is required');
+      if (!input || typeof input.grant !== 'string' || input.grant.trim()!==input.grant || !/^[A-Za-z0-9_-]{64,2048}$/.test(input.grant)) throw Error('A valid broadcast grant is required');
       const encoder = validateNativeSelection(input.selection, capabilities);
       // Copy the allowlisted fields. An arbitrary caller cannot smuggle an ingest
       // host, stream key or unbounded bitrate into the native bridge options.

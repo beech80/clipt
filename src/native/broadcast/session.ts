@@ -32,7 +32,7 @@ export function readNativeSessionStatus(value:unknown):NativeSessionStatus {
 export function readPreparedNativeSession(value:unknown,streamId:string,selection:NativeBroadcastSelection,now=Date.now()):PreparedNativeSession {
  const v=object(value),returned=readSessionSelection(v.selection);
  if(v.protocolVersion!==1||typeof v.sessionId!=='string'||!uuid.test(v.sessionId)||v.streamId!==streamId
-  ||typeof v.grant!=='string'||!/^[A-Za-z0-9_-]{64,2048}$/.test(v.grant)
+  ||typeof v.grant!=='string'||v.grant.trim()!==v.grant||!/^[A-Za-z0-9_-]{64,2048}$/.test(v.grant)
   ||typeof v.expiresAt!=='string'||Date.parse(v.expiresAt)<=now||Date.parse(v.expiresAt)>now+120000
   ||!Number.isFinite(Date.parse(v.expiresAt))||!Number.isSafeInteger(v.maxDurationSeconds)
   ||Number(v.maxDurationSeconds)<60||Number(v.maxDurationSeconds)>7200

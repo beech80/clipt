@@ -9,7 +9,7 @@ import {reconcileNativeBroadcasts} from './reconcile.ts';
 function env(name:string){return Deno.env.get(name)??'';}
 function providerCredentials() {
  const id=env('MUX_TOKEN_ID'),secret=env('MUX_TOKEN_SECRET');
- if(!/^[\x21-\x7e]{1,500}$/.test(id)||!/^[\x21-\x7e]{1,500}$/.test(secret))
+ if(id.trim()!==id||secret.trim()!==secret||!/^[\x21-\x7e]{1,500}$/.test(id)||!/^[\x21-\x7e]{1,500}$/.test(secret))
   throw new NativeSessionError(503,'PROVIDER_UNAVAILABLE','Broadcast provider is unavailable');
  return 'Basic '+btoa(id+':'+secret);
 }
@@ -75,7 +75,7 @@ async function dependencies(needsSigning:boolean):Promise<NativeDependencies> {
   config:{origin:env('SUPABASE_URL'),enabled:env('CLIPT_NATIVE_BROADCAST_ENABLED')==='true',
    provisioningEnabled:env('CLIPT_NATIVE_MUX_CREATE_ENABLED')==='true',mode,
    paidApproved:env('CLIPT_NATIVE_MUX_PAID_APPROVED')==='true',
-   maxDurationSeconds:seconds,testOwnerId:env('CLIPT_NATIVE_TEST_OWNER_ID'),signingReady:!!keyId&&!!privateKey&&/^[A-Za-z0-9]{1,200}$/.test(keyId)},
+   maxDurationSeconds:seconds,operationsReady:env('CLIPT_NATIVE_RECONCILE_TOKEN').trim()===env('CLIPT_NATIVE_RECONCILE_TOKEN')&&/^[A-Za-z0-9_-]{64,256}$/.test(env('CLIPT_NATIVE_RECONCILE_TOKEN'))&&env('MUX_NATIVE_WEBHOOK_SECRET').length>=16,testOwnerId:env('CLIPT_NATIVE_TEST_OWNER_ID'),signingReady:!!keyId&&!!privateKey&&/^[A-Za-z0-9]{1,200}$/.test(keyId)},
  };
 }
 async function readWebhook(req:Request) {

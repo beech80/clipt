@@ -14,12 +14,12 @@ function fixture(patch={}){
   db:async(action,args)=>{calls.push({action,args});return {...base,...(action==='reserve'?{needsProvision:true}:{}),...(action==='snapshot'?{state:args.status==='active'?'active':'starting',providerStatus:args.status}:{}),...(action==='stop'?{state:'stopping'}:{})};},
   provider:{create:async()=>{calls.push({action:'provider-create'});return resource;},read:async()=>resource,disable:async()=>{calls.push({action:'provider-disable'});}},
   signPlayback:async()=> 'https://stream.mux.com/synthetic.m3u8?token=fixture',
-  config:{origin:NATIVE_DEVELOPMENT_ORIGIN,enabled:true,provisioningEnabled:true,mode:'test',paidApproved:false,maxDurationSeconds:300,signingReady:true,testOwnerId:owner},...patch};
+  config:{origin:NATIVE_DEVELOPMENT_ORIGIN,enabled:true,provisioningEnabled:true,mode:'test',paidApproved:false,maxDurationSeconds:300,signingReady:true,operationsReady:true,testOwnerId:owner},...patch};
  return {d,calls};
 }
 const req=new Request('https://fixture.invalid',{method:'POST'});
 test('native creation is gated before auth and cannot activate paid/production resources',async()=>{
- for(const patch of [{enabled:false},{provisioningEnabled:false},{signingReady:false},{origin:'https://slnjliheyiiummxhrgmk.supabase.co'},{mode:'paid',paidApproved:false},{maxDurationSeconds:301}]){
+ for(const patch of [{enabled:false},{provisioningEnabled:false},{signingReady:false},{operationsReady:false},{origin:'https://slnjliheyiiummxhrgmk.supabase.co'},{mode:'paid',paidApproved:false},{maxDurationSeconds:301}]){
   const {d,calls}=fixture();Object.assign(d.config,patch);
   await assert.rejects(nativeCommand(req,{action:'create',protocolVersion:1},d));assert.deepEqual(calls,[]);
  }

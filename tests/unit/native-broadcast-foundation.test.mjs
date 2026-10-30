@@ -57,7 +57,7 @@ test('bridge forwards only a native grant, verified selection and fixed encoder 
  assert.deepEqual(value.selection,selection);assert.equal(value.encoder.videoBitrateBps,1000000);assert.ok(!JSON.stringify(value).includes('evil.invalid'));assert.ok(!JSON.stringify(value).includes('private-value'));
 });
 test('bad grants, unsupported qualities and missing system audio cannot start native capture',async()=>{
- for(const input of [{grant:'short',selection},{grant:'a'.repeat(64),selection:{...selection,quality:'1080p30'}}]){
+ for(const input of [{grant:'short',selection},{grant:'a'.repeat(64)+'\n',selection},{grant:'a'.repeat(64),selection:{...selection,quality:'1080p30'}}]){
   const f=fixture();await assert.rejects(f.bridge.start(input));assert.equal(f.calls.some(x=>x.start),false);
  }
 });
