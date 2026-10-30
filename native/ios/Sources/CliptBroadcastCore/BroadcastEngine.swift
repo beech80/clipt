@@ -33,6 +33,7 @@ public final class CliptBroadcastEngine {
     private var leaseTask: Task<Void, Never>?
     private var heartbeatLastSucceeded: Date?
     private var observers: [NSObjectProtocol] = []
+    private var screenMicrophoneEnabled = false
     private var microphoneMuted = false
     private var systemMuted = false
     private var cameraPosition: AVCaptureDevice.Position = .back
@@ -151,6 +152,7 @@ public final class CliptBroadcastEngine {
                 options: requested.mode == "screen" ? [.defaultToSpeaker, .allowBluetooth, .mixWithOthers] : [.defaultToSpeaker, .allowBluetooth])
             try audio.setPreferredSampleRate(Double(encoder.audioSampleRate))
             try audio.setActive(true)
+            screenMicrophoneEnabled = false
             microphoneMuted = !requested.microphone
             systemMuted = !requested.systemAudio
             let media = MediaMixer(captureSessionMode: requested.mode == "camera" ? .single : .manual,
@@ -184,6 +186,11 @@ public final class CliptBroadcastEngine {
                     screen = capture
                     provisionalScreen = capture
                     capture.onTermination = { [weak self] in Task { @MainActor in await self?.stop(finalState: "ended") } }
+                    capture.onAudioSourcesChanged = { [weak self] enabled in
+                        guard let self, self.operation == current else { return }
+                        self.screenMicrophoneEnabled = enabled
+                        try? await self.applyMute()
+                    }
                     await media.startRunning()
                     try await capture.start(selection: requested, encoder: encoder, mixer: media)
                 } else { throw BroadcastFailure.unsupported }
@@ -372,13 +379,9 @@ public final class CliptBroadcastEngine {
 
     private func applyMute() async throws {
         guard let mixer else { throw BroadcastFailure.unavailable }
-        var settings = await mixer.audioMixerSettings
-        var microphone = settings.tracks[0] ?? .init()
-        microphone.isMuted = microphoneMuted
-        settings.tracks[0] = microphone
-        var system = settings.tracks[1] ?? .init()
-        system.isMuted = systemMuted
-        settings.tracks[1] = system
+        let current = await mixer.audioMixerSettings
+        let settings = BroadcastAudioRouting.settings(current, screen: selection?.mode == "screen",
+            screenMicrophoneEnabled: screenMicrophoneEnabled, microphoneMuted: microphoneMuted, systemMuted: systemMuted)
         await mixer.setAudioMixerSettings(settings)
     }
 
