@@ -1,5 +1,5 @@
 import {supabase} from '@/lib/supabase';
-export type ProviderGame={id:number|string;name:string;cover_url:string|null;release_year:number|null;platforms:string|null};
+export type ProviderGame={id:number|string;name:string;description?:string;cover_url:string|null;release_year:number|null;platforms:string|null};
 export async function providerCatalogPage(term:string,page:number,signal?:AbortSignal){
  const {data,error}=await supabase.functions.invoke('game-catalog',{body:{action:'search',term:term.trim().slice(0,80),page},signal});
  if(error)throw new Error('Full game catalog search is unavailable. Your configured Clipt channels still work.');

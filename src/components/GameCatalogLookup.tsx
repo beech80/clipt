@@ -28,7 +28,7 @@ export function GameCatalogLookup({term='',onChoose,disabled=false}:{term?:strin
   {results.isError&&<div role="alert"><p>Full catalog search is unavailable. Configured Clipt channels remain available.</p><Button type="button" onClick={()=>void results.refetch()}>Retry full catalog</Button></div>}
   {choose.isError&&<p role="alert">{choose.error.message}</p>}
   {!results.isPending&&!results.isError&&rows.length===0&&<p>No provider games match this search.</p>}
-  <ul className="space-y-2">{rows.map(game=><li key={game.id}><Button type="button" variant="outline" className="h-auto min-h-11 w-full justify-start whitespace-normal text-left" disabled={disabled||choose.isPending} onClick={()=>choose.mutate(game.id)}>{gameLabel(game)}</Button></li>)}</ul>
+  <ul className="space-y-2">{rows.map(game=><li key={game.id}><Button type="button" variant="outline" className="h-auto min-h-11 w-full justify-start whitespace-normal text-left" disabled={disabled||choose.isPending} onClick={()=>choose.mutate(game.id)}><span className="min-w-0"><span className="block">{gameLabel(game)}</span>{game.description&&<span className="block text-sm text-muted-foreground">{game.description}</span>}</span></Button></li>)}</ul>
   {results.hasNextPage&&<Button type="button" disabled={disabled||results.isFetching||choose.isPending} onClick={()=>void results.fetchNextPage()}>Load more provider games</Button>}
   <a href={results.data?.pages[0].source==='wikidata'?'https://www.wikidata.org/wiki/Wikidata:Data_access':'https://www.igdb.com/'} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-sm underline">Game data from {results.data?.pages[0].source==='wikidata'?'Wikidata':'IGDB'}</a>
   </>}</>}
