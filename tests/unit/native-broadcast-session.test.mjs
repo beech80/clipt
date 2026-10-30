@@ -86,9 +86,15 @@ test('private Mux playback tokens have verifiable RS256 signatures, bounded audi
  assert.equal(claims.aud,'v');assert.equal(claims.sub,'playbackfixture');assert.equal(claims.kid,'keyfixture');
  assert.ok(await crypto.subtle.verify('RSASSA-PKCS1-v1_5',keys.publicKey,Buffer.from(parts[2],'base64url'),new TextEncoder().encode(parts[0]+'.'+parts[1])));
  const providerPem=createPrivateKey(pem).export({type:'pkcs1',format:'pem'});
- const providerKey=await importNativeSigningKey(Buffer.from(providerPem).toString('base64'));
- const providerParts=new URL(await nativePlaybackUrl('playbackfixture',now+60000,'keyfixture',providerKey,now)).searchParams.get('token').split('.');
- assert.ok(await crypto.subtle.verify('RSASSA-PKCS1-v1_5',keys.publicKey,Buffer.from(providerParts[2],'base64url'),new TextEncoder().encode(providerParts[0]+'.'+providerParts[1])));
+ const providerBase64=Buffer.from(providerPem).toString('base64');
+ const formats=[providerPem,' \r\n'+providerPem+'\r\n ',providerBase64,
+  providerBase64.match(/.{1,64}/g).join('\r\n'),pem,'\n '+pem+'\n',
+  pem.replaceAll('\n','\\n'),Buffer.from(pem).toString('base64')];
+ for(const encoded of formats){
+  const providerKey=await importNativeSigningKey(encoded);
+  const providerParts=new URL(await nativePlaybackUrl('playbackfixture',now+60000,'keyfixture',providerKey,now)).searchParams.get('token').split('.');
+  assert.ok(await crypto.subtle.verify('RSASSA-PKCS1-v1_5',keys.publicKey,Buffer.from(providerParts[2],'base64url'),new TextEncoder().encode(providerParts[0]+'.'+providerParts[1])));
+ }
  await assert.rejects(nativePlaybackUrl('playbackfixture',now+3600000,'keyfixture',imported,now));
 });
 
@@ -98,4 +104,13 @@ test('test publishing is restricted to the designated account, independent of or
  assert.deepEqual(calls,[]);
  const missing=fixture();missing.d.config.testOwnerId='';
  await assert.rejects(nativeCommand(req,{action:'create',protocolVersion:1,streamId:stream,requestId:id,selection},missing.d),e=>e.code==='NATIVE_DISABLED');
+});
+
+test('private signing rejects API-token secrets, public keys, weak keys and oversized values without reflecting them',async()=>{
+ const weak=await crypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:1024,publicExponent:Uint8Array.of(1,0,1),hash:'SHA-256'},true,['sign','verify']);
+ const weakPem='-----BEGIN PRIVATE KEY-----\n'+Buffer.from(await crypto.subtle.exportKey('pkcs8',weak.privateKey)).toString('base64')+'\n-----END PRIVATE KEY-----';
+ const publicPem='-----BEGIN PUBLIC KEY-----\n'+Buffer.from(await crypto.subtle.exportKey('spki',weak.publicKey)).toString('base64')+'\n-----END PUBLIC KEY-----';
+ for(const invalid of ['', 'synthetic-api-token-secret-not-a-signing-key', weakPem,publicPem,'a'.repeat(16385)]){
+  await assert.rejects(importNativeSigningKey(invalid),e=>e.code==='PLAYBACK_UNAVAILABLE'&&e.status===503&&(!invalid||!e.message.includes(invalid)));
+ }
 });

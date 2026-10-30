@@ -28,7 +28,10 @@ function concat(...arrays:Uint8Array[]):Uint8Array {
 export async function importNativeSigningKey(encoded:string):Promise<CryptoKey> {
  try {
   if(!encoded || encoded.length>16384)throw Error();
-  const pem=encoded.startsWith('-----BEGIN')?encoded:atob(encoded.replace(/\s/g,''));
+  const trimmed=encoded.trim();
+  const pem=(trimmed.startsWith('-----BEGIN')
+   ?trimmed.replaceAll('\\r\\n','\n').replaceAll('\\n','\n')
+   :atob(trimmed.replace(/\s/g,''))).trim();
   const pkcs1=pem.includes('-----BEGIN RSA PRIVATE KEY-----');
   if(!pkcs1&&!pem.includes('-----BEGIN PRIVATE KEY-----'))throw Error();
   const payload=pem.replace(/-----BEGIN (?:RSA )?PRIVATE KEY-----|-----END (?:RSA )?PRIVATE KEY-----|\s/g,'');
