@@ -68,7 +68,9 @@ export async function boundedBody(response, maxBytes) {
   } catch (error) { await reader.cancel(); throw error; }
   return Buffer.concat(chunks, total);
 }
-export async function connectBackup({ keyId, applicationKey, fetchImpl = fetch }) {
+export async function connectBackup({ keyId, applicationKey, fetchImpl = fetch, writeScope = 'legacy' }) {
+  if (!['legacy','private-recurring-v1'].includes(writeScope)) fail('backup-write-scope-rejected');
+  const writeLimit = writeScope === 'private-recurring-v1' ? 100_000_000 : 36_000_000;
   let authorization;
   const checked = await inspectBackblazeConnection({ keyId, applicationKey, fetchImpl: async (url, options) => {
     const response = await fetchImpl(url, options);
@@ -96,7 +98,7 @@ export async function connectBackup({ keyId, applicationKey, fetchImpl = fetch }
     if (exact[0] && exact[0].bucketId !== bucketId) fail('backup-file-bucket-mismatch');
     return exact[0] || null;
   }
-  async function get(file, maxBytes = 36_000_000) {
+  async function get(file, maxBytes = writeLimit) {
     if (file.bucketId !== bucketId || typeof file.fileId !== 'string') fail('backup-file-boundary');
     const r = await request(download + '/b2api/v4/b2_download_file_by_id?fileId=' + encodeURIComponent(file.fileId), { headers: { Authorization: token } });
     const bytes = await boundedBody(r, maxBytes);
@@ -104,8 +106,10 @@ export async function connectBackup({ keyId, applicationKey, fetchImpl = fetch }
     return bytes;
   }
   async function put(name, bytes) {
-    if (!/^(clipt-backup-control\/transport-private-v1\.pem|snapshots\/20261027-[a-z0-9-]{1,40}\/(?:objects\/\d{4}|manifest\.json|receipt\.json))$/.test(name)) fail('backup-write-boundary');
-    if (bytes.length > 36_000_000) fail('backup-write-size-limit');
+    if (writeScope === 'private-recurring-v1') {
+      if (!/^recurring\/v1\/(?:objects\/[a-f0-9]{64}|runs\/[0-9]{8}-[1-9][0-9]{0,19}-[1-9][0-9]{0,4}\/(?:manifest|receipt)\.json)$/.test(name)) fail('backup-write-boundary');
+    } else if (!/^(clipt-backup-control\/transport-private-v1\.pem|snapshots\/20261027-[a-z0-9-]{1,40}\/(?:objects\/\d{4}|manifest\.json|receipt\.json))$/.test(name)) fail('backup-write-boundary');
+    if (bytes.length > writeLimit) fail('backup-write-size-limit');
     const existing = await find(name);
     if (existing) { const saved = await get(existing); if (hash(saved) !== hash(bytes)) fail('backup-existing-file-mismatch'); return existing; }
     if (!upload) { upload = await rpc('b2_get_upload_url', { bucketId });
