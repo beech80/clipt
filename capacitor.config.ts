@@ -10,8 +10,8 @@ const config: CapacitorConfig = {
   loggingBehavior: 'none',
   zoomEnabled: true,
   server: { androidScheme: 'https', cleartext: false },
-  ios: { contentInset: 'automatic', backgroundColor: '#1A1F2C' },
-  android: { backgroundColor: '#1A1F2C', allowMixedContent: false },
+  ios: { contentInset: 'automatic', backgroundColor: '#000000' },
+  android: { backgroundColor: '#000000', allowMixedContent: false },
 };
 
 export default config;

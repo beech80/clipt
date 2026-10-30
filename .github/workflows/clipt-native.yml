@@ -60,6 +60,8 @@ jobs:
           name: reviewed-native-runtime-lock
       - run: npm ci --ignore-scripts --no-fund --no-audit
       - run: npm run build
+      - run: npx playwright install chromium
+      - run: node scripts/generate-native-brand-assets.mjs
       - run: node scripts/prepare-native-hosts.mjs android
       - name: Compile native engine, execute unit tests and build minified beta APK
         working-directory: android
@@ -72,6 +74,7 @@ jobs:
           name: android-native-build-evidence
           path: |
             android/app/build/outputs/apk/release/*.apk
+            outputs/native-brand/*.png
             native/android/build/test-results/**
             native/android/build/reports/tests/**
           retention-days: 3
@@ -99,6 +102,8 @@ jobs:
           test "${sdk%%.*}" -ge 27
       - run: npm ci --ignore-scripts --no-fund --no-audit
       - run: npm run build
+      - run: npx playwright install chromium
+      - run: node scripts/generate-native-brand-assets.mjs
       - run: node scripts/prepare-native-hosts.mjs ios
       - name: Build full app with iOS27 screen capture
         run: xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -configuration Debug -derivedDataPath outputs/native-ios CODE_SIGNING_ALLOWED=NO build
@@ -113,5 +118,6 @@ jobs:
           name: ios-native-build-evidence
           path: |
             outputs/native-ios/Logs/Build/**
+            outputs/native-brand/*.png
             native/ios/outputs/native-policy-tests.xcresult/**
           retention-days: 3
