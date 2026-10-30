@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase';
+import { storageProjectUrl } from '@/integrations/supabase/client';
+import { isMuxTestProject } from '@/lib/live-test-environment';
 import type { Tables } from '@/integrations/supabase/types';
 
 const publicFields = 'id, title, description, user_id, is_live, started_at, ended_at, thumbnail_url, viewer_count, created_at, playback_url, game_id' as const;
@@ -9,7 +11,7 @@ export interface StreamCredentials { id: string; rtmp_url: string; stream_key: s
 export interface MuxTestLiveStatus { id: string; is_live: boolean; provider_status: 'active' | 'idle' | 'disabled'; playback_url: string; provider_stream_id?: string; checked_at?: string; test: true }
 export async function getMuxTestLiveStatus(streamId: string): Promise<StreamResponse<MuxTestLiveStatus>> {
   try {
-    if(!import.meta.env.DEV)throw new Error('Local development live pilot only');
+    if(!isMuxTestProject(storageProjectUrl))throw new Error('Development live pilot only');
     await currentUser();
     const {data,error}=await supabase.functions.invoke('mux-test-live',{body:{action:'status',streamId}});
     if(error){
@@ -83,17 +85,23 @@ export async function getUserStream(): Promise<StreamResponse> {
 export async function getStreamCredentials(streamId: string): Promise<StreamResponse<StreamCredentials>> {
   try {
     await currentUser();
-    const { data, error } = await supabase.functions.invoke('oauth', { body: { action: 'get_stream_credentials', streamId } });
+    const testPilot = isMuxTestProject(storageProjectUrl);
+    const { data, error } = await supabase.functions.invoke(testPilot ? 'mux-test-live' : 'oauth', {
+      body: { action: testPilot ? 'credentials' : 'get_stream_credentials', streamId },
+    });
     if (error) throw error;
     if (!data || data.id !== streamId || typeof data.rtmp_url !== 'string' || !data.rtmp_url || typeof data.stream_key !== 'string' || !data.stream_key) {
       throw new Error('Stream credentials are not configured');
     }
+    if (testPilot && (data.test !== true || data.rtmp_url !== 'rtmps://global-live.mux.com:443/app'
+      || !/^[\x21-\x7e]{8,256}$/.test(data.stream_key))) throw new Error('Test stream credentials could not be verified');
     return { data: { id: data.id, rtmp_url: data.rtmp_url, stream_key: data.stream_key }, error: null };
   } catch (error) { return failure(error); }
 }
 
 async function lifecycle(streamId: string, action: 'initialize_stream' | 'end_stream'): Promise<StreamResponse> {
   try {
+    if (isMuxTestProject(storageProjectUrl)) throw new Error('For the test pilot, start or stop OBS, then check Mux test status / playback.');
     await currentUser();
     const { error } = await supabase.functions.invoke('oauth', { body: { action, streamId } });
     if (error) throw error;

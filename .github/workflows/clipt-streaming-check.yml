@@ -1,0 +1,46 @@
+name: CLIPT streaming pilot verification
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/services/streamService.ts'
+      - 'src/lib/live-test-environment.ts'
+      - 'src/components/streaming/**'
+      - 'tests/unit/*stream*.test.mjs'
+      - 'tests/unit/*live*.test.mjs'
+      - 'tests/unit/*mux*.test.mjs'
+      - 'tests/stream-pilot.spec.ts'
+      - 'playwright.stream-pilot.config.ts'
+      - '.github/workflows/clipt-streaming-check.yml'
+permissions:
+  contents: read
+jobs:
+  streaming:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CYPRESS_INSTALL_BINARY: '0'
+      VITE_APP_ENV: staging
+      VITE_SUPABASE_URL: https://akiksrlzdqvipqbbjxpw.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_local_test_fixture
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts --no-fund --no-audit
+      - run: node --test tests/unit/mux*.test.mjs tests/unit/live-preview-persistence.test.mjs tests/unit/stream*.test.mjs tests/unit/beta-live-auth-status.test.mjs
+      - run: npm run typecheck
+      - run: npx playwright install --with-deps chromium
+      - name: Generate synthetic local HLS only
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+          node scripts/generate-channel-hls-fixture.mjs
+      - run: npm run build
+      - run: npx playwright test -c playwright.stream-pilot.config.ts --reporter=line
