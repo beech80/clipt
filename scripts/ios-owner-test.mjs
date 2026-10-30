@@ -3,9 +3,9 @@ import {access} from 'node:fs/promises';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 export function iosOwnerTestPlan({teamId,deviceId,sdkVersion,install=false}){
- if(typeof teamId!=='string'||! /^[A-Z0-9]{10}$/.test(teamId))throw Error('Use your10-character Apple development Team ID.');
- if(typeof deviceId!=='string'||! /^[A-Fa-f0-9-]{20,60}$/.test(deviceId))throw Error('Use the identifier of your paired development iPhone.');
- if(typeof sdkVersion!=='string'||! /^\d+\.\d+(?:\.\d+)?$/.test(sdkVersion)||Number(sdkVersion.split('.')[0])<27)
+ if(typeof teamId!=='string'||teamId.trim()!==teamId||! /^[A-Z0-9]{10}$/.test(teamId))throw Error('Use your 10-character Apple development Team ID.');
+ if(typeof deviceId!=='string'||deviceId.trim()!==deviceId||! /^[A-Fa-f0-9-]{20,60}$/.test(deviceId))throw Error('Use the identifier of your paired development iPhone.');
+ if(typeof sdkVersion!=='string'||sdkVersion.trim()!==sdkVersion||! /^\d+\.\d+(?:\.\d+)?$/.test(sdkVersion)||Number(sdkVersion.split('.')[0])<27)
   throw Error('Use Xcode with the actual iPhoneOS27 or later SDK for Screen Live.');
  if(typeof install!=='boolean')throw Error('Choose installation explicitly with --install.');
  const output='outputs/native-ios-owner';
