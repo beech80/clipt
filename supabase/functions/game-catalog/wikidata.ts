@@ -33,7 +33,7 @@ export function createPublicGameCatalog(fetcher:typeof fetch=fetch){
   if(pending.size>=4)throw Error('Public catalog is busy.');
   const task=(async()=>{
    const wait=Math.max(0,nextStart-Date.now());nextStart=Math.max(nextStart,Date.now())+250;if(wait)await new Promise(resolve=>setTimeout(resolve,wait));
-   const response=await fetcher(key,{headers:{Accept:'application/json','User-Agent':'CLIPTGameCatalog/1.0 (+https://github.com/beech80/clipt)'},redirect:'error',signal:AbortSignal.timeout(10000)});
+   const response=await fetcher(key,{headers:{Accept:'application/json','User-Agent':'CLIPTGameCatalog/1.0 (+https://github.com/beech80/clipt)'},redirect:'error',signal:AbortSignal.timeout(15000)});
    if(!response.ok){if(response.status===429||response.status===503)cooldown=Date.now()+Math.min(3600,Math.max(10,Number(response.headers.get('Retry-After'))||60))*1000;throw Error('Public catalog unavailable.');}
    const text=await response.text();if(text.length>4000000)throw Error('Catalog response too large.');const data=JSON.parse(text);
    if(data?.error){if(data.error.code==='maxlag')cooldown=Date.now()+10000;throw Error('Public catalog unavailable.');}

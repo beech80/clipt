@@ -8,8 +8,8 @@ import {providerCatalogPage,chooseProviderGame} from '@/lib/provider-game-catalo
 import {gameLabel} from '@/lib/game-catalog';
 import {useAuth} from '@/contexts/AuthContext';
 export function GameCatalogLookup({term='',onChoose,disabled=false}:{term?:string;disabled?:boolean;onChoose?:(game:{id:string;name:string})=>void}){
- const {user}=useAuth();const navigate=useNavigate(),client=useQueryClient();const [open,setOpen]=useState(false);const [lookupTerm,setLookupTerm]=useState(term);const [queryTerm,setQueryTerm]=useState(term.trim().slice(0,80));
- useEffect(()=>setLookupTerm(term),[term]);
+ const {user}=useAuth();const navigate=useNavigate(),client=useQueryClient();const [open,setOpen]=useState(false);const [lookup,setLookup]=useState({parent:term,value:term});const lookupTerm=lookup.parent===term?lookup.value:term;const [queryTerm,setQueryTerm]=useState(term.trim().slice(0,80));
+ useEffect(()=>setLookup({parent:term,value:term}),[term]);
  useEffect(()=>{const timer=setTimeout(()=>setQueryTerm(lookupTerm.trim().slice(0,80)),350);return()=>clearTimeout(timer);},[lookupTerm]);const alive=useRef(true);const unavailable=useRef(disabled);unavailable.current=disabled;
  useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
  const results=useInfiniteQuery({queryKey:['provider-game-catalog',user?.id,queryTerm],enabled:open&&Boolean(user)&&queryTerm===lookupTerm.trim().slice(0,80),retry:false,initialPageParam:0,queryFn:({pageParam,signal})=>providerCatalogPage(queryTerm,pageParam,signal),getNextPageParam:(last,pages)=>last.more?pages.length:undefined});
@@ -21,7 +21,7 @@ export function GameCatalogLookup({term='',onChoose,disabled=false}:{term?:strin
  return <section className="space-y-3" aria-label="Full game catalog">
   <Button type="button" variant="outline" onClick={()=>setOpen(value=>!value)} aria-expanded={open} disabled={disabled||choose.isPending}><Gamepad2 aria-hidden="true" className="mr-2 h-4 w-4"/>{open?'Hide full catalog':term?'Search full game catalog':'Browse full game catalog'}</Button>
   {open&&<>{!user?<p>Sign in to search the full game catalog.</p>:<>
-  <label className="block space-y-1"><span>Search full game catalog</span><Input type="search" aria-label="Search full game catalog" className="min-h-11" maxLength={80} value={lookupTerm} disabled={disabled||choose.isPending} onChange={event=>setLookupTerm(event.target.value)} placeholder="Find a game by name"/></label>
+  <label className="block space-y-1"><span>Search full game catalog</span><Input type="search" aria-label="Search full game catalog" className="min-h-11" maxLength={80} value={lookupTerm} disabled={disabled||choose.isPending} onChange={event=>setLookup({parent:term,value:event.target.value})} placeholder="Find a game by name"/></label>
   <p className="text-sm text-muted-foreground">Search or browse the provider catalog. Select a real game to open its Clipt channel. Availability depends on catalog coverage.</p>
   {results.data?.pages[0].total!==undefined&&<p className="text-sm text-muted-foreground">{results.data.pages[0].total.toLocaleString()} matching game entries</p>}
   {results.isPending&&<p role="status">Loading full catalog…</p>}
