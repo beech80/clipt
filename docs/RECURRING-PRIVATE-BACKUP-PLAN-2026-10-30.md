@@ -2,7 +2,11 @@
 
 Owner authorization: "do the back up". Existing approved destination remains the private clipt-media-backup2026 Backblaze bucket in us-east-005. The owner also reports testing everything and approves the current layout. This work changes no application layout and publishes no frontend release.
 
-## Planned operation
+## Status
+
+Implemented and verified. See [actual copy/restore evidence and operating runbook](RECURRING-PRIVATE-BACKUP-VERIFIED-2026-10-30.md). The active schedule covers private production media; source files were unchanged.
+
+## Implemented operation
 
 - Daily GitHub schedule at 03:17 UTC, manual dispatch, and an explicit reviewed main-branch request file for the initial run.
 - Verify the exact private destination and existing bucket-restricted credentials before requesting private source data.
@@ -22,7 +26,7 @@ Production currently has 141 objects / 942,701,900 bytes; largest 26,432,818 byt
 
 Content hashes deduplicate unchanged binary bytes between runs. Each snapshot still downloads source bytes and performs a full restore check. Existing provider usage/egress applies. No paid plan, new destination or deletion/retention rule is changed. Historical snapshots and content versions are not automatically pruned; storage grows when content changes.
 
-GitHub schedule timing and notifications are best-effort, not an uptime SLA. The first real private-source copy/restore run and reporter status must pass before this is recorded as enabled and verified.
+GitHub schedule timing and notifications are best-effort, not an uptime SLA. The first real private-source copy/restore passed for all 141 files and the reporter returned healthy on October 30, 2026. See the linked evidence for exact counts and run.
 
 ## Owner acceptance
 
