@@ -124,7 +124,7 @@ begin
    or jsonb_typeof(sel->'systemAudio') is distinct from 'boolean'
    or (sel->>'systemAudio'='true' and sel->>'mode'<>'screen')
    or mode is null or mode not in ('test','paid') or max_seconds is null
-   or max_seconds not between 60 and case when mode='test' then 300 else 7200 end
+   or max_seconds not between 60 and (case when mode='test' then 300 else 7200 end)
    or granted is null or granted !~ '^[0-9a-f]{64}$' then
     raise exception 'Invalid native configuration' using errcode='22023'; end if;
   -- Account lock closes concurrent requests across different stream rows.

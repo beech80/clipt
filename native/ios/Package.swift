@@ -24,7 +24,8 @@ let package = Package(
             .product(name: "Logboard", package: "Logboard")
         ], swiftSettings: screenSDK ? [.define("CLIPT_IOS27_SCREEN_CAPTURE")] : []),
         .target(name: "CliptBroadcaster", dependencies: [
-            "CliptBroadcastCore", .product(name: "Capacitor", package: "capacitor-swift-pm")
+            "CliptBroadcastCore", .product(name: "Capacitor", package: "capacitor-swift-pm"),
+            .product(name: "Cordova", package: "capacitor-swift-pm")
         ]),
         .testTarget(name: "CliptBroadcastCoreTests", dependencies: ["CliptBroadcastCore"])
     ],
