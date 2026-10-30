@@ -30,10 +30,11 @@ No java, adb, gradle or xcodebuild was found on the attached Windows environment
 - Camera Live: native AVFoundation camera/microphone capture, VideoToolbox H.264 and AAC audio encoding, and a reviewed/pinned RTMPS publisher. Handle camera changes, mute, interruption, orientation and thermal limits in native code.
 - Screen Live on iOS/iPadOS27+: Apple's current ScreenCaptureKit documentation replaces ReplayKit streaming and removes the broadcast-extension requirement. Use SCContentSharingPicker, SCStream samples and the supported background capture mode. The official symbol metadata reports iOS27 introduction for ScreenCaptureKit/picker and iOS27 deprecation for RPBroadcastSampleHandler.
 - Older supported iOS: ReplayKit Broadcast Upload Extension with RPSystemBroadcastPickerView/RPBroadcastSampleHandler, a separately signed extension target and narrowly shared credentials/state. Its capture process must survive the host WebView backgrounding. Do not assume JavaScript can keep a capture session alive.
+- For an iOS27 SDK build, adopt and verify UIKit scene-based lifecycle in the actual native host. Apple states that apps built with this SDK require scenes. The existing Capacitor7 dependency alone does not establish this compatibility.
 - Compile/version-gate both paths against an appropriate SDK and validate on devices. Capacitor7's minimum documented tooling is not proof of iOS27 lifecycle/SDK compatibility. Review an upgrade separately before choosing a supported device range; no blind major upgrade was made.
 - System audio is conditional. Protected content, app/OS restrictions and interruptions must be respected. Camera background behavior must be capability-gated rather than assumed equivalent to screen sharing.
 
-Sources: [Apple ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit), [RPBroadcastSampleHandler](https://developer.apple.com/documentation/replaykit/rpbroadcastsamplehandler), [Capacitor7 iOS](https://capacitorjs.com/docs/v7/ios).
+Sources: [Apple ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit), [RPBroadcastSampleHandler](https://developer.apple.com/documentation/replaykit/rpbroadcastsamplehandler), [Capacitor7 iOS](https://capacitorjs.com/docs/v7/ios), [UIKit scene lifecycle](https://developer.apple.com/documentation/uikit/transitioning-to-the-uikit-scene-based-life-cycle).
 
 ### Android
 
@@ -92,4 +93,14 @@ No session-issuer endpoint, native grant table, general provider provisioning or
 - Observe native stop, provider idle and discovery/chat transition without keeping the owner WebView active.
 - Credentials must be absent from browser storage, deep links, diagnostic artifacts and crash logs.
 
-No physical native broadcasting, screen sharing, microphone/game-audio capture, native build or app-store verification is claimed. Device availability was asked asynchronously; unanswered means unknown, not approval or a passed test.
+No physical native broadcasting, screen sharing, microphone/game-audio capture, native build or app-store verification is claimed. The owner confirmed an iPhone and Android phone are available. Their OS versions, native signing/build setup and actual capture behavior remain unverified. Availability is not a passed physical-device test.
+
+
+## Executed validation and source references
+
+- Foundation PR: https://github.com/beech80/clipt/pull/29; merged as 3d358c77bb8c4bd84da87a1c6f4e3d0d7cfd96b2. Tested source head: 37c0e5d8228c35201945a4a261e33c681efff76d.
+- CI: https://github.com/beech80/clipt/actions/runs/41056667679 — final result success.
+- 775 application tests passed, including 13 new native-foundation tests; 12 monitor tests passed. TypeScript (including Capacitor config), security checks, CSS validation and production web build passed.
+- 31 Chromium and 18 WebKit browser checks passed. An initial WebKit existing gift-dialog click failed intermittently during controller/scroll interaction; the failed-job rerun passed. No gifting UI, payment protection or test expectation was changed to obtain that pass. This increment does not claim to fix that intermittent browser interaction.
+- No native iOS/Android compile, device capture, microphone/game-audio test, cross-app screen broadcast or native RTMPS publish ran. These are outstanding release gates, not covered by browser/contract tests.
+- No production frontend deployment, app-store publication, new provider resource or billing activation occurred.
