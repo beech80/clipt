@@ -22,7 +22,7 @@ export function readNativeCapabilities(value: unknown, platform: string): Native
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw Error('Native broadcaster unavailable');
   const v = value as Record<string, unknown>;
   if (v.protocolVersion !== 1 || !['ios', 'android'].includes(platform) || v.platform !== platform
-    || !Array.isArray(v.modes) || v.modes.length > 2 || v.modes.some(m => !['camera', 'screen'].includes(m))
+    || !Array.isArray(v.modes) || !v.modes.length || v.modes.length > 2 || v.modes.some(m => !['camera', 'screen'].includes(m))
     || new Set(v.modes).size !== v.modes.length
     || !Array.isArray(v.qualityIds) || !v.qualityIds.length || v.qualityIds.length > 4
     || v.qualityIds.some(q => !NATIVE_QUALITY_IDS.includes(q)) || new Set(v.qualityIds).size !== v.qualityIds.length

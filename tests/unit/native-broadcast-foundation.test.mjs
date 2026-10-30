@@ -29,7 +29,7 @@ test('invalid quality and orientation cannot enter the encoder',()=>{
 });
 test('native capability parsing requires matching platform, protocol, valid options and cross-app screen support',()=>{
  assert.deepEqual(readNativeCapabilities(cap,'ios'),cap);
- for(const patch of [{protocolVersion:2},{platform:'web'},{modes:['camera','camera']},{modes:['screen'],backgroundScreen:false},{qualityIds:['4k']},{qualityIds:[]},{systemAudio:{toString:()=> 'supported'}},{microphone:'yes'}])assert.throws(()=>readNativeCapabilities({...cap,...patch},'ios'));
+ for(const patch of [{protocolVersion:2},{modes:[]},{platform:'web'},{modes:['camera','camera']},{modes:['screen'],backgroundScreen:false},{qualityIds:['4k']},{qualityIds:[]},{systemAudio:{toString:()=> 'supported'}},{microphone:'yes'}])assert.throws(()=>readNativeCapabilities({...cap,...patch},'ios'));
  assert.throws(()=>readNativeCapabilities(cap,'android'));
 });
 test('higher quality and audio are offered only when native capability confirms support',()=>{
