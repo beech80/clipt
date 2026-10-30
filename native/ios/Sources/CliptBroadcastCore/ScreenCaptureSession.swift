@@ -12,6 +12,7 @@ final class ScreenCaptureSession: NSObject, NativeScreenCapture, SCContentSharin
         (Bundle.main.object(forInfoDictionaryKey: "UIBackgroundModes") as? [String])?.contains("screen-capture") == true
     }
     var onTermination: (() -> Void)?
+    var onAudioSourcesChanged: (@MainActor (Bool) async -> Void)?
     private let picker = SCContentSharingPicker.shared
     private var stream: SCStream?
     private var pending: CheckedContinuation<Void, Error>?
@@ -137,12 +138,15 @@ final class ScreenCaptureSession: NSObject, NativeScreenCapture, SCContentSharin
         configuration.sampleRate = encoder.audioSampleRate
         configuration.channelCount = 2
         configuration.excludesCurrentProcessAudio = true
+        let microphoneEnabled = requested.microphone && filter.isMicrophoneEnabled
+        await onAudioSourcesChanged?(microphoneEnabled)
+        guard !stopped, revision.accepts(current), !Task.isCancelled else { return }
         let capture = SCStream(filter: filter, configuration: configuration, delegate: self)
         stream = capture
         do {
             try capture.addStreamOutput(self, type: .screen, sampleHandlerQueue: sampleQueue)
             if requested.systemAudio { try capture.addStreamOutput(self, type: .audio, sampleHandlerQueue: sampleQueue) }
-            if requested.microphone && filter.isMicrophoneEnabled {
+            if microphoneEnabled {
                 try capture.addStreamOutput(self, type: .microphone, sampleHandlerQueue: sampleQueue)
             }
             try await capture.startCapture()
