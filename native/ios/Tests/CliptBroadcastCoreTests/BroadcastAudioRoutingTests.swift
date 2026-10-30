@@ -22,7 +22,12 @@ final class BroadcastAudioRoutingTests: XCTestCase {
             microphoneMuted: true, systemMuted: false)
         XCTAssertEqual(microphoneMuted.tracks[0]?.isMuted, true)
         XCTAssertEqual(microphoneMuted.tracks[1]?.isMuted, false)
-        let gameMuted = BroadcastAudioRouting.settings(microphoneMuted, screen: true, screenMicrophoneEnabled: false,
+        let changedSource = BroadcastAudioRouting.settings(microphoneMuted, screen: true, screenMicrophoneEnabled: false,
+            microphoneMuted: true, systemMuted: false)
+        XCTAssertEqual(changedSource.mainTrack, 1)
+        XCTAssertEqual(changedSource.tracks[0]?.isMuted, true)
+        XCTAssertEqual(changedSource.tracks[1]?.isMuted, false)
+        let gameMuted = BroadcastAudioRouting.settings(changedSource, screen: true, screenMicrophoneEnabled: false,
             microphoneMuted: false, systemMuted: true)
         XCTAssertEqual(gameMuted.tracks[0]?.isMuted, false)
         XCTAssertEqual(gameMuted.tracks[1]?.isMuted, true)
