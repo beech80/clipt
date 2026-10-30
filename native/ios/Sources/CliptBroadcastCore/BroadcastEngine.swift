@@ -37,6 +37,7 @@ public final class CliptBroadcastEngine {
     private var systemMuted = false
     private var cameraPosition: AVCaptureDevice.Position = .back
     private var reconnecting = false
+    private var encoderSupport: [String: Bool] = [:]
 
     private init() {
         // Even library diagnostics must never print an RTMP publish name/key.
@@ -70,7 +71,7 @@ public final class CliptBroadcastEngine {
     public var enabled: Bool { Bundle.main.object(forInfoDictionaryKey: "CLIPTNativeBroadcastEnabled") as? Bool == true }
 
     public func capabilities() -> [String: Any] {
-        guard enabled, VTIsHardwareEncodeSupported(kCMVideoCodecType_H264), ProcessInfo.processInfo.thermalState != .critical else {
+        guard enabled, supportsHardwareH264(width: 640, height: 360), ProcessInfo.processInfo.thermalState != .critical else {
             return ["protocolVersion": 1, "platform": "ios", "modes": [], "qualityIds": [],
                     "microphone": false, "cameraSwitch": false, "backgroundScreen": false, "systemAudio": "unsupported"]
         }
@@ -82,7 +83,8 @@ public final class CliptBroadcastEngine {
         // Screen capture defaults to the same conservative tested preset selection.
         let profiles: [(String, Int32, Int32, Double)] = [("360p15",640,360,15), ("480p30",854,480,30), ("720p30",1280,720,30), ("1080p30",1920,1080,30)]
         let quality = profiles.filter { profile in
-            cameras.isEmpty ? backgroundScreen && profile.0 == "360p15" : cameras.contains { camera in
+            guard supportsHardwareH264(width: profile.1, height: profile.2) else { return false }
+            return cameras.isEmpty ? backgroundScreen && profile.0 == "360p15" : cameras.contains { camera in
                 camera.formats.contains { format in
                     let dimensions = CMVideoFormatDescriptionGetDimensions(format.formatDescription)
                     return dimensions.width >= profile.1 && dimensions.height >= profile.2 && format.videoSupportedFrameRateRanges.contains { $0.maxFrameRate >= profile.3 }
@@ -92,6 +94,23 @@ public final class CliptBroadcastEngine {
         return ["protocolVersion": 1, "platform": "ios", "modes": modes, "qualityIds": quality,
                 "microphone": true, "cameraSwitch": cameras.contains { $0.position == .front } && cameras.contains { $0.position == .back },
                 "backgroundScreen": backgroundScreen, "systemAudio": backgroundScreen ? "permission-dependent" : "unsupported"]
+    }
+
+    private func supportsHardwareH264(width: Int32, height: Int32) -> Bool {
+        let cacheKey = "\(width)x\(height)"
+        if let supported = encoderSupport[cacheKey] { return supported }
+        guard #available(iOS 17.4, *) else { return false }
+        var session: VTCompressionSession?
+        let specification = [kVTVideoEncoderSpecification_RequireHardwareAcceleratedVideoEncoder: true] as CFDictionary
+        let result = VTCompressionSessionCreate(allocator: kCFAllocatorDefault,
+            width: width, height: height, codecType: kCMVideoCodecType_H264,
+            encoderSpecification: specification, imageBufferAttributes: nil,
+            compressedDataAllocator: nil, outputCallback: nil, refcon: nil,
+            compressionSessionOut: &session)
+        let supported = result == noErr && session != nil
+        if let session { VTCompressionSessionInvalidate(session) }
+        encoderSupport[cacheKey] = supported
+        return supported
     }
 
     private var screenAvailable: Bool {

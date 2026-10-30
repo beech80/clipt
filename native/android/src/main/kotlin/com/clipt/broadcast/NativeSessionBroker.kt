@@ -24,7 +24,9 @@ internal class NativeSessionBroker {
     internal fun decode(value: JSONObject, requested: BroadcastSelection, now: Long): NativeSession {
         require(value.opt("protocolVersion") == 1)
         val returned = BroadcastPolicy.selection(value.getJSONObject("selection"))
-        require(BroadcastPolicy.selectionJson(returned).similar(BroadcastPolicy.selectionJson(requested)))
+        require(returned.mode == requested.mode && returned.quality == requested.quality &&
+            returned.portrait == requested.portrait && returned.microphone == requested.microphone &&
+            returned.systemAudio == requested.systemAudio && returned.frontCamera == requested.frontCamera)
         val sessionId = value.getString("sessionId")
         require(Regex("^[a-fA-F0-9-]{36}$").matches(sessionId))
         val origin = value.getString("ingestUrl")

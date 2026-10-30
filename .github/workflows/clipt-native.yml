@@ -31,8 +31,8 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
-      - name: Resolve exact reviewed native runtime
-        run: npm install --package-lock-only --ignore-scripts --save-exact @capacitor/core@8.6.0 @capacitor/android@8.6.0 @capacitor/ios@8.6.0 @capacitor/cli@8.6.0 --no-fund --no-audit
+      - name: Verify exact reviewed native runtime
+        run: node -e "const p=require('./package.json'),l=require('./package-lock.json');for(const n of ['core','android','ios','cli']){const k='@capacitor/'+n;if((p.dependencies?.[k]||p.devDependencies?.[k])!=='8.6.0'||l.packages['node_modules/'+k]?.version!=='8.6.0')process.exit(1)}"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: reviewed-native-runtime-lock
