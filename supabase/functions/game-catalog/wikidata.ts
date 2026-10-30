@@ -32,11 +32,11 @@ export function createPublicGameCatalog(fetcher:typeof fetch=fetch){
    if(cache.size>=200)cache.delete(cache.keys().next().value!);cache.set(key,{until:Date.now()+300000,data});return data;
   })().finally(()=>pending.delete(key));pending.set(key,task);return task;
  }
- async function entities(ids:string[]){
+ async function entities(ids:string[],labelsOnly=false){
   if(ids.some(id=>!isPublicGameId(id))||ids.length>100)throw Error('Invalid entity request.');
   const all:Record<string,any>={};
   for(let i=0;i<ids.length;i+=50){
-   const data=await api({action:'wbgetentities',ids:ids.slice(i,i+50).join('|'),props:'labels|claims',languages:'en|mul',languagefallback:'1'});
+   const data=await api({action:'wbgetentities',ids:ids.slice(i,i+50).join('|'),props:labelsOnly?'labels':'labels|claims',languages:'en|mul',languagefallback:'1'});
    if(!data.entities||typeof data.entities!=='object'||Array.isArray(data.entities))throw Error('Invalid catalog response.');
    for(const id of ids.slice(i,i+50))if(data.entities[id]?.id===id)all[id]=data.entities[id];
   }return all;
@@ -44,7 +44,7 @@ export function createPublicGameCatalog(fetcher:typeof fetch=fetch){
  async function decorate(ids:string[]){
   if(!ids.length)return [];const rows=await entities(ids);
   const platformIds=[...new Set(ids.flatMap(id=>values(rows[id],'P400').flatMap(v=>isPublicGameId(v?.id)?[v.id as string]:[])))].slice(0,100);
-  const platformRows=platformIds.length?await entities(platformIds):{};const labels:Record<string,string>={};
+  const platformRows=platformIds.length?await entities(platformIds,true):{};const labels:Record<string,string>={};
   for(const id of platformIds){const label=platformRows[id]?.labels?.en?.value||platformRows[id]?.labels?.mul?.value;if(typeof label==='string'&&label.length<160)labels[id]=label;}
   return ids.flatMap(id=>{const game=publicGame(rows[id],labels);return game?[game]:[];});
  }

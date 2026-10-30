@@ -14,7 +14,7 @@ test('public catalog paginates, caches requests and resolves a verified game wit
  const calls=[];const catalog=createPublicGameCatalog(async(input,init)=>{
   const url=new URL(input);calls.push(url);assert.equal(url.origin,'https://www.wikidata.org');assert.equal(url.searchParams.get('maxlag'),'5');assert.match(init.headers['User-Agent'],/CLIPT/);assert.equal(init.redirect,'error');
   if(url.searchParams.get('action')==='query'){const second=url.searchParams.get('sroffset')==='20';return new Response(JSON.stringify({query:{searchinfo:{totalhits:178000},search:[{title:second?'Q2':'Q1'}]},...(!second?{continue:{sroffset:20}}:{})}));}
-  const ids=url.searchParams.get('ids').split('|');return new Response(JSON.stringify({entities:Object.fromEntries(ids.map(id=>[id,id==='Q100'?{id,labels:{en:{value:'Windows'}}}:entity(id,id==='Q1'?'Game one':'Game two')]))}));
+  const ids=url.searchParams.get('ids').split('|');if(ids.length===1&&ids[0]==='Q100')assert.equal(url.searchParams.get('props'),'labels');return new Response(JSON.stringify({entities:Object.fromEntries(ids.map(id=>[id,id==='Q100'?{id,labels:{en:{value:'Windows'}}}:entity(id,id==='Q1'?'Game one':'Game two')]))}));
  });
  const a=await catalog.search('',0),b=await catalog.search('',1);assert.equal(a.source,'wikidata');assert.equal(a.total,178000);assert.equal(a.more,true);assert.equal(b.more,false);assert.equal(a.games[0].name,'Game one');assert.equal(b.games[0].name,'Game two');
  const count=calls.length;await catalog.search('',0);assert.equal(calls.length,count);
