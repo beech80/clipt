@@ -1,12 +1,20 @@
 import {serve} from 'https://deno.land/std@0.190.0/http/server.ts';
 import {authenticatedUser,HttpError,serviceClient} from '../_shared/request.ts';
 import {verifyMuxSignature} from '../_shared/mux-webhook-signature.ts';
-import {nativeCommand,nativeError,nativeHeaders,nativeRequestBody,nativeResponse,NativeSessionError,
+import {nativeCommand,nativeError,nativeHeaders,nativeRequestBody,nativeResponse,NativeSessionError,nativeConfigurationIssues,
  NATIVE_DEVELOPMENT_ORIGIN,providerSnapshot,validUuid,type NativeDependencies,type NativeSession} from './protocol.ts';
 import {nativeRandomToken,nativeTokenHash,equalNativeSecret,importNativeSigningKey,nativePlaybackUrl} from './crypto.ts';
 import {reconcileNativeBroadcasts} from './reconcile.ts';
 
 function env(name:string){return Deno.env.get(name)??'';}
+const reportedConfigurationFailures=new Set<string>();
+function reportConfigurationIssues(config:NativeDependencies['config']) {
+ const missing=nativeConfigurationIssues(config),fingerprint=missing.join(',');
+ if(missing.length&&!reportedConfigurationFailures.has(fingerprint)) {
+  reportedConfigurationFailures.add(fingerprint);
+  console.warn(JSON.stringify({event:'native_configuration_incomplete',missing}));
+ }
+}
 function providerCredentials() {
  const id=env('MUX_TOKEN_ID'),secret=env('MUX_TOKEN_SECRET');
  if(id.trim()!==id||secret.trim()!==secret||!/^[\x21-\x7e]{1,500}$/.test(id)||!/^[\x21-\x7e]{1,500}$/.test(secret))
@@ -140,6 +148,7 @@ serve(async req=>{
    return await reconcile(req);
   }
   const d=await dependencies(body.action==='create'||body.action==='playback');
+  if(body.action==='create'||body.action==='redeem')reportConfigurationIssues(d.config);
   return nativeResponse(await nativeCommand(req,body,d));
  }catch(error){return nativeError(error);}
 });
