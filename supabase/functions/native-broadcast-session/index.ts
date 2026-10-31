@@ -1,12 +1,26 @@
 import {serve} from 'https://deno.land/std@0.190.0/http/server.ts';
 import {authenticatedUser,HttpError,serviceClient} from '../_shared/request.ts';
 import {verifyMuxSignature} from '../_shared/mux-webhook-signature.ts';
-import {nativeCommand,nativeError,nativeHeaders,nativeRequestBody,nativeResponse,NativeSessionError,
+import {nativeCommand,nativeError,nativeHeaders,nativeRequestBody,nativeResponse,NativeSessionError,nativeConfigurationIssues,nativeOperationsReadiness,
  NATIVE_DEVELOPMENT_ORIGIN,providerSnapshot,validUuid,type NativeDependencies,type NativeSession} from './protocol.ts';
 import {nativeRandomToken,nativeTokenHash,equalNativeSecret,importNativeSigningKey,nativePlaybackUrl} from './crypto.ts';
 import {reconcileNativeBroadcasts} from './reconcile.ts';
 
 function env(name:string){return Deno.env.get(name)??'';}
+const reportedConfigurationFailures=new Set<string>();
+function reportConfigurationIssues(config:NativeDependencies['config']) {
+ const missing=nativeConfigurationIssues(config);
+ const operationsIndex=missing.indexOf('webhook_or_cleanup_configuration');
+ if(operationsIndex>=0) {
+  const operations=nativeOperationsReadiness(env('CLIPT_NATIVE_RECONCILE_TOKEN'),env('MUX_NATIVE_WEBHOOK_SECRET'));
+  missing.splice(operationsIndex,1,...Object.entries(operations).filter(([,ready])=>!ready).map(([name])=>name));
+ }
+ const fingerprint=missing.join(',');
+ if(missing.length&&!reportedConfigurationFailures.has(fingerprint)) {
+  reportedConfigurationFailures.add(fingerprint);
+  console.warn(JSON.stringify({event:'native_configuration_incomplete',missing}));
+ }
+}
 function providerCredentials() {
  const id=env('MUX_TOKEN_ID'),secret=env('MUX_TOKEN_SECRET');
  if(id.trim()!==id||secret.trim()!==secret||!/^[\x21-\x7e]{1,500}$/.test(id)||!/^[\x21-\x7e]{1,500}$/.test(secret))
@@ -46,6 +60,7 @@ async function dependencies(needsSigning:boolean):Promise<NativeDependencies> {
  if(needsSigning)signingKey=await importNativeSigningKey(privateKey);
  const mode=env('CLIPT_NATIVE_MUX_MODE')==='paid'?'paid':'test';
  const seconds=Number(env('CLIPT_NATIVE_MAX_DURATION_SECONDS')||(mode==='test'?'300':'3600'));
+ const operations=nativeOperationsReadiness(env('CLIPT_NATIVE_RECONCILE_TOKEN'),env('MUX_NATIVE_WEBHOOK_SECRET'));
  return {
   now:()=>Date.now(),randomToken:nativeRandomToken,hashToken:nativeTokenHash,
   authenticate:async(req,options)=>{
@@ -75,7 +90,7 @@ async function dependencies(needsSigning:boolean):Promise<NativeDependencies> {
   config:{origin:env('SUPABASE_URL'),enabled:env('CLIPT_NATIVE_BROADCAST_ENABLED')==='true',
    provisioningEnabled:env('CLIPT_NATIVE_MUX_CREATE_ENABLED')==='true',mode,
    paidApproved:env('CLIPT_NATIVE_MUX_PAID_APPROVED')==='true',
-   maxDurationSeconds:seconds,operationsReady:env('CLIPT_NATIVE_RECONCILE_TOKEN').trim()===env('CLIPT_NATIVE_RECONCILE_TOKEN')&&/^[A-Za-z0-9_-]{64,256}$/.test(env('CLIPT_NATIVE_RECONCILE_TOKEN'))&&env('MUX_NATIVE_WEBHOOK_SECRET').length>=16,testOwnerId:env('CLIPT_NATIVE_TEST_OWNER_ID'),signingReady:!!keyId&&!!privateKey&&/^[A-Za-z0-9]{1,200}$/.test(keyId)},
+   maxDurationSeconds:seconds,operationsReady:Object.values(operations).every(Boolean),testOwnerId:env('CLIPT_NATIVE_TEST_OWNER_ID'),signingReady:!!keyId&&!!privateKey&&/^[A-Za-z0-9]{1,200}$/.test(keyId)},
  };
 }
 async function readWebhook(req:Request) {
@@ -140,6 +155,7 @@ serve(async req=>{
    return await reconcile(req);
   }
   const d=await dependencies(body.action==='create'||body.action==='playback');
+  if(body.action==='create'||body.action==='redeem')reportConfigurationIssues(d.config);
   return nativeResponse(await nativeCommand(req,body,d));
  }catch(error){return nativeError(error);}
 });

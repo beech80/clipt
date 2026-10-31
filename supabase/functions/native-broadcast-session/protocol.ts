@@ -87,13 +87,32 @@ export function providerSnapshot(value: unknown, session: NativeSession): Native
   }
   return x;
 }
+export function nativeOperationsReadiness(cleanupToken:string,webhookSecret:string) {
+ return {
+  CLIPT_NATIVE_RECONCILE_TOKEN: cleanupToken.trim()===cleanupToken&&tokenPattern.test(cleanupToken),
+  MUX_NATIVE_WEBHOOK_SECRET: webhookSecret.length>=16,
+ };
+}
+export function nativeConfigurationIssues(config: NativeDependencies['config']): string[] {
+ const checks: Array<[string, boolean]> = [
+  ['development_project', config.origin===NATIVE_DEVELOPMENT_ORIGIN],
+  ['CLIPT_NATIVE_BROADCAST_ENABLED', config.enabled],
+  ['CLIPT_NATIVE_MUX_CREATE_ENABLED', config.provisioningEnabled],
+  ['signing_key_configuration', config.signingReady],
+  ['webhook_or_cleanup_configuration', config.operationsReady],
+  ['CLIPT_NATIVE_TEST_OWNER_ID', config.mode!=='test'||uuidPattern.test(config.testOwnerId||'')],
+  ['paid_mode_approval', config.mode!=='paid'||config.paidApproved],
+  ['CLIPT_NATIVE_MAX_DURATION_SECONDS', Number.isInteger(config.maxDurationSeconds)
+   &&config.maxDurationSeconds>=60&&config.maxDurationSeconds<=(config.mode==='test'?300:7200)],
+ ];
+ // Return fixed labels only. Configuration values, credentials and account IDs
+ // must never appear in operator diagnostics or public error responses.
+ return checks.filter(([,passed])=>!passed).map(([name])=>name);
+}
 function enabled(d: NativeDependencies) {
-  if(d.config.origin!==NATIVE_DEVELOPMENT_ORIGIN || !d.config.enabled || !d.config.provisioningEnabled
-    || !d.config.signingReady || !d.config.operationsReady || (d.config.mode==='test'&&!uuidPattern.test(d.config.testOwnerId||'')) || (d.config.mode==='paid' && !d.config.paidApproved)
-    || !Number.isInteger(d.config.maxDurationSeconds) || d.config.maxDurationSeconds<60
-    || d.config.maxDurationSeconds>(d.config.mode==='test'?300:7200)) {
-    fail(503,'NATIVE_DISABLED','Native broadcasting is not enabled for this environment');
-  }
+ if(nativeConfigurationIssues(d.config).length) {
+  fail(503,'NATIVE_DISABLED','Native broadcasting is not enabled for this environment');
+ }
 }
 function publicStatus(s: NativeSession) {
   return {protocolVersion:1,sessionId:s.sessionId,streamId:s.streamId,state:s.state,
