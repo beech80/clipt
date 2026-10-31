@@ -87,6 +87,12 @@ export function providerSnapshot(value: unknown, session: NativeSession): Native
   }
   return x;
 }
+export function nativeOperationsReadiness(cleanupToken:string,webhookSecret:string) {
+ return {
+  CLIPT_NATIVE_RECONCILE_TOKEN: cleanupToken.trim()===cleanupToken&&tokenPattern.test(cleanupToken),
+  MUX_NATIVE_WEBHOOK_SECRET: webhookSecret.length>=16,
+ };
+}
 export function nativeConfigurationIssues(config: NativeDependencies['config']): string[] {
  const checks: Array<[string, boolean]> = [
   ['development_project', config.origin===NATIVE_DEVELOPMENT_ORIGIN],
