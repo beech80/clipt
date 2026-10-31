@@ -1,15 +1,15 @@
 # Native phone broadcasting implementation — October 30, 2026
 
-This records implemented source and observed verification. Native broadcasting is not certified for launch: private setup and physical-device acceptance remain incomplete.
+This records implemented source and observed verification. The development server's configuration checks now pass. Native broadcasting is not certified for launch: real provider delivery/playback and physical-device acceptance remain incomplete.
 
 ## Configuration update — October 31, 2026
 
 - The private RSA signing key now imports: the unauthenticated playback probe reaches AUTHENTICATION_REQUIRED. Matching the signing ID/private key and Mux environment still needs real authenticated playback.
 - [Manual external cleanup](https://github.com/beech80/clipt/actions/runs/41217511448) passed at 11:00 AM Chicago: checked0, stopped0, pending0, oktrue. The scoped token works between GitHub and development Supabase. The owner reports saving CLIPT_NATIVE_RECONCILE_ENABLED=true as a repository variable; a successful automatic scheduled invocation has not yet been observed.
 - All six owner/test gates and signing-key configuration pass their finite readiness checks. The development test is restricted to the confirmed beecher@cliptgaming.com account, test mode and300seconds; paid approval is false.
-- Private server diagnostics at12:00:41PM Chicago identify **MUX_NATIVE_WEBHOOK_SECRET** as missing/incomplete. The earlier owner report that it was saved did not establish runtime readiness. Update that exact development Secret from the dedicated Mux webhook's Signing Secret, then verify actual signed delivery. No credential value was retrieved or logged.
-- Readiness diagnostics are fixed labels only, deduplicated per worker; public errors and all enforcement predicates are retained. Development native-broadcast-session version11 is deployed. PR34 also patches newly published build-tool advisories with exact minimatch11.0.1/glob14.0.2 overrides and a regenerated lockfile; the security audit passes with0 vulnerabilities.
-- The owner is using only the iPhone now. Native installation/signing still needs the Mac and Xcode. No physical native broadcast has passed acceptance, and no native provider resource was created by these read-only probes.
+- Earlier private diagnostics identified MUX_NATIVE_WEBHOOK_SECRET as missing/incomplete. The owner has now created the native Mux webhook and saved its endpoint-specific Signing Secret in development. The read-only redemption probe now returns INVALID_GRANT for a missing grant rather than NATIVE_DISABLED: the configuration guards pass. Playback still correctly requires user authentication. Actual signed webhook delivery and matching private playback remain physical-broadcast checks. No credential value was retrieved or logged.
+- Readiness diagnostics are fixed labels only, deduplicated per worker; public errors and all enforcement predicates are retained. Development native-broadcast-session runtime version12 is active after the secret update; its reviewed source is unchanged from the version11 diagnostic deployment. PR34 also patches newly published build-tool advisories with exact minimatch11.0.1/glob14.0.2 overrides and a regenerated lockfile; the security audit passes with0 vulnerabilities.
+- The owner is using only the iPhone now. Native installation/signing still needs the Mac and Xcode. [First-test handoff](NATIVE-IPHONE-FIRST-TEST-2026-10-31.md) records the verified package, installation steps and acceptance checks. No physical native broadcast has passed acceptance, and no native provider resource was created by these read-only probes.
 
 ## Implemented
 
@@ -55,31 +55,31 @@ The successful Android run provides CLIPT-development-owner-test-Android: APK, B
 
 The successful iPhone run provides CLIPT-development-owner-test-iPhone: prepared Xcode project, unsigned arm64 archive, build metadata, instructions and checksums. It is not a signed installable IPA. On the owner's Mac, scripts/ios-owner-test.mjs validates the actual SDK/team/paired-device identifiers, preserves the SDK27 flags during package resolution/build, and installs only with --install. Apple signing/provisioning still requires the owner's account.
 
-Artifacts expire after7 days (November6,2026). The October30 prepared iPhone source archive predates the October31 build-tool patches; rebuild the owner package from current main before installing its project dependencies. See NATIVE-ANDROID-OWNER-TEST.md and NATIVE-IOS-OWNER-TEST.md for installation/acceptance instructions. No physical screenshot or broadcast is represented by these artifacts. The original1024px CLIPT icon was inspected; its opaque PNG format was verified.
+Artifacts expire after7 days (November6,2026). Correction to the earlier rebuild note: the prepared Xcode project is self-contained and does not include/install npm manifests. Direct Git tree comparison confirmed that its bundled client/native code, host/branding generation and Mac installer match current reviewed sources. The CI dependency-manifest patches do not require rebuilding this unchanged prepared client package. See NATIVE-ANDROID-OWNER-TEST.md and NATIVE-IOS-OWNER-TEST.md for installation/acceptance instructions. No physical screenshot or broadcast is represented by these artifacts. The original1024px CLIPT icon was inspected; its opaque PNG format was verified.
 
 ## Observed development state
 
 Project akiksrlzdqvipqbbjxpw only:
 
 - Private native tables/functions and RLS are installed; anon/authenticated cannot SELECT the native tables or execute the service-only RPC.
-- native-broadcast-session version11 is deployed. Index/protocol changes add private fixed-label diagnostics and reuse equivalent readiness guards; unchanged deployed dependencies were compared and preserved. Gateway verify_jwt remains false because the function performs per-action authentication for user JWTs, one-use grants, scoped cleanup and signed provider callbacks.
+- native-broadcast-session runtime version12 is active after the owner saved the webhook secret; its source matches the reviewed version11 deployment. Index/protocol changes add private fixed-label diagnostics and reuse equivalent readiness guards; unchanged deployed dependencies were compared and preserved. Gateway verify_jwt remains false because the function performs per-action authentication for user JWTs, one-use grants, scoped cleanup and signed provider callbacks.
 - Initial October30 probes after that deployment returned PLAYBACK_UNAVAILABLE for playback initialization and NATIVE_DISABLED for grant redemption. The owner confirmed using an Access Tokens → Token Secret in the signing field, then replaced it with the signing pair. The October31 update above records the successful private-key import. No credential value was retrieved or logged.
 - SQL inspection found0 native sessions. The SQL-only per-minute expiry job succeeded at20:20UTC on October30. It sends no secrets through pg_net.
 - Anonymous user requests and forged webhooks were previously verified as denied with private/no-store response caching.
-- No native provider stream was created by these checks. Hosted publishing remains gated; no paid native stream was enabled.
+- No native provider stream was created by these checks. Bounded development publishing configuration now passes; signed-in owner/grant authorization is still mandatory. No paid native stream was enabled.
 - The last development advisor snapshot still included its leaked-password-protection warning. No blanket Supabase security clearance is claimed; production and development settings must not be confused.
 
 Production project slnjliheyiiummxhrgmk, production frontend, payment gates and app stores were not deployed or enabled by this work.
 
-## Private setup still required
+## Private setup and remaining verification
 
 Do not put credentials in chat, source, VITE variables, screenshots, artifacts or logs.
 
 1. The development private signing key now imports successfully. Verify its MUX_SIGNING_KEY_ID belongs to the matching pair and the same Mux environment as the Video API token during authenticated playback. The earlier access-token/signing-key mismatch is resolved at the import step.
-2. Correct the missing/incomplete MUX_NATIVE_WEBHOOK_SECRET in development using the dedicated native webhook's Signing Secret. Keep the OBS webhook. Verify actual signed delivery; the earlier download_failed video-import attempt was not webhook evidence.
+2. The owner created the dedicated native webhook and saved MUX_NATIVE_WEBHOOK_SECRET; the server's configuration guards now pass. Keep the OBS webhook. Verify actual signed delivery during a real native broadcast; the earlier download_failed video-import attempt was not webhook evidence.
 3. The scoped CLIPT_NATIVE_RECONCILE_TOKEN is configured and the manual workflow passed. The owner reports enabling repository variable CLIPT_NATIVE_RECONCILE_ENABLED=true. Observe a successful automatic run and verify real expired-provider teardown. The5-minute worker supplements, rather than replaces, SQL expiry.
 4. The confirmed beecher@cliptgaming.com development owner and all six test settings now pass configuration checks. Existing MUX_TOKEN_ID / MUX_TOKEN_SECRET must retain required Video permissions in the same environment; provider authorization is still exercised by the real broadcast test.
-5. Bounded development gates are saved: CLIPT_NATIVE_BROADCAST_ENABLED=true, CLIPT_NATIVE_MUX_CREATE_ENABLED=true, CLIPT_NATIVE_MUX_MODE=test, CLIPT_NATIVE_MAX_DURATION_SECONDS=300 and CLIPT_NATIVE_MUX_PAID_APPROVED=false. The missing webhook configuration still prevents publishing. Paid/general production streaming is a separate approval/release decision.
+5. Bounded development gates are saved: CLIPT_NATIVE_BROADCAST_ENABLED=true, CLIPT_NATIVE_MUX_CREATE_ENABLED=true, CLIPT_NATIVE_MUX_MODE=test, CLIPT_NATIVE_MAX_DURATION_SECONDS=300 and CLIPT_NATIVE_MUX_PAID_APPROVED=false. A request without a grant is correctly rejected as INVALID_GRANT, demonstrating that configuration guards pass without creating a stream. Paid/general production streaming is a separate approval/release decision.
 
 ## Outstanding physical acceptance
 
@@ -87,6 +87,6 @@ Use the configured signed native builds on the actual iPhone and Android phone a
 
 iOS Screen Live requires iOS27+ in this increment; there is no older-iOS ReplayKit extension fallback. Android game audio is conditional on OS/source-app permissions. Protected media cannot be promised capture. Camera backgrounding stops camera capture; screen capture is OS/service owned.
 
-No physical-device pass, production rollout, store approval, zero-bug guarantee or full beta certification is claimed. Private configuration, signing and the physical matrix remain acceptance gates.
+No physical-device pass, production rollout, store approval, zero-bug guarantee or full beta certification is claimed. Apple signing, real provider delivery/private playback, automatic cleanup observation and the physical matrix remain acceptance gates.
 
 Primary references: [Apple iOS capture sample](https://developer.apple.com/documentation/screencapturekit/capturing-screen-content-on-ios), [Android MediaProjection](https://developer.android.com/media/grow/media-projection), [Mux signed playback](https://www.mux.com/docs/guides/secure-video-playback), [Capacitor8.5 scene migration](https://capacitorjs.com/docs/updating/8-5).
