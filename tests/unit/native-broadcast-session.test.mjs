@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPrivateKey} from 'node:crypto';
-import {nativeCommand,nativeRequestBody,nativeError,providerSnapshot,NATIVE_DEVELOPMENT_ORIGIN} from '../../supabase/functions/native-broadcast-session/protocol.ts';
+import {nativeCommand,nativeRequestBody,nativeError,providerSnapshot,NATIVE_DEVELOPMENT_ORIGIN,nativeConfigurationIssues} from '../../supabase/functions/native-broadcast-session/protocol.ts';
 import {nativeRandomToken,nativeTokenHash,nativePlaybackUrl,importNativeSigningKey} from '../../supabase/functions/native-broadcast-session/crypto.ts';
 import {reconcileNativeBroadcasts} from '../../supabase/functions/native-broadcast-session/reconcile.ts';
 const id='10000000-0000-4000-8000-000000000001',stream='10000000-0000-4000-8000-000000000002',owner='10000000-0000-4000-8000-000000000003';
@@ -113,4 +113,32 @@ test('private signing rejects API-token secrets, public keys, weak keys and over
  for(const invalid of ['', 'synthetic-api-token-secret-not-a-signing-key', weakPem,publicPem,'a'.repeat(16385)]){
   await assert.rejects(importNativeSigningKey(invalid),e=>e.code==='PLAYBACK_UNAVAILABLE'&&e.status===503&&(!invalid||!e.message.includes(invalid)));
  }
+});
+
+test('configuration diagnostics identify every failed gate without returning private values',()=>{
+ const {d}=fixture();
+ Object.assign(d.config,{origin:'private-origin-sentinel',enabled:false,provisioningEnabled:false,
+  signingReady:false,operationsReady:false,testOwnerId:'private-owner-sentinel',maxDurationSeconds:301});
+ assert.deepEqual(nativeConfigurationIssues(d.config),[
+  'development_project','CLIPT_NATIVE_BROADCAST_ENABLED','CLIPT_NATIVE_MUX_CREATE_ENABLED',
+  'signing_key_configuration','webhook_or_cleanup_configuration','CLIPT_NATIVE_TEST_OWNER_ID',
+  'CLIPT_NATIVE_MAX_DURATION_SECONDS']);
+ assert.ok(!JSON.stringify(nativeConfigurationIssues(d.config)).includes('sentinel'));
+});
+test('configuration diagnostics preserve approved test and paid duration boundaries',()=>{
+ const {d}=fixture();assert.deepEqual(nativeConfigurationIssues(d.config),[]);
+ Object.assign(d.config,{mode:'paid',paidApproved:false,maxDurationSeconds:7200,testOwnerId:''});
+ assert.deepEqual(nativeConfigurationIssues(d.config),['paid_mode_approval']);
+ d.config.paidApproved=true;assert.deepEqual(nativeConfigurationIssues(d.config),[]);
+ for(const seconds of [59,7201,NaN,Infinity,300.5]) {
+  d.config.maxDurationSeconds=seconds;
+  assert.deepEqual(nativeConfigurationIssues(d.config),['CLIPT_NATIVE_MAX_DURATION_SECONDS']);
+ }
+});
+test('disabled configuration diagnostics never change the public response or invoke storage/provider',async()=>{
+ const {d,calls}=fixture();d.config.operationsReady=false;
+ let error;try{await nativeCommand(req,{action:'redeem',protocolVersion:1},d);}catch(value){error=value;}
+ const response=nativeError(error);assert.equal(response.status,503);
+ assert.deepEqual(await response.json(),{error:'Native broadcasting is not enabled for this environment',code:'NATIVE_DISABLED'});
+ assert.deepEqual(calls,[]);
 });
