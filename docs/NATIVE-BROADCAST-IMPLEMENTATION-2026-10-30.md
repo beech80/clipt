@@ -2,14 +2,14 @@
 
 This records implemented source and observed verification. Native broadcasting is not certified for launch: private setup and physical-device acceptance remain incomplete.
 
-## Configuration update — October31,2026
+## Configuration update — October 31, 2026
 
-- The owner replaced the wrong access-token credential with a signing pair in development. The read-only playback probe now reaches AUTHENTICATION_REQUIRED rather than PLAYBACK_UNAVAILABLE: the private RSA key imports successfully. Matching the signing ID/Mux environment is still an authenticated playback acceptance check.
-- The owner reports the native webhook and MUX_NATIVE_WEBHOOK_SECRET are saved. Real signed webhook delivery still needs verification.
-- Grant redemption still returns NATIVE_DISABLED. No publishing activation or paid resource was performed.
-- The confirmed development owner is still beecher@cliptgaming.com. SQL inspection found0 native sessions and a successful expiry run at10:24AM Chicago time.
-- Recent native cleanup schedule runs were skipped. The scoped worker token and schedule activation remain pending.
-- extensions.gen_random_bytes(integer) exists in development. The owner can generate a private64-character token in the signed-in SQL editor with `select pg_catalog.encode(extensions.gen_random_bytes(32), 'hex') as cleanup_token;`, then copy the same value directly into Supabase/GitHub Secrets. Do not return this generated value through chat or commit it.
+- The private RSA signing key now imports: the unauthenticated playback probe reaches AUTHENTICATION_REQUIRED. Matching the signing ID/private key and Mux environment still needs real authenticated playback.
+- [Manual external cleanup](https://github.com/beech80/clipt/actions/runs/41217511448) passed at 11:00 AM Chicago: checked0, stopped0, pending0, oktrue. The scoped token works between GitHub and development Supabase. The owner reports saving CLIPT_NATIVE_RECONCILE_ENABLED=true as a repository variable; a successful automatic scheduled invocation has not yet been observed.
+- All six owner/test gates and signing-key configuration pass their finite readiness checks. The development test is restricted to the confirmed beecher@cliptgaming.com account, test mode and300seconds; paid approval is false.
+- Private server diagnostics at12:00:41PM Chicago identify **MUX_NATIVE_WEBHOOK_SECRET** as missing/incomplete. The earlier owner report that it was saved did not establish runtime readiness. Update that exact development Secret from the dedicated Mux webhook's Signing Secret, then verify actual signed delivery. No credential value was retrieved or logged.
+- Readiness diagnostics are fixed labels only, deduplicated per worker; public errors and all enforcement predicates are retained. Development native-broadcast-session version11 is deployed. PR34 also patches newly published build-tool advisories with exact minimatch11.0.1/glob14.0.2 overrides and a regenerated lockfile; the security audit passes with0 vulnerabilities.
+- The owner is using only the iPhone now. Native installation/signing still needs the Mac and Xcode. No physical native broadcast has passed acceptance, and no native provider resource was created by these read-only probes.
 
 ## Implemented
 
@@ -33,12 +33,14 @@ The normal client flow delivers transport credentials to the native broker. This
 | Android development owner package | [31](https://github.com/beech80/clipt/pull/31) | 04313eace7125ac9ac8735385871c88ad75973ab |
 | iPhone device compatibility, audio routing and owner project | [32](https://github.com/beech80/clipt/pull/32) | fd237be20027b840183d17c74da0753946406a4d |
 | Copied signing-key normalization | [33](https://github.com/beech80/clipt/pull/33) | 72afaea081a3361d60a03a83f2d399b2705f5028 |
+| Private setup diagnostics and build-tool security patches | [34](https://github.com/beech80/clipt/pull/34) | 4e29aa01111b29ed8cffadf9e4b76d32fe4ba1b6 |
 
 The branches retain feature-native-mobile-broadcasting-20261030, feature-native-owner-test-package-20261030, feature-ios-owner-device-package-20261030 and fix-native-signing-key-normalization-20261030. The test runs below identify the exact source heads; merged/documentation commits have different identifiers.
 
 ## Automated evidence
 
-- [Latest app/source verification](https://github.com/beech80/clipt/actions/runs/41120375177), source17928324843c451449e66135ee86d5113f63e78a:811 app tests and12 monitor tests passed;0 failures; typecheck, CSS, web build, npm audit (0 vulnerabilities), Chromium and WebKit regressions passed. Signing tests verify actual JWT signatures over8 supported key-format variants and reject unsafe inputs.
+- [Latest app/source verification](https://github.com/beech80/clipt/actions/runs/41222107987), source6545f2dcf13a9e416d5373d433df831ddbd76707:817 app tests and12 monitor tests passed;0 failures; typecheck, CSS, web build, npm audit (0 vulnerabilities), Chromium and WebKit regressions passed. This includes the new guard/redaction and patched build-tool compatibility checks. Signing tests verify actual JWT signatures over8 supported key-format variants and reject unsafe inputs.
+- [Latest native builds](https://github.com/beech80/clipt/actions/runs/41222108000), same source: Android minified build/tests, iOS simulator and physical-device SDK builds, and14 Swift tests passed. The focused native session suite also passed20/20 locally.
 - [Native verification](https://github.com/beech80/clipt/actions/runs/41111317236), source475864d36aeee85e1273256a3e1b12f559dd936b: Android compile/minified APK/native unit checks passed; iOS simulator and physical-iPhone-SDK builds passed;14 Swift tests passed with0 failures. The physical SDK check is now part of normal native CI.
 - [iPhone owner device archive](https://github.com/beech80/clipt/actions/runs/41111317044), same native source: actual iPhoneOS27.1 arm64 archive passed, native identity checked, development public key accepted,8 owner/configuration boundary checks passed.
 - [Android owner package](https://github.com/beech80/clipt/actions/runs/41104358378), source70afa0af6caff0229d9dfc7808899e415ff865cc:4 packaging boundary tests, development public-key acceptance, Android native tests, minified APK and APK Signature Scheme v2 verification passed. Later iPhone/backend changes do not alter that Android client's implementation.
@@ -53,14 +55,14 @@ The successful Android run provides CLIPT-development-owner-test-Android: APK, B
 
 The successful iPhone run provides CLIPT-development-owner-test-iPhone: prepared Xcode project, unsigned arm64 archive, build metadata, instructions and checksums. It is not a signed installable IPA. On the owner's Mac, scripts/ios-owner-test.mjs validates the actual SDK/team/paired-device identifiers, preserves the SDK27 flags during package resolution/build, and installs only with --install. Apple signing/provisioning still requires the owner's account.
 
-Artifacts expire after7 days (November6,2026). See NATIVE-ANDROID-OWNER-TEST.md and NATIVE-IOS-OWNER-TEST.md for installation/acceptance instructions. No physical screenshot or broadcast is represented by these artifacts. The original1024px CLIPT icon was inspected; its opaque PNG format was verified.
+Artifacts expire after7 days (November6,2026). The October30 prepared iPhone source archive predates the October31 build-tool patches; rebuild the owner package from current main before installing its project dependencies. See NATIVE-ANDROID-OWNER-TEST.md and NATIVE-IOS-OWNER-TEST.md for installation/acceptance instructions. No physical screenshot or broadcast is represented by these artifacts. The original1024px CLIPT icon was inspected; its opaque PNG format was verified.
 
 ## Observed development state
 
 Project akiksrlzdqvipqbbjxpw only:
 
 - Private native tables/functions and RLS are installed; anon/authenticated cannot SELECT the native tables or execute the service-only RPC.
-- native-broadcast-session version5 is deployed. The signing parser is the only changed file relative to the previous deployed function; all5 other dependencies were compared and preserved. Gateway verify_jwt remains false because the function performs per-action authentication for user JWTs, one-use grants, scoped cleanup and signed provider callbacks.
+- native-broadcast-session version11 is deployed. Index/protocol changes add private fixed-label diagnostics and reuse equivalent readiness guards; unchanged deployed dependencies were compared and preserved. Gateway verify_jwt remains false because the function performs per-action authentication for user JWTs, one-use grants, scoped cleanup and signed provider callbacks.
 - Initial October30 probes after that deployment returned PLAYBACK_UNAVAILABLE for playback initialization and NATIVE_DISABLED for grant redemption. The owner confirmed using an Access Tokens → Token Secret in the signing field, then replaced it with the signing pair. The October31 update above records the successful private-key import. No credential value was retrieved or logged.
 - SQL inspection found0 native sessions. The SQL-only per-minute expiry job succeeded at20:20UTC on October30. It sends no secrets through pg_net.
 - Anonymous user requests and forged webhooks were previously verified as denied with private/no-store response caching.
@@ -74,10 +76,10 @@ Production project slnjliheyiiummxhrgmk, production frontend, payment gates and 
 Do not put credentials in chat, source, VITE variables, screenshots, artifacts or logs.
 
 1. The development private signing key now imports successfully. Verify its MUX_SIGNING_KEY_ID belongs to the matching pair and the same Mux environment as the Video API token during authenticated playback. The earlier access-token/signing-key mismatch is resolved at the import step.
-2. The owner reports the dedicated Mux webhook and endpoint-specific MUX_NATIVE_WEBHOOK_SECRET are saved in development. Keep the OBS webhook. Verify actual signed delivery; the earlier download_failed video-import attempt was not webhook evidence.
-3. Create a separate high-entropy64–256-character URL-safe cleanup token. Store it as CLIPT_NATIVE_RECONCILE_TOKEN in both development Supabase Secrets and GitHub encrypted repository Secrets. Verify the cleanup workflow manually before enabling repository variable CLIPT_NATIVE_RECONCILE_ENABLED=true. Its5-minute worker supplements, rather than replaces, SQL expiry.
-4. Set CLIPT_NATIVE_TEST_OWNER_ID to the confirmed development Auth owner for beecher@cliptgaming.com. Existing MUX_TOKEN_ID / MUX_TOKEN_SECRET must retain required Video permissions in the same environment.
-5. Only after configuration/delivery checks, enable the bounded test gates: CLIPT_NATIVE_BROADCAST_ENABLED=true, CLIPT_NATIVE_MUX_CREATE_ENABLED=true, CLIPT_NATIVE_MUX_MODE=test, CLIPT_NATIVE_MAX_DURATION_SECONDS=300 and CLIPT_NATIVE_MUX_PAID_APPROVED=false. Paid/general production streaming is a separate approval/release decision.
+2. Correct the missing/incomplete MUX_NATIVE_WEBHOOK_SECRET in development using the dedicated native webhook's Signing Secret. Keep the OBS webhook. Verify actual signed delivery; the earlier download_failed video-import attempt was not webhook evidence.
+3. The scoped CLIPT_NATIVE_RECONCILE_TOKEN is configured and the manual workflow passed. The owner reports enabling repository variable CLIPT_NATIVE_RECONCILE_ENABLED=true. Observe a successful automatic run and verify real expired-provider teardown. The5-minute worker supplements, rather than replaces, SQL expiry.
+4. The confirmed beecher@cliptgaming.com development owner and all six test settings now pass configuration checks. Existing MUX_TOKEN_ID / MUX_TOKEN_SECRET must retain required Video permissions in the same environment; provider authorization is still exercised by the real broadcast test.
+5. Bounded development gates are saved: CLIPT_NATIVE_BROADCAST_ENABLED=true, CLIPT_NATIVE_MUX_CREATE_ENABLED=true, CLIPT_NATIVE_MUX_MODE=test, CLIPT_NATIVE_MAX_DURATION_SECONDS=300 and CLIPT_NATIVE_MUX_PAID_APPROVED=false. The missing webhook configuration still prevents publishing. Paid/general production streaming is a separate approval/release decision.
 
 ## Outstanding physical acceptance
 
