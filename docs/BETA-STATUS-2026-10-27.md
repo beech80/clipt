@@ -1,3 +1,5 @@
+> Historical snapshot from October 27. Later backup, private-media, provider-support and cleanup results supersede pending items below. See [the October 31 release review](BETA-RELEASE-REVIEW-2026-10-31.md) and [current launch checklist](LAUNCH_CHECKLIST.md) for current production status and outstanding approvals.
+
 # CLIPT beta status — October 27, 2026
 
 Payments remain disabled. This is a free, explicitly invited web beta. Domain/DNS and native/App Store work remain deferred by owner choice. This record distinguishes automated/backend evidence from real signed-in/device acceptance.
