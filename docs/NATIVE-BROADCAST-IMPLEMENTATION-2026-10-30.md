@@ -2,6 +2,15 @@
 
 This records implemented source and observed verification. Native broadcasting is not certified for launch: private setup and physical-device acceptance remain incomplete.
 
+## Configuration update — October31,2026
+
+- The owner replaced the wrong access-token credential with a signing pair in development. The read-only playback probe now reaches AUTHENTICATION_REQUIRED rather than PLAYBACK_UNAVAILABLE: the private RSA key imports successfully. Matching the signing ID/Mux environment is still an authenticated playback acceptance check.
+- The owner reports the native webhook and MUX_NATIVE_WEBHOOK_SECRET are saved. Real signed webhook delivery still needs verification.
+- Grant redemption still returns NATIVE_DISABLED. No publishing activation or paid resource was performed.
+- The confirmed development owner is still beecher@cliptgaming.com. SQL inspection found0 native sessions and a successful expiry run at10:24AM Chicago time.
+- Recent native cleanup schedule runs were skipped. The scoped worker token and schedule activation remain pending.
+- extensions.gen_random_bytes(integer) exists in development. The owner can generate a private64-character token in the signed-in SQL editor with `select pg_catalog.encode(extensions.gen_random_bytes(32), 'hex') as cleanup_token;`, then copy the same value directly into Supabase/GitHub Secrets. Do not return this generated value through chat or commit it.
+
 ## Implemented
 
 - Exact Capacitor8.6.0 runtime and reproducible hosts loading the reviewed bundled app. Existing CLIPT interface, controller artwork, OBS, navigation and web deployment are preserved.
@@ -52,7 +61,7 @@ Project akiksrlzdqvipqbbjxpw only:
 
 - Private native tables/functions and RLS are installed; anon/authenticated cannot SELECT the native tables or execute the service-only RPC.
 - native-broadcast-session version5 is deployed. The signing parser is the only changed file relative to the previous deployed function; all5 other dependencies were compared and preserved. Gateway verify_jwt remains false because the function performs per-action authentication for user JWTs, one-use grants, scoped cleanup and signed provider callbacks.
-- Read-only probes after that deployment returned PLAYBACK_UNAVAILABLE for unsigned playback initialization and NATIVE_DISABLED for grant redemption. The saved private signing value still cannot be imported; the copy-format fix alone did not resolve the configuration. The owner subsequently confirmed that an Access Tokens → Token Secret was placed in MUX_SIGNING_PRIVATE_KEY. That is the wrong credential type, so both signing fields must be replaced with the matching ID/private key from Mux Signing Keys. No credential value was retrieved or logged.
+- Initial October30 probes after that deployment returned PLAYBACK_UNAVAILABLE for playback initialization and NATIVE_DISABLED for grant redemption. The owner confirmed using an Access Tokens → Token Secret in the signing field, then replaced it with the signing pair. The October31 update above records the successful private-key import. No credential value was retrieved or logged.
 - SQL inspection found0 native sessions. The SQL-only per-minute expiry job succeeded at20:20UTC on October30. It sends no secrets through pg_net.
 - Anonymous user requests and forged webhooks were previously verified as denied with private/no-store response caching.
 - No native provider stream was created by these checks. Hosted publishing remains gated; no paid native stream was enabled.
@@ -64,8 +73,8 @@ Production project slnjliheyiiummxhrgmk, production frontend, payment gates and 
 
 Do not put credentials in chat, source, VITE variables, screenshots, artifacts or logs.
 
-1. Validate the saved MUX_SIGNING_KEY_ID / MUX_SIGNING_PRIVATE_KEY pair in development. It must be the signing-key ID and complete matching private key, from the same Mux environment as the configured Video API token. An Access Token Secret is a different credential. User confirmed the correct Supabase development project and then confirmed copying Token Secret from Access Tokens. Replace both signing fields with a real signing pair; do not change the existing MUX_TOKEN_ID/MUX_TOKEN_SECRET or weaken playback authorization to accommodate the wrong credential.
-2. Configure the dedicated Mux webhook at /functions/v1/native-broadcast-session?hook=mux and save its endpoint-specific secret as MUX_NATIVE_WEBHOOK_SECRET. Keep the OBS webhook. Real signed delivery is untested; the reported download_failed video-import error did not confirm webhook creation.
+1. The development private signing key now imports successfully. Verify its MUX_SIGNING_KEY_ID belongs to the matching pair and the same Mux environment as the Video API token during authenticated playback. The earlier access-token/signing-key mismatch is resolved at the import step.
+2. The owner reports the dedicated Mux webhook and endpoint-specific MUX_NATIVE_WEBHOOK_SECRET are saved in development. Keep the OBS webhook. Verify actual signed delivery; the earlier download_failed video-import attempt was not webhook evidence.
 3. Create a separate high-entropy64–256-character URL-safe cleanup token. Store it as CLIPT_NATIVE_RECONCILE_TOKEN in both development Supabase Secrets and GitHub encrypted repository Secrets. Verify the cleanup workflow manually before enabling repository variable CLIPT_NATIVE_RECONCILE_ENABLED=true. Its5-minute worker supplements, rather than replaces, SQL expiry.
 4. Set CLIPT_NATIVE_TEST_OWNER_ID to the confirmed development Auth owner for beecher@cliptgaming.com. Existing MUX_TOKEN_ID / MUX_TOKEN_SECRET must retain required Video permissions in the same environment.
 5. Only after configuration/delivery checks, enable the bounded test gates: CLIPT_NATIVE_BROADCAST_ENABLED=true, CLIPT_NATIVE_MUX_CREATE_ENABLED=true, CLIPT_NATIVE_MUX_MODE=test, CLIPT_NATIVE_MAX_DURATION_SECONDS=300 and CLIPT_NATIVE_MUX_PAID_APPROVED=false. Paid/general production streaming is a separate approval/release decision.
