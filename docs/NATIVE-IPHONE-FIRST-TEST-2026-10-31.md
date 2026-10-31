@@ -7,7 +7,7 @@ Status as of October31,2026: the development server's configuration guards pass.
 - Manual cleanup: https://github.com/beech80/clipt/actions/runs/41217511448 passed with checked0/stopped0/pending0.
 - App/source validation: https://github.com/beech80/clipt/actions/runs/41222107987 passed817 application tests,12 monitor tests, typecheck, CSS, build, Chromium/WebKit regressions and dependency audit (0 vulnerabilities).
 - Native builds: https://github.com/beech80/clipt/actions/runs/41222108000 passed Android minified build/tests, iPhone simulator/device-SDK builds and14 Swift tests.20 focused native session tests passed locally.
-- The owner reports enabling the recurring cleanup variable; its first automatic successful run remains unverified. Independent SQL expiry is running successfully.
+- Automatic cleanup: https://github.com/beech80/clipt/actions/runs/41226669924 passed on October31 at12:53PM Chicago with checked0/stopped0/pending0/oktrue. This verifies the schedule and scoped authentication. Actual expired-provider teardown remains a real-broadcast check. Independent SQL expiry is also running successfully.
 - Development test settings are restricted to the designated confirmed beecher@cliptgaming.com account and a300-second test duration. Paid production streaming remains outside this test.
 - The prepared iPhone artifact has no installable signed IPA. It contains a self-contained prepared Xcode project, bundled web assets, a built-in-only Node installer script, an unsigned arm64 archive and checksums.
 
