@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPrivateKey} from 'node:crypto';
-import {nativeCommand,nativeRequestBody,nativeError,providerSnapshot,NATIVE_DEVELOPMENT_ORIGIN,nativeConfigurationIssues} from '../../supabase/functions/native-broadcast-session/protocol.ts';
+import {nativeCommand,nativeRequestBody,nativeError,providerSnapshot,NATIVE_DEVELOPMENT_ORIGIN,nativeConfigurationIssues,nativeOperationsReadiness} from '../../supabase/functions/native-broadcast-session/protocol.ts';
 import {nativeRandomToken,nativeTokenHash,nativePlaybackUrl,importNativeSigningKey} from '../../supabase/functions/native-broadcast-session/crypto.ts';
 import {reconcileNativeBroadcasts} from '../../supabase/functions/native-broadcast-session/reconcile.ts';
 const id='10000000-0000-4000-8000-000000000001',stream='10000000-0000-4000-8000-000000000002',owner='10000000-0000-4000-8000-000000000003';
@@ -141,4 +141,14 @@ test('disabled configuration diagnostics never change the public response or inv
  const response=nativeError(error);assert.equal(response.status,503);
  assert.deepEqual(await response.json(),{error:'Native broadcasting is not enabled for this environment',code:'NATIVE_DISABLED'});
  assert.deepEqual(calls,[]);
+});
+
+test('operations diagnostics distinguish cleanup credentials from webhook configuration without revealing values',()=>{
+ const token='a'.repeat(64),webhook='private-webhook-sentinel';
+ assert.deepEqual(nativeOperationsReadiness(token,webhook),{CLIPT_NATIVE_RECONCILE_TOKEN:true,MUX_NATIVE_WEBHOOK_SECRET:true});
+ assert.deepEqual(nativeOperationsReadiness(token,''),{CLIPT_NATIVE_RECONCILE_TOKEN:true,MUX_NATIVE_WEBHOOK_SECRET:false});
+ for(const invalid of [token+'\n','too-short',token+'+']) {
+  assert.deepEqual(nativeOperationsReadiness(invalid,webhook),{CLIPT_NATIVE_RECONCILE_TOKEN:false,MUX_NATIVE_WEBHOOK_SECRET:true});
+ }
+ assert.ok(!JSON.stringify(nativeOperationsReadiness(token,webhook)).includes('sentinel'));
 });
