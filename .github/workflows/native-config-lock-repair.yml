@@ -49,4 +49,4 @@ jobs:
           if(!(await glob('src/App.tsx')).includes('src/App.tsx'))throw Error('Glob API compatibility failed');
           console.log('Patched dependency compatibility passed');
           NODE
-          node scripts/prepare-native-hosts.mjs --help
+          npx --no-install cap --version
