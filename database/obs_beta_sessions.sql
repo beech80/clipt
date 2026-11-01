@@ -5,7 +5,7 @@ create table if not exists clipt_private.obs_beta_config(
  enabled boolean not null default false,
  monthly_minutes integer not null default 300 check(monthly_minutes between 30 and 300),
  session_seconds integer not null default 1800 check(session_seconds between 60 and 1800),
- worker_at timestamptz,
+ worker_at timestamptz, expiry_claimed_at timestamptz, expiry_claim_id uuid,
  signing_id text, signing_secret uuid, webhook_id text, webhook_secret uuid,
  bootstrap_state text not null default 'new' check(bootstrap_state in ('new','claimed','ready','review')),
  bootstrap_at timestamptz
@@ -123,6 +123,20 @@ begin
   update clipt_private.obs_beta_config set signing_id=p_args->>'signingId',webhook_id=p_args->>'webhookId',
    webhook_secret=secret_id,bootstrap_state='ready' where singleton;
   return jsonb_build_object('saved',true);
+ end if;
+ if p_action='expiry_claim' then
+  select * into c from clipt_private.obs_beta_config where singleton for update;
+  if c.expiry_claimed_at>clock_timestamp()-interval '55 seconds' then return jsonb_build_object('claimed',false); end if;
+  rid:=gen_random_uuid();
+  update clipt_private.obs_beta_config set expiry_claimed_at=clock_timestamp(),expiry_claim_id=rid where singleton;
+  perform clipt_private.obs_beta_expire();
+  return jsonb_build_object('claimed',true,'claimId',rid,'sessions',coalesce((select jsonb_agg(clipt_private.obs_beta_json(t)) from
+   (select * from clipt_private.obs_beta_sessions where state='stopping' order by created_at limit 20) t),'[]'::jsonb));
+ end if;
+ if p_action='expiry_complete' then
+  update clipt_private.obs_beta_config set worker_at=clock_timestamp(),expiry_claim_id=null
+   where singleton and expiry_claim_id=(p_args->>'claimId')::uuid and expiry_claimed_at>clock_timestamp()-interval '4 minutes';
+  return jsonb_build_object('ok',found);
  end if;
  if p_action='worker_complete' then
   update clipt_private.obs_beta_config set worker_at=clock_timestamp() where singleton;
