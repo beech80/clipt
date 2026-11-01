@@ -168,6 +168,15 @@ begin
    values(u,sid,a,p_args->>'aal',rid,'provisioning',clock_timestamp()+make_interval(secs=>c.session_seconds)) returning * into s;
   return clipt_private.obs_beta_json(s,true);
  end if;
+ if p_action='owner_cleanup' then
+  u:=(p_args->>'ownerId')::uuid; a:=(p_args->>'authSessionId')::uuid;
+  if u is null or a is null or not exists(select 1 from auth.sessions x where x.id=a and x.user_id=u
+   and (x.not_after is null or x.not_after>statement_timestamp())) then raise exception 'Current account required' using errcode='42501'; end if;
+  update clipt_private.obs_beta_sessions set state='stopping' where owner_id=u and state<>'ended';
+  update public.streams set is_live=false where id in(select stream_id from clipt_private.obs_beta_sessions where owner_id=u and state='stopping');
+  return coalesce((select jsonb_agg(clipt_private.obs_beta_json(t)) from
+   (select * from clipt_private.obs_beta_sessions where owner_id=u and state='stopping' order by created_at) t),'[]'::jsonb);
+ end if;
  if p_action='current' then
   u:=(p_args->>'ownerId')::uuid; a:=(p_args->>'authSessionId')::uuid;
   if not clipt_private.obs_beta_account(u,a,p_args->>'aal') then raise exception 'Invitation required' using errcode='42501'; end if;
