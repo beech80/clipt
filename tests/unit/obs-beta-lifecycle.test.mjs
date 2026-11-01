@@ -10,6 +10,7 @@ const session={sessionId:'10000000-0000-4000-8000-000000000001',streamId:'100000
 const provider={id:'provider',passthrough:'clipt-obs:'+session.sessionId,test:false,status:'idle',max_continuous_duration:1800,playback_ids:[{id:'playback',policy:'signed'}],stream_key:'PRIVATE_TEST_ONLY'};
 test('OBS verifies exact resource, paid mode, signed playback and provider duration',()=>{
  assert.equal(obsProvider(provider,session).id,'provider');
+ const omitted={...provider};delete omitted.test;assert.equal(obsProvider(omitted,session).id,'provider');
  for(const bad of [{test:true},{passthrough:'another'},{max_continuous_duration:43200},{playback_ids:[{id:'public',policy:'public'}]},{status:'unknown'}])
   assert.throws(()=>obsProvider({...provider,...bad},session));
 });
