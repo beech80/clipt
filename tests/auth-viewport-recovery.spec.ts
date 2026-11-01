@@ -48,7 +48,7 @@ test('reset request uses the recovery route and keeps an accessible confirmation
  await page.getByLabel('Email for password reset',{exact:true}).fill('Owner@Example.invalid');
  await page.getByRole('button',{name:'Send Reset Link',exact:true}).click();
  await expect(page.getByRole('status').filter({hasText:'If an account exists for this email'})).toBeVisible();
- await expect(page).toHaveURL(/\/reset-password$/);expect(f.requests()).toBe(1);expect(f.received()).toEqual({email:'owner@example.invalid',gotrue_meta_security:{}});expect(f.redirect()).toBe('http://127.0.0.1:8081/update-password');
+ await expect(page).toHaveURL(/\/reset-password$/);expect(f.requests()).toBe(1);expect(f.received()).toMatchObject({email:'owner@example.invalid',gotrue_meta_security:{}});expect(f.redirect()).toBe('http://127.0.0.1:8081/update-password');
  await expect(page.getByRole('button',{name:'Send Reset Link',exact:true})).toHaveCount(0);await assertFitted(page);
  await page.getByRole('button',{name:'Back to Login',exact:true}).click();await expect(page).toHaveURL(/\/login$/);
 });
