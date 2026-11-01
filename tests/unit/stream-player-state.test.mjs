@@ -16,6 +16,7 @@ const mod={exports:{}};
 const localRequire=name=>{
   if(name==='@/contexts/AuthContext')return {useAuth:()=>({user:null})};
   if(name==='@tanstack/react-query')return {useQuery:()=>({data:undefined,isError:false})};
+  if(name==='@/services/obsBroadcastService')return {isObsPlaybackMarker:()=>false,resolveObsPlayback:()=>{throw Error('Unexpected private OBS lookup in public player fixture');}};
   if(name==='@/native/broadcast/session')return {isNativePlaybackMarker:()=>false,resolveNativePlayback:()=>{throw Error('Unexpected native lookup in OBS unit fixture');}};
   if(name==='@/lib/streamPlaybackError')return require('../../src/lib/streamPlaybackError.ts');
   if(name==='@/components/ui/card')return {Card:props=>React.createElement('section',props)};
