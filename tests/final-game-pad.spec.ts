@@ -41,10 +41,13 @@ for(const hand of ['right','left'])test('roomy computer/tablet CLIPT navigation 
   await page.setViewportSize(size);await expect(home).toBeVisible();
   await expect.poll(async()=>{const r=(await home.boundingBox())!;return Math.abs(r.x+r.width/2-size.width/2);}).toBeLessThanOrEqual(1);
   const h=(await home.boundingBox())!;const media=(await page.locator('[data-active-clip="true"] .clipt-cinematic-media').boundingBox())!;expect(h.y).toBeGreaterThanOrEqual(media.y+media.height);expect(h.y+h.height).toBeLessThanOrEqual(size.height);expect(h.y).toBeGreaterThan(size.height-160);
+  const socialBottoms:number[]=[];
   for(const button of await page.locator('.clipt-controller-actions > .clipt-controller-action, .clipt-controller-actions > .clipt-feed-flip').all()){
    if(!await button.isVisible())continue;const r=(await button.boundingBox())!;
    expect(h.x+h.width<=r.x||r.x+r.width<=h.x||h.y+h.height<=r.y||r.y+r.height<=h.y).toBe(true);
+   if(size.width>size.height&&await button.getAttribute('data-controller-action')){expect(r.y).toBeGreaterThanOrEqual(media.y+media.height);socialBottoms.push(r.y+r.height);}
   }
+  if(size.width>size.height){expect(socialBottoms).toHaveLength(4);expect(Math.max(...socialBottoms)).toBeGreaterThanOrEqual(size.height-16);expect(Math.max(...socialBottoms)).toBeLessThanOrEqual(size.height);}
   await expect(player).toHaveAttribute('data-wide-layout-probe','kept');
   expect(await page.evaluate(()=>scrollY)).toBe(0);
   await page.screenshot({path:info.outputPath('centered-'+hand+'-'+size.width+'x'+size.height+'.png')});
