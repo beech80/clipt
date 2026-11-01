@@ -1,3 +1,4 @@
+import {ObsBroadcastDashboard} from '@/components/streaming/ObsBroadcastDashboard';
 import { StreamDashboard } from '@/components/streaming/StreamDashboard';
 import { Radio, MonitorPlay } from 'lucide-react';
 import {Link} from 'react-router-dom';
@@ -5,11 +6,8 @@ import {Link} from 'react-router-dom';
 export default function StreamSetup() {
   if (import.meta.env.VITE_APP_ENV === 'production') return <main className="clipt-stream-setup container max-w-6xl px-4 py-6 space-y-6">
     <header className="flex items-center gap-3"><Radio aria-hidden="true" className="h-7 w-7 text-purple-400"/><h1 className="text-2xl font-bold">Go Live</h1></header>
-    <section className="gaming-card p-6 space-y-4" aria-labelledby="beta-broadcast-title">
-      <h2 id="beta-broadcast-title" className="text-xl font-semibold">Broadcasting is coming after the web beta</h2>
-      <p>You can share recorded videos and photos now. Camera, screen and OBS broadcasting will be available in a later release.</p>
-      <div className="flex flex-wrap gap-4"><Link to="/new-post" className="inline-flex min-h-11 items-center underline">Upload a video or photo</Link><Link to="/clipts" className="inline-flex min-h-11 items-center underline">Watch Clipts</Link></div>
-    </section>
+    <ObsBroadcastDashboard />
+
   </main>;
   return <main className="clipt-stream-setup container max-w-6xl px-4 py-6 space-y-6">
     <header className="flex items-center gap-3"><Radio aria-hidden="true" className="h-7 w-7 text-purple-400" /><h1 className="text-2xl font-bold">Go Live / Stream Setup</h1></header>

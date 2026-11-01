@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { assertOwnUser, authenticatedUser, errorResponse, HttpError, jsonResponse, requestBody, requestMethod, serviceClient } from '../_shared/request.ts'
+import {endOwnerObsBeforeErasure} from '../_shared/obs-beta-erasure.ts'
 import Stripe from 'https://esm.sh/stripe@14.21.0'
 import { billingCommand, releaseExpiredErasureCheckouts, subscriptionConfig, verifyErasureBillingShutdown } from '../_shared/subscription.ts'
 
@@ -19,6 +20,7 @@ serve(async (req) => {
       || typeof body.receipt !== 'string' || !/^[a-f0-9]{64}$/.test(body.receipt)) {
       throw new HttpError(400, 'Invalid deletion receipt')
     }
+    if (body.action === 'begin') await endOwnerObsBeforeErasure(req)
     const admin = serviceClient()
     let billingReserved = false
     // Only the isolated development backend has this staged integration.

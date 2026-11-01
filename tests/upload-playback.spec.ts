@@ -213,7 +213,7 @@ for(const format of ['mov','hevc'] as const) {
     try {
       // Reproduce browsers that do not deliver preloading events to React.
       // Publishing must recover from a real, explicit play gesture instead.
-      await page.addInitScript(()=>{for(const type of ['loadedmetadata','loadeddata','canplay'])document.addEventListener(type,event=>{if(event.target instanceof HTMLVideoElement&&event.target.closest('.clipt-create-media'))event.stopImmediatePropagation();},true);});
+      await page.addInitScript(()=>{for(const type of ['loadedmetadata','loadeddata','canplay','playing'])document.addEventListener(type,event=>{if(event.target instanceof HTMLVideoElement&&event.target.closest('.clipt-create-media'))event.stopImmediatePropagation();},true);});
       await page.setViewportSize({width:390,height:844});await page.goto('/new-post');
       const candidate=format==='hevc'?readFileSync(fileURLToPath(new URL('./fixtures/clip-test-hevc.mp4',import.meta.url))):bytes;
       await page.getByLabel('Clipt video',{exact:true}).setInputFiles({name:format==='hevc'?'iphone.mp4':'iphone.mov',mimeType:format==='hevc'?'video/mp4':'video/quicktime',buffer:candidate});

@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - 'src/services/streamService.ts'
+      - 'src/services/obsBroadcastService.ts'
+      - 'tests/obs-beta.spec.ts'
+      - 'playwright.obs-beta.config.ts'
       - 'src/lib/live-test-environment.ts'
       - 'src/components/streaming/**'
       - 'tests/unit/*stream*.test.mjs'
@@ -44,3 +47,32 @@ jobs:
           node scripts/generate-channel-hls-fixture.mjs
       - run: npm run build
       - run: npx playwright test -c playwright.stream-pilot.config.ts --reporter=line
+
+  obs-production-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CYPRESS_INSTALL_BINARY: '0'
+      VITE_APP_ENV: production
+      VITE_SUPABASE_URL: https://slnjliheyiiummxhrgmk.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_local_test_fixture
+      VITE_BETA_ACCESS_REQUIRED: 'true'
+      VITE_BILLING_CHECKOUT_DISABLED: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts --no-fund --no-audit
+      - run: npx playwright install --with-deps chromium
+      - name: Generate local synthetic HLS
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+          node scripts/generate-channel-hls-fixture.mjs
+      - run: npm run build
+      - run: npx playwright test -c playwright.obs-beta.config.ts --reporter=line

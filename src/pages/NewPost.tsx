@@ -131,6 +131,7 @@ export default function NewPost() {
     captionInput.current?.focus();
   }
   function previewReady(video: HTMLVideoElement) {
+    if (playable) return;
     // Metadata alone does not prove a frame can decode. Support the events
     // reached after an explicit iPhone play gesture as well as preloading.
     if (video !== previewVideo.current || !videoPreviewReady(video)) return;
@@ -138,8 +139,17 @@ export default function NewPost() {
     setError(current => current === 'The preview could not start. Tap Play in the video or choose another copy.' ? '' : current);
   }
   function playPreview() {
+    const video = previewVideo.current, revision = selection.current;
+    if (!video) return;
     setError('');
-    void previewVideo.current?.play().catch(() => setError('The preview could not start. Tap Play in the video or choose another copy.'));
+    // Safari can settle play() without delivering another React playing event.
+    // Confirm the current decoded preview here after play() resolves, while rejecting a replaced selection.
+    void video.play().then(() => {
+      if (revision === selection.current) previewReady(video);
+    }).catch(() => {
+      if (revision === selection.current && video === previewVideo.current)
+        setError('The preview could not start. Tap Play in the video or choose another copy.');
+    });
   }
   async function publish(event: React.FormEvent) {
     event.preventDefault();
