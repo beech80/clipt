@@ -99,11 +99,14 @@ export async function obsCommand(body:Record<string,unknown>,identity:Record<str
  }
  throw new ObsError(400,'INVALID_ACTION','Choose a valid OBS action');
 }
-export async function reconcileObs(d:ObsDependencies){
- const sessions:ObsSession[]=await d.db('list');let pending=0,ended=0;
+export async function reconcileObs(d:ObsDependencies,expiredOnly=false){
+ const claim=expiredOnly?await d.db('expiry_claim'):null;
+ if(expiredOnly&&!claim?.claimed)return {checked:0,ended:0,pending:0,skipped:true};
+ const sessions:ObsSession[]=expiredOnly?claim.sessions:await d.db('list');let pending=0,ended=0;
  let listing:{resources:any[];complete:boolean}|undefined;
  for(let s of sessions){
   try{
+   if(expiredOnly&&s.state!=='stopping'){pending++;continue;}
    if(!s.providerId&&['provisioning','uncertain','stopping'].includes(s.state)){
     if(!listing)listing=await d.provider.list();
     const matching=listing.resources.filter(p=>p?.passthrough==='clipt-obs:'+s.sessionId);
@@ -120,6 +123,9 @@ export async function reconcileObs(d:ObsDependencies){
    else await observeObs(d,s);
   }catch{pending++;}
  }
- if(!pending)await d.db('worker_complete');
+ if(!pending){
+  const completion=await d.db(expiredOnly?'expiry_complete':'worker_complete',expiredOnly?{claimId:claim.claimId}:{});
+  if(expiredOnly&&completion?.ok!==true)pending++;
+ }
  return {checked:sessions.length,ended,pending};
 }
