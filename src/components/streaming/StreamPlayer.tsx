@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import {useQuery} from '@tanstack/react-query';
 import {useAuth} from '@/contexts/AuthContext';
+import {isObsPlaybackMarker,resolveObsPlayback} from '@/services/obsBroadcastService';
 import {isNativePlaybackMarker,resolveNativePlayback} from '@/native/broadcast/session';
 import { Button } from '@/components/ui/button';
 import { Card } from "@/components/ui/card";
@@ -32,11 +33,12 @@ export const StreamPlayer = ({
   offlineMessage = 'Stream is offline'
 }: StreamPlayerProps) => {
   const {user}=useAuth();
-  const privateStream=isNativePlaybackMarker(suppliedPlaybackUrl,streamId);
+  const obsStream=isObsPlaybackMarker(suppliedPlaybackUrl,streamId);
+  const privateStream=obsStream||isNativePlaybackMarker(suppliedPlaybackUrl,streamId);
   const privatePlayback=useQuery({
-    queryKey:['native-live-playback',streamId,user?.id],
-    enabled:privateStream&&isLive&&Boolean(user),retry:false,staleTime:60000,gcTime:0,
-    queryFn:()=>resolveNativePlayback(streamId),
+    queryKey:[obsStream?'obs-live-playback':'native-live-playback',streamId,user?.id],
+    enabled:privateStream&&isLive&&Boolean(user),retry:false,staleTime:30000,gcTime:0,
+    queryFn:()=>obsStream?resolveObsPlayback(streamId):resolveNativePlayback(streamId),
     refetchInterval:query=>query.state.data?Math.max(10000,query.state.data.expiresAt-Date.now()-60000):false,
     refetchIntervalInBackground:false,
   });
