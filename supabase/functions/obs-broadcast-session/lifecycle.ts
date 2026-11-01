@@ -20,7 +20,7 @@ export function obsProvider(value:any,s:ObsSession){
 }
 export type ObsDependencies={
  now():number; db(action:string,args?:Record<string,unknown>):Promise<any>;
- provider:{create(s:ObsSession):Promise<unknown>;read(id:string):Promise<unknown>;disable(id:string):Promise<void>;list():Promise<{resources:any[];complete:boolean}>};
+ provider:{create(s:ObsSession):Promise<unknown>;read(id:string):Promise<unknown>;disable(id:string):Promise<void>;clearRecordings(id:string,snapshot:unknown):Promise<void>;list():Promise<{resources:any[];complete:boolean}>};
  sign(id:string,expires:number):Promise<string>;
 };
 function status(s:ObsSession|null){return s?{sessionId:s.sessionId,streamId:s.streamId,state:s.state,expiresAt:s.expiresAt,
@@ -38,6 +38,7 @@ export async function stopObs(d:ObsDependencies,s:ObsSession){
  await d.provider.disable(s.providerId);
  const p=obsProvider(await d.provider.read(s.providerId),s);
  if(p.status!=='disabled')throw new ObsError(503,'STOP_PENDING','Provider shutdown is not yet confirmed');
+ await d.provider.clearRecordings(p.id,p);
  await d.db('finish',{sessionId:s.sessionId,providerId:p.id});
 }
 export async function obsCommand(body:Record<string,unknown>,identity:Record<string,unknown>,d:ObsDependencies){
