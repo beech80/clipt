@@ -102,6 +102,12 @@ serve(async req=>{
   }
   if(method)return method;
   if(url.searchParams.get('hook')==='mux')return await webhook(req);
+  // No credentials are sent through pg_net. This endpoint can only claim
+  // rate-limited teardown work derived from the database's own expiry checks.
+  if(url.searchParams.get('operation')==='expire'){
+   const result=await reconcileObs(await dependencies(),true);
+   return jsonResponse(result,result.pending?503:200);
+  }
   if(['reconcile','acceptance','acceptance-status','acceptance-stop'].includes(url.searchParams.get('operation')||'')){
    let claims;
    try{const token=req.headers.get('Authorization')?.match(/^Bearer ([^\s,]+)$/i)?.[1];
