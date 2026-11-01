@@ -301,4 +301,25 @@ revoke all on function clipt_private.obs_beta_account(uuid,uuid,text),
  clipt_private.obs_beta_json(clipt_private.obs_beta_sessions,boolean),clipt_private.obs_beta_expire(),
  clipt_private.obs_beta_stream_delete(),clipt_private.obs_beta_admin(text,jsonb),public.obs_beta_admin(text,jsonb) from public,anon,authenticated;
 grant execute on function clipt_private.obs_beta_admin(text,jsonb),public.obs_beta_admin(text,jsonb),clipt_private.obs_beta_expire() to service_role;
+-- Browser inserts into OBS chat require a live, authorized, unblocked publisher.
+-- Other existing stream systems keep their existing policies.
+create or replace function clipt_private.obs_beta_chat_allowed(p_stream uuid)
+returns boolean language plpgsql stable security definer set search_path='' as $
+declare s clipt_private.obs_beta_sessions%rowtype;
+begin
+ select * into s from clipt_private.obs_beta_sessions where stream_id=p_stream order by created_at desc limit 1;
+ if not found then return true; end if;
+ return coalesce(auth.uid() is not null and s.state='active' and s.expires_at>statement_timestamp()
+  and s.observed_at>statement_timestamp()-interval '6 minutes'
+  and exists(select 1 from clipt_private.obs_beta_config where singleton and enabled)
+  and clipt_private.obs_beta_account(s.owner_id,s.auth_session_id,s.auth_aal)
+  and not exists(select 1 from public.user_blocks b where
+   (b.blocker_id=auth.uid() and b.blocked_id=s.owner_id) or (b.blocked_id=auth.uid() and b.blocker_id=s.owner_id)),false);
+end;
+$;
+revoke all on function clipt_private.obs_beta_chat_allowed(uuid) from public,anon;
+grant execute on function clipt_private.obs_beta_chat_allowed(uuid) to authenticated;
+drop policy if exists clipt_obs_live_chat_insert on public.stream_chat;
+create policy clipt_obs_live_chat_insert on public.stream_chat as restrictive
+for insert to authenticated with check(clipt_private.obs_beta_chat_allowed(stream_id));
 commit;
