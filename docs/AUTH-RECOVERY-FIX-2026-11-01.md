@@ -1,0 +1,26 @@
+# Authentication viewport and password recovery — November 1, 2026
+
+[PR36](https://github.com/beech80/clipt/pull/36) merged as9afbf706d33c48e50128949a7f4afed5a66b12c8. Production deployment dpl_D8a58t47PU6fTgMaRWNW6EyXo8Dx is READY and owns the stable app alias. The previous web-beta deployment dpl_A4AxYytdYJFutv37ogBi7SZanjFq remains the frontend rollback target. No database, invitation, MFA, storage or payment-policy change was made.
+
+## Screen-space correction
+
+The reported sign-in screenshot showed a nested scroll surface: login reserved its own viewport height while the surrounding page also reserved controller padding. Auth routes now have a fitted visible-viewport shell and one form scroller ending at the measured controller edge. ResizeObserver and visualViewport events handle changes in controller height, browser chrome and keyboard size; listeners and animation frames are cleaned up. A callback ref also handles Auth/MFA gates attaching the shell after the initial render. Normal page/feed layouts keep their existing behavior and artwork.
+
+The recovery link now sits beside the password field. A successful reset request stays on the recovery screen with an accessible account-neutral confirmation instead of immediately leaving for login. Request success does not claim mailbox delivery.
+
+## Test evidence
+
+[CI41317004504](https://github.com/beech80/clipt/actions/runs/41317004504) passed for exact source ede636afa22aa71f8e30931c412347d8cbe0a957:
+
+-820 app tests and12 monitor tests, TypeScript, CSS, build and zero-vulnerability dependency checks.
+-30 Chromium interaction cases and8 HTTPS media cases passed.
+-WebKit:4 native-conversion/playback cases,18 channel/auth cases and3 repeated feed-transition cases passed.
+-Seven new auth cases cover390x844,320x568,260x500 and844x390; no document overflow or gap at the fixed controller after error/scroll; reachable recovery controls; accepted and rate-limited recovery responses; normalized email/correct recovery redirect; and simulated keyboard viewport changes.
+
+The first run exposed an overly strict test expectation about additional null PKCE metadata emitted by the SDK. The expectation was corrected while preserving email, redirect, request-count, success/error and geometry assertions. No failing layout behavior was waived. These tests use isolated local Auth fixtures and do not prove delivery of a real email or physical iPhone Safari behavior.
+
+## Real recovery request and separate hosted template
+
+The owner explicitly requested a reset for beecher@cliptgaming.com. The first production request returned HTTP200 and Auth recorded recovery_sent_at; the owner confirmed receiving the email but reported no button or linked words. The reviewed recovery.html provides both ConfirmationURL anchor and visible text fallback. Hosted Auth templates are separate from Vite deployment.
+
+The owner confirmed saving the production Reset password template. One fresh request after that save returned HTTP200. Use only the newest email and do not share its token/URL. Visible-link/correct-destination/password-change acceptance still awaits the owner. Dashboard content was not independently read because browser connections were unavailable. If the new link opens another site, inspect the production Auth Site URL and exact /update-password redirect allow list; do not bypass token verification or MFA.
