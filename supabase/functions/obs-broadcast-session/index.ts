@@ -76,7 +76,7 @@ async function webhook(req:Request){
  if(!['video.live_stream.active','video.live_stream.idle','video.live_stream.disabled'].includes(event?.type))return jsonResponse({ignored:true});
  if(!/^[A-Za-z0-9]{1,200}$/.test(event.data?.id||''))throw new ObsError(400,'INVALID_WEBHOOK','Invalid webhook identity');
  const s=await db('lookup',{providerId:event.data.id});
- if(s)await observeObs(await dependencies(),s); // Provider re-read defeats replay and stale ordering.
+ if(s)await observeObs(await dependencies(),s,true); // Provider re-read defeats replay and stale ordering.
  return jsonResponse({received:true});
 }
 serve(async req=>{
