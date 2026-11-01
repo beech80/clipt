@@ -47,7 +47,7 @@ export async function runPrivateBackup(inventory,client,source,{fetchImpl=fetch,
   for(let i=0;i<inventory.objects.length;i++){
    const o=inventory.objects[i];const url=validateSignedSource(await source.sign(o),o);
    const response=await fetchImpl(url,{redirect:'error',cache:'no-store',headers:{'Cache-Control':'no-cache','If-Match':'"'+o.metadata.eTag.replaceAll('"','')+'"'},signal:AbortSignal.timeout(120000)});
-   const bytes=await boundedBody(response,o.metadata.size);
+   const bytes=await boundedBody(response,o.metadata.size,'private-source-download');
    if(bytes.length!==o.metadata.size||response.headers.get('etag')?.replaceAll('"','').toLowerCase()!==o.metadata.eTag.replaceAll('"','').toLowerCase())fail('private-source-snapshot-changed');
    const sha256=hash(bytes),name='recurring/v1/objects/'+sha256;
    let saved=pooled.get(sha256);if(!saved){saved=await client.put(name,bytes);pooled.set(sha256,saved);}
