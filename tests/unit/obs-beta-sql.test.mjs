@@ -1,0 +1,67 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+const owner='10000000-0000-4000-8000-000000000001',stream='10000000-0000-4000-8000-000000000002',aid='10000000-0000-4000-8000-000000000003',rid='10000000-0000-4000-8000-000000000004';
+test('real OBS SQL enforces invitation, idempotency, global quota, private leases, shutdown and revoked accounts',async()=>{
+ const db=new PGlite();
+ try{
+ await db.exec(`
+ create role anon;create role authenticated;create role service_role;
+ create schema auth;create schema clipt_private;create schema vault;grant usage on schema clipt_private to service_role;
+ create function auth.role() returns text language sql as $$select current_setting('request.jwt.claim.role',true)$$;
+ create table auth.users(id uuid primary key,email_confirmed_at timestamptz,is_anonymous boolean default false,deleted_at timestamptz,banned_until timestamptz);
+ create table auth.sessions(id uuid primary key,user_id uuid,not_after timestamptz);
+ create table auth.mfa_factors(user_id uuid,status text);
+ create table profiles(id uuid primary key);
+ create table streams(id uuid primary key,user_id uuid,is_live boolean default false,playback_url text,hls_playback_url text,started_at timestamptz,ended_at timestamptz,viewer_count integer);
+ create table user_blocks(blocker_id uuid,blocked_id uuid);
+ create table clipt_private.beta_members(user_id uuid,revoked_at timestamptz,expires_at timestamptz);
+ create table clipt_private.erasure_jobs(user_id uuid,state text);
+ create table vault.decrypted_secrets(id uuid,decrypted_secret text);
+ create function vault.create_secret(text,text) returns uuid language sql as $$select gen_random_uuid()$$;
+ insert into auth.users(id,email_confirmed_at)values('${owner}',now());
+ insert into profiles values('${owner}');insert into streams(id,user_id)values('${stream}','${owner}');
+ insert into auth.sessions(id,user_id)values('${aid}','${owner}');
+ select set_config('request.jwt.claim.role','service_role',false);
+ `);
+ await db.exec(await readFile(new URL('../../database/obs_beta_sessions.sql',import.meta.url),'utf8'));
+ const call=async(action,args={})=>(await db.query('select public.obs_beta_admin($1,$2::jsonb) value',[action,JSON.stringify(args)])).rows[0].value;
+ const identity={ownerId:owner,authSessionId:aid,aal:'aal1'},args={...identity,streamId:stream,requestId:rid};
+ await assert.rejects(call('reserve',args));
+ await db.query('insert into clipt_private.beta_members(user_id)values($1)',[owner]);
+ await assert.rejects(call('reserve',args));
+ await db.exec("update clipt_private.obs_beta_config set enabled=true,bootstrap_state='ready',worker_at=now()");
+ await assert.rejects(call('reserve',{...args,aal:null}));
+ const s=await call('reserve',args);assert.equal(s.needsProvision,true);
+ assert.equal((await call('reserve',args)).needsProvision,false);
+ await assert.rejects(call('reserve',{...args,requestId:owner}));
+ assert.equal((await db.query('select reserved_minutes from clipt_private.obs_beta_usage')).rows[0].reserved_minutes,30);
+ await call('attach',{sessionId:s.sessionId,providerId:'verifiedprovider',playbackId:'privateplayback'});
+ const snap=()=>call('snapshot',{sessionId:s.sessionId,providerId:'verifiedprovider',playbackId:'privateplayback',status:'active',observedAt:new Date().toISOString()});
+ await snap();
+ assert.equal((await db.query('select is_live,playback_url from streams')).rows[0].playback_url,'clipt-obs:'+stream);
+ const token=await call('playback',{...identity,streamId:stream});assert.ok(Date.parse(token.tokenExpiresAt)<=Date.now()+181000);
+ await assert.rejects(call('credentials',{...identity,ownerId:rid,sessionId:s.sessionId}));
+ for(let i=10;i<16;i++){
+  const viewer='20000000-0000-4000-8000-'+String(i).padStart(12,'0'),auth='30000000-0000-4000-8000-'+String(i).padStart(12,'0');
+  await db.query('insert into auth.users(id,email_confirmed_at)values($1,now())',[viewer]);
+  await db.query('insert into profiles values($1)',[viewer]);await db.query('insert into auth.sessions(id,user_id)values($1,$2)',[auth,viewer]);
+  await db.query('insert into clipt_private.beta_members(user_id)values($1)',[viewer]);
+  if(i<14)await call('playback',{ownerId:viewer,authSessionId:auth,aal:'aal1',streamId:stream});
+  else await assert.rejects(call('playback',{ownerId:viewer,authSessionId:auth,aal:'aal1',streamId:stream}));
+ }
+ await db.query('insert into user_blocks values($1,$2)',[owner,rid]);
+ await db.exec("update clipt_private.beta_members set revoked_at=now() where user_id='"+owner+"'");
+ await assert.rejects(call('credentials',{...identity,sessionId:s.sessionId}));
+ await call('list');assert.equal((await db.query('select is_live from streams')).rows[0].is_live,false);
+ await assert.rejects(call('finish',{sessionId:s.sessionId}));
+ await call('finish',{sessionId:s.sessionId,providerId:'verifiedprovider'});
+ await call('stop',{...identity,sessionId:s.sessionId});
+ await db.exec("update clipt_private.beta_members set revoked_at=null;update clipt_private.obs_beta_config set worker_at=now();update clipt_private.obs_beta_usage set reserved_minutes=300;");
+ await assert.rejects(call('reserve',{...args,requestId:owner}));
+ await db.exec('set role authenticated');
+ await assert.rejects(call('configuration'));
+ await assert.rejects(db.query('select * from clipt_private.obs_beta_sessions'));
+ }finally{await db.close();}
+});
