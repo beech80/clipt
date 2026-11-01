@@ -56,8 +56,24 @@ export function validateInventory(inventory) {
   if (bytes > 1_000_000_000 || bytes !== inventory.totalBytes) fail('inventory-byte-limit');
   return bytes;
 }
-export async function boundedBody(response, maxBytes) {
-  if (!response.ok) { await response.body?.cancel(); fail('binary-request-rejected'); }
+const DOWNLOAD_OPERATIONS=new Set(['private-source-download','backup-destination-download']);
+const PROVIDER_ERRORS=new Set(['unauthorized','bad_auth_token','expired_auth_token','cap_exceeded','download_cap_exceeded','transaction_cap_exceeded','service_unavailable','not_found','file_not_present','no_such_file','access_denied']);
+async function rejectedProviderCode(response){
+ const reader=response.body?.getReader();if(!reader)return undefined;
+ try{
+  const chunks=[];let total=0;
+  for(;;){const {done,value}=await reader.read();if(done)break;total+=value.length;if(total>4096)return undefined;chunks.push(value);}
+  const code=JSON.parse(Buffer.concat(chunks).toString()).code;return PROVIDER_ERRORS.has(code)?code:undefined;
+ }catch{return undefined;}finally{await reader.cancel();reader.releaseLock();}
+}
+export async function boundedBody(response, maxBytes, operation) {
+  if (!response.ok) {
+    const error=new BackupError('binary-request-rejected');error.httpStatus=response.status;
+    if(DOWNLOAD_OPERATIONS.has(operation))error.operation=operation;
+    if(operation==='backup-destination-download'){const code=await rejectedProviderCode(response);if(code)error.providerCode=code;}
+    else await response.body?.cancel();
+    throw error;
+  }
   const declared = Number(response.headers.get('content-length'));
   if (declared > maxBytes) { await response.body?.cancel(); fail('binary-size-limit'); }
   if (!response.body) return Buffer.alloc(0);
@@ -101,7 +117,7 @@ export async function connectBackup({ keyId, applicationKey, fetchImpl = fetch, 
   async function get(file, maxBytes = writeLimit) {
     if (file.bucketId !== bucketId || typeof file.fileId !== 'string') fail('backup-file-boundary');
     const r = await request(download + '/b2api/v4/b2_download_file_by_id?fileId=' + encodeURIComponent(file.fileId), { headers: { Authorization: token } });
-    const bytes = await boundedBody(r, maxBytes);
+    const bytes = await boundedBody(r, maxBytes, 'backup-destination-download');
     if (hash(bytes, 'sha1') !== file.contentSha1 || bytes.length !== file.contentLength) fail('backup-download-integrity');
     return bytes;
   }
