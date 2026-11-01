@@ -143,7 +143,7 @@ export default function NewPost() {
     if (!video) return;
     setError('');
     // Safari can settle play() without delivering another React playing event.
-    // Confirm the current decoded preview both here and on timeupdate.
+    // Confirm the current decoded preview here after play() resolves, while rejecting a replaced selection.
     void video.play().then(() => {
       if (revision === selection.current) previewReady(video);
     }).catch(() => {
@@ -257,7 +257,7 @@ export default function NewPost() {
       {draftId && draft.isError && <p role="alert">This draft could not be opened. <Button type="button" onClick={() => void draft.refetch()}>Retry draft</Button></p>}
       {savedMedia.error && !file && <p role="alert">Draft media access failed. <Button type="button" onClick={() => void savedMedia.retry()}>Retry media</Button></p>}
       {(preview || savedMedia.src) && (kind === 'photo' ? <img key={preview || savedMedia.src} src={preview || savedMedia.src} alt="Selected photo preview" className="max-h-72 w-full rounded-xl bg-black object-contain" onLoad={() => setPlayable(true)} onError={() => { setPlayable(false); setError('Photo preview failed. Choose a supported photo and retry.'); }} /> : <video ref={previewVideo} key={preview || savedMedia.src} src={preview || savedMedia.src} controls playsInline preload="auto" className="max-h-72 w-full rounded-xl bg-black"
-        onLoadedMetadata={event => previewReady(event.currentTarget)} onLoadedData={event => previewReady(event.currentTarget)} onCanPlay={event => previewReady(event.currentTarget)} onPlaying={event => previewReady(event.currentTarget)} onTimeUpdate={event => previewReady(event.currentTarget)}
+        onLoadedMetadata={event => previewReady(event.currentTarget)} onLoadedData={event => previewReady(event.currentTarget)} onCanPlay={event => previewReady(event.currentTarget)} onPlaying={event => previewReady(event.currentTarget)}
         onError={() => { setPlayable(false); setError('This browser cannot decode the video. Export H.264 MP4 or WebM and try again.'); }} />)}
       {kind === 'video' && (preview || savedMedia.src) && !preparing && <div className="space-y-2"><Button type="button" variant="outline" className="min-h-11" disabled={submitting} onClick={playPreview}>Play video preview</Button>{!playable && <p role="status" className="text-sm text-violet-200">Tap Play to check this video before posting.</p>}</div>}
       </section>
