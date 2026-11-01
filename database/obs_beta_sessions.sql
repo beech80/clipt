@@ -269,6 +269,9 @@ begin
   update clipt_private.obs_beta_sessions set state='stopping' where id=s.id and state<>'ended' returning * into s;
   update public.streams set is_live=false where id=s.stream_id;
  elsif p_action='finish' then
+  if s.state='ended' and (s.provider_id is null or s.provider_id is not distinct from p_args->>'providerId') then
+   return clipt_private.obs_beta_json(s);
+  end if;
   if s.state<>'stopping' or (s.provider_id is not null and s.provider_id is distinct from p_args->>'providerId')
    then raise exception 'Provider stop unconfirmed' using errcode='42501'; end if;
   update clipt_private.obs_beta_sessions set state='ended',ended_at=clock_timestamp() where id=s.id returning * into s;
