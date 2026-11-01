@@ -24,7 +24,7 @@ create table if not exists clipt_private.obs_beta_sessions(
  provider_id text unique check(provider_id ~ '^[A-Za-z0-9]{1,200}$'),
  playback_id text check(playback_id ~ '^[A-Za-z0-9]{1,200}$'),
  state text not null check(state in ('provisioning','uncertain','ready','active','stopping','ended')),
- expires_at timestamptz not null, observed_at timestamptz,
+ expires_at timestamptz not null, observed_at timestamptz, webhook_at timestamptz,
  created_at timestamptz not null default clock_timestamp(), ended_at timestamptz,
  unique(owner_id,request_id)
 );
@@ -57,7 +57,7 @@ create or replace function clipt_private.obs_beta_json(s clipt_private.obs_beta_
 returns jsonb language sql stable security definer set search_path='' as $$
  select jsonb_build_object('sessionId',s.id,'streamId',s.stream_id,'state',s.state,
  'providerId',s.provider_id,'playbackId',s.playback_id,'expiresAt',s.expires_at,
- 'maxDurationSeconds',s.duration_seconds,'needsProvision',claimed);
+ 'acceptance',s.acceptance,'webhookVerified',s.webhook_at is not null,'maxDurationSeconds',s.duration_seconds,'needsProvision',claimed);
 $$;
 
 create or replace function clipt_private.obs_beta_expire()
@@ -279,10 +279,10 @@ begin
    or observed<clock_timestamp()-interval '30 seconds' or observed>clock_timestamp()+interval '5 seconds'
    then raise exception 'Provider observation rejected' using errcode='22023'; end if;
   if s.observed_at is not null and s.observed_at>=observed then return clipt_private.obs_beta_json(s); end if;
-  live:=c.enabled and s.state in ('ready','active') and s.expires_at>clock_timestamp()
-   and clipt_private.obs_beta_account(s.owner_id,s.auth_session_id,s.auth_aal)
-   and exists(select 1 from public.streams where id=s.stream_id and user_id=s.owner_id);
-  update clipt_private.obs_beta_sessions set observed_at=observed,
+  live:=(c.enabled or (s.acceptance and c.bootstrap_state='ready')) and s.state in ('ready','active') and s.expires_at>clock_timestamp()
+   and (s.acceptance or clipt_private.obs_beta_account(s.owner_id,s.auth_session_id,s.auth_aal))
+   and (s.acceptance or exists(select 1 from public.streams where id=s.stream_id and user_id=s.owner_id));
+  update clipt_private.obs_beta_sessions set observed_at=observed,webhook_at=case when p_args->>'webhook'='true' then clock_timestamp() else webhook_at end,
    state=case when state='ended' then 'ended' when not live or p_args->>'status'='disabled' then 'stopping'
     when p_args->>'status'='active' then 'active' else 'ready' end where id=s.id returning * into s;
   update public.streams set is_live=(live and p_args->>'status'='active'),
