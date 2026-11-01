@@ -34,7 +34,6 @@ export default function NewPost() {
   const [caption, setCaption] = useState('');
   const [hashtags, setHashtags] = useState('');
   const [gameId, setGameId] = useState('');
-  const [selectedCatalogGame,setSelectedCatalogGame]=useState<CatalogGameSelection|null>(null);
   const [gameSearch, setGameSearch] = useState('');
   const [stage, setStage] = useState<'idle' | 'checking' | 'converting' | 'uploading' | 'publishing' | 'reward'>('idle');
   const [playable, setPlayable] = useState(false);
@@ -45,6 +44,7 @@ export default function NewPost() {
   const [uncertain, setUncertain] = useState(false);
   const [kind, setKind] = useState<'video' | 'photo'>('video');
   const [captionError, setCaptionError] = useState('');
+  const [selectedCatalogGame,setSelectedCatalogGame]=useState<CatalogGameSelection|null>(null);
   const captionInput = useRef<HTMLTextAreaElement>(null);
   const previewVideo = useRef<HTMLVideoElement>(null);
   const busy = useRef(false);
