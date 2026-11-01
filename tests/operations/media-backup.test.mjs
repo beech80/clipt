@@ -175,3 +175,21 @@ test('private recurring write scope is isolated from the original snapshot and c
 test('unknown backup write scopes fail before any provider request',async()=>{
  let calls=0;await assert.rejects(connectBackup({keyId:'synthetic-key',applicationKey:'synthetic-secret',writeScope:'outside',fetchImpl:async()=>{calls++;throw Error();}}));assert.equal(calls,0);
 });
+
+test('download diagnostics report only a fixed operation, HTTP status and allowlisted provider code',async()=>{
+ for(const [body,expected]of [
+  [JSON.stringify({code:'cap_exceeded',message:'synthetic-private-value'}),'cap_exceeded'],
+  [JSON.stringify({code:'synthetic-private-value',message:'synthetic-private-value'}),undefined],
+  ['x'.repeat(5000),undefined],
+ ]){
+  let error;try{await boundedBody(new Response(body,{status:403}),100,'backup-destination-download');}catch(cause){error=cause;}
+  assert.equal(error.code,'binary-request-rejected');assert.equal(error.httpStatus,403);assert.equal(error.operation,'backup-destination-download');assert.equal(error.providerCode,expected);
+  assert(!JSON.stringify(error).includes('synthetic-private-value'));assert(!error.message.includes(body));
+ }
+});
+test('private-source error bodies are canceled without reading or publishing their contents',async()=>{
+ const response=new Response('synthetic-private-source-message',{status:503});let error;
+ try{await boundedBody(response,100,'private-source-download');}catch(cause){error=cause;}
+ assert.equal(error.httpStatus,503);assert.equal(error.operation,'private-source-download');assert.equal(error.providerCode,undefined);
+ assert(!JSON.stringify(error).includes('synthetic-private-source-message'));
+});
