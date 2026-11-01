@@ -64,3 +64,11 @@ body:has(.clipt-stream-viewer) .clipt-masthead { display: none; }
 .clipt-game-cover { display: flex; align-items: center; justify-content: center; width: 48px; height: 64px; flex-shrink: 0; object-fit: contain; border-radius: 8px; background: #19122e; color: #e9d5ff; font-weight: 800; }
 .clipt-search-result-image .clipt-game-cover { width: 100%; height: 100%; }
 .clipt-game-cover-fallback { letter-spacing: .04em; font-size: 14px; }
+
+/* Center the portrait tablet swipe/menu surface despite handed rail offsets. */
+@media (min-width: 600px) and (min-height: 500px) {
+  body:has(.clipt-controller[data-mobile-v2="true"][data-portrait-viewing="true"][data-hand]) .clipt-bottom-swipe-zone.clipt-bottom-swipe-zone {
+    left: calc(var(--clipt-portrait-visible-left,0px) + 78px + env(safe-area-inset-left,0px));
+    right: calc(100vw - var(--clipt-portrait-visible-width,100vw) - var(--clipt-portrait-visible-left,0px) + 78px + env(safe-area-inset-right,0px));
+  }
+}
