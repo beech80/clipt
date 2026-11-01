@@ -61,3 +61,23 @@ Validation: [PR head CI41325592048](https://github.com/beech80/clipt/actions/run
 ## Owner-approved final scope (November1)
 
 The owner explicitly selected “Launch web beta; defer broadcasting.” Production Camera Live, Screen Live and OBS broadcasting remain disabled for this release; the public Go Live page explains that state and offers the existing recorded-media flows. Development pilot functionality is preserved. This closes the previously pending web-beta streaming-scope decision without claiming a production or physical-device broadcast pass. Mac/Xcode, native distribution and custom domain remain owner-deferred work.
+
+## Final owner-accepted web beta release — November1
+
+The owner’s final requests were to keep Backblaze download spending at$0 during beta, retain centered CLIPT navigation on computer/iPad, and lower the four original action buttons. These replace the earlier tentative$0.10 cap approval. No Backblaze cap, payment setting or provider key was changed.
+
+[PR42](https://github.com/beech80/clipt/pull/42) merged as a31905ad0ba0230aa254dedeba53fc042f61f794. Production deployment dpl_HqVMVXVPDztVEvBLhbPDFjTKo2CG is READY from that commit at the stable address above. On roomy classic landscape computer/tablet feeds, the four-button diamond is56px lower and retains its original artwork/arrangement. A176px black footer keeps the player’s seek controls above all four actions. CLIPT stays centered; phone layouts and existing handlers are preserved. Portrait-tablet controls retain the existing safe gutter and lower centered swipe/menu surface.
+
+[Release CI41337224553](https://github.com/beech80/clipt/actions/runs/41337224553) passed825 app tests,12 monitor tests,type/CSS/build/audit0 vulnerabilities,34 Chromium UI+8 private-media checks,and macOS WebKit4 codec+22 UI+3 repeated-feed checks. Both hands were tested at1280x800,1024x768 and768x1024 for centered geometry, action visibility/bounds, player clearance, menu/focus and retained player identity. Downloaded screenshots were visually reviewed after the final lowering. The tested PR head and deployed merge have the exact same Git tree250f5f7a9f51d254a4ba33b6a870b0269e8b73c6, independently confirming source identity. The merge also runs the automatic validation workflow41338021619.
+
+Post-deployment verification passed public login/privacy/terms, active production API/stage, required invitations, disabled checkout/billing readiness, catalog status200 and anonymous catalog POST401. The production project remains ACTIVE_HEALTHY on17.11.0.003; its advisor has no ERROR or leaked-password finding. The managed pg_net placement warning remains within the documented provider-supported boundary. Recent bounded production logs had no5xx entries in the checked interval. All six buckets are private. The owner confirmed real sign-in/password recovery, upload/playback, messaging and previous phone-flow acceptance; automated checks do not replace physical-device acceptance of this exact revision.
+
+### Explicitly accepted beta limits
+
+- Free, invite-only web beta; the approved owner is the initial member. Further tester emails require explicit invitation approval.
+- Production Camera Live, Screen Live and OBS broadcasting are deferred by the owner. Go Live explains this state and offers recorded-media flows. Development pilot functionality is preserved; no production/native broadcast or physical capture pass is claimed.
+- Backblaze stays at$0 by owner choice. The earlier141-file snapshot and isolated restore are verified. The new142-file/948205598-byte inventory has not completed a fresh backup/restore because Backblaze returns403 download_cap_exceeded. The latest upload is not covered by a completed verified snapshot. The owner deferred revisiting the amount and fresh verification until after beta. Scheduled attempts and deduplicated external alerts remain active; no success receipt was fabricated.
+- Mac/Xcode signing, native physical acceptance, App Store/Google Play publication and custom domain/DNS remain separately deferred. Full legal, accessibility and load certification are not asserted.
+- Provider game search is paginated and broader than the configured list; Overwatch2016 is independently verified and available. Provider coverage is not a guarantee of every historical game.
+
+Within this owner-approved web-beta scope, the release work is finished. Keep the existing monitoring/moderation/backups running and act on real incidents; do not introduce further launch gates for the explicitly deferred items.
