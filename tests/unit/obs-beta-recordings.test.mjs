@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import ts from 'typescript';
 const mod={exports:{}},core={exports:{}};
-new Function('module','exports',ts.transpileModule(readFileSync(new URL('../../supabase/functions/obs-broadcast-session/lifecycle.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText)(core,core.exports);
-new Function('require','module','exports',ts.transpileModule(readFileSync(new URL('../../supabase/functions/obs-broadcast-session/recordings.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText)(()=>core.exports,mod,mod.exports);
+new Function('module','exports',ts.transpileModule(readFileSync(new URL('../../supabase/functions/obs-broadcast-session/lifecycle.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText)(core,core.exports);
+new Function('require','module','exports',ts.transpileModule(readFileSync(new URL('../../supabase/functions/obs-broadcast-session/recordings.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText)(()=>core.exports,mod,mod.exports);
 test('recording cleanup deletes only provider-verified recordings and confirms they are gone',async()=>{
  let deleted=false;const calls=[];
  await mod.exports.clearObsRecordings('provider',{recent_asset_ids:['asset']},async(path,method)=>{
