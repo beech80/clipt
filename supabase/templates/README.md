@@ -6,6 +6,6 @@ For production slnjliheyiiummxhrgmk, open https://supabase.com/dashboard/project
 
 The ConfirmationURL placeholder must remain intact in both the clickable anchor and the text fallback. Do not substitute SiteURL alone: it does not verify a recovery token. Keep the stable app's /update-password URL in the Auth redirect allow list. Request a fresh email only after saving, and verify on the receiving device without sharing its private URL.
 
-One owner-requested production reset was accepted (HTTP200) and recorded by Auth on November1; the owner received an email with no button or linked text. The actual hosted template could not be inspected/updated because both browser connections were unavailable and no local management credential was available. The repair is prepared, not claimed applied. Follow-up delivery/link/password-change acceptance remains pending.
+One owner-requested production reset was accepted (HTTP200) and recorded by Auth on November1; the owner received an email with no button or linked text. The actual hosted template could not be inspected through the connector because both browser connections were unavailable and no local management credential was available. The owner subsequently confirmed saving the Reset password template in the production dashboard. One fresh recovery request after that save returned HTTP200. Visible-link, correct destination and completed password-change acceptance remain pending; no credential value or recovery URL was retrieved.
 
 Reference: https://supabase.com/docs/guides/auth/auth-email-templates
