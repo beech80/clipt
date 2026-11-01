@@ -1,6 +1,6 @@
 // OBS lifecycle: pure orchestration with injected provider/storage for executable tests.
 export type ObsSession={sessionId:string;streamId:string|null;state:string;providerId?:string;playbackId?:string;
- expiresAt:string;maxDurationSeconds:number;needsProvision?:boolean;tokenExpiresAt?:string};
+ expiresAt:string;maxDurationSeconds:number;needsProvision?:boolean;tokenExpiresAt?:string;acceptance?:boolean;webhookVerified?:boolean};
 export class ObsError extends Error {constructor(public status:number,public code:string,message:string){super(message);}}
 export const OBS_INGEST='rtmps://global-live.mux.com:443/app';
 export function uuid(value:unknown):string{
@@ -25,10 +25,10 @@ export type ObsDependencies={
 };
 function status(s:ObsSession|null){return s?{sessionId:s.sessionId,streamId:s.streamId,state:s.state,expiresAt:s.expiresAt,
  maxDurationSeconds:s.maxDurationSeconds,isLive:s.state==='active'}:null;}
-export async function observeObs(d:ObsDependencies,s:ObsSession){
+export async function observeObs(d:ObsDependencies,s:ObsSession,webhook=false){
  if(!s.providerId||s.state==='ended')return s;
  const observedAt=new Date(d.now()).toISOString(),p=obsProvider(await d.provider.read(s.providerId),s);
- const next=await d.db('snapshot',{sessionId:s.sessionId,providerId:p.id,playbackId:p.playback_ids[0].id,status:p.status,observedAt});
+ const next=await d.db('snapshot',{sessionId:s.sessionId,providerId:p.id,playbackId:p.playback_ids[0].id,status:p.status,observedAt,webhook});
  if(next.state==='stopping')await stopObs(d,next);
  return next;
 }
