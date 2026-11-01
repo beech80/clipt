@@ -72,8 +72,9 @@ function handlerFor(name, options = {}) {
   const billing = load('../../supabase/functions/_shared/subscription.ts');
   const billingReview = load('../../supabase/functions/_shared/billing-return-review.ts');
   const source = load('../../supabase/functions/' + name + '/index.ts');
+  const obsErasure=name==='account-deletion'?load('../../supabase/functions/_shared/obs-beta-erasure.ts'):'';
   const review=name==='review-public-photo'?load('../../supabase/functions/_shared/azure-review.ts')+'\n'+load('../../supabase/functions/_shared/photo-review-workflow.ts'):'';
-  new Function('serve', 'createClient', 'Mux', 'Stripe', 'Deno', 'fetch', shared + '\n' + billing + '\n' + billingReview + '\n' + review + '\n' + source)(
+  new Function('serve', 'createClient', 'Mux', 'Stripe', 'Deno', 'fetch', shared + '\n' + billing + '\n' + billingReview + '\n' + review + '\n' + obsErasure + '\n' + source)(
     value => { handler = value; }, createClient, Mux, Stripe,
     { env: { get: key => options.env?.[key] ?? (['CLIPT_SUBSCRIPTION_TEST_CLOCK_ID','CLIPT_AZURE_VERIFICATION_USER_ID','CLIPT_AZURE_VERIFICATION_POST_ID'].includes(key) ? undefined : key === 'SUPABASE_URL' ? 'http://local.invalid' : 'test-only-value') } },
     options.fetcher??(() => { throw new Error('Unexpected network request'); }),
