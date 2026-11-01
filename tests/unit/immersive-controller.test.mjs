@@ -241,3 +241,13 @@ test('click-based media activation reveals manual hiding without cancelling the 
     assert.equal(values[1],'visible');assert.equal(cancelled,false);cleanup();assert.equal(events.size,0);
   } finally {Object.assign(globalThis,saved);}
 });
+
+test('browser chrome expansion uses the visible height even when the layout viewport remains shorter',()=>{
+ const keys=['document','window','matchMedia','ResizeObserver'];const saved=Object.fromEntries(keys.map(k=>[k,globalThis[k]]));
+ try{
+  let measure,index=0;const effects=[];const state=[{width:0,height:0,left:0,top:0,landscape:false,portraitConstrained:false,normalWidth:0},'visible',0];
+  globalThis.document={documentElement:{clientWidth:390,clientHeight:600},activeElement:null};globalThis.window={innerWidth:390,innerHeight:844,screen:{width:390},visualViewport:{width:390,height:780,offsetTop:12,offsetLeft:0,addEventListener(){},removeEventListener(){}},addEventListener(){},removeEventListener(){}};globalThis.matchMedia=()=>({matches:false});globalThis.ResizeObserver=class{constructor(fn){measure=fn;}observe(){}disconnect(){}};
+  const {useImmersiveController}=load('hooks/useImmersiveController.ts',{react:{useState:()=>{const n=index++;return[state[n],v=>state[n]=typeof v==='function'?v(state[n]):v];},useRef:()=>({current:null}),useEffect:fn=>effects.push(fn)},'@/lib/controller-layout':policy});
+  useImmersiveController(true,{layout:'auto',autoHide:false},'/clipts',true);const cleanup=effects[0]();assert.equal(state[0].height,780);assert.equal(state[0].top,12);window.visualViewport.height=844;measure();assert.equal(state[0].height,844);window.visualViewport.height=420;measure();assert.equal(state[0].height,420);cleanup();
+ }finally{Object.assign(globalThis,saved);}
+});
