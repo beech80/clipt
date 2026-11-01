@@ -1,3 +1,5 @@
+> Update November1: the owner approved the final production steps. The migration, catalog deployment and production web publication below have now succeeded. See [the actual rollout receipt](WEB-BETA-ROLLOUT-2026-11-01.md) for deployed source, checks and remaining signed-in acceptance. The text below preserves the pre-release review; its pending-approval/publication statements are historical.
+
 # CLIPT beta release review — October 31, 2026
 
 This report distinguishes observed production state from a tested release candidate. The owner has accepted the current interface and reports testing web messaging and the other phone flows. That report is user acceptance, not an independent automated or native-device pass. Production publication still requires the owner's explicit approval.
