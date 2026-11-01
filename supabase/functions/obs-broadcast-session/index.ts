@@ -7,7 +7,7 @@ import {obsCommand,observeObs,reconcileObs,ObsError,uuid,type ObsDependencies} f
 import {obsAcceptance,acceptanceRequestId} from './acceptance.ts';
 import {bootstrapObs} from './bootstrap.ts';
 const ORIGIN='https://slnjliheyiiummxhrgmk.supabase.co';
-const REVIEWED_RUNNER={".github/workflows/obs-beta-operations.yml":"666ebf1d97da404518fcb1229fc90e25d728e835344f0aaff5d26bd7181c0a6c","scripts/obs-beta-operations.mjs":"bde08c9e0dca553bd1fa95a1282f30eff0a9f67760d80d513aade2de09cddd42"};
+const REVIEWED_RUNNER={".github/workflows/obs-beta-operations.yml":"cef7a8335a00726f43d9d69ee2b6a809f1f8e735f209c3c60758e4b5df978a81","scripts/obs-beta-operations.mjs":"a7239e306dfad1b295356d0718b1fc76f62fd74c2870eaa7220de513c451163b"};
 const env=(name:string)=>Deno.env.get(name)||'';
 async function db(action:string,args:Record<string,unknown>={}){
  const result=await serviceClient().rpc('obs_beta_admin',{p_action:action,p_args:args});
