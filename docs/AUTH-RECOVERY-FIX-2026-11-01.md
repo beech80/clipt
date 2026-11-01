@@ -36,3 +36,7 @@ After the owner saved the email template, the fresh email arrived with a link, b
 The owner confirmed saving the production Auth Site URL and the exact /update-password redirect entry. A fresh read-only GET to the Auth verification endpoint using an intentionally invalid probe token returned303 with Location origin https://clipttest-matthew-beechers-projects.vercel.app and path /update-password. The expected destination matched. No valid token was used, no user's recovery link was consumed, and that probe sent no email. This independently verifies that Supabase accepts the correct recovery destination after the settings change.
 
 One owner-authorized fresh recovery request after this check returned HTTP200; Auth recorded recovery_sent_at2026-11-01T15:06:21.94841Z. The owner should use that newest email to set a private password and sign in. Final password-change and signed-in app acceptance remain pending; no password or token was requested, retrieved or logged. Earlier unconnected-domain links should not be reused.
+
+## Owner acceptance completed
+
+The owner confirmed that the newest email opened the password page, a new private password was set, and sign-in to CLIPT succeeded. This closes the real email/link/password-change/sign-in acceptance for this repair. The password and recovery URL were never shared with or inspected by the agent. The separate final production clip/feed/comments/profile smoke check and explicit web-beta broadcasting scope are tracked in the beta handoff, not represented by this Auth pass.
