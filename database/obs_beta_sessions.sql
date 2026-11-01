@@ -246,7 +246,8 @@ begin
    update public.streams set is_live=false where id=s.stream_id;
    return clipt_private.obs_beta_json(s);
   end if;
-  if not c.enabled or not clipt_private.obs_beta_account(u,a,p_args->>'aal') or s.expires_at<=clock_timestamp()
+  if not c.enabled or not clipt_private.obs_beta_account(u,a,p_args->>'aal')
+   or not clipt_private.obs_beta_account(s.owner_id,s.auth_session_id,s.auth_aal) or s.expires_at<=clock_timestamp()
    or s.state not in ('ready','active') then raise exception 'Broadcast expired or unavailable' using errcode='42501'; end if;
   return clipt_private.obs_beta_json(s);
  end if;
