@@ -1,6 +1,6 @@
 {
   "format": "clipt-private-media-backup-request-v1",
-  "request": "first-recurring-private-source-backup",
+  "request": "verify-latest-142-media-files-with-redacted-download-diagnostics-20261101",
   "project": "slnjliheyiiummxhrgmk",
   "destination": "clipt-media-backup2026",
   "restoreVerification": "all-files-isolated-sha256",
