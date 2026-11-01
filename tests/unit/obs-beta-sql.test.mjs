@@ -9,7 +9,7 @@ test('real OBS SQL enforces invitation, idempotency, global quota, private lease
  await db.exec(`
  create role anon;create role authenticated;create role service_role;
  create schema auth;create schema clipt_private;create schema vault;grant usage on schema clipt_private to service_role;
- create function auth.uid() returns uuid language sql as $select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$;
+ create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  create function auth.role() returns text language sql as $$select current_setting('request.jwt.claim.role',true)$$;
  create table auth.users(id uuid primary key,email_confirmed_at timestamptz,is_anonymous boolean default false,deleted_at timestamptz,banned_until timestamptz);
  create table auth.sessions(id uuid primary key,user_id uuid,not_after timestamptz);
