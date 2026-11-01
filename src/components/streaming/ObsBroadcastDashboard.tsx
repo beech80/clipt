@@ -15,13 +15,13 @@ export function ObsBroadcastDashboard(){
  const [credentials,setCredentials]=useState<Awaited<ReturnType<typeof obsCredentials>>|null>(null),[revealed,setRevealed]=useState(false);
  const [notice,setNotice]=useState('');
  const pending=useRef<{requestId:string;streamId:string}|null>(null),running=useRef(false);
- const mounted=useRef(true);
+ const mounted=useRef(true),currentUser=useRef(user?.id);currentUser.current=user?.id;
  const readiness=useQuery({queryKey:['obs-readiness'],queryFn:obsReadiness,retry:false,refetchInterval:60000});
  const current=useQuery({queryKey:['obs-current',user?.id],enabled:Boolean(user),queryFn:currentObsSession,
   retry:false,gcTime:0,refetchInterval:15000,refetchIntervalInBackground:false});
  const stream=useQuery({queryKey:['obs-metadata',user?.id],enabled:Boolean(user),retry:false,
   queryFn:async()=>{const r=await getUserStream();if(r.error)throw r.error;return r.data;}});
- useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;credentials&&setCredentials(null);};},[]);
+ useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
  useEffect(()=>{setCredentials(null);setRevealed(false);pending.current=null;setError('');},[user?.id]);
  useEffect(()=>{
   if(!credentials)return;
@@ -36,7 +36,7 @@ export function ObsBroadcastDashboard(){
   try{await work();}catch(e){if(mounted.current)setError(e instanceof Error?e.message:'Broadcast request failed.');}
   finally{running.current=false;if(mounted.current)setBusy(false);}
  }
- function save(s:ObsSession|null){client.setQueryData(['obs-current',user?.id],s);}
+ function save(s:ObsSession|null){if(currentUser.current!==user?.id||!mounted.current)return;client.setQueryData(['obs-current',user?.id],s);}
  async function prepare(){
   await action(async()=>{
    if(!user||!available)throw Error('OBS broadcasting is not ready.');
@@ -71,7 +71,7 @@ export function ObsBroadcastDashboard(){
    {!active&&<Button disabled={busy||!available||current.isPending||current.isError||stream.isPending||stream.isError} onClick={()=>void prepare()}>Prepare OBS broadcast</Button>}
    <Button variant="outline" disabled={busy} onClick={()=>void action(async()=>{await Promise.all([current.refetch(),readiness.refetch()]);})}>Check status</Button>
    {active&&active.state!=='ended'&&<Button variant="outline" disabled={busy} onClick={()=>void action(async()=>{save(await endObsSession(active.sessionId));setCredentials(null);setRevealed(false);pending.current=null;await current.refetch();})}>End broadcast</Button>}
-   {active&&['ready','active'].includes(active.state)&&<Button disabled={busy} onClick={()=>void action(async()=>{setCredentials(await obsCredentials(active.sessionId));setRevealed(false);})}>Get OBS credentials</Button>}
+   {active&&['ready','active'].includes(active.state)&&<Button disabled={busy} onClick={()=>void action(async()=>{const value=await obsCredentials(active.sessionId);if(currentUser.current===user?.id&&mounted.current){setCredentials(value);setRevealed(false);}})}>Get OBS credentials</Button>}
   </div>
   {credentials&&<div className="space-y-3 rounded-lg border border-purple-500/50 p-4 min-w-0">
    <p>Copy these into OBS → Settings → Stream → Custom. The key is private and expires with this session.</p>
