@@ -140,7 +140,7 @@ export const StreamPlayer = ({
                 {viewerCount == null ? 'Viewer count unavailable' : `${viewerCount.toLocaleString()} ${viewerCount === 1 ? 'viewer' : 'viewers'}`}
               </p>
             </div>
-            {showHealth && <StreamHealthIndicator streamId={streamId} />}
+            {showHealth && !obsStream && <StreamHealthIndicator streamId={streamId} />}
           </div>
         </Card>
       </div>
