@@ -51,3 +51,16 @@ test('provider bootstrap keeps private keys server-only and never retries a clai
   checkKey:async()=>{},request:async path=>path.includes('signing-keys')?{id:'key',private_key:secret}:{id:'hook',address:m.exports.OBS_WEBHOOK_ADDRESS,enabled:true,signing_secret:'WEBHOOK_PRIVATE_ONLY'}});
  assert.equal(saved.privateKey,secret);assert.equal(JSON.stringify(result).includes(secret),false);assert.deepEqual(result,{configured:true});
 });
+
+test('cleanup disables an owned test or oversized resource without treating it as usable paid playback',async()=>{
+ const calls=[],sessionRow={...session,state:'stopping',needsProvision:false};
+ const raw={...provider,test:true,max_continuous_duration:300};
+ const d={now:Date.now,db:async(action,args)=>{
+  calls.push(action);if(action==='list')return [sessionRow];if(action==='adopt')return {...sessionRow,providerId:'provider',playbackId:'playback'};
+  return null;
+ },provider:{list:async()=>({resources:[raw],complete:true}),disable:async()=>calls.push('disable'),
+ read:async()=>({...raw,status:'disabled'}),clearRecordings:async()=>calls.push('clear-recordings')}};
+ const result=await reconcileObs(d);assert.equal(result.pending,0);assert.equal(result.ended,1);
+ assert.deepEqual(calls,['list','adopt','disable','clear-recordings','finish','worker_complete']);
+ assert.throws(()=>obsProvider(raw,session),e=>e.code==='MUX_PAID_MODE_UNAVAILABLE');
+});
