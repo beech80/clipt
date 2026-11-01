@@ -1,0 +1,11 @@
+# Password recovery email
+
+recovery.html is the reviewed HTML for the hosted project's Reset password email. Committing or deploying the Vite frontend does not apply this hosted Auth setting.
+
+For production slnjliheyiiummxhrgmk, open https://supabase.com/dashboard/project/slnjliheyiiummxhrgmk/auth/templates, select Reset password, and replace only that template's Message body/source with recovery.html. Preserve other templates and mail-provider credentials. Save. The subject can be Reset your CLIPT password.
+
+The ConfirmationURL placeholder must remain intact in both the clickable anchor and the text fallback. Do not substitute SiteURL alone: it does not verify a recovery token. Keep the stable app's /update-password URL in the Auth redirect allow list. Request a fresh email only after saving, and verify on the receiving device without sharing its private URL.
+
+One owner-requested production reset was accepted (HTTP200) and recorded by Auth on November1; the owner received an email with no button or linked text. The actual hosted template could not be inspected/updated because both browser connections were unavailable and no local management credential was available. The repair is prepared, not claimed applied. Follow-up delivery/link/password-change acceptance remains pending.
+
+Reference: https://supabase.com/docs/guides/auth/auth-email-templates
