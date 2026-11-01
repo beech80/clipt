@@ -33,5 +33,5 @@ export async function obsAcceptance(action:string,args:Record<string,unknown>,re
  const p=obsProvider(await d.provider.read(s.providerId!),s);
  if(p.status!=='active')return {live:false};
  const expires=Math.min(d.now()+60000,Date.parse(s.expiresAt));
- return {live:true,playbackUrl:await d.sign(p.playback_ids[0].id,expires)};
+ return {live:true,webhookVerified:s.webhookVerified===true,playbackUrl:await d.sign(p.playback_ids[0].id,expires)};
 }
