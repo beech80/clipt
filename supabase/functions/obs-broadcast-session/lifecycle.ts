@@ -9,7 +9,7 @@ export function uuid(value:unknown):string{
 }
 export function obsProvider(value:any,s:ObsSession){
  if(!value||!(/^[A-Za-z0-9]{1,200}$/.test(value.id||''))||(s.providerId&&value.id!==s.providerId)
-  ||value.passthrough!=='clipt-obs:'+s.sessionId||value.test!==false
+  ||value.passthrough!=='clipt-obs:'+s.sessionId||(value.test!==undefined&&value.test!==false)
   ||!['active','idle','disabled'].includes(value.status)||!Number.isInteger(value.max_continuous_duration)
   ||value.max_continuous_duration<60||value.max_continuous_duration>s.maxDurationSeconds
   ||!Array.isArray(value.playback_ids)||value.playback_ids.length!==1
