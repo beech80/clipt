@@ -66,7 +66,7 @@ export function ObsBroadcastDashboard(){
  }
  async function copy(value:string){await action(async()=>{await navigator.clipboard.writeText(value);setNotice('Copied. Keep this credential private.');});}
  if(!user)return <section className="gaming-card p-6"><p>Sign in with your invited account to broadcast.</p><Link className="underline" to="/login">Sign in</Link></section>;
- return <section className="gaming-card p-4 sm:p-6 space-y-4 min-w-0" aria-labelledby="obs-title">
+ return <section className="gaming-card p-4 sm:p-6 space-y-4 min-w-0" aria-label="Broadcast instructions">
   <h2 id="obs-title" className="text-xl font-semibold">Computer live — OBS</h2>
   <p>Use OBS on your computer. Phone camera and screen broadcasting remain unavailable in this web beta.</p>
   <p className="text-sm text-muted-foreground">One beta broadcast at a time. Up to 30 minutes per session, two starts per account per day, and 300 reserved minutes per month across the beta. Each prepared session reserves its full allowance. Up to five invited viewer sessions.</p>
