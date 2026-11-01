@@ -42,7 +42,7 @@ export const StreamPlayer = ({
     refetchInterval:query=>query.state.data?Math.max(10000,query.state.data.expiresAt-Date.now()-60000):false,
     refetchIntervalInBackground:false,
   });
-  const playbackUrl=privateStream?privatePlayback.data?.url:suppliedPlaybackUrl;
+  const playbackUrl=privateStream?(!privatePlayback.isError&&privatePlayback.data&&privatePlayback.data.expiresAt>Date.now()?privatePlayback.data.url:undefined):suppliedPlaybackUrl;
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playbackError, setPlaybackError] = useState('');
   const [attempt, setAttempt] = useState(0);
