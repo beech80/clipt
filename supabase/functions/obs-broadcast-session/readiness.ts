@@ -4,7 +4,7 @@ const fields=['MUX_TOKEN_ID','MUX_TOKEN_SECRET','MUX_SIGNING_KEY_ID','MUX_SIGNIN
 export async function obsReadiness(env:Record<string,string>,deps:ObsReadinessDependencies,checkProvider=false){
  const missing:string[]=fields.filter(name=>!env[name]);
  if(!OBS_ORIGINS.includes(env.SUPABASE_URL as any))missing.push('supported_project');
- if(env.MUX_TOKEN_ID&&env.MUX_TOKEN_SECRET&&(!/^[\\x21-\\x7e]{1,500}$/.test(env.MUX_TOKEN_ID)||!/^[\\x21-\\x7e]{1,500}$/.test(env.MUX_TOKEN_SECRET)))missing.push('mux_token_format');
+ if(env.MUX_TOKEN_ID&&env.MUX_TOKEN_SECRET&&(!/^[!-~]{1,500}$/.test(env.MUX_TOKEN_ID)||!/^[!-~]{1,500}$/.test(env.MUX_TOKEN_SECRET)))missing.push('mux_token_format');
  if(env.MUX_SIGNING_KEY_ID&&!/^[A-Za-z0-9]{1,200}$/.test(env.MUX_SIGNING_KEY_ID))missing.push('signing_key_id_format');
  if(env.MUX_OBS_WEBHOOK_SECRET&&env.MUX_OBS_WEBHOOK_SECRET.length<16)missing.push('webhook_secret_format');
  let signingReady=false;
