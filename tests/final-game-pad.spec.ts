@@ -1,9 +1,9 @@
 import {test,expect,type Page} from '@playwright/test';
 import {fileURLToPath} from 'node:url';
 const owner='00000000-0000-4000-8000-000000000077',known='00000000-0000-4000-8000-000000000078',picked='00000000-0000-4000-8000-000000000079',postId='00000000-0000-4000-8000-000000000080';
-async function fixture(page:Page){
+async function fixture(page:Page,hand='right'){
  const user={id:owner,aud:'authenticated',role:'authenticated',email:'fixture@example.invalid',app_metadata:{},user_metadata:{},created_at:'2026-09-19T00:00:00Z',factors:[]};let searches=0,resolutions=0;const writes:any[]=[];
- await page.addInitScript(({user})=>{const exp=Math.floor(Date.now()/1000)+3600;const enc=(x:object)=>btoa(JSON.stringify(x)).replaceAll('=','').replaceAll('+','-').replaceAll('/','_');localStorage.setItem('sb-127-auth-token',JSON.stringify({access_token:enc({alg:'HS256'})+'.'+enc({sub:user.id,exp,aal:'aal1',role:'authenticated'})+'.fixture',refresh_token:'fixture',expires_at:exp,expires_in:3600,token_type:'bearer',user}));localStorage.setItem('clipt-controller-preferences-v1',JSON.stringify({layout:'auto',autoHide:false}));},{user});
+ await page.addInitScript(({user,hand})=>{const exp=Math.floor(Date.now()/1000)+3600;const enc=(x:object)=>btoa(JSON.stringify(x)).replaceAll('=','').replaceAll('+','-').replaceAll('/','_');localStorage.setItem('sb-127-auth-token',JSON.stringify({access_token:enc({alg:'HS256'})+'.'+enc({sub:user.id,exp,aal:'aal1',role:'authenticated'})+'.fixture',refresh_token:'fixture',expires_at:exp,expires_in:3600,token_type:'bearer',user}));localStorage.setItem('clipt-mobile-controls-v1',JSON.stringify({hand,trail:false}));localStorage.setItem('clipt-controller-preferences-v1',JSON.stringify({layout:'auto',autoHide:false}));},{user,hand});
  await page.route('**/*',async route=>{const req=route.request(),url=new URL(req.url()),path=url.pathname;if(url.origin==='http://127.0.0.1:8081')return route.continue();if(url.origin!=='http://127.0.0.1:54321')return route.abort();let data:any=[],status=200;
  if(path==='/auth/v1/user')data=user;
  if(path==='/rest/v1/rpc/clipt_posting_capabilities')data=true;
@@ -30,4 +30,25 @@ test('portrait swipe/menu pad follows expanded Safari chrome and stays below the
   const p=await pad.boundingBox(),video=await page.locator('[data-active-clip="true"] .clipt-cinematic-media').boundingBox();expect(p!.y).toBeGreaterThanOrEqual(video!.y+video!.height);expect(await page.evaluate(()=>scrollY)).toBe(0);
  }
  await pad.click();await expect(page.getByRole('dialog',{name:'CLIPT navigation',exact:true})).toBeVisible();
+});
+
+for(const hand of ['right','left'])test('roomy computer/tablet CLIPT navigation is centered and separate ('+hand+')',async({page},info)=>{
+ await fixture(page,hand);await page.setViewportSize({width:1280,height:800});await page.goto('/clipts');
+ const home=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});
+ const player=page.locator('[data-active-clip="true"] video');await expect(player).toBeVisible();
+ await player.evaluate(element=>{element.dataset.wideLayoutProbe='kept';});
+ for(const size of [{width:1280,height:800},{width:1024,height:768},{width:768,height:1024}]){
+  await page.setViewportSize(size);await expect(home).toBeVisible();
+  await expect.poll(async()=>{const r=(await home.boundingBox())!;return Math.abs(r.x+r.width/2-size.width/2);}).toBeLessThanOrEqual(1);
+  const h=(await home.boundingBox())!;expect(h.y+h.height).toBeLessThanOrEqual(size.height);expect(h.y).toBeGreaterThan(size.height-160);
+  for(const button of await page.locator('.clipt-controller-actions > .clipt-controller-action, .clipt-controller-actions > .clipt-feed-flip').all()){
+   if(!await button.isVisible())continue;const r=(await button.boundingBox())!;
+   expect(h.x+h.width<=r.x||r.x+r.width<=h.x||h.y+h.height<=r.y||r.y+r.height<=h.y).toBe(true);
+  }
+  await expect(player).toHaveAttribute('data-wide-layout-probe','kept');
+  expect(await page.evaluate(()=>scrollY)).toBe(0);
+  await page.screenshot({path:info.outputPath('centered-'+hand+'-'+size.width+'x'+size.height+'.png')});
+  await home.click();await expect(page.getByRole('dialog',{name:'CLIPT navigation',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Close',exact:true}).click();await expect(home).toBeFocused();
+ }
 });

@@ -22,7 +22,7 @@ Updated November 1, 2026. The approved web release is published; see [the rollou
 - [x] Catalog version1 deployed/read back; production deployment dpl_A4AxYytdYJFutv37ogBi7SZanjFq is READY with verified active production configuration. Payments and general broadcasting remain closed.
 - [x] Public login/privacy/terms, Auth health, beta admission denial, unauthorized data denial and deployed asset configuration passed. November1 scheduled monitoring and backup/restore passed.
 - [x] Owner confirmed password recovery, sign-in, a real upload/playback and prior phone/messaging/UI acceptance. PR37 fixes the two newly reported game-selection and portrait swipe-position defects with Chromium/WebKit coverage. A fresh owner iPhone check of this latest revision remains recommended; no automated signed-in hosted pass is claimed.
-- [ ] Resolve web-beta streaming scope explicitly: the OBS proof is a development-owner pilot, not general production Mux readiness. Do not advertise unrestricted live broadcasting until separately configured, authorized and tested.
+- [x] Owner explicitly chose “Launch web beta; defer broadcasting” on November1. Production broadcasting stays disabled; Go Live explains the deferral and links to video/photo posting. Development OBS pilot and later native acceptance remain separate.
 
 ## Separate deferred work
 
