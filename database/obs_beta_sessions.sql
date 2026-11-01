@@ -174,6 +174,13 @@ begin
   select * into s from clipt_private.obs_beta_sessions where owner_id=u and state<>'ended' order by created_at desc limit 1;
   return case when found then clipt_private.obs_beta_json(s) else null end;
  end if;
+ if p_action='viewer_candidate' then
+  u:=(p_args->>'ownerId')::uuid; a:=(p_args->>'authSessionId')::uuid;
+  if not clipt_private.obs_beta_account(u,a,p_args->>'aal') then raise exception 'Invitation required' using errcode='42501'; end if;
+  select * into s from clipt_private.obs_beta_sessions where stream_id=(p_args->>'streamId')::uuid and state in ('ready','active');
+  if not found then raise exception 'Broadcast unavailable' using errcode='42501'; end if;
+  return clipt_private.obs_beta_json(s);
+ end if;
  if p_action='playback' then
   u:=(p_args->>'ownerId')::uuid; a:=(p_args->>'authSessionId')::uuid;
   select * into s from clipt_private.obs_beta_sessions where stream_id=(p_args->>'streamId')::uuid and state='active' for update;
@@ -199,6 +206,7 @@ begin
   if s.owner_id is distinct from u or not exists(select 1 from auth.sessions x where x.id=a and x.user_id=u and (x.not_after is null or x.not_after>statement_timestamp()))
    then raise exception 'Owned session required' using errcode='42501'; end if;
   if p_action='stop' then
+   if s.state='ended' then return clipt_private.obs_beta_json(s); end if;
    update clipt_private.obs_beta_sessions set state='stopping' where id=s.id and state<>'ended' returning * into s;
    update public.streams set is_live=false where id=s.stream_id;
    return clipt_private.obs_beta_json(s);
