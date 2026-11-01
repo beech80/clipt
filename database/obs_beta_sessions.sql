@@ -19,6 +19,8 @@ create table if not exists clipt_private.obs_beta_sessions(
  owner_id uuid references auth.users(id) on delete set null,
  stream_id uuid, auth_session_id uuid, auth_aal text,
  request_id uuid not null,
+ acceptance boolean not null default false,
+ duration_seconds integer not null default 1800 check(duration_seconds between 60 and 1800),
  provider_id text unique check(provider_id ~ '^[A-Za-z0-9]{1,200}$'),
  playback_id text check(playback_id ~ '^[A-Za-z0-9]{1,200}$'),
  state text not null check(state in ('provisioning','uncertain','ready','active','stopping','ended')),
@@ -55,7 +57,7 @@ create or replace function clipt_private.obs_beta_json(s clipt_private.obs_beta_
 returns jsonb language sql stable security definer set search_path='' as $$
  select jsonb_build_object('sessionId',s.id,'streamId',s.stream_id,'state',s.state,
  'providerId',s.provider_id,'playbackId',s.playback_id,'expiresAt',s.expires_at,
- 'maxDurationSeconds',1800,'needsProvision',claimed);
+ 'maxDurationSeconds',s.duration_seconds,'needsProvision',claimed);
 $$;
 
 create or replace function clipt_private.obs_beta_expire()
@@ -64,9 +66,9 @@ declare s clipt_private.obs_beta_sessions%rowtype; n integer:=0;
 begin
  for s in select * from clipt_private.obs_beta_sessions where state not in ('stopping','ended') for update skip locked loop
   if s.expires_at<=clock_timestamp()
-   or not clipt_private.obs_beta_account(s.owner_id,s.auth_session_id,s.auth_aal)
-   or not exists(select 1 from public.streams where id=s.stream_id and user_id=s.owner_id)
-   or not coalesce((select enabled from clipt_private.obs_beta_config where singleton),false)
+   or (not s.acceptance and not clipt_private.obs_beta_account(s.owner_id,s.auth_session_id,s.auth_aal))
+   or (not s.acceptance and not exists(select 1 from public.streams where id=s.stream_id and user_id=s.owner_id))
+   or (not s.acceptance and not coalesce((select enabled from clipt_private.obs_beta_config where singleton),false))
    or (s.state in ('provisioning','uncertain') and s.created_at<clock_timestamp()-interval '2 minutes') then
    update clipt_private.obs_beta_sessions set state='stopping' where id=s.id;
    update public.streams set is_live=false where id=s.stream_id; n:=n+1;
@@ -138,6 +140,30 @@ begin
  if p_action='lookup' then
   select * into s from clipt_private.obs_beta_sessions where provider_id=p_args->>'providerId';
   return case when found then clipt_private.obs_beta_json(s) else null end;
+ end if;
+ if p_action='acceptance_reserve' then
+  perform pg_advisory_xact_lock(42126,1);
+  rid:=(p_args->>'requestId')::uuid;
+  if rid is null or c.enabled or c.bootstrap_state<>'ready' or c.worker_at is null or c.worker_at<clock_timestamp()-interval '10 minutes'
+   then raise exception 'Acceptance setup unavailable' using errcode='55000'; end if;
+  select * into s from clipt_private.obs_beta_sessions where acceptance and request_id=rid for update;
+  if found then return clipt_private.obs_beta_json(s,false); end if;
+  if exists(select 1 from clipt_private.obs_beta_sessions where state<>'ended')
+   or (select count(*) from clipt_private.obs_beta_sessions where acceptance and created_at>clock_timestamp()-interval '24 hours')>=2
+   then raise exception 'Acceptance capacity reached' using errcode='P0001'; end if;
+  mon:=date_trunc('month',clock_timestamp() at time zone 'UTC')::date;
+  insert into clipt_private.obs_beta_usage(month) values(mon) on conflict do nothing;
+  update clipt_private.obs_beta_usage set reserved_minutes=reserved_minutes+2 where month=mon and reserved_minutes+2<=c.monthly_minutes;
+  if not found then raise exception 'Monthly allowance reached' using errcode='P0001'; end if;
+  insert into clipt_private.obs_beta_sessions(request_id,acceptance,duration_seconds,state,expires_at)
+   values(rid,true,90,'provisioning',clock_timestamp()+interval '90 seconds') returning * into s;
+  return clipt_private.obs_beta_json(s,true);
+ end if;
+ if p_action='acceptance_current' then
+  select * into s from clipt_private.obs_beta_sessions where acceptance and request_id=(p_args->>'requestId')::uuid
+   and id=(p_args->>'sessionId')::uuid;
+  if not found then raise exception 'Acceptance ownership required' using errcode='42501'; end if;
+  return clipt_private.obs_beta_json(s);
  end if;
  if p_action='reserve' then
   perform pg_advisory_xact_lock(42126,1);
@@ -227,7 +253,7 @@ begin
  if p_action='attach' then
   if s.state<>'provisioning' or s.expires_at<=clock_timestamp()
    or coalesce(p_args->>'providerId','') !~ '^[A-Za-z0-9]{1,200}$' or coalesce(p_args->>'playbackId','') !~ '^[A-Za-z0-9]{1,200}$'
-   or not clipt_private.obs_beta_account(s.owner_id,s.auth_session_id,s.auth_aal)
+   or (not s.acceptance and not clipt_private.obs_beta_account(s.owner_id,s.auth_session_id,s.auth_aal))
    then raise exception 'Provision unavailable' using errcode='42501'; end if;
   update clipt_private.obs_beta_sessions set state='ready',provider_id=p_args->>'providerId',playback_id=p_args->>'playbackId'
    where id=s.id returning * into s;
