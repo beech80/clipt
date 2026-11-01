@@ -54,7 +54,6 @@ for(const hand of ['right','left']) {
     await page.getByRole('button',{name:'Close',exact:true}).click();
     await expect(home).toBeFocused();
     const cdp=await page.context().newCDPSession(page);
-    console.log('portrait-pad-metrics',await page.evaluate(()=>{const pad=document.querySelector('.clipt-bottom-swipe-zone')!,stage=document.querySelector('.clipt-fyp')!,s=getComputedStyle(pad),p=getComputedStyle(stage);return {pad:pad.getBoundingClientRect().toJSON(),stage:stage.getBoundingClientRect().toJSON(),css:{top:s.top,bottom:s.bottom,height:s.height,padding:s.padding,margin:s.margin,transform:s.transform,position:s.position,contain:p.contain,stageTransform:p.transform},viewport:{width:innerWidth,height:innerHeight,visualHeight:visualViewport?.height,visualTop:visualViewport?.offsetTop,docHeight:document.documentElement.clientHeight},vars:{height:getComputedStyle(document.documentElement).getPropertyValue('--clipt-portrait-visible-height'),top:getComputedStyle(document.documentElement).getPropertyValue('--clipt-portrait-visible-top')}};}));
     const pad=(await home.boundingBox())!;
     const x=pad.x+pad.width/2, y=pad.y+pad.height-12;
     await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
@@ -112,7 +111,6 @@ test('portrait menu remains reachable on an empty feed and narrow accessibility 
   await expect(page.getByText('No clips yet. Be the first to share one.',{exact:true})).toBeVisible();
   const menu=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});
   await expect(menu).toBeVisible();
-  console.log('portrait-pad-metrics',await page.evaluate(()=>{const pad=document.querySelector('.clipt-bottom-swipe-zone')!,stage=document.querySelector('.clipt-fyp')!,s=getComputedStyle(pad),p=getComputedStyle(stage);return {pad:pad.getBoundingClientRect().toJSON(),stage:stage.getBoundingClientRect().toJSON(),css:{top:s.top,bottom:s.bottom,height:s.height,padding:s.padding,margin:s.margin,transform:s.transform,position:s.position,contain:p.contain,stageTransform:p.transform},viewport:{width:innerWidth,height:innerHeight,visualHeight:visualViewport?.height,visualTop:visualViewport?.offsetTop,docHeight:document.documentElement.clientHeight},vars:{height:getComputedStyle(document.documentElement).getPropertyValue('--clipt-portrait-visible-height'),top:getComputedStyle(document.documentElement).getPropertyValue('--clipt-portrait-visible-top')}};}));
   const rect=(await menu.boundingBox())!;
   expect(rect.width).toBeGreaterThanOrEqual(44);expect(rect.height).toBeGreaterThanOrEqual(44);
   expect(rect.x).toBeGreaterThanOrEqual(0);expect(rect.x+rect.width).toBeLessThanOrEqual(195);
