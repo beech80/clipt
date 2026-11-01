@@ -9,6 +9,7 @@ import { Gamepad2 } from "lucide-react";
 const ResetPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const submitting = useRef(false);
   const { resetPassword } = useAuth();
@@ -23,7 +24,7 @@ const ResetPassword = () => {
 
     try {
       await resetPassword(email);
-      navigate("/login");
+      setSent(true);
     } catch (error) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -53,7 +54,7 @@ const ResetPassword = () => {
           </Alert>
         )}
 
-        <form onSubmit={handleResetPassword} className="space-y-4">
+        {sent ? <div className="space-y-4"><p role="status" aria-live="polite">If an account exists for this email, a password reset link has been requested. Check your inbox and spam folder. Open the newest link to choose a new password.</p><Button type="button" variant="outline" className="w-full" onClick={()=>navigate('/login')}>Back to Login</Button></div> : <form onSubmit={handleResetPassword} aria-busy={loading} className="space-y-4">
           <div>
             <Input
               type="email"
@@ -81,7 +82,7 @@ const ResetPassword = () => {
           >
             Back to Login
           </Button>
-        </form>
+        </form>}
       </div>
     </main>
   );
