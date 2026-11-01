@@ -9,12 +9,14 @@ test('real OBS SQL enforces invitation, idempotency, global quota, private lease
  await db.exec(`
  create role anon;create role authenticated;create role service_role;
  create schema auth;create schema clipt_private;create schema vault;grant usage on schema clipt_private to service_role;
+ create function auth.uid() returns uuid language sql as $select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$;
  create function auth.role() returns text language sql as $$select current_setting('request.jwt.claim.role',true)$$;
  create table auth.users(id uuid primary key,email_confirmed_at timestamptz,is_anonymous boolean default false,deleted_at timestamptz,banned_until timestamptz);
  create table auth.sessions(id uuid primary key,user_id uuid,not_after timestamptz);
  create table auth.mfa_factors(user_id uuid,status text);
  create table profiles(id uuid primary key);
  create table streams(id uuid primary key,user_id uuid,is_live boolean default false,playback_url text,hls_playback_url text,started_at timestamptz,ended_at timestamptz,viewer_count integer);
+ create table stream_chat(id uuid,stream_id uuid,user_id uuid,message text);alter table stream_chat enable row level security;
  create table user_blocks(blocker_id uuid,blocked_id uuid);
  create table clipt_private.beta_members(user_id uuid,revoked_at timestamptz,expires_at timestamptz);
  create table clipt_private.erasure_jobs(user_id uuid,state text);
@@ -41,6 +43,8 @@ test('real OBS SQL enforces invitation, idempotency, global quota, private lease
  const snap=()=>call('snapshot',{sessionId:s.sessionId,providerId:'verifiedprovider',playbackId:'privateplayback',status:'active',observedAt:new Date().toISOString()});
  await snap();
  assert.equal((await db.query('select is_live,playback_url from streams')).rows[0].playback_url,'clipt-obs:'+stream);
+ await db.query("select set_config('request.jwt.claim.sub',$1,false)",[owner]);
+ assert.equal((await db.query('select clipt_private.obs_beta_chat_allowed($1) ok',[stream])).rows[0].ok,true);
  const token=await call('playback',{...identity,streamId:stream});assert.ok(Date.parse(token.tokenExpiresAt)<=Date.now()+181000);
  await assert.rejects(call('credentials',{...identity,ownerId:rid,sessionId:s.sessionId}));
  for(let i=10;i<16;i++){
@@ -54,7 +58,9 @@ test('real OBS SQL enforces invitation, idempotency, global quota, private lease
  await db.query('insert into user_blocks values($1,$2)',[owner,rid]);
  await db.exec("update clipt_private.beta_members set revoked_at=now() where user_id='"+owner+"'");
  await assert.rejects(call('credentials',{...identity,sessionId:s.sessionId}));
- await call('list');assert.equal((await db.query('select is_live from streams')).rows[0].is_live,false);
+ await call('list');
+ assert.equal((await db.query('select clipt_private.obs_beta_chat_allowed($1) ok',[stream])).rows[0].ok,false);
+ assert.equal((await db.query('select is_live from streams')).rows[0].is_live,false);
  await assert.rejects(call('finish',{sessionId:s.sessionId}));
  await call('finish',{sessionId:s.sessionId,providerId:'verifiedprovider'});
  await call('stop',{...identity,sessionId:s.sessionId});
