@@ -101,7 +101,7 @@ serve(async req=>{
    const result=await reconcileObs(await dependencies());
    return jsonResponse({...configured,...result},result.pending?503:200);
   }
-  const body=await requestBody(req),who=await identity(req,body.action==='stop');
+  const body=await requestBody(req),who=await identity(req,body.action==='stop'||body.action==='erase');
   return jsonResponse(await obsCommand(body,who,await dependencies()));
  }catch(error){
   if(error instanceof ObsError)return jsonResponse({error:error.message,code:error.code},error.status);
