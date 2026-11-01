@@ -419,3 +419,16 @@ body:has(.clipt-controller[data-page-controller]) .page-content { padding-bottom
 @media (max-height: 350px) {
   .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="immersive"]:not([data-portrait-viewing="true"]):not([data-compact="true"]) .clipt-controller-actions { gap: 4px; }
 }
+
+/* Roomier tablet/computer feeds keep universal navigation away from the action rail.
+   Short phone landscapes retain their established rail and overflow behavior. */
+@media (min-width: 600px) and (min-height: 500px) {
+  .gameboy-controls.clipt-controller[data-mobile-v2="true"]:not([data-portrait-viewing="true"]) .clipt-controller-actions.clipt-controller-actions > .clipt-controller-home {
+    position: fixed; top: auto; left: 50%; right: auto; bottom: calc(12px + env(safe-area-inset-bottom,0px));
+    transform: translateX(-50%); margin: 0; z-index: 2;
+  }
+  body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-bottom-swipe-zone.clipt-bottom-swipe-zone {
+    left: calc(var(--clipt-portrait-visible-left,0px) + 78px + env(safe-area-inset-left,0px));
+    right: calc(100vw - var(--clipt-portrait-visible-width,100vw) - var(--clipt-portrait-visible-left,0px) + 78px + env(safe-area-inset-right,0px));
+  }
+}
