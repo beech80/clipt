@@ -14,10 +14,10 @@ export async function obsAcceptance(action:string,args:Record<string,unknown>,re
     p=obsProvider(await d.provider.create(s),s);
     if(p.status!=='idle')throw Error();
     await d.db('attach',{sessionId:s.sessionId,providerId:p.id,playbackId:p.playback_ids[0].id});
-   }catch{
+   }catch(error){
     await d.db('uncertain',{sessionId:s.sessionId,...(p?.id?{providerId:p.id}:{})}).catch(()=>undefined);
     if(p?.id)await d.provider.disable(p.id).catch(()=>undefined);
-    throw new ObsError(503,'ACCEPTANCE_PENDING','Acceptance setup requires reconciliation');
+    throw new ObsError(503,error instanceof ObsError?error.code:'ACCEPTANCE_PENDING','Acceptance setup requires reconciliation');
    }
   }else if(s.providerId&&s.state==='ready')p=obsProvider(await d.provider.read(s.providerId),s);
   else throw new ObsError(409,'ACCEPTANCE_UNAVAILABLE','This acceptance request cannot be started again');
