@@ -40,7 +40,7 @@ revoke all on clipt_private.obs_beta_config,clipt_private.obs_beta_usage,clipt_p
 
 create or replace function clipt_private.obs_beta_account(u uuid,a uuid,aal text)
 returns boolean language sql stable security definer set search_path='' as $$
-select u is not null and a is not null and aal in ('aal1','aal2')
+select u is not null and a is not null and aal is not null and aal in ('aal1','aal2')
  and exists(select 1 from auth.users x join public.profiles p on p.id=x.id where x.id=u
   and x.email_confirmed_at is not null and not coalesce(x.is_anonymous,false)
   and x.deleted_at is null and (x.banned_until is null or x.banned_until<=statement_timestamp()))
@@ -187,7 +187,7 @@ begin
   if not found or s.expires_at<=clock_timestamp() or not c.enabled
    or not clipt_private.obs_beta_account(u,a,p_args->>'aal')
    or not clipt_private.obs_beta_account(s.owner_id,s.auth_session_id,s.auth_aal)
-   or s.observed_at<clock_timestamp()-interval '90 seconds'
+   or s.observed_at is null or s.observed_at<clock_timestamp()-interval '90 seconds'
    or exists(select 1 from public.user_blocks b where (b.blocker_id=u and b.blocked_id=s.owner_id) or (b.blocked_id=u and b.blocker_id=s.owner_id))
    then raise exception 'Private broadcast unavailable' using errcode='42501'; end if;
   delete from clipt_private.obs_beta_viewers where session_id=s.id and expires_at<clock_timestamp();
@@ -217,7 +217,7 @@ begin
  end if;
  if p_action='attach' then
   if s.state<>'provisioning' or s.expires_at<=clock_timestamp()
-   or p_args->>'providerId' !~ '^[A-Za-z0-9]{1,200}$' or p_args->>'playbackId' !~ '^[A-Za-z0-9]{1,200}$'
+   or coalesce(p_args->>'providerId','') !~ '^[A-Za-z0-9]{1,200}$' or coalesce(p_args->>'playbackId','') !~ '^[A-Za-z0-9]{1,200}$'
    or not clipt_private.obs_beta_account(s.owner_id,s.auth_session_id,s.auth_aal)
    then raise exception 'Provision unavailable' using errcode='42501'; end if;
   update clipt_private.obs_beta_sessions set state='ready',provider_id=p_args->>'providerId',playback_id=p_args->>'playbackId'
@@ -239,7 +239,7 @@ begin
   update public.streams set is_live=false,ended_at=clock_timestamp(),playback_url=null,hls_playback_url=null where id=s.stream_id;
  elsif p_action='snapshot' then
   observed:=(p_args->>'observedAt')::timestamptz;
-  if s.provider_id is distinct from p_args->>'providerId' or s.playback_id is distinct from p_args->>'playbackId'
+  if s.provider_id is null or s.provider_id is distinct from p_args->>'providerId' or s.playback_id is distinct from p_args->>'playbackId'
    or coalesce(p_args->>'status','') not in ('active','idle','disabled') or observed is null
    or observed<clock_timestamp()-interval '30 seconds' or observed>clock_timestamp()+interval '5 seconds'
    then raise exception 'Provider observation rejected' using errcode='22023'; end if;
