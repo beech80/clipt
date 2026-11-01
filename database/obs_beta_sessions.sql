@@ -304,7 +304,7 @@ grant execute on function clipt_private.obs_beta_admin(text,jsonb),public.obs_be
 -- Browser inserts into OBS chat require a live, authorized, unblocked publisher.
 -- Other existing stream systems keep their existing policies.
 create or replace function clipt_private.obs_beta_chat_allowed(p_stream uuid)
-returns boolean language plpgsql stable security definer set search_path='' as $
+returns boolean language plpgsql stable security definer set search_path='' as $$
 declare s clipt_private.obs_beta_sessions%rowtype;
 begin
  select * into s from clipt_private.obs_beta_sessions where stream_id=p_stream order by created_at desc limit 1;
@@ -316,7 +316,7 @@ begin
   and not exists(select 1 from public.user_blocks b where
    (b.blocker_id=auth.uid() and b.blocked_id=s.owner_id) or (b.blocked_id=auth.uid() and b.blocker_id=s.owner_id)),false);
 end;
-$;
+$$;
 revoke all on function clipt_private.obs_beta_chat_allowed(uuid) from public,anon;
 grant execute on function clipt_private.obs_beta_chat_allowed(uuid) to authenticated;
 drop policy if exists clipt_obs_live_chat_insert on public.stream_chat;
