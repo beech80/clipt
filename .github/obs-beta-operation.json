@@ -1,0 +1,5 @@
+{
+  "action": "reconcile",
+  "requestedOn": "2026-11-01",
+  "purpose": "Owner-approved private signing and webhook setup; broadcasting remains disabled"
+}
