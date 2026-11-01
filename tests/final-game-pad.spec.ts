@@ -40,7 +40,7 @@ for(const hand of ['right','left'])test('roomy computer/tablet CLIPT navigation 
  for(const size of [{width:1280,height:800},{width:1024,height:768},{width:768,height:1024}]){
   await page.setViewportSize(size);await expect(home).toBeVisible();
   await expect.poll(async()=>{const r=(await home.boundingBox())!;return Math.abs(r.x+r.width/2-size.width/2);}).toBeLessThanOrEqual(1);
-  const h=(await home.boundingBox())!;expect(h.y+h.height).toBeLessThanOrEqual(size.height);expect(h.y).toBeGreaterThan(size.height-160);
+  const h=(await home.boundingBox())!;const media=(await page.locator('[data-active-clip="true"] .clipt-cinematic-media').boundingBox())!;expect(h.y).toBeGreaterThanOrEqual(media.y+media.height);expect(h.y+h.height).toBeLessThanOrEqual(size.height);expect(h.y).toBeGreaterThan(size.height-160);
   for(const button of await page.locator('.clipt-controller-actions > .clipt-controller-action, .clipt-controller-actions > .clipt-feed-flip').all()){
    if(!await button.isVisible())continue;const r=(await button.boundingBox())!;
    expect(h.x+h.width<=r.x||r.x+r.width<=h.x||h.y+h.height<=r.y||r.y+r.height<=h.y).toBe(true);
