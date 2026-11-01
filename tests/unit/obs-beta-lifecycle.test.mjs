@@ -64,3 +64,20 @@ test('cleanup disables an owned test or oversized resource without treating it a
  assert.deepEqual(calls,['list','adopt','disable','clear-recordings','finish','worker_complete']);
  assert.throws(()=>obsProvider(raw,session),e=>e.code==='MUX_PAID_MODE_UNAVAILABLE');
 });
+
+test('the public expiry path cannot provision, sign playback, observe healthy sessions or bootstrap',async()=>{
+ const calls=[];let claimed=false;
+ const d={now:Date.now,db:async(action,args)=>{
+  calls.push(action);if(action==='expiry_claim'){if(claimed)return {claimed:false};claimed=true;return {claimed:true,claimId:'fixture',sessions:[]};}
+  if(action==='expiry_complete'){assert.equal(args.claimId,'fixture');return {ok:true};}
+  throw Error('Unexpected privileged operation');
+ },provider:new Proxy({},{get(){throw Error('Unexpected provider operation');}}),sign:()=>{throw Error('Unexpected signing');}};
+ assert.equal((await reconcileObs(d,true)).pending,0);
+ assert.equal((await reconcileObs(d,true)).skipped,true);
+ assert.deepEqual(calls,['expiry_claim','expiry_complete','expiry_claim']);
+});
+test('expiry-only reconciliation refuses a healthy session returned accidentally by storage',async()=>{
+ const calls=[];const d={now:Date.now,db:async action=>{calls.push(action);return {claimed:true,claimId:'fixture',sessions:[{...session,state:'active'}]};},
+ provider:new Proxy({},{get(){throw Error('Healthy provider must not be touched');}})};
+ assert.equal((await reconcileObs(d,true)).pending,1);assert.deepEqual(calls,['expiry_claim']);
+});
