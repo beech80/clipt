@@ -29,9 +29,9 @@ test('failed attach disables the known created resource and does not return cred
 });
 test('stop clears local eligibility before provider calls and confirms disable before finish',async()=>{
  const calls=[];const d={now:Date.now,db:async action=>{calls.push(action);return {...session,state:'stopping',providerId:'provider',playbackId:'playback'};},
- provider:{disable:async()=>calls.push('disable'),read:async()=>({...provider,status:'disabled'})}};
+ provider:{disable:async()=>calls.push('disable'),clearRecordings:async()=>calls.push('clear-recordings'),read:async()=>({...provider,status:'disabled'})}};
  const result=await obsCommand({protocolVersion:1,action:'stop',sessionId:session.sessionId},{},d);
- assert.deepEqual(calls,['stop','disable','finish']);assert.equal(result.session.state,'ended');
+ assert.deepEqual(calls,['stop','disable','clear-recordings','finish']);assert.equal(result.session.state,'ended');
 });
 test('an incomplete provider listing cannot release an uncertain reservation',async()=>{
  const calls=[];const d={now:Date.now,db:async action=>{calls.push(action);return action==='list'?[{...session,state:'stopping'}]:null;},
