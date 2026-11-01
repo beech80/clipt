@@ -3,14 +3,21 @@ import {useQuery,useQueryClient} from '@tanstack/react-query';
 import {Link} from 'react-router-dom';
 import {useAuth} from '@/contexts/AuthContext';
 import {Button} from '@/components/ui/button';
+import {GameCatalogLookup} from '@/components/GameCatalogLookup';
+import {completeGameCatalog,gameLabel} from '@/lib/game-catalog';
+import {validChannelGame} from '@/lib/channel-feeds';
+import {useSearchParams} from 'react-router-dom';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {StreamPlayer} from './StreamPlayer';
-import {createStream,getUserStream} from '@/services/streamService';
+import {createStream,getUserStream,updateStream} from '@/services/streamService';
 import {obsReadiness,currentObsSession,createObsSession,endObsSession,obsCredentials,type ObsSession} from '@/services/obsBroadcastService';
 
 export function ObsBroadcastDashboard(){
  const {user}=useAuth(),client=useQueryClient();
+ const [params]=useSearchParams();
+ const [gameId,setGameId]=useState(()=>{const id=params.get('game');return id&&validChannelGame(id)?id:'';});
+ const games=useQuery({queryKey:['obs-games',user?.id],enabled:Boolean(user),retry:false,queryFn:({signal})=>completeGameCatalog('',signal)});
  const [title,setTitle]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const [credentials,setCredentials]=useState<Awaited<ReturnType<typeof obsCredentials>>|null>(null),[revealed,setRevealed]=useState(false);
  const [notice,setNotice]=useState('');
@@ -30,6 +37,7 @@ export function ObsBroadcastDashboard(){
   document.addEventListener('visibilitychange',clear);
   return()=>{clearTimeout(timer);document.removeEventListener('visibilitychange',clear);};
  },[credentials]);
+ useEffect(()=>{if(stream.data)setGameId(stream.data.game_id||'');},[stream.data?.id,stream.data?.game_id]);
  const active=current.data,available=readiness.data?.enabled&&readiness.data.configured&&readiness.data.operationsReady;
  async function action(work:()=>Promise<void>){
   if(running.current)return;running.current=true;setBusy(true);setError('');setNotice('');
@@ -43,9 +51,13 @@ export function ObsBroadcastDashboard(){
    if(!pending.current){
     let metadata=stream.data;
     if(!metadata){if(!title.trim())throw Error('Add a stream title.');
-     const r=await createStream({title:title.trim().slice(0,120),description:'',thumbnail_url:null});
+     const r=await createStream({title:title.trim().slice(0,120),description:'',thumbnail_url:null,game_id:gameId||null});
      if(r.error||!r.data)throw r.error||Error('Stream details could not be saved');metadata=r.data;
      client.setQueryData(['obs-metadata',user.id],metadata);
+    }
+    if(metadata.game_id!==(gameId||null)){
+     const r=await updateStream(metadata.id,{game_id:gameId||null});if(r.error||!r.data)throw r.error||Error('Game channel was not saved.');
+     metadata=r.data;client.setQueryData(['obs-metadata',user.id],metadata);
     }
     pending.current={streamId:metadata.id,requestId:crypto.randomUUID()};
    }
@@ -63,6 +75,11 @@ export function ObsBroadcastDashboard(){
   {!available&&<p role="status">Computer broadcasting is being prepared. New sessions stay disabled until provider setup and independent cleanup are verified.</p>}
   {!stream.data&&!active&&<div className="space-y-2"><Label htmlFor="obs-stream-title">Stream title</Label><Input id="obs-stream-title" value={title} onChange={e=>setTitle(e.target.value)} maxLength={120}/></div>}
   {stream.data&&<p>Stream: {stream.data.title}</p>}
+  {!active&&<div className="space-y-2"><Label htmlFor="obs-game">Game channel</Label><select id="obs-game" className="clipt-live-game-filter block w-full" value={gameId} disabled={busy} onChange={e=>setGameId(e.target.value)}>
+   <option value="">No game selected</option>{games.data?.map(game=><option key={game.id} value={game.id}>{gameLabel(game)}</option>)}</select>
+   <GameCatalogLookup onChoose={game=>setGameId(game.id)}/>
+   {games.isError&&<p role="alert">Configured games could not be loaded. <button type="button" className="underline min-h-11" onClick={()=>void games.refetch()}>Retry games</button></p>}
+  </div>}
   {active&&<div className="space-y-2"><p role="status">Status: {active.isLive?'LIVE':active.state}. Session ends by {new Date(active.expiresAt).toLocaleTimeString()}.</p>
    <p>Closing this page does not stop OBS. Use End broadcast and stop OBS when finished.</p>
    {active.streamId&&<Link className="inline-flex min-h-11 items-center underline" to={'/streaming/'+active.streamId}>Open viewer and live chat</Link>}
