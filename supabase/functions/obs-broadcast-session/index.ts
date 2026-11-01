@@ -4,6 +4,7 @@ import {verifyMuxSignature} from '../_shared/mux-webhook-signature.ts';
 import {verifyObsOidc,attestObsRunner} from '../_shared/obs-beta-oidc.mjs';
 import {importNativeSigningKey,nativePlaybackUrl} from '../native-broadcast-session/crypto.ts';
 import {obsCommand,observeObs,reconcileObs,ObsError,uuid,type ObsDependencies} from './lifecycle.ts';
+import {obsAcceptance,acceptanceRequestId} from './acceptance.ts';
 import {bootstrapObs} from './bootstrap.ts';
 const ORIGIN='https://slnjliheyiiummxhrgmk.supabase.co';
 const REVIEWED_RUNNER={".github/workflows/obs-beta-operations.yml":"666ebf1d97da404518fcb1229fc90e25d728e835344f0aaff5d26bd7181c0a6c","scripts/obs-beta-operations.mjs":"bde08c9e0dca553bd1fa95a1282f30eff0a9f67760d80d513aade2de09cddd42"};
@@ -92,11 +93,17 @@ serve(async req=>{
   }
   if(method)return method;
   if(url.searchParams.get('hook')==='mux')return await webhook(req);
-  if(url.searchParams.get('operation')==='reconcile'){
+  if(['reconcile','acceptance','acceptance-status','acceptance-stop'].includes(url.searchParams.get('operation')||'')){
    let claims;
    try{const token=req.headers.get('Authorization')?.match(/^Bearer ([^\s,]+)$/i)?.[1];
     claims=await verifyObsOidc(token);await attestObsRunner(claims,REVIEWED_RUNNER);
    }catch{throw new ObsError(401,'WORKER_FORBIDDEN','Reviewed scheduled worker authorization required');}
+   const operation=url.searchParams.get('operation')!;
+   if(operation!=='reconcile'){
+    const body=await requestBody(req),requestId=await acceptanceRequestId(claims.run_id,claims.run_attempt);
+    if(operation!=='acceptance')uuid(body.sessionId);
+    return jsonResponse(await obsAcceptance(operation,body,requestId,await dependencies()));
+   }
    const configured=await bootstrapObs({db,request:providerRequest,checkKey:async key=>{await importNativeSigningKey(key);}});
    const result=await reconcileObs(await dependencies());
    return jsonResponse({...configured,...result},result.pending?503:200);
