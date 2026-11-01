@@ -59,6 +59,11 @@ export async function obsCommand(body:Record<string,unknown>,identity:Record<str
   }
   return {session:status(s)};
  }
+ if(body.action==='erase'){
+  const sessions=await d.db('owner_cleanup',identity);
+  for(const s of sessions)await stopObs(d,s);
+  return {state:'ended'};
+ }
  if(body.action==='current'){
   const s=await d.db('current',identity);
   return {session:status(s?await observeObs(d,s):null)};
