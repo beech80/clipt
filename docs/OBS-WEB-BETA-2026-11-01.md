@@ -23,7 +23,7 @@ One-time bootstrap creates a Mux signing key and the production OBS webhook. Pri
 
 A SQL-only minute job revokes local LIVE eligibility at expiry, invitation/session revocation or account erasure. Independent five-minute operations reconcile provider state and disable expired resources. Provider continuous duration is also bounded. A missing/stale healthy worker prevents new sessions; closing the browser does not extend the deadline or act as a shutdown mechanism.
 
-Mux webhooks are signature checked and then re-read against Mux before updating LIVE. Stale events cannot resurrect an ended session. Failed creation is durably uncertain; reconciliation must finish before capacity is released. Account deletion first confirms provider shutdown; it cannot silently delete its only cleanup record.
+Mux webhooks are signature checked and then re-read against Mux before updating LIVE. Stale events cannot resurrect an ended session. Failed creation is durably uncertain; reconciliation must finish before capacity is released. Account deletion first confirms provider shutdown; it cannot silently delete its only cleanup record. This initial live-only beta removes this OBS session's Mux recordings after shutdown, verifying each asset's live-stream ownership and subsequent absence; it does not retain a replay. Cleanup failures remain durable and block a false completion.
 
 ## Rollout gate
 
