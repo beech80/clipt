@@ -9,5 +9,5 @@ try{
  stage='private-copy-and-restore';
  console.log(JSON.stringify(await runPrivateBackup(inventory,client,source,{progress:value=>console.log(JSON.stringify(value))})));
 }catch(error){
- console.error(JSON.stringify({stage,backupCompleted:false,restoreCompleted:false,code:error instanceof BackupError?error.code:'private-backup-stopped-for-review',productionFilesModified:false,bucketPrivacyChanged:false}));process.exitCode=1;
+ console.error(JSON.stringify({stage,backupCompleted:false,restoreCompleted:false,code:error instanceof BackupError?error.code:'private-backup-stopped-for-review',...(error instanceof BackupError&&Number.isInteger(error.httpStatus)?{httpStatus:error.httpStatus}:{}),...(error instanceof BackupError&&['private-source-download','backup-destination-download'].includes(error.operation)?{operation:error.operation}:{}),...(error instanceof BackupError&&typeof error.providerCode==='string'?{providerCode:error.providerCode}:{}),productionFilesModified:false,bucketPrivacyChanged:false}));process.exitCode=1;
 }finally{delete process.env.CLIPT_B2_KEY_ID;delete process.env.CLIPT_B2_APPLICATION_KEY;}
