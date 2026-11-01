@@ -7,7 +7,15 @@ export function uuid(value:unknown):string{
  if(typeof value!=='string'||!/^[-0-9a-f]{36}$/i.test(value)||!(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)))
   throw new ObsError(400,'INVALID_REQUEST','A valid broadcast identifier is required');return value;
 }
+export function obsOwnedProvider(value:any,s:ObsSession){
+ if(!value||typeof value.id!=='string'||!(/^[A-Za-z0-9]{1,200}$/.test(value.id))
+  ||(s.providerId&&s.providerId!==value.id)||value.passthrough!=='clipt-obs:'+s.sessionId)
+  throw new ObsError(502,'PROVIDER_UNVERIFIED','Provider ownership could not be verified');
+ return value;
+}
 export function obsProvider(value:any,s:ObsSession){
+ obsOwnedProvider(value,s);
+ if(value.test===true)throw new ObsError(503,'MUX_PAID_MODE_UNAVAILABLE','Mux returned a five-minute test stream; paid livestreaming must be activated.');
  if(!value||!(/^[A-Za-z0-9]{1,200}$/.test(value.id||''))||(s.providerId&&value.id!==s.providerId)
   ||value.passthrough!=='clipt-obs:'+s.sessionId||(value.test!==undefined&&value.test!==false)
   ||!['active','idle','disabled'].includes(value.status)||!Number.isInteger(value.max_continuous_duration)
@@ -36,7 +44,7 @@ export async function stopObs(d:ObsDependencies,s:ObsSession){
  if(s.state==='ended')return;
  if(!s.providerId)throw new ObsError(503,'STOP_PENDING','Broadcast setup is still being reconciled');
  await d.provider.disable(s.providerId);
- const p=obsProvider(await d.provider.read(s.providerId),s);
+ const p=obsOwnedProvider(await d.provider.read(s.providerId),s);
  if(p.status!=='disabled')throw new ObsError(503,'STOP_PENDING','Provider shutdown is not yet confirmed');
  await d.provider.clearRecordings(p.id,p);
  await d.db('finish',{sessionId:s.sessionId,providerId:p.id});
@@ -101,8 +109,9 @@ export async function reconcileObs(d:ObsDependencies){
     const matching=listing.resources.filter(p=>p?.passthrough==='clipt-obs:'+s.sessionId);
     if(matching.length>1||!listing.complete)throw new Error('Ambiguous provider listing');
     if(matching.length===1){
-     const p=obsProvider(matching[0],s);
-     s=await d.db('adopt',{sessionId:s.sessionId,providerId:p.id,playbackId:p.playback_ids[0].id});
+     const p=obsOwnedProvider(matching[0],s);
+     const playbackId=Array.isArray(p.playback_ids)&&/^[A-Za-z0-9]{1,200}$/.test(p.playback_ids[0]?.id||'')?p.playback_ids[0].id:null;
+     s=await d.db('adopt',{sessionId:s.sessionId,providerId:p.id,playbackId});
     }else if(Date.parse(s.expiresAt)<=d.now()||s.state==='stopping'){
      await d.db('finish',{sessionId:s.sessionId});ended++;continue;
     }else{pending++;continue;}
