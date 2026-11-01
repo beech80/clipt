@@ -63,5 +63,18 @@ test('real OBS SQL enforces invitation, idempotency, global quota, private lease
  await db.exec('set role authenticated');
  await assert.rejects(call('configuration'));
  await assert.rejects(db.query('select * from clipt_private.obs_beta_sessions'));
+ await db.exec("reset role;update clipt_private.obs_beta_config set enabled=false,worker_at=now();update clipt_private.obs_beta_usage set reserved_minutes=30;");
+ const qa=await call('acceptance_reserve',{requestId:rid});assert.equal(qa.maxDurationSeconds,90);assert.equal(qa.acceptance,true);
+ assert.equal((await call('acceptance_reserve',{requestId:rid})).needsProvision,false);
+ await call('attach',{sessionId:qa.sessionId,providerId:'qaprovider',playbackId:'qaplayback'});
+ await call('snapshot',{sessionId:qa.sessionId,providerId:'qaprovider',playbackId:'qaplayback',status:'active',observedAt:new Date().toISOString(),webhook:true});
+ assert.equal((await call('acceptance_current',{requestId:rid,sessionId:qa.sessionId})).webhookVerified,true);
+ assert.equal((await db.query('select count(*)::int n from streams where is_live')).rows[0].n,0);
+ await assert.rejects(call('acceptance_current',{requestId:owner,sessionId:qa.sessionId}));
+ await db.query("update clipt_private.obs_beta_sessions set expires_at=now()-interval '1 second' where id=$1",[qa.sessionId]);
+ await call('list');
+ assert.equal((await call('acceptance_current',{requestId:rid,sessionId:qa.sessionId})).state,'stopping');
+ await call('finish',{sessionId:qa.sessionId,providerId:'qaprovider'});
+
  }finally{await db.close();}
 });
