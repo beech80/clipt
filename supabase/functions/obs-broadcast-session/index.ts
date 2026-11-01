@@ -5,6 +5,7 @@ import {verifyObsOidc,attestObsRunner} from '../_shared/obs-beta-oidc.mjs';
 import {importNativeSigningKey,nativePlaybackUrl} from '../native-broadcast-session/crypto.ts';
 import {obsCommand,observeObs,reconcileObs,ObsError,uuid,type ObsDependencies} from './lifecycle.ts';
 import {obsAcceptance,acceptanceRequestId} from './acceptance.ts';
+import {clearObsRecordings} from './recordings.ts';
 import {bootstrapObs} from './bootstrap.ts';
 const ORIGIN='https://slnjliheyiiummxhrgmk.supabase.co';
 const REVIEWED_RUNNER={".github/workflows/obs-beta-operations.yml":"cef7a8335a00726f43d9d69ee2b6a809f1f8e735f209c3c60758e4b5df978a81","scripts/obs-beta-operations.mjs":"a7239e306dfad1b295356d0718b1fc76f62fd74c2870eaa7220de513c451163b"};
@@ -19,7 +20,7 @@ async function db(action:string,args:Record<string,unknown>={}){
  }return result.data;
 }
 async function providerRequest(path:string,method='GET',body?:unknown){
- if(!(/^\/(?:video\/v1\/live-streams(?:\/[A-Za-z0-9]+(?:\/disable)?)?(?:\?limit=100&page=\d{1,2})?|system\/v1\/(?:signing-keys|webhooks)(?:\/[A-Za-z0-9]+)?)$/).test(path))
+ if(!(/^\/(?:video\/v1\/(?:live-streams(?:\/[A-Za-z0-9]+(?:\/disable)?)?(?:\?limit=100&page=\d{1,2})?|assets(?:\/[A-Za-z0-9]+|\?live_stream_id=[A-Za-z0-9]+&limit=100&page=\d{1,2}))|system\/v1\/(?:signing-keys|webhooks)(?:\/[A-Za-z0-9]+)?)$/).test(path))
   throw new ObsError(503,'PROVIDER_UNAVAILABLE','Provider request unavailable');
  const id=env('MUX_TOKEN_ID'),secret=env('MUX_TOKEN_SECRET');
  if(!/^[!-~]{1,500}$/.test(id)||!/^[!-~]{1,500}$/.test(secret))throw new ObsError(503,'PROVIDER_UNAVAILABLE','Mux token is not configured');
@@ -28,6 +29,7 @@ async function providerRequest(path:string,method='GET',body?:unknown){
   headers:{Authorization:'Basic '+btoa(id+':'+secret),'Content-Type':'application/json','Cache-Control':'no-cache'},
   ...(body===undefined?{}:{body:JSON.stringify(body)}),redirect:'error',signal:AbortSignal.timeout(12000)});
  }catch{throw new ObsError(502,'PROVIDER_UNAVAILABLE','Mux could not be reached');}
+ if(response.status===404&&/^\/video\/v1\/assets\/[A-Za-z0-9]+$/.test(path)){await response.body?.cancel();return null;}
  if(!response.ok){await response.body?.cancel();throw new ObsError(502,
   response.status===401||response.status===403?'MUX_PERMISSION_REQUIRED':'PROVIDER_UNAVAILABLE','Mux could not confirm this operation');}
  if(response.status===204)return null;
@@ -44,6 +46,7 @@ async function dependencies():Promise<ObsDependencies>{
    playback_policies:['signed'],new_asset_settings:{playback_policies:['signed'],max_resolution_tier:'1080p',video_quality:'plus'},
    reconnect_window:60,latency_mode:'standard',passthrough:'clipt-obs:'+s.sessionId}),
   read:id=>providerRequest('/video/v1/live-streams/'+id),
+  clearRecordings:(id,snapshot)=>clearObsRecordings(id,snapshot,providerRequest),
   disable:async id=>{await providerRequest('/video/v1/live-streams/'+id+'/disable','PUT');},
   list:async()=>{
    const resources:any[]=[];
