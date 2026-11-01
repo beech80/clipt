@@ -1,14 +1,16 @@
+/* Share one measured pad size between its anchor and the reserved media area. */
+body:has(.clipt-controller[data-portrait-viewing="true"]) { --clipt-portrait-swipe-height: 140px; }
 /* Roomier input stays clear of the social/camera rail and the native video controls. */
 body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-bottom-swipe-zone.clipt-bottom-swipe-zone {
   left: calc(var(--clipt-portrait-visible-left,0px) + 12px + env(safe-area-inset-left,0px));
   right: calc(100vw - var(--clipt-portrait-visible-width,100vw) - var(--clipt-portrait-visible-left,0px) + 78px + env(safe-area-inset-right,0px));
-  width: auto; height: 140px; border-radius: 26px;
+  width: auto; height: var(--clipt-portrait-swipe-height); border-radius: 26px;
 }
 body:has(.clipt-controller[data-portrait-viewing="true"][data-hand="left"]) .clipt-bottom-swipe-zone.clipt-bottom-swipe-zone {
   left: calc(var(--clipt-portrait-visible-left,0px) + 78px + env(safe-area-inset-left,0px));
   right: calc(100vw - var(--clipt-portrait-visible-width,100vw) - var(--clipt-portrait-visible-left,0px) + 12px + env(safe-area-inset-right,0px));
 }
-body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-fyp.clipt-fyp .clipt-cinematic-media { bottom: 152px !important; height: calc(100% - 152px) !important; }
+body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-fyp.clipt-fyp .clipt-cinematic-media { bottom: calc(var(--clipt-portrait-swipe-height) + 12px + env(safe-area-inset-bottom,0px)) !important; height: calc(100% - var(--clipt-portrait-swipe-height) - 12px - env(safe-area-inset-bottom,0px)) !important; }
 .clipt-channel-games { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,160px),1fr)); gap: 10px; }
 .clipt-channel-game { display: flex; align-items: center; gap: 10px; min-height: 68px; padding: 12px; border: 1px solid #a78bfa55; border-radius: 12px; background: #0c0a1bd9; overflow-wrap: anywhere; }
 .clipt-channel-game:focus-visible { outline: 2px solid #e9d5ff; outline-offset: 2px; }
@@ -21,8 +23,7 @@ body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-fyp.clipt-fyp .
 .clipt-live-discovery .clipt-filter-bar { gap: 10px; align-items: center; }
 .clipt-live-game-filter { min-height: 44px; max-width: 100%; min-width: 0; padding: 8px; border: 1px solid #a78bfa88; border-radius: 10px; background: #0c0b1b; color: #f5f3ff; }
 @media (max-height: 400px) and (orientation:portrait) {
-  body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-bottom-swipe-zone.clipt-bottom-swipe-zone { height: 100px; }
-  body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-fyp.clipt-fyp .clipt-cinematic-media { bottom: 112px !important; height: calc(100% - 112px) !important; }
+  body:has(.clipt-controller[data-portrait-viewing="true"]) { --clipt-portrait-swipe-height: 100px; }
 }
 
 .clipt-game-channel-indicator { position: absolute; top: 8px; left: 8px; z-index: 56; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: min(65%,360px); border: 1px solid #a78bfa66; border-radius: 12px; padding: 4px 10px; background: #000b; font-size: 12px; }
