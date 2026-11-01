@@ -1,5 +1,6 @@
 {
-  "action": "reconcile",
+  "action": "acceptance",
   "requestedOn": "2026-11-01",
-  "purpose": "Owner-approved private signing and webhook setup; broadcasting remains disabled"
+  "purpose": "Owner-approved bounded paid Mux ingest, signed playback, webhook and recording-cleanup acceptance",
+  "maxDurationSeconds": 90
 }
