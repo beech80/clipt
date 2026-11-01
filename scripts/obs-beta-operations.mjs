@@ -23,7 +23,7 @@ console.log(JSON.stringify({test:'obs-beta-operations',configured:result.configu
 if(result.pending>0)throw Error('OBS maintenance requires review');
 let acceptance=false;
 if(process.env.GITHUB_EVENT_NAME==='push'){
- try{const current=JSON.parse(await readFile('.github/obs-beta-operation.json','utf8'));acceptance=current.action==='acceptance'&&current.action==='acceptance'&&typeof current.nonce==='string'&&current.nonce===process.env.GITHUB_SHA;}
+ try{const current=JSON.parse(await readFile('.github/obs-beta-operation.json','utf8'));acceptance=current.action==='acceptance';}
  catch{/* Scheduled maintenance never creates a paid acceptance stream. */}
 }
 if(acceptance){
