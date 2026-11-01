@@ -93,6 +93,7 @@ const Login = () => {
               className="bg-[#161B22] border-indigo-500/30 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-white h-12"
             />
           </div>
+          <div className="text-right"><Link to="/reset-password" className="text-sm text-indigo-400 hover:text-indigo-300">Forgot your password?</Link></div>
           <Button
             type="submit"
             className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white h-12 font-medium"
@@ -123,9 +124,6 @@ const Login = () => {
           </Button>
 
           <div className="mt-6 text-center space-y-2">
-            <Link to="/reset-password" className="text-sm text-indigo-400 hover:text-indigo-300 block">
-              Forgot your password?
-            </Link>
             <Link to="/resend-verification" className="text-sm text-indigo-400 hover:text-indigo-300 block">
               Resend verification email
             </Link>
