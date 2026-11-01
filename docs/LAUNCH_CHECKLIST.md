@@ -1,6 +1,6 @@
 # CLIPT web beta launch checklist
 
-Updated October 31, 2026. Use the [current release review](BETA-RELEASE-REVIEW-2026-10-31.md) for evidence, rollout order, invariants and rollback instructions. This checklist records verified results; it is not a legal, store or zero-defect certification.
+Updated November 1, 2026. The approved web release is published; see [the rollout receipt](WEB-BETA-ROLLOUT-2026-11-01.md). Use the [current release review](BETA-RELEASE-REVIEW-2026-10-31.md) for evidence, rollout order, invariants and rollback instructions. This checklist records verified results; it is not a legal, store or zero-defect certification.
 
 ## Verified
 
@@ -15,12 +15,13 @@ Updated October 31, 2026. Use the [current release review](BETA-RELEASE-REVIEW-2
 - [x] The staged compatibility release passed 820 app tests, 12 monitor tests, type/CSS/build/audit checks and Chromium/WebKit regressions.
 - [x] Development native cleanup has an observed successful automatic invocation. Native builds passed; physical broadcasts have not passed acceptance.
 
-## Before publishing the reviewed web release
+## Production rollout and final acceptance
 
-- [ ] Obtain explicit production rollout approval for PR 35, the existing game-catalog Edge function and the pinned frontend build.
-- [ ] Apply the tested production feature-contract migration and verify preserved content, invitation/RLS boundaries and stream-secret privileges.
-- [ ] Deploy the authenticated catalog and publish with verified production configuration; keep payments and general broadcasting closed.
-- [ ] Complete post-release HTTP/security probes and an approved signed-in hosted smoke check when the session is available.
+- [x] Owner approved the final production steps; PR35 merged as8c301c9fdabbed95dbc30c5ee34b978193c26b60.
+- [x] Applied tracked migration20261031194900; content/media hashes, invitation/RLS boundaries, erasure registration and stream-secret restrictions were verified.
+- [x] Catalog version1 deployed/read back; production deployment dpl_A4AxYytdYJFutv37ogBi7SZanjFq is READY with verified active production configuration. Payments and general broadcasting remain closed.
+- [x] Public login/privacy/terms, Auth health, beta admission denial, unauthorized data denial and deployed asset configuration passed. November1 scheduled monitoring and backup/restore passed.
+- [ ] Complete the final approved signed-in production upload/playback/comments/profile smoke check. Browser connectors were unavailable; Windows helper initialization timed out. Read-only RLS simulation passed, but is not a browser pass.
 - [ ] Resolve web-beta streaming scope explicitly: the OBS proof is a development-owner pilot, not general production Mux readiness. Do not advertise unrestricted live broadcasting until separately configured, authorized and tested.
 
 ## Separate deferred work
