@@ -40,6 +40,7 @@ async function fixture(page:any,{denied=false,quota=false}={}){
 }
 for(const viewport of [{width:1366,height:768},{width:1024,height:768},{width:390,height:844}])test('production OBS controls, private playback and end flow fit '+viewport.width,async({page})=>{
  await page.setViewportSize(viewport);const state=await fixture(page);await page.goto('/stream-setup');
+ await expect(page.getByRole('region',{name:'Broadcast instructions',exact:true})).toBeVisible();
  const prepare=page.getByRole('button',{name:'Prepare OBS broadcast',exact:true});await expect(prepare).toBeEnabled();
  expect(state.creates).toBe(0);expect(state.keys).toBe(0);
  await prepare.click();await expect(page.getByText(/Status: ready/)).toBeVisible();expect(state.creates).toBe(1);expect(state.keys).toBe(0);
