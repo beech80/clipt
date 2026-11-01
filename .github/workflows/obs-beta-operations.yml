@@ -1,0 +1,28 @@
+name: CLIPT OBS beta operations
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/obs-beta-operation.json'
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: clipt-obs-beta-operations
+  cancel-in-progress: false
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Verify provider configuration and reconcile OBS broadcasts
+        run: node scripts/obs-beta-operations.mjs
