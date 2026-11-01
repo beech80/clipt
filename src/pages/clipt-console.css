@@ -867,7 +867,7 @@ body:has(.clipt-controller[data-mobile-v2="true"][data-portrait-viewing="true"])
 /* Wide-screen navigation has its own black strip below native playback controls. */
 @media (min-width:600px) and (min-height:500px) and (orientation:landscape) {
   body:has(.clipt-controller[data-mobile-v2="true"]:not([data-portrait-viewing="true"])) .clipt-fyp .clipt-cinematic-media {
-    bottom: calc(76px + env(safe-area-inset-bottom,0px)) !important;
-    height: calc(100% - 76px - env(safe-area-inset-bottom,0px)) !important;
+    bottom: calc(176px + env(safe-area-inset-bottom,0px)) !important;
+    height: calc(100% - 176px - env(safe-area-inset-bottom,0px)) !important;
   }
 }

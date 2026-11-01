@@ -428,3 +428,10 @@ body:has(.clipt-controller[data-page-controller]) .page-content { padding-bottom
     transform: translateX(-50%); margin: 0; z-index: 2;
   }
 }
+
+/* Keep the original diamond low on roomy computer/tablet landscape feeds. */
+@media (min-width:600px) and (min-height:500px) {
+  .gameboy-controls.clipt-controller[data-mobile-v2="true"][data-layout="classic"]:not([data-portrait-viewing="true"]) .clipt-controller-actions {
+    bottom: calc(12px + env(safe-area-inset-bottom,0px));
+  }
+}
