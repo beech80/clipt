@@ -1,6 +1,5 @@
 {
-  "action": "acceptance",
+  "action": "reconcile",
   "requestedOn": "2026-11-01",
-  "purpose": "Owner-approved bounded paid Mux ingest, signed playback, webhook and recording-cleanup acceptance",
-  "maxDurationSeconds": 90
+  "purpose": "Disable the rejected test-mode resource and verify all cleanup before awaiting Mux paid-mode activation"
 }
