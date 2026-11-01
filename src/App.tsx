@@ -1,6 +1,8 @@
 import React from 'react';
 import {installNativeBroadcastAccountGuard} from '@/native/broadcast/accountGuard';
 import './pages/clipt-console.css';
+import './pages/clipt-auth-layout.css';
+import {useAuthViewport} from './hooks/useAuthViewport';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
@@ -70,6 +72,8 @@ const App = () => {
   React.useEffect(installNativeBroadcastAccountGuard, []);
   useApplyAccessibilityPreferences();
   const location = useLocation();
+  const authPage=['/login','/signup','/reset-password','/forgot-password','/update-password','/resend-verification'].includes(location.pathname);
+  const authViewport=useAuthViewport(authPage);
   const [currentPostId, setCurrentPostId] = React.useState<string | null>(null);
   
   // Extract post ID from URL if viewing a post
@@ -89,7 +93,7 @@ const App = () => {
 
   return (
     <><Toaster position="top-center" richColors />
-    <BetaAccessGate><MfaGate><MessagesProvider><CommentsProvider><ReportDialogProvider><div className="app-container min-h-screen bg-black text-white">
+    <BetaAccessGate><MfaGate><MessagesProvider><CommentsProvider><ReportDialogProvider><div ref={authViewport} className={`app-container min-h-screen bg-black text-white${authPage ? ' clipt-auth-shell' : ''}`}>
       <div className="page-content pb-32"> {/* Add padding to bottom for GameBoy controller */}
         <ConsoleMasthead />
         <React.Suspense fallback={<p role="status" className="p-6">Loading page…</p>}>

@@ -1,0 +1,25 @@
+/* Auth routes have a single scroll surface above the unchanged console. */
+html:has(.clipt-auth-shell),body:has(.clipt-auth-shell),body:has(.clipt-auth-shell) #root {
+ min-height:0 !important;height:100% !important;overflow:hidden !important;overscroll-behavior-y:none;
+}
+.app-container.clipt-auth-shell {
+ position:fixed;top:var(--clipt-auth-top,0px);left:var(--clipt-auth-left,0px);
+ width:var(--clipt-auth-width,100%);height:var(--clipt-auth-height,100dvh);min-height:0 !important;
+ overflow:hidden !important;
+}
+body:has(.clipt-auth-shell) .clipt-auth-shell > .page-content {
+ position:absolute;inset:0 0 var(--clipt-auth-controller-height,var(--clipt-page-controller-space,160px));
+ min-height:0 !important;min-width:0;padding:0 !important;overflow-x:hidden !important;overflow-y:auto !important;
+ overscroll-behavior-y:contain;scroll-padding-block:16px;-webkit-overflow-scrolling:touch;
+}
+.clipt-auth-shell .clipt-login,.clipt-auth-shell .clipt-auth-form {
+ box-sizing:border-box;min-height:0 !important;height:auto !important;overflow:visible !important;
+ margin-block:0;padding-block:16px;
+}
+.clipt-auth-shell .gameboy-controls.clipt-controller[data-page-controller] {
+ left:var(--clipt-auth-left,0px);right:auto;width:var(--clipt-auth-width,100%);
+ bottom:max(0px,calc(var(--clipt-auth-layout-height,100dvh) - var(--clipt-auth-top,0px) - var(--clipt-auth-height,100dvh)));
+ max-height:calc(var(--clipt-auth-height,100dvh) * .4);overflow-y:auto;overscroll-behavior-y:contain;
+}
+.clipt-auth-shell .clipt-auth a {display:inline-flex;align-items:center;min-height:44px;}
+.clipt-auth-shell .clipt-auth :is(input,button,a){scroll-margin-block:16px;}
