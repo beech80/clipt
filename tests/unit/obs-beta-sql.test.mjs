@@ -63,6 +63,7 @@ test('real OBS SQL enforces invitation, idempotency, global quota, private lease
  assert.equal((await db.query('select is_live from streams')).rows[0].is_live,false);
  await assert.rejects(call('finish',{sessionId:s.sessionId}));
  await call('finish',{sessionId:s.sessionId,providerId:'verifiedprovider'});
+ await call('finish',{sessionId:s.sessionId,providerId:'verifiedprovider'});
  await call('stop',{...identity,sessionId:s.sessionId});
  await db.exec("update clipt_private.beta_members set revoked_at=null;update clipt_private.obs_beta_config set worker_at=now();update clipt_private.obs_beta_usage set reserved_minutes=300;");
  await assert.rejects(call('reserve',{...args,requestId:owner}));
