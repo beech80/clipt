@@ -1,4 +1,5 @@
 import {supabase} from '@/lib/supabase';
+export type CatalogGameSelection={id:string;name:string;release_year:number|null;platforms:string|null};
 export type ProviderGame={id:number|string;name:string;description?:string;cover_url:string|null;release_year:number|null;platforms:string|null};
 export async function providerCatalogPage(term:string,page:number,signal?:AbortSignal){
  const {data,error}=await supabase.functions.invoke('game-catalog',{body:{action:'search',term:term.trim().slice(0,80),page},signal});
@@ -10,5 +11,5 @@ export async function chooseProviderGame(id:number|string){
  if(!(typeof id==='number'&&Number.isSafeInteger(id)&&id>0)&&!(typeof id==='string'&&/^Q[1-9][0-9]{0,15}$/.test(id)))throw new Error('Choose a game from the catalog.');
  const {data,error}=await supabase.functions.invoke('game-catalog',{body:{action:'resolve',id}});
  if(error||!data?.game||typeof data.game.name!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(data.game.id))throw new Error('This game could not be opened. Please retry.');
- return data.game as {id:string;name:string};
+ return {id:data.game.id,name:data.game.name,release_year:Number.isSafeInteger(data.game.release_year)&&data.game.release_year>=1000&&data.game.release_year<=9999?data.game.release_year:null,platforms:typeof data.game.platforms==='string'?data.game.platforms.slice(0,1000):null} as CatalogGameSelection;
 }

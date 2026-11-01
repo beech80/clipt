@@ -11,6 +11,7 @@ import { clipCaption, formatClipSize, MAX_CLIP_BYTES, videoPreviewReady } from '
 import { prepareClipFile } from '@/lib/prepare-clip';
 import { preparePhoto, photoUploadError } from '@/lib/photo-upload';
 import {GameCatalogLookup} from '@/components/GameCatalogLookup';
+import type {CatalogGameSelection} from '@/lib/provider-game-catalog';
 import {completeGameCatalog, gameLabel} from '@/lib/game-catalog';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePrivateMediaUrl } from '@/hooks/usePrivateMedia';
@@ -43,6 +44,7 @@ export default function NewPost() {
   const [uncertain, setUncertain] = useState(false);
   const [kind, setKind] = useState<'video' | 'photo'>('video');
   const [captionError, setCaptionError] = useState('');
+  const [selectedCatalogGame,setSelectedCatalogGame]=useState<CatalogGameSelection|null>(null);
   const captionInput = useRef<HTMLTextAreaElement>(null);
   const previewVideo = useRef<HTMLVideoElement>(null);
   const busy = useRef(false);
@@ -55,7 +57,7 @@ export default function NewPost() {
     selection.current += 1;
     initializedDraft.current = null;
     setConversionProgress(null); setConverted(false); setStage('idle');
-    setFile(null); setCaption(''); setHashtags(''); setGameId(''); setGameSearch('');
+    setFile(null); setCaption(''); setHashtags(''); setGameId(''); setGameSearch(''); setSelectedCatalogGame(null);
     setDestination('clipts'); setKind('video'); setPlayable(false); setError(''); setCaptionError(''); setUncertain(false);
     return () => { selection.current += 1; prepareAbort.current?.abort(); };
   }, [draftId, user?.id]);
@@ -258,10 +260,10 @@ export default function NewPost() {
         <p id="clip-caption-count" className="text-right text-xs text-slate-300">{caption.length.toLocaleString()} / {kind==='photo'&&destination==='clipts'?'500':'2,000'} characters</p></div>
       {kind==='photo'&&destination==='clipts'&&<p className="text-sm text-slate-300">Public photo captions and hashtags together are limited to 500 characters for safety review. When automated review is enabled, the photo stays out of public discovery until review completes. Check Photo safety notices in Notifications for status.</p>}
       <label className="block space-y-2"><span>Hashtags</span><Input value={hashtags} disabled={submitting} onChange={event => setHashtags(event.target.value)} placeholder="#gaming #clipt" /></label>
-      <label className="block space-y-2"><span>Find a game</span><Input value={gameSearch} onKeyDown={event=>{if(event.key==='Enter'&&!event.nativeEvent.isComposing)event.preventDefault();}} disabled={submitting} onChange={event => { setGameSearch(event.target.value); setGameId(''); }} placeholder="Search games…" /></label>
+      <label className="block space-y-2"><span>Find a game</span><Input value={gameSearch} onKeyDown={event=>{if(event.key==='Enter'&&!event.nativeEvent.isComposing)event.preventDefault();}} disabled={submitting} onChange={event => { setGameSearch(event.target.value); setGameId(''); setSelectedCatalogGame(null); }} placeholder="Search games…" /></label>
       <label className="block space-y-2"><span>Game / category</span><select aria-label="Game / category" className="w-full rounded-md border border-purple-500 bg-slate-950 p-3" value={gameId} disabled={submitting || games.isPending}
-        onChange={event => setGameId(event.target.value)}><option value="">No game selected</option>{games.data?.map(game => <option key={game.id} value={game.id}>{gameLabel(game)}</option>)}</select></label>
-      <GameCatalogLookup disabled={submitting} term={gameSearch} onChoose={game=>{setGameSearch('');setGameId(game.id);}}/>
+        onChange={event => setGameId(event.target.value)}><option value="">No game selected</option>{selectedCatalogGame&&!games.data?.some(game=>game.id===selectedCatalogGame.id)&&<option value={selectedCatalogGame.id}>{gameLabel(selectedCatalogGame)}</option>}{games.data?.map(game => <option key={game.id} value={game.id}>{gameLabel(game)}</option>)}</select></label>
+      <GameCatalogLookup disabled={submitting} searchOnType term={gameSearch} onChoose={game=>{setSelectedCatalogGame(game);setGameSearch('');setGameId(game.id);}}/>
       {games.isPending && <p role="status">Loading game categories…</p>}
       {!games.isPending && !games.isError && !games.data?.length && <p role="status">{gameSearch.trim() ? 'No configured channels match. Search the full game catalog above to choose another game.' : 'No game categories are available. You can post without a game.'}</p>}
       {games.isError && <div role="alert">Games could not be loaded. <Button type="button" variant="outline" disabled={games.isFetching} onClick={() => games.refetch()}>Retry games</Button></div>}

@@ -16,8 +16,8 @@ export function useImmersiveController(eligible: boolean, preferences: Controlle
   useEffect(() => {
     const measure = () => {
       const visual = window.visualViewport;
-      const next = {width: Math.min(document.documentElement.clientWidth, visual?.width ?? innerWidth),
-        height: Math.min(document.documentElement.clientHeight, visual?.height ?? innerHeight),
+      const next = {width: visual?.width || window.innerWidth || document.documentElement.clientWidth,
+        height: visual?.height || window.innerHeight || document.documentElement.clientHeight,
         left: visual?.offsetLeft ?? 0, top: visual?.offsetTop ?? 0,
         landscape: matchMedia('(orientation: landscape)').matches, normalWidth: window.screen?.width ?? 0};
       setViewport(old => {

@@ -781,9 +781,10 @@ body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp-track { overflow: 
 body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-bottom-swipe-zone {
   display: grid; place-items: center; position: fixed; z-index: 58;
   left: calc(var(--clipt-portrait-visible-left,0px) + 70px + env(safe-area-inset-left,0px));
-  bottom: calc(100dvh - var(--clipt-portrait-visible-height,100dvh) - var(--clipt-portrait-visible-top,0px) + env(safe-area-inset-bottom,0px));
+  top: calc(var(--clipt-portrait-visible-top,0px) + var(--clipt-portrait-visible-height,100dvh) - var(--clipt-portrait-swipe-height,96px) - env(safe-area-inset-bottom,0px));
+  bottom: auto;
   width: max(44px,calc(var(--clipt-portrait-visible-width,100vw) - 140px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)));
-  height: 96px; touch-action: pinch-zoom; user-select: none;
+  height: var(--clipt-portrait-swipe-height,96px); touch-action: pinch-zoom; user-select: none;
 }
 .clipt-bottom-swipe-zone span { color: #c4b5fd; font-size: .75rem; pointer-events: none; }
 .clipt-bottom-swipe-zone::before,
@@ -855,3 +856,10 @@ html.high-contrast button.clipt-bottom-swipe-zone > span { color: #fff; text-sha
 
 /* Keep recovery controls stationary even when decorative desktop cards float. */
 .clipt-fyp-slide > article:has(.clipt-video-frame [role="alert"]) { animation-play-state: paused !important; }
+
+/* The portrait stage and swipe pad use the same visible viewport coordinates. */
+body:has(.clipt-controller[data-mobile-v2="true"][data-portrait-viewing="true"]) .clipt-fyp {
+ top:var(--clipt-portrait-visible-top,0px) !important;left:var(--clipt-portrait-visible-left,0px) !important;
+ right:auto !important;bottom:auto !important;width:var(--clipt-portrait-visible-width,100vw);
+ height:var(--clipt-portrait-visible-height,100dvh) !important;
+}

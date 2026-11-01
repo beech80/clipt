@@ -2,7 +2,10 @@ import {serve} from 'https://deno.land/std@0.168.0/http/server.ts';
 import {authenticatedUser,errorResponse,requestBody,requestMethod,serverEnv,jsonResponse,HttpError,serviceClient} from '../_shared/request.ts';
 import {catalogAction,catalogGame,catalogQuery,CATALOG_PAGE_SIZE} from './catalog.ts';
 import {createPublicGameCatalog} from './wikidata.ts';
+import {createPublicCatalogProbe} from './health.ts';
 const publicCatalog=createPublicGameCatalog();
+const publicProviderCheck=createPublicCatalogProbe(publicCatalog.search);
+console.info(JSON.stringify({event:'game_catalog_readiness',igdbCredentialsConfigured:Boolean(Deno.env.get('TWITCH_CLIENT_ID')&&Deno.env.get('TWITCH_CLIENT_SECRET')),igdbEnabled:Deno.env.get('CLIPT_IGDB_CATALOG_ENABLED')==='true'}));
 let token:{value:string;until:number}|null=null;let tokenFlight:Promise<string>|null=null;
 const cache=new Map<string,{until:number;data:unknown[]}>(),rates=new Map<string,{until:number;count:number}>();
 const configured=()=>Deno.env.get('CLIPT_IGDB_CATALOG_ENABLED')==='true'&&Boolean(Deno.env.get('TWITCH_CLIENT_ID')&&Deno.env.get('TWITCH_CLIENT_SECRET'));
@@ -21,7 +24,12 @@ async function provider(query:string){
  if(cache.size>=200)cache.delete(cache.keys().next().value!);cache.set(query,{until:Date.now()+60000,data:result});return result;
 }
 serve(async req=>{
- if(req.method==='GET'&&new URL(req.url).pathname.endsWith('/status'))return jsonResponse({provider:configured()?'igdb':'wikidata',configured:true});
+ if(req.method==='GET'&&new URL(req.url).pathname.endsWith('/status')){
+  if(new URL(req.url).searchParams.get('check')==='public-provider'&&!configured()){
+   const available=await publicProviderCheck();return jsonResponse({provider:'wikidata',configured:true,available},available?200:503);
+  }
+  return jsonResponse({provider:configured()?'igdb':'wikidata',configured:true});
+ }
  const method=requestMethod(req);if(method)return method;
  try{
  const user=await authenticatedUser(req);
