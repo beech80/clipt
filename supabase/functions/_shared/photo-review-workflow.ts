@@ -11,9 +11,16 @@ export function reviewImageBytes(bytes:Uint8Array) {
  if(bytes.length<12||bytes.length>4*1024*1024)throw Error('Unsupported photo size')
  const jpeg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255
  const png=[137,80,78,71,13,10,26,10].every((value,index)=>bytes[index]===value)
- if(!jpeg&&!png)throw Error('Unsupported photo type')
+ const webp=String.fromCharCode(...bytes.subarray(0,4))==='RIFF'&&String.fromCharCode(...bytes.subarray(8,12))==='WEBP';
+ if(!jpeg&&!png&&!webp)throw Error('Unsupported photo type')
  let encoded='';for(let offset=0;offset<bytes.length;offset+=8192)encoded+=String.fromCharCode(...bytes.subarray(offset,offset+8192))
  return btoa(encoded)
+}
+export function reviewStorageTargets(reference:unknown,owner:string,project:string){
+ if(typeof reference!=='string')throw Error('Invalid photos');
+ const refs=reference.split(/,\s*(?=https?:\/\/)/i).map(x=>x.trim());
+ if(!refs.length||refs.length>10||new Set(refs).size!==refs.length)throw Error('Invalid photo album');
+ return refs.map(ref=>reviewStorageTarget(ref,owner,project));
 }
 interface Dependencies {
  reserve:()=>Promise<boolean>;read:()=>Promise<Record<string,unknown>>;
@@ -26,13 +33,16 @@ export async function runPhotoReview(owner:string,project:string,deps:Dependenci
  try {
   const post=await deps.read()
   if(!publicReviewEligible(post,owner))throw Error('Photo is no longer eligible')
-  const target=reviewStorageTarget(post.image_url,owner,project)
+  const targets=reviewStorageTargets(post.image_url,owner,project)
   if(post.content!==null&&post.content!==undefined&&typeof post.content!=='string')throw Error('Invalid caption')
   const caption=typeof post.content==='string'?post.content:''
   if(caption.length>500)throw Error('Caption too long')
-  const imageBase64=reviewImageBytes(await deps.download(target.bucket,target.path))
-  let state=await deps.analyze({imageBase64})
-  if(!['needs_review','no_flag_detected'].includes(state))throw Error('Unknown review result')
+  let state='no_flag_detected';
+  for(const target of targets){const imageBase64=reviewImageBytes(await deps.download(target.bucket,target.path));
+   const result=await deps.analyze({imageBase64});
+   if(!['needs_review','no_flag_detected'].includes(result))throw Error('Unknown review result');
+   if(result==='needs_review')state='needs_review';
+  }
   if(caption.trim()) {
    const captionState=await deps.analyze({caption})
    if(!['needs_review','no_flag_detected'].includes(captionState))throw Error('Unknown caption review result')

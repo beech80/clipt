@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { ReportedContent } from './ReportedContent';
 import { OperationalAlerts } from './OperationalAlerts';
 import { PhotoReviewQueue } from './PhotoReviewQueue';
+import { ProductionPhotoReviewQueue } from './ProductionPhotoReviewQueue';
 import { PhotoQuarantineQueue } from './PhotoQuarantineQueue';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ export const ModerationDashboard = () => {
   });
   return <main className="clipt-moderation mx-auto max-w-6xl space-y-5 px-4 py-6">
     <header className="flex flex-wrap items-center gap-3 border-b border-purple-500/40 pb-4"><ShieldCheck aria-hidden="true" className="h-7 w-7 text-purple-300" /><h1 className="text-2xl font-bold">Admin / Moderation Dashboard</h1><span className="rounded border border-purple-400/50 px-3 py-1 text-xs text-purple-200">Authorized staff only</span></header>
+    {role.data && <ProductionPhotoReviewQueue />}
     {role.data && <PhotoReviewQueue />}
     {role.data && <PhotoQuarantineQueue />}
     {role.data && <OperationalAlerts />}
