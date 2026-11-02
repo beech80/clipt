@@ -44,15 +44,16 @@ async function fixture(){
  await db.query('insert into public.profiles(id) values($1),($2),($3)',[owner,staff,other]);
  await db.query("insert into public.user_roles values($1,'moderator')",[staff]);
  const actor=async(id,aal='aal1')=>{await db.exec('reset role');await db.query("select set_config('test.uid',$1,false),set_config('test.aal',$2,false)",[id,aal]);await db.exec('set role authenticated');};
- return {db,actor};
+ const activate=async()=>{await assert.rejects(db.exec('update clipt_private.azure_dispatch_settings set enabled=true'),/verification and MFA/);await db.query("insert into auth.mfa_factors values($1,'verified')",[staff]);await db.exec('update clipt_private.azure_dispatch_settings set verified_free_tier=true,probe_verified_at=now()');await db.exec('update clipt_private.azure_dispatch_settings set enabled=true');};
+ return {db,actor,activate};
 }
 test('actual production SQL defaults off and holds only eligible photos; MFA staff can resolve failed album review',async()=>{
- const {db,actor}=await fixture();try{
+ const {db,actor,activate}=await fixture();try{
   const old=randomUUID(),post=randomUUID();
   await db.query('insert into public.posts(id,user_id,image_url) values($1,$2,$3)',[old,owner,reference(0)]);
   assert.equal((await db.query('select count(*)::int n from clipt_private.azure_review_dispatch')).rows[0].n,0);
   assert.equal((await db.query('select azure_photo_worker_status() value')).rows[0].value.enabled,false);
-  await db.exec('update clipt_private.azure_dispatch_settings set enabled=true');
+  await activate();
   await db.query('insert into public.posts(id,user_id,image_url) values($1,$2,$3)',[post,owner,reference(1)+','+reference(2)]);
   const d=(await db.query('select id from clipt_private.azure_review_dispatch where post_id=$1',[post])).rows[0].id;
   await db.exec('set role anon');assert.equal((await db.query('select id from public.posts where id=$1',[post])).rows.length,0);
@@ -76,8 +77,8 @@ test('actual production SQL defaults off and holds only eligible photos; MFA sta
  }finally{await db.close();}
 });
 test('queued quota holds can be reviewed and stale processing jobs are quarantined rather than left locked',async()=>{
- const {db,actor}=await fixture();try{
-  await db.exec('update clipt_private.azure_dispatch_settings set enabled=true');
+ const {db,actor,activate}=await fixture();try{
+  await activate();
   const post=randomUUID();await db.query('insert into public.posts(id,user_id,image_url) values($1,$2,$3)',[post,owner,reference(1)]);
   const d=(await db.query('select id from clipt_private.azure_review_dispatch')).rows[0].id;
   await actor(staff,'aal2');await db.query("select resolve_production_photo_review($1,'keep')",[d]);

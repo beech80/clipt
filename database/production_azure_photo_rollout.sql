@@ -753,4 +753,20 @@ END $$;
 REVOKE ALL ON FUNCTION public.reserve_azure_photo_probe(text,text) FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.reserve_azure_photo_probe(text,text) TO service_role;
 
+
+CREATE FUNCTION clipt_private.guard_photo_review_activation() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+BEGIN
+ IF NEW.enabled AND NOT OLD.enabled THEN
+ IF NEW.verified_free_tier IS NOT TRUE OR NEW.probe_verified_at IS NULL
+ OR NEW.probe_verified_at<clock_timestamp()-interval '24 hours'
+ OR NOT EXISTS(SELECT 1 FROM public.user_roles r JOIN auth.mfa_factors f ON f.user_id=r.user_id
+ WHERE r.role IN ('admin','moderator') AND f.status='verified') THEN
+ RAISE EXCEPTION 'Provider verification and MFA moderator setup required' USING ERRCODE='42501'; END IF;
+ END IF;RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION clipt_private.guard_photo_review_activation() FROM PUBLIC,anon,authenticated;
+CREATE TRIGGER clipt_photo_review_activation BEFORE UPDATE ON clipt_private.azure_dispatch_settings
+ FOR EACH ROW EXECUTE FUNCTION clipt_private.guard_photo_review_activation();
+
 COMMIT;
