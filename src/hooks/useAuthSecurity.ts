@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { validateAuthenticatorCode } from '@/lib/mfa';
+import { startAuthenticatorEnrollment, validateAuthenticatorCode } from '@/lib/mfa';
 
 export const useAuthSecurity = () => {
   const { user } = useAuth();
@@ -16,12 +16,7 @@ export const useAuthSecurity = () => {
   useEffect(()=>{setEnrollment(null);},[user?.id]);
 
   const enroll = async () => {
-    const { data, error: enrollError } = await supabase.auth.mfa.enroll({
-      factorType: 'totp', friendlyName: 'Clipt authenticator',
-    });
-    if (enrollError) throw enrollError;
-    if (data.type !== 'totp') throw new Error('Authenticator enrollment was not returned.');
-    setEnrollment({ id: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret });
+    setEnrollment(await startAuthenticatorEnrollment(supabase.auth.mfa));
   };
   const verifyEnrollment = async (code: string) => {
     if (!enrollment) throw new Error('Start authenticator setup first.');
