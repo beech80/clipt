@@ -1,6 +1,8 @@
 
 import { BookOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
+import {Link} from "react-router-dom";
 import remarkGfm from 'remark-gfm';
 import ReactMarkdown from 'react-markdown';
 import userGuideContent from '../../../docs/USER_GUIDE.md?raw';
@@ -14,6 +16,7 @@ const UserGuide = () => {
         <h1 className="text-2xl font-bold">User Guide</h1>
       </div>
       
+      <Button asChild className="mb-5"><Link to="/clipts?tour=controls">Replay Home tutorial</Link></Button>
       <div className="prose dark:prose-invert max-w-none">
         <ReactMarkdown 
           remarkPlugins={[remarkGfm]}

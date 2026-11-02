@@ -18,6 +18,7 @@ import './clipt-channels.css';
 import { cancelClipScroll, scrollClipTo } from '@/lib/clip-carousel-scroll';
 import { usePortraitSwipe } from '@/hooks/usePortraitSwipe';
 import {publishingSnapshot,subscribePublishing} from '@/lib/publishing-status';
+import {HomeControlsTour} from '@/components/onboarding/HomeControlsTour';
 
 const PAGE_SIZE = 20;
 const MEDIA_FILTER = 'and(video_url.not.is.null,video_url.neq.),and(image_url.not.is.null,image_url.neq.)';
@@ -213,6 +214,7 @@ export default function Clipts() {
     <button ref={swipeZoneRef} type="button" className="clipt-bottom-swipe-zone" data-swipe-menu
       aria-label="CLIPT — Open navigation" aria-haspopup="dialog" aria-controls="clipt-navigation-panel"
       onClick={() => window.dispatchEvent(new CustomEvent('clipt:open-navigation'))}><span>CLIPT</span></button>
+    {user && !gameId && <HomeControlsTour key={user.id} userId={user.id} ready={!engagementOpen && (!publishing || hiddenPublishing===publishing.id)} />}
     <svg className="clipt-swipe-trail" aria-hidden="true"><path ref={swipePath} /></svg>
     <Dialog open={engagementOpen && Boolean(activePost)} onOpenChange={setEngagementOpen} modal={false}>
       {engagementOpen && activePost && <EngagementHud postId={activePost.id} creatorId={activePost.user_id}
