@@ -1,3 +1,4 @@
+import {openApp} from './fixtures/open-app';
 import {test,expect} from '@playwright/test';
 import {fileURLToPath} from 'node:url';
 
@@ -36,7 +37,7 @@ for (const failure of [403,503]) {
       }
       return route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
     });
-    await page.goto('/new-post');
+    await openApp(page,'/new-post');
     await expect(page.getByRole('heading',{name:'Create Clipt'})).toBeVisible();
     await expect(page.getByText('Home Feed',{exact:true})).toHaveCount(0);
     await page.getByLabel('Caption',{exact:true}).fill('My gaming moment');
@@ -87,7 +88,7 @@ test('Photos file-size feedback clears a rejected replacement and keeps the capt
   await page.addInitScript(({user})=>{const expires=Math.floor(Date.now()/1000)+3600;const encode=(value:object)=>btoa(JSON.stringify(value)).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');localStorage.setItem('sb-127-auth-token',JSON.stringify({access_token:encode({alg:'HS256'})+'.'+encode({sub:user.id,exp:expires,aal:'aal1',role:'authenticated'})+'.fixture',refresh_token:'fixture',expires_at:expires,expires_in:3600,token_type:'bearer',user}));},{user});
   let uploads=0,posts=0;
   await page.route('**/*',async route=>{const url=new URL(route.request().url());if(url.origin==='http://127.0.0.1:8081')return route.continue();if(url.origin!=='http://127.0.0.1:54321')return route.abort();if(url.pathname.startsWith('/storage/v1/object/media'))uploads++;if(url.pathname==='/rest/v1/posts'&&route.request().method()==='POST')posts++;await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(url.pathname==='/auth/v1/user'?user:[])});});
-  await page.goto('/new-post');const picker=page.getByLabel('Clipt video',{exact:true}),submit=page.getByRole('button',{name:'Post Clipt',exact:true});
+  await openApp(page,'/new-post');const picker=page.getByLabel('Clipt video',{exact:true}),submit=page.getByRole('button',{name:'Post Clipt',exact:true});
   await page.getByLabel('Caption',{exact:true}).fill('Keep my selected caption');
   // A valid MP4 with a legal trailing free box exercises the actual 49 MB
   // File/Photos handoff without transferring a customer's video.
