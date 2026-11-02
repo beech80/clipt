@@ -739,7 +739,7 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path='' SET timezone='UTC' AS $$
 DECLARE day_start timestamptz:=date_trunc('day',clock_timestamp() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC';
  month_start timestamptz:=date_trunc('month',clock_timestamp() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC';n integer;k text;
 BEGIN
- IF p_run !~ '^[1-9][0-9]{0,19} OR p_attempt !~ '^[1-9][0-9]{0,4} OR p_run IS NULL OR p_attempt IS NULL THEN RAISE EXCEPTION 'Invalid probe'; END IF;
+ IF p_run !~ '^[1-9][0-9]{0,19}$' OR p_attempt !~ '^[1-9][0-9]{0,4}$' OR p_run IS NULL OR p_attempt IS NULL THEN RAISE EXCEPTION 'Invalid probe'; END IF;
  PERFORM pg_advisory_xact_lock(57421,101);
  IF EXISTS(SELECT 1 FROM clipt_private.azure_provider_probes WHERE run_id=p_run AND run_attempt=p_attempt) THEN RETURN false; END IF;
  IF (SELECT count(*) FROM clipt_private.azure_provider_probes WHERE created_at>=day_start)>=5 THEN RETURN false; END IF;
