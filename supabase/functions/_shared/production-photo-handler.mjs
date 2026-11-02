@@ -22,12 +22,11 @@ export function createAzurePhotoHandler({reviewedFiles,getEnv,analyze,review,fet
    if(!r.ok){
     // Enumerated transport diagnostics only. Never log arguments, request
     // headers, response messages/hints, or an arbitrary database error body.
-    const allowed=['PGRST000','PGRST001','PGRST002','PGRST003','PGRST102','PGRST116','PGRST202','PGRST203','PGRST204','PGRST205','PGRST301','PGRST302','42501','25006','23514','P0001','42883','42P01','23502','22P02','57014','53300','53400','55000','53200'];
     let code='unclassified';
     try{
      const reader=r.body?.getReader();let size=0;const parts=[];
      if(reader)for(;;){const next=await reader.read();if(next.done)break;size+=next.value.length;if(size>4096){await reader.cancel();break;}parts.push(next.value);}
-     if(size<=4096){const bytes=new Uint8Array(size);let offset=0;for(const part of parts){bytes.set(part,offset);offset+=part.length;}const body=JSON.parse(new TextDecoder().decode(bytes));if(allowed.includes(body.code))code=body.code;}
+     if(size<=4096){const bytes=new Uint8Array(size);let offset=0;for(const part of parts){bytes.set(part,offset);offset+=part.length;}const body=JSON.parse(new TextDecoder().decode(bytes));if(typeof body.code==='string'&&/^(?:[0-9A-Z]{5}|PGRST[0-9]{3})$/.test(body.code))code=body.code;}
     }catch{}
     const operations=['azure_photo_worker_status','reserve_azure_photo_probe','record_azure_photo_worker','reconcile_stale_photo_reviews','claim_public_photo_review','finish_azure_review_with_quarantine','finish_public_photo_dispatch'];
     if(operations.includes(name))reportDiagnostic({event:'azure_photo_rpc_failure',operation:name,status:r.status,code});
