@@ -46,7 +46,8 @@ test('photo retry reloads an unchanged authorized URL only after successful acce
 });
 function load(path,deps) {
   const source=ts.transpileModule(readFileSync(new URL('../../src/'+path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
-  const imports={'./clipt-feed-surface.css':{},'./clipt-channels.css':{},'@/lib/game-catalog':{gameChannel:async()=>null},'@/components/GameChannelToolbar':{GameChannelToolbar:()=>null},'@/lib/channel-feeds':{validChannelGame:()=>true},'@/lib/clip-carousel-scroll':clipCarouselScroll,'@/lib/publishing-status':{publishingSnapshot:()=>null,subscribePublishing:()=>()=>{}},...deps};
+  const imports={
+    '@/components/onboarding/HomeControlsTour':{HomeControlsTour:()=>null},'./clipt-feed-surface.css':{},'./clipt-channels.css':{},'@/lib/game-catalog':{gameChannel:async()=>null},'@/components/GameChannelToolbar':{GameChannelToolbar:()=>null},'@/lib/channel-feeds':{validChannelGame:()=>true},'@/lib/clip-carousel-scroll':clipCarouselScroll,'@/lib/publishing-status':{publishingSnapshot:()=>null,subscribePublishing:()=>()=>{}},...deps};
   if(imports.react)imports.react={...imports.react,useSyncExternalStore:()=>null};
   const mod={exports:{}};new Function('require','module','exports',source)(name=>imports[name]??require(name),mod,mod.exports);return mod.exports.default;
 }
