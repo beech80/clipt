@@ -47,9 +47,9 @@ export function HomeControlsTour({userId,ready=true}:{userId:string;ready?:boole
   const schedule=()=>{if(!frame)frame=requestAnimationFrame(()=>{frame=0;measure();});};
   const observer=new MutationObserver(records=>{
    if(records.every(r=>r.target instanceof Element&&r.target.closest('[data-clipt-feed-tour],[data-home-tour-highlight]')))return;
-   if(records.some(r=>r.type==='childList'||r.target instanceof Element&&r.target.matches('.clipt-controller,[role="dialog"],[data-sliding-panel]')))schedule();
+   if(records.some(r=>r.type==='childList'||r.target===document.documentElement||r.target instanceof Element&&r.target.matches('.clipt-controller,[role="dialog"],[data-sliding-panel]')))schedule();
   });
-  observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['data-hand','data-layout','data-hidden','data-expanded','data-portrait-viewing','data-state','class','style']});
+  observer.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['data-hand','data-layout','data-hidden','data-expanded','data-portrait-viewing','data-state','class','style']});
   const size=new ResizeObserver(schedule);size.observe(document.documentElement);
   if(card.current)size.observe(card.current);
   window.addEventListener('resize',schedule);window.addEventListener('orientationchange',schedule);window.visualViewport?.addEventListener('resize',schedule);window.visualViewport?.addEventListener('scroll',schedule);
@@ -73,7 +73,7 @@ export function HomeControlsTour({userId,ready=true}:{userId:string;ready?:boole
 
  function finish(outcome:'skipped'|'completed'){
   rememberHomeTour(userId,outcome,storage());setOpen(false);
-  requestAnimationFrame(()=>{const old=previousFocus.current;if(old?.isConnected&&!old.closest('[data-clipt-feed-tour]'))old.focus({preventScroll:true});else firstVisible('[data-swipe-menu],.clipt-controller-home')?.focus({preventScroll:true});});
+  requestAnimationFrame(()=>{const old=previousFocus.current;if(old?.isConnected&&old!==document.body&&old!==document.documentElement&&!old.closest('[data-clipt-feed-tour]'))old.focus({preventScroll:true});else firstVisible('[data-swipe-menu],.clipt-controller-home')?.focus({preventScroll:true});});
  }
  useEffect(()=>{
   if(!open||layout?.blocked||!ready)return;
