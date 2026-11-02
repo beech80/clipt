@@ -25,7 +25,7 @@ export type TourRect={left:number;top:number;right:number;bottom:number};
 export type TourViewport={left:number;top:number;width:number;height:number};
 export function rectanglesOverlap(a:TourRect,b:TourRect){return a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;}
 /** Place the compact guide in free space around actual controls, including mirrored layouts. */
-export function homeTourPlacement(v:TourViewport,blocked:TourRect[],video?:TourRect|null){
+export function homeTourPlacement(v:TourViewport,blocked:TourRect[],video?:TourRect|null,minCardHeight=180){
  const margin=12,left=v.left+margin,top=v.top+margin,right=v.left+v.width-margin,bottom=v.top+v.height-margin;
  const width=Math.max(44,Math.min(320,right-left));
  const candidates:{left:number;top:number;width:number;maxHeight:number;compact:boolean;score:number}[]=[];
@@ -35,8 +35,8 @@ export function homeTourPlacement(v:TourViewport,blocked:TourRect[],video?:TourR
   let cursor=top;
   const add=(end:number)=>{const height=end-cursor;if(height<56)return;
    const shown=Math.min(260,height),area=video?Math.max(0,Math.min(x+width,video.right)-Math.max(x,video.left))*Math.max(0,Math.min(cursor+shown,video.bottom)-Math.max(cursor,video.top)):0;
-   candidates.push({left:x,top:cursor,width,maxHeight:height,compact:height<180,
-    score:(height<180?100000:Math.max(0,260-height)*100)+area/400+(cursor-top)*.05+(x-left)*.01});};
+   candidates.push({left:x,top:cursor,width,maxHeight:height,compact:height<minCardHeight,
+    score:(height<minCardHeight?100000:Math.max(0,260-height)*100)+area/400+(cursor-top)*.05+(x-left)*.01});};
   for(const r of intervals){if(r.top>cursor)add(r.top);cursor=Math.max(cursor,r.bottom);}
   if(cursor<bottom)add(bottom);
  }

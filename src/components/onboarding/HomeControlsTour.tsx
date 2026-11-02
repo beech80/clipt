@@ -39,7 +39,7 @@ export function HomeControlsTour({userId,ready=true}:{userId:string;ready?:boole
    if(!target&&current.id==='post')target=firstVisible('[data-swipe-menu],.clipt-controller-home');
    if(!target&&current.target)target=firstVisible('.clipt-controller-more')??firstVisible('.clipt-controller-toggle');
    const controls=Array.from(document.querySelectorAll('.clipt-controller button,.clipt-controller-joystick,[data-swipe-menu],.clipt-feed-tabs [role="tab"],.clipt-fyp-header button')).filter(visible).map(rect);
-   const placement=homeTourPlacement(viewport,controls,videoPixels());
+   const placement=homeTourPlacement(viewport,controls,videoPixels(),Math.max(180,Math.ceil(parseFloat(cs.fontSize)*13)));
    const result={viewport,placement,target:target?rect(target):null,targetName:target?(own?'Highlighted control':current.id==='post'?'Open CLIPT → Post / Create':target.matches('.clipt-controller-more')?'Open All controller actions':'Show controls'): '',
     portrait:Boolean(firstVisible('[data-swipe-menu]')),postVisible:Boolean(firstVisible('.clipt-controller-post')),blocked:panelOpen(),disabled:target instanceof HTMLButtonElement&&target.disabled};
    setLayout(old=>JSON.stringify(old)===JSON.stringify(result)?old:result);
