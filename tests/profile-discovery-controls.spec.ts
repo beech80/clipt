@@ -1,3 +1,4 @@
+import {openApp} from './fixtures/open-app';
 import {test,expect, type Page} from '@playwright/test';
 
 const owner='00000000-0000-4000-8000-000000000077';
@@ -34,7 +35,7 @@ async function fixture(page:Page,hand='right') {
 }
 for(const hand of ['right','left']) {
   test(`portrait swipe-menu and landscape rail remain usable (${hand} hand)`,async({page},info)=>{
-    await fixture(page,hand);await page.setViewportSize({width:390,height:844});await page.goto('/clipts');
+    await fixture(page,hand);await page.setViewportSize({width:390,height:844});await openApp(page,'/clipts');
     const home=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});
     await expect(home).toBeVisible();
     await expect(home).toHaveClass(/clipt-bottom-swipe-zone/);
@@ -99,7 +100,7 @@ for(const hand of ['right','left']) {
     await home.click();
     await expect(page.getByRole('dialog',{name:'CLIPT navigation'})).toBeVisible();
     await expect(page.getByRole('link',{name:'Post / Create',exact:true})).toBeVisible();
-    await page.goto('/discovery');
+    await openApp(page,'/discovery');
     await expect(page.getByRole('heading',{name:'Discovery',exact:true})).toBeVisible();
     expect(await page.locator('.app-container').evaluate(element=>getComputedStyle(element).backgroundImage)).not.toBe('none');
   });
@@ -107,7 +108,7 @@ for(const hand of ['right','left']) {
 test('portrait menu remains reachable on an empty feed and narrow accessibility viewport',async({page})=>{
   await fixture(page);
   await page.route('**/rest/v1/posts?**',route=>route.fulfill({status:200,contentType:'application/json',body:'[]'}));
-  await page.setViewportSize({width:195,height:422});await page.goto('/clipts');
+  await page.setViewportSize({width:195,height:422});await openApp(page,'/clipts');
   await expect(page.getByText('No clips yet. Be the first to share one.',{exact:true})).toBeVisible();
   const menu=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});
   await expect(menu).toBeVisible();
@@ -120,7 +121,7 @@ test('portrait menu remains reachable on an empty feed and narrow accessibility 
   await page.getByRole('button',{name:'Close',exact:true}).click();await expect(menu).toBeFocused();
 });
 test('profile website, Playing game link and hashtag results remain reachable with pagination',async({page},info)=>{
-  await fixture(page);await page.goto('/user/'+creator);
+  await fixture(page);await openApp(page,'/user/'+creator);
   await expect(page.getByRole('link',{name:'cliptgaming.com',exact:true})).toHaveAttribute('href','https://cliptgaming.com/');
   await page.screenshot({path:info.outputPath('profile-shared-chrome.png')});
   await page.getByRole('button',{name:'Clipts',exact:true}).click();
@@ -158,7 +159,7 @@ test('Safari PNG encoder fallback uploads the actual format and confirms the pro
     updated=true;
     await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({id:owner})});
   });
-  await page.goto('/edit-profile');
+  await openApp(page,'/edit-profile');
   await expect(page.getByRole('button',{name:'Upload New Picture',exact:true})).toBeVisible();
   const png=await page.evaluate(()=>{const canvas=document.createElement('canvas');canvas.width=2;canvas.height=2;canvas.getContext('2d')!.fillRect(0,0,2,2);return canvas.toDataURL('image/png').split(',')[1];});
   await page.locator('input[type="file"]').setInputFiles({name:'phone.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
@@ -167,7 +168,7 @@ test('Safari PNG encoder fallback uploads the actual format and confirms the pro
 });
 
 test('hashtag collections preserve pagination, profile routes and narrow readable cards',async({page},info)=>{
-  await fixture(page);await page.setViewportSize({width:390,height:844});await page.goto('/hashtag/Gaming');
+  await fixture(page);await page.setViewportSize({width:390,height:844});await openApp(page,'/hashtag/Gaming');
   await expect(page.getByRole('heading',{name:'#gaming',exact:true})).toBeVisible();
   await expect(page.getByText('Newest first',{exact:true})).toBeVisible();
   const collection=page.getByRole('region',{name:'Hashtag Clipts',exact:true});
@@ -181,11 +182,11 @@ test('hashtag collections preserve pagination, profile routes and narrow readabl
   await expect(page.getByRole('button',{name:'Load more Clipts',exact:true})).toHaveCount(0);
   await page.evaluate(()=>scrollTo(0,0));
   await page.screenshot({path:info.outputPath('hashtag-portrait-collection.png')});
-  await page.setViewportSize({width:195,height:422});await page.goto('/hashtag/'+ 'a'.repeat(40));
+  await page.setViewportSize({width:195,height:422});await openApp(page,'/hashtag/'+ 'a'.repeat(40));
   await expect(page.getByRole('heading',{name:'#'+'a'.repeat(40),exact:true})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:info.outputPath('hashtag-constrained.png')});
-  await page.setViewportSize({width:390,height:844});await page.goto('/hashtag/gaming');
+  await page.setViewportSize({width:390,height:844});await openApp(page,'/hashtag/gaming');
   await collection.getByRole('link',{name:'@RecordedCreator',exact:true}).first().click();
   await expect(page).toHaveURL(new RegExp('/user/'+creator+'$'));
 });
@@ -196,12 +197,12 @@ test('hashtag collections recover from errors and explain empty and invalid tags
     requests++;expect(new URL(route.request().url()).searchParams.get('order')).toBe('created_at.desc,id.desc');
     await route.fulfill({status:failed?503:200,contentType:'application/json',body:JSON.stringify(failed?{message:'Recorded temporary failure'}:empty?[]:records.slice(0,1))});
   });
-  await page.goto('/hashtag/gaming');await expect(page.getByText('Could not load this hashtag.',{exact:true})).toBeVisible();
+  await openApp(page,'/hashtag/gaming');await expect(page.getByText('Could not load this hashtag.',{exact:true})).toBeVisible();
   failed=false;await page.getByRole('button',{name:'Retry hashtag',exact:true}).click();
   await expect(page.getByRole('link',{name:'Open Clipt',exact:true})).toHaveCount(1);
-  empty=true;await page.goto('/hashtag/empty');
+  empty=true;await openApp(page,'/hashtag/empty');
   await expect(page.getByRole('heading',{name:'No published Clipts with this hashtag yet.',exact:true})).toBeVisible();
-  const before=requests;await page.goto('/hashtag/invalid-tag');
+  const before=requests;await openApp(page,'/hashtag/invalid-tag');
   await expect(page.getByRole('heading',{name:'Hashtag unavailable',exact:true})).toBeVisible();
   await expect(page.getByText('Choose a hashtag of 1–40 letters, numbers or underscores.',{exact:true})).toBeVisible();
   expect(requests).toBe(before);
@@ -230,7 +231,7 @@ test('post Like, Follow, Trophy and comment actions use the current post and pre
     const single=(request.headers()['accept']||'').includes('vnd.pgrst.object');
     const count=rows.length;await route.fulfill({status:200,contentType:'application/json',headers:{'content-range':count?'0-0/'+count:'*/0'},body:method==='HEAD'?'':JSON.stringify(single?rows[0]??null:rows)});
   });
-  await page.goto('/post/'+post.id);
+  await openApp(page,'/post/'+post.id);
   const card=page.locator('article[data-post-id="'+post.id+'"]');
   await card.getByRole('button',{name:'Like post',exact:true}).evaluate(element=>element.scrollIntoView({block:'center'}));
   await card.getByRole('button',{name:'Like post',exact:true}).click();await expect(card.getByRole('button',{name:'Unlike post',exact:true})).toBeVisible();

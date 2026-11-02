@@ -1,3 +1,4 @@
+import {openApp} from './fixtures/open-app';
 import {createServer} from 'node:https';
 import {execFileSync} from 'node:child_process';
 import {mkdtempSync,rmSync,rmdirSync} from 'node:fs';
@@ -119,7 +120,7 @@ async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false
   };
 }
 async function publish(page:Page) {
-  await page.goto('/new-post');
+  await openApp(page,'/new-post');
   await page.getByLabel('Caption',{exact:true}).fill('Upload playback verification');
   await page.getByLabel('Hashtags',{exact:true}).fill('#Gaming');
   await page.getByLabel('Clipt video').setInputFiles(fixturePath);
@@ -152,12 +153,12 @@ test('upload to private playback, creator profile and hashtag results works whil
     await expect(creator).toHaveAttribute('href','/user/'+owner);await creator.click();
     await expect(page).toHaveURL(new RegExp('/user/'+owner+'$'));
     await expect(page.getByText('Upload Tester',{exact:true}).first()).toBeVisible();
-    await page.goto('/post/'+postId);
+    await openApp(page,'/post/'+postId);
     await page.evaluate(()=>{(window as any).__profileNavigationProbe='kept';});
     await page.getByRole('button',{name:'upload_tester',exact:true}).first().click();
     await expect(page).toHaveURL(new RegExp('/user/'+owner+'$'));
     expect(await page.evaluate(()=>(window as any).__profileNavigationProbe)).toBe('kept');
-    await page.goto('/post/'+postId);await page.getByRole('link',{name:'#gaming',exact:true}).first().click();
+    await openApp(page,'/post/'+postId);await page.getByRole('link',{name:'#gaming',exact:true}).first().click();
     await expect(page).toHaveURL(/\/hashtag\/gaming$/);
     await expect(page.getByRole('link',{name:'Open Clipt',exact:true})).toHaveCount(1);
     expect(service.stats().hashtagRequested).toBe(true);
@@ -181,7 +182,7 @@ test('the uploaded post plays in a visible frame in portrait, landscape and cons
   const service=await setup(page,{gameLabel:true});
   try {
     await page.setViewportSize({width:390,height:844});await publish(page);
-    await page.goto('/post/'+postId);
+    await openApp(page,'/post/'+postId);
     const video=page.locator('.clipt-watch-media video');
     await expect(video).toBeVisible();
     const oldRule=await page.addStyleTag({content:'.clipt-watch-content{max-width:min(520px,calc((100dvh - 420px) * 16 / 19 + 66px)) !important}.clipt-watch-media .clipt-video-frame{height:auto !important;aspect-ratio:16 / 19 !important}'});
@@ -214,7 +215,7 @@ for(const format of ['mov','hevc'] as const) {
       // Reproduce browsers that do not deliver preloading events to React.
       // Publishing must recover from a real, explicit play gesture instead.
       await page.addInitScript(()=>{for(const type of ['loadedmetadata','loadeddata','canplay','playing'])document.addEventListener(type,event=>{if(event.target instanceof HTMLVideoElement&&event.target.closest('.clipt-create-media'))event.stopImmediatePropagation();},true);});
-      await page.setViewportSize({width:390,height:844});await page.goto('/new-post');
+      await page.setViewportSize({width:390,height:844});await openApp(page,'/new-post');
       const candidate=format==='hevc'?readFileSync(fileURLToPath(new URL('./fixtures/clip-test-hevc.mp4',import.meta.url))):bytes;
       await page.getByLabel('Clipt video',{exact:true}).setInputFiles({name:format==='hevc'?'iphone.mp4':'iphone.mov',mimeType:format==='hevc'?'video/mp4':'video/quicktime',buffer:candidate});
       await expect(page.getByText('Converted to a compatible MP4 on your device. Your original is unchanged.',{exact:true})).toBeVisible({timeout:60000});
@@ -240,7 +241,7 @@ for(const format of ['mov','hevc'] as const) {
       const feedVideo=page.locator('[data-active-clip="true"] video');
       await expect.poll(()=>feedVideo.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
       await expect(page.getByText('Loading video...',{exact:true})).toHaveCount(0);
-      await page.goto('/post/'+postId);
+      await openApp(page,'/post/'+postId);
       const video=page.locator('.clipt-watch-media video');await expect(video).toBeVisible();
       await page.getByRole('button',{name:'Play video',exact:true}).click();
       await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);
@@ -256,7 +257,7 @@ test('an unsupported HEVC decoder gives a recovery message without uploading',as
       const check=VideoDecoder.isConfigSupported.bind(VideoDecoder);
       VideoDecoder.isConfigSupported=async config=>/^(hvc1|hev1)/.test(config.codec)?{supported:false,config}:check(config);
     });
-    await page.goto('/new-post');await page.getByLabel('Caption',{exact:true}).fill('Keep this caption');
+    await openApp(page,'/new-post');await page.getByLabel('Caption',{exact:true}).fill('Keep this caption');
     await page.getByLabel('Clipt video',{exact:true}).setInputFiles(fileURLToPath(new URL('./fixtures/clip-test-hevc.mp4',import.meta.url)));
     await expect(page.getByRole('alert')).toContainText('This browser cannot convert this iPhone video.');
     await expect(page.getByRole('button',{name:'Post Clipt',exact:true})).toBeDisabled();
@@ -272,7 +273,7 @@ test('cancelling video conversion keeps the caption and never posts',async({page
       const check=VideoDecoder.isConfigSupported.bind(VideoDecoder);
       VideoDecoder.isConfigSupported=async config=>{await new Promise(resolve=>setTimeout(resolve,1500));return check(config);};
     });
-    await page.goto('/new-post');await page.getByLabel('Caption',{exact:true}).fill('Keep my cancelled recording caption');
+    await openApp(page,'/new-post');await page.getByLabel('Caption',{exact:true}).fill('Keep my cancelled recording caption');
     await page.getByLabel('Clipt video',{exact:true}).setInputFiles({name:'iphone.mov',mimeType:'video/quicktime',buffer:bytes});
     await page.getByRole('button',{name:'Cancel conversion',exact:true}).click();
     await expect(page.getByRole('alert')).toContainText('Conversion cancelled. Your caption has been kept.');

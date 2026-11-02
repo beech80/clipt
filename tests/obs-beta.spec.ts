@@ -1,3 +1,4 @@
+import {openApp} from './fixtures/open-app';
 import {test,expect} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
 const base='https://slnjliheyiiummxhrgmk.supabase.co';
@@ -39,7 +40,7 @@ async function fixture(page:any,{denied=false,quota=false}={}){
  });return state;
 }
 for(const viewport of [{width:1366,height:768},{width:1024,height:768},{width:390,height:844}])test('production OBS controls, private playback and end flow fit '+viewport.width,async({page})=>{
- await page.setViewportSize(viewport);const state=await fixture(page);await page.goto('/stream-setup');
+ await page.setViewportSize(viewport);const state=await fixture(page);await openApp(page,'/stream-setup');
  await expect(page.getByRole('region',{name:'Broadcast instructions',exact:true})).toBeVisible();
  const prepare=page.getByRole('button',{name:'Prepare OBS broadcast',exact:true});await expect(prepare).toBeEnabled();
  expect(state.creates).toBe(0);expect(state.keys).toBe(0);
@@ -57,13 +58,13 @@ for(const viewport of [{width:1366,height:768},{width:1024,height:768},{width:39
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
 test('revoked or uninvited sessions cannot prepare or reveal OBS credentials',async({page})=>{
- const state=await fixture(page,{denied:true});await page.goto('/stream-setup');
+ const state=await fixture(page,{denied:true});await openApp(page,'/stream-setup');
  await expect(page.getByText(/Current session could not be checked/)).toBeVisible();
  await expect(page.getByRole('button',{name:'Prepare OBS broadcast',exact:true})).toBeDisabled();
  expect(state.creates).toBe(0);expect(state.keys).toBe(0);
 });
 test('quota failure preserves a stable request ID and never claims LIVE',async({page})=>{
- const state=await fixture(page,{quota:true});await page.goto('/stream-setup');
+ const state=await fixture(page,{quota:true});await openApp(page,'/stream-setup');
  const prepare=page.getByRole('button',{name:'Prepare OBS broadcast',exact:true});await expect(prepare).toBeEnabled();await prepare.click();
  await expect(page.getByText(/broadcast or viewer allowance is full/)).toBeVisible();
  await prepare.click();await expect.poll(()=>state.creates).toBe(2);expect(state.requests[0]).toBe(state.requests[1]);

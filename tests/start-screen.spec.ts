@@ -11,5 +11,44 @@ for(const size of [{width:390,height:844},{width:844,height:390},{width:1024,hei
 test('larger text stays reachable inside the entrance without horizontal overflow',async({page},info)=>{await fixture(page);await page.setViewportSize({width:260,height:500});await page.goto('/start');await page.addStyleTag({content:'html {font-size:24px!important;}'});const enter=page.getByRole('button',{name:'ENTER CLIPT',exact:true});await expect(enter).toBeEnabled();await enter.scrollIntoViewIfNeeded();const r=(await enter.boundingBox())!;expect(r.x).toBeGreaterThanOrEqual(0);expect(r.x+r.width).toBeLessThanOrEqual(261);expect(r.height).toBeGreaterThanOrEqual(44);expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(261);await enter.click();await expect(page).toHaveURL(/\/login$/);});
 test('reduced motion removes the entrance animation',async({page})=>{await page.emulateMedia({reducedMotion:'reduce'});await fixture(page);await page.goto('/start');await expect(page.getByRole('button',{name:'ENTER CLIPT',exact:true})).toBeEnabled();expect(await page.locator('.clipt-launch-content').evaluate(el=>getComputedStyle(el).animationName)).toBe('none');});
 test('an unavailable backdrop never blocks access to sign-in',async({page})=>{await fixture(page);await page.route('**/clipt-launch-space-2026.webp',route=>route.abort());await page.goto('/start');await page.getByRole('button',{name:'ENTER CLIPT',exact:true}).click();await expect(page).toHaveURL(/\/login$/);});
-test('signed-in Home retains its direct feed route',async({page})=>{await fixture(page,true);await page.goto('/');await expect(page).toHaveURL(/\/clipts$/);await expect(page.locator('.clipt-launch')).toHaveCount(0);});
+test('signed-in Home waits for Enter instead of skipping Welcome',async({page})=>{await fixture(page,true);await page.goto('/');await expect(page.getByRole('button',{name:'ENTER CLIPT',exact:true})).toBeEnabled();await expect(page).toHaveURL(/\/$/);await expect(page.locator('.clipt-controller')).toHaveCount(0);await page.getByRole('button',{name:'ENTER CLIPT',exact:true}).click();await expect(page).toHaveURL(/\/clipts$/);await expect(page.locator('.clipt-launch')).toHaveCount(0);});
 test('password recovery and legal deep links bypass the entrance',async({page})=>{await fixture(page);await page.goto('/reset-password');await expect(page.getByRole('heading',{name:'Reset Password',exact:true})).toBeVisible();await expect(page.locator('.clipt-launch')).toHaveCount(0);await page.goto('/privacy');await expect(page.locator('.clipt-launch')).toHaveCount(0);});
+
+test('fresh opens welcome every time, while refresh and in-app navigation remain direct',async({page})=>{
+ await fixture(page);await page.goto('/login');
+ const enter=page.getByRole('button',{name:'ENTER CLIPT',exact:true});
+ await expect(enter).toBeEnabled();await enter.click();
+ await expect(page.getByRole('heading',{name:'Welcome Back'})).toBeVisible();
+ await page.getByRole('link',{name:'Forgot your password?',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Reset Password',exact:true})).toBeVisible();
+ await expect(page.locator('.clipt-launch')).toHaveCount(0);
+ await page.getByRole('button',{name:'Back to Login',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Welcome Back'})).toBeVisible();
+ await page.reload();await expect(page.getByRole('heading',{name:'Welcome Back'})).toBeVisible();
+ await expect(page.locator('.clipt-launch')).toHaveCount(0);
+ // Even this tab's previous entry does not suppress a fresh open.
+ await page.goto('/login');await expect(enter).toBeEnabled();
+ await page.reload();await expect(enter).toBeEnabled();
+});
+test('a shared post URL and its query remain intact through Enter',async({page})=>{
+ const f=await fixture(page,true);
+ const path='/post/00000000-0000-4000-8000-000000000078?source=shared#comments';
+ await page.goto(path);await expect(page.getByRole('button',{name:'ENTER CLIPT',exact:true})).toBeEnabled();
+ expect(f.posts()).toBe(0);await page.getByRole('button',{name:'ENTER CLIPT',exact:true}).click();
+ await expect(page.locator('.app-container')).toBeVisible();
+ expect(new URL(page.url()).pathname+new URL(page.url()).search+new URL(page.url()).hash).toBe(path);
+ await expect(page.locator('.clipt-launch')).toHaveCount(0);
+});
+test('an entry in one tab never skips Welcome in a newly opened tab',async({page,context})=>{
+ await fixture(page);await page.goto('/login');await page.getByRole('button',{name:'ENTER CLIPT',exact:true}).click();
+ const other=await context.newPage();await fixture(other);await other.goto('/login');
+ await expect(other.getByRole('button',{name:'ENTER CLIPT',exact:true})).toBeEnabled();
+ await other.close();
+});
+test('blocked session storage never blocks Enter or internal navigation',async({page})=>{
+ await fixture(page);await page.addInitScript(()=>{Object.defineProperty(window,'sessionStorage',{configurable:true,get(){throw new DOMException('Storage blocked','SecurityError');}});});
+ await page.goto('/login');await page.getByRole('button',{name:'ENTER CLIPT',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Welcome Back'})).toBeVisible();
+ await page.getByRole('link',{name:'Forgot your password?',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Reset Password',exact:true})).toBeVisible();
+});

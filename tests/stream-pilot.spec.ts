@@ -1,3 +1,4 @@
+import {openApp} from './fixtures/open-app';
 import {test,expect} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
 const base='https://akiksrlzdqvipqbbjxpw.supabase.co';
@@ -33,7 +34,7 @@ test('built preview uses explicit test credentials and verified idle-active-idle
   if(u.pathname==='/rest/v1/rpc/filter_chat_message')data=[{is_blocked:false,filtered_message:req.postDataJSON().p_message}];
   return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
  });
- await page.goto('/stream-setup');
+ await openApp(page,'/stream-setup');
  const check=page.getByRole('button',{name:'Check Mux test status / playback',exact:true});
  await expect(check).toBeVisible();
  await expect(page.getByRole('button',{name:'Initialize Stream',exact:true})).toHaveCount(0);

@@ -1,9 +1,11 @@
 import React from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { isDirectEntry, needsAppWelcome, readAppEntry, rememberAppEntry } from '@/lib/app-entry';
 import {installNativeBroadcastAccountGuard} from '@/native/broadcast/accountGuard';
 import './pages/clipt-console.css';
 import './pages/clipt-auth-layout.css';
 import {useAuthViewport} from './hooks/useAuthViewport';
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
 // Import all page components directly
@@ -72,6 +74,18 @@ const App = () => {
   React.useEffect(installNativeBroadcastAccountGuard, []);
   useApplyAccessibilityPreferences();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [welcomeOpen, setWelcomeOpen] = React.useState(() => {
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    return needsAppWelcome(window.location, navigation?.type ?? 'navigate', readAppEntry());
+  });
+  const directEntry = isDirectEntry(location);
+  React.useEffect(() => {
+    // Legal and account-recovery links remain direct, including links from Welcome.
+    if (directEntry) setWelcomeOpen(false);
+    rememberAppEntry(!welcomeOpen || directEntry);
+  }, [welcomeOpen, directEntry]);
   const authPage=['/login','/signup','/reset-password','/forgot-password','/update-password','/resend-verification'].includes(location.pathname);
   const authViewport=useAuthViewport(authPage);
   const [currentPostId, setCurrentPostId] = React.useState<string | null>(null);
@@ -91,11 +105,18 @@ const App = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Only the public entrance bypasses the console shell. All application routes retain their gates.
-  if (location.pathname === '/' || location.pathname === '/start') {
+  // New app opens show the same welcome for guests and returning accounts.
+  // Enter mounts the existing shell and all of its authorization gates.
+  if (welcomeOpen && !directEntry) {
     return <><Toaster position="top-center" richColors />
       <React.Suspense fallback={<main className="fixed inset-0 grid place-items-center bg-black text-white"><p role="status">Loading CLIPT…</p></main>}>
-        <Start />
+        <Start onEnter={() => {
+          rememberAppEntry(true);
+          setWelcomeOpen(false);
+          if (['/', '/start', '/home'].includes(location.pathname)) {
+            navigate(user ? '/clipts' : '/login', { replace: true });
+          }
+        }} />
       </React.Suspense>
     </>;
   }

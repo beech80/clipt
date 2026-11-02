@@ -1,3 +1,4 @@
+import {openApp} from './fixtures/open-app';
 import {test,expect,type Page} from '@playwright/test';
 
 async function isolatedAuth(page:Page,status=200){
@@ -28,7 +29,7 @@ async function assertFitted(page:Page){
 }
 for(const size of [{width:390,height:844},{width:320,height:568},{width:260,height:500},{width:844,height:390}]){
  test('auth scroll stays above the controller at '+size.width+'x'+size.height,async({page},info)=>{
-  await isolatedAuth(page);await page.setViewportSize(size);await page.goto('/login');
+  await isolatedAuth(page);await page.setViewportSize(size);await openApp(page,'/login');
   await expect(page.getByRole('heading',{name:'Welcome Back'})).toBeVisible();await assertFitted(page);
   const before=await page.locator('.clipt-controller').boundingBox();
   await page.getByLabel('Email',{exact:true}).fill('owner@example.invalid');await page.getByLabel('Password',{exact:true}).fill('example-not-a-real-password');await page.getByRole('button',{name:'Sign in',exact:true}).click();
@@ -44,7 +45,7 @@ for(const size of [{width:390,height:844},{width:320,height:568},{width:260,heig
  });
 }
 test('reset request uses the recovery route and keeps an accessible confirmation on screen',async({page})=>{
- const f=await isolatedAuth(page);await page.setViewportSize({width:390,height:844});await page.goto('/reset-password');
+ const f=await isolatedAuth(page);await page.setViewportSize({width:390,height:844});await openApp(page,'/reset-password');
  await page.getByLabel('Email for password reset',{exact:true}).fill('Owner@Example.invalid');
  await page.getByRole('button',{name:'Send Reset Link',exact:true}).click();
  await expect(page.getByRole('status').filter({hasText:'If an account exists for this email'})).toBeVisible();
@@ -53,12 +54,12 @@ test('reset request uses the recovery route and keeps an accessible confirmation
  await page.getByRole('button',{name:'Back to Login',exact:true}).click();await expect(page).toHaveURL(/\/login$/);
 });
 test('reset rate-limit failure preserves the address and does not show a success confirmation',async({page})=>{
- const f=await isolatedAuth(page,429);await page.goto('/reset-password');await page.getByLabel('Email for password reset',{exact:true}).fill('owner@example.invalid');await page.getByRole('button',{name:'Send Reset Link',exact:true}).click();
+ const f=await isolatedAuth(page,429);await openApp(page,'/reset-password');await page.getByLabel('Email for password reset',{exact:true}).fill('owner@example.invalid');await page.getByRole('button',{name:'Send Reset Link',exact:true}).click();
  await expect(page.getByRole('alert').filter({hasText:'Please wait'})).toBeVisible();await expect(page.getByLabel('Email for password reset',{exact:true})).toHaveValue('owner@example.invalid');await expect(page.getByRole('status').filter({hasText:'If an account exists for this email'})).toHaveCount(0);expect(f.requests()).toBe(1);
 });
 test('auth layout follows the visible viewport when the keyboard opens without adding page scroll',async({page})=>{
  await page.addInitScript(()=>{const viewport=Object.assign(new EventTarget(),{height:window.innerHeight,width:window.innerWidth,offsetTop:0,offsetLeft:0,pageTop:0,pageLeft:0,scale:1});Object.defineProperty(window,'visualViewport',{configurable:true,value:viewport});(window as unknown as {authViewportFixture:typeof viewport}).authViewportFixture=viewport;});
- await isolatedAuth(page);await page.setViewportSize({width:390,height:844});await page.goto('/login');await assertFitted(page);
+ await isolatedAuth(page);await page.setViewportSize({width:390,height:844});await openApp(page,'/login');await assertFitted(page);
  await page.evaluate(()=>{const viewport=(window as unknown as {authViewportFixture:{height:number;width:number;offsetTop:number;dispatchEvent:(event:Event)=>boolean}}).authViewportFixture;viewport.height=360;viewport.width=390;viewport.offsetTop=24;viewport.dispatchEvent(new Event('resize'));});
  await expect.poll(async()=>Math.round((await page.locator('.clipt-auth-shell').boundingBox())!.height)).toBe(360);
  await expect.poll(async()=>Math.round((await page.locator('.clipt-auth-shell').boundingBox())!.y)).toBe(24);await assertFitted(page);

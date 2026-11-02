@@ -1,3 +1,4 @@
+import {openApp} from './fixtures/open-app';
 import {test,expect,type Page} from '@playwright/test';
 const api='https://akiksrlzdqvipqbbjxpw.supabase.co';
 const owner='10000000-0000-4000-8000-000000000003',stream='10000000-0000-4000-8000-000000000002',session='10000000-0000-4000-8000-000000000001';
@@ -49,14 +50,14 @@ async function fixture(page:Page,{native=true,deny=false,restored=false}={}){
  return stats;
 }
 test('web preserves OBS without pretending native capture is available',async({page})=>{
- const stats=await fixture(page,{native:false});await page.goto('/stream-setup');
+ const stats=await fixture(page,{native:false});await openApp(page,'/stream-setup');
  await expect(page.getByRole('button',{name:'Check Mux test status / playback',exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:'Camera Live',exact:true})).toHaveCount(0);
  expect(stats.creates).toBe(0);
 });
 test('native Screen Live uses bounded grants, keeps LIVE provider verified and ends explicitly',async({page})=>{
  await page.setViewportSize({width:390,height:844});
- const stats=await fixture(page);await page.goto('/stream-setup');
+ const stats=await fixture(page);await openApp(page,'/stream-setup');
  const panel=page.getByRole('region',{name:'Phone broadcasting'});
  await expect(panel).toBeVisible();expect(stats.creates).toBe(0);
  await panel.getByRole('button',{name:'Screen Live',exact:true}).click();
@@ -77,7 +78,7 @@ test('native Screen Live uses bounded grants, keeps LIVE provider verified and e
  await expect(panel.getByRole('button',{name:'Start Screen Live',exact:true})).toBeVisible();
 });
 test('denied native capture revokes the prepared session and permits a fresh retry',async({page})=>{
- const stats=await fixture(page,{deny:true});await page.goto('/stream-setup');
+ const stats=await fixture(page,{deny:true});await openApp(page,'/stream-setup');
  const panel=page.getByRole('region',{name:'Phone broadcasting'});
  await panel.getByRole('button',{name:'Start Camera Live',exact:true}).click();
  await expect(panel.getByRole('alert')).toContainText('Phone capture did not start');
@@ -87,7 +88,7 @@ test('denied native capture revokes the prepared session and permits a fresh ret
 });
 
 test('returning from another app restores broadcast controls without creating or restarting the session',async({page})=>{
- const stats=await fixture(page,{restored:true});stats.live=true;await page.goto('/stream-setup');
+ const stats=await fixture(page,{restored:true});stats.live=true;await openApp(page,'/stream-setup');
  const panel=page.getByRole('region',{name:'Phone broadcasting'});
  await expect(panel.getByRole('button',{name:'End broadcast',exact:true})).toBeVisible();
  expect(stats.creates).toBe(0);
