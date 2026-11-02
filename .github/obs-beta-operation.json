@@ -1,5 +1,6 @@
 {
-  "action": "reconcile",
+  "action": "acceptance",
   "requestedOn": "2026-11-01",
-  "purpose": "Confirm cleanup after Mux still returned test mode; do not start another broadcast"
+  "purpose": "Owner confirmed the Mux plan explicitly shows Pay as you go; perform the final bounded paid-ingest acceptance",
+  "maxDurationSeconds": 90
 }
