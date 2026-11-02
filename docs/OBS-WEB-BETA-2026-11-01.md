@@ -67,3 +67,17 @@ The $25 planning budget is not a provider billing cap. Add $20 and $25 spending 
 - Phone Camera Live/Screen Live, native signing/physical-device acceptance and app-store publishing remain deferred. App checkout/donations remain disabled. Backblaze's download cap remains $0.
 
 The existing web beta remains available. Do not label longer computer livestreaming launched while the provider activation gate is closed.
+
+## Follow-up after owner-reported activation — 2026-11-02 02:34 UTC
+
+- The owner reported completion of the Mux billing/alerts step. A fresh bounded production acceptance ran at [41377241929](https://github.com/beech80/clipt/actions/runs/41377241929), commit `f2a1f255474dd5e266a6edeba2470725d5114ded`.
+- Mux again returned `test:true` with a 300-second duration despite the explicit `test:false` request. The validator returned `MUX_PAID_MODE_UNAVAILABLE` before any encoder started. Real paid ingest, private HLS decoding and webhook delivery therefore remain unverified.
+- Automatic teardown completed: three total acceptance resources ended, zero unresolved sessions, healthy minute cleanup. Six conservative reserved minutes remain charged against the internal monthly allowance; no encoder minutes were streamed by these refused checks.
+- PR [45](https://github.com/beech80/clipt/pull/45) merged as `a7b13888e717a012da59f7b83ad65654d408f4f6`. This permits at most four 90-second operator checks per rolling day; authenticated tester limits remain two starts/day, one concurrent broadcast and a 30-minute deadline. Validation [41376895014](https://github.com/beech80/clipt/actions/runs/41376895014) passed release, Chromium and macOS WebKit checks.
+- Read-only account correlation confirms the production token belongs to the same Mux organization as the owner's known dashboard. Its environment type is production; it is separate from the earlier development dashboard environment. Video/System write permissions are valid. No account names, token names, credentials or raw identifiers are returned by diagnostics.
+- Production backend version 8 includes this redacted account correlation. Code checks [41377895159](https://github.com/beech80/clipt/actions/runs/41377895159) passed 846 application tests, 12 monitoring tests, typecheck, CSS checks, build and dependency audit with zero vulnerabilities. Chromium checks passed 34 general and eight private-media scenarios.
+- Operations request was restored to `reconcile` only at commit `8125765ff36adf322911194a02a127788045f4af`; its independent cleanup run [41377895408](https://github.com/beech80/clipt/actions/runs/41377895408) passed. No additional paid attempt is automatically scheduled.
+- Security advisors show no ERROR; the managed `pg_net` placement warning and intentional RLS/no-browser-policy information remain unchanged.
+- **Invited production broadcasting remains disabled until Mux creates a non-test resource and the real encoder/playback/webhook/shutdown test passes.** The next owner input is the actual plan label shown in Mux Organization Settings → Billing. Do not repeatedly rotate keys or retry resource creation without a new provider/configuration finding.
+
+- Account-correlation PR [46](https://github.com/beech80/clipt/pull/46) merged as `49820ff005451fb00ae064dfe7a1bbbf5bacca1a`. Its macOS WebKit job also completed successfully; this is automated browser-engine coverage, not physical-device/native broadcasting verification.
