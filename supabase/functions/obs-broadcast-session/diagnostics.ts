@@ -24,3 +24,12 @@ export function obsProviderShape(value:any,sessionId?:string){
  playbackCount:Array.isArray(value?.playback_ids)?value.playback_ids.length:0,
  signedOnly:Array.isArray(value?.playback_ids)&&value.playback_ids.length===1&&value.playback_ids[0]?.policy==='signed'};
 }
+
+/** Safe account correlation: no account names, token names, identifiers or keys. */
+export function muxAccountShape(value:any){
+ return {
+  knownDashboardOrganization:value?.organization_id==='t0gc3o',
+  knownDashboardEnvironment:value?.environment_id==='a7g7mn',
+  environmentType:['development','production'].includes(value?.environment_type)?value.environment_type:'unknown'
+ };
+}
