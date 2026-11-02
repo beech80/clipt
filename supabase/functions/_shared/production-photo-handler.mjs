@@ -78,6 +78,14 @@ export function createAzurePhotoHandler({reviewedFiles,getEnv,analyze,review,fet
     await rpc('record_azure_photo_worker',{p_state:'failed'});
     return json({state:'held',reason:'scan_unconfirmed_human_review_required'});
    }
-  }catch{return json({error:'Photo review unavailable; no approval was issued'},503);}
+  }catch(cause){
+   // Surface only a bounded status for an authenticated synthetic probe.
+   // Never return the provider body, request, endpoint value, key or content.
+   if(action==='probe'&&[400,401,403,404,408,409,413,415,422,429,500,502,503,504].includes(cause?.providerStatus)){
+    const status=cause.providerStatus;
+    return json({state:status===429||status>=500?'held':'configuration_required',reason:'provider_probe_failed'},status);
+   }
+   return json({error:'Photo review unavailable; no approval was issued'},503);
+  }
  };
 }
