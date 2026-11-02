@@ -1,0 +1,62 @@
+/* The entrance owns the viewport; console and feed styles remain unchanged. */
+html:has(.clipt-launch),body:has(.clipt-launch),body:has(.clipt-launch) #root {
+ min-height:0!important;height:100%!important;overflow:hidden!important;overscroll-behavior:none;
+}
+.clipt-launch {
+ position:fixed;inset:0;isolation:isolate;box-sizing:border-box;display:grid;grid-template-rows:minmax(min-content,1fr) auto;
+ width:100%;height:100dvh!important;min-height:0!important;min-width:0;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;
+ background:#03020b;color:#fff;text-align:center;
+ padding:max(20px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));
+}
+.clipt-launch-art,.clipt-launch-shade {position:fixed;inset:0;width:100%;height:100%;pointer-events:none;}
+.clipt-launch-art {z-index:-3;object-fit:cover;object-position:50% 50%;}
+.clipt-launch-shade {z-index:-2;background:radial-gradient(ellipse at 50% 47%,#07021b12 10%,#04020c44 62%,#03010bd9 100%),linear-gradient(transparent 15%,#03010b28 45%,#03010bbb 100%);}
+.clipt-launch-content {align-self:center;justify-self:center;box-sizing:border-box;width:min(100%,960px);min-width:0;padding:clamp(16px,5vh,60px) 0;animation:clipt-launch-arrive .65s ease-out both;}
+.clipt-launch-kicker {margin:0 0 24px;color:#e9d5ff;font-size:.75rem;font-weight:600;letter-spacing:.24em;line-height:1.6;}
+.clipt-launch-wordmark {margin:0;font-family:'Clipt Console Display',sans-serif;font-size:clamp(3.5rem,14.5vw,9.5rem);font-weight:900;line-height:1.2;letter-spacing:.04em;color:#fff;text-shadow:0 0 4px #fff8,0 0 22px #c026d3,0 0 58px #7c3aed,3px 2px #6b21a8;}
+.clipt-launch-tagline {margin:14px 0 0;color:#f3e8ff;font-size:clamp(.75rem,2.3vw,1.2rem);font-weight:500;letter-spacing:.22em;line-height:1.8;text-shadow:0 2px 8px #000;}
+.clipt-launch-entry {display:grid;justify-items:center;gap:12px;margin:clamp(24px,6vh,56px) auto 0;width:min(100%,360px);}
+.clipt-launch-status {margin:0;min-height:1.5em;font-size:.875rem;color:#ede9fe;text-shadow:0 2px 8px #000;}
+.clipt-launch-enter {appearance:none;display:flex;align-items:center;justify-content:center;gap:20px;box-sizing:border-box;width:100%;min-height:60px;padding:14px 24px;border:1px solid #e9d5ff;border-radius:16px;background:linear-gradient(135deg,#280d55dd,#160b37ee);color:#fff;font-family:'Clipt Console Display',sans-serif;font-size:clamp(1rem,3vw,1.25rem);font-weight:800;letter-spacing:.09em;line-height:1.5;box-shadow:0 0 4px #f5d0fe,0 0 26px #a855f788,inset 0 0 20px #9333ea44;cursor:pointer;transition:background .2s,box-shadow .2s,transform .2s;-webkit-tap-highlight-color:transparent;}
+.clipt-launch-enter:hover:not(:disabled) {background:#4c1d95ee;box-shadow:0 0 8px #f5d0fe,0 0 38px #a855f7bb,inset 0 0 20px #9333ea66;transform:translateY(-2px);}
+.clipt-launch-enter:active:not(:disabled){transform:translateY(0);}
+.clipt-launch-enter:focus-visible,.clipt-launch-footer a:focus-visible {outline:3px solid #fff;outline-offset:6px;}
+.clipt-launch-enter:disabled {cursor:wait;color:#e9d5ff;}
+.clipt-launch-motto {margin:22px 0 0;color:#e9d5ff;font-size:.75rem;letter-spacing:.2em;line-height:1.8;text-shadow:0 2px 8px #000;}
+.clipt-launch-loading {height:3px;width:180px;overflow:hidden;background:#c084fc33;border-radius:4px;}
+.clipt-launch-loading span {display:block;width:40%;height:100%;background:#e9d5ff;box-shadow:0 0 12px #c084fc;animation:clipt-launch-progress 1.4s ease-in-out infinite;}
+.clipt-launch-footer {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 20px;width:min(100%,1120px);margin:auto auto 0;color:#d8c9ef;font-size:.6875rem;letter-spacing:.12em;line-height:1.6;}
+.clipt-launch-footer nav {display:flex;gap:24px;}
+.clipt-launch-footer a {display:inline-flex;align-items:center;min-height:44px;color:#ede9fe;text-decoration:none;font-size:.75rem;letter-spacing:.04em;}
+.clipt-launch-footer a:hover {text-decoration:underline;}
+@keyframes clipt-launch-arrive {from {opacity:0;transform:translateY(12px);}to {opacity:1;transform:translateY(0);}}
+@keyframes clipt-launch-progress {from {transform:translateX(-100%);}to {transform:translateX(350%);}}
+@media(max-width:480px) {
+ .clipt-launch-kicker {font-size:.625rem;letter-spacing:.16em;margin-bottom:20px;}
+ .clipt-launch-wordmark {font-size:clamp(3rem,16vw,5rem);}
+ .clipt-launch-tagline {letter-spacing:.14em;}
+ .clipt-launch-footer {justify-content:center;}
+ .clipt-launch-footer > span {width:100%;font-size:.625rem;}
+ .clipt-launch-art {object-position:50% 45%;}
+}
+@media(max-height:480px) and (min-width:600px) {
+ .clipt-launch {padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(4px,env(safe-area-inset-bottom));}
+ .clipt-launch-content {padding:8px 0;}
+ .clipt-launch-kicker {margin-bottom:4px;font-size:.625rem;}
+ .clipt-launch-wordmark {font-size:4rem;}
+ .clipt-launch-tagline {margin-top:4px;font-size:.75rem;}
+ .clipt-launch-entry {margin-top:10px;gap:6px;}
+ .clipt-launch-enter {min-height:48px;}
+ .clipt-launch-motto {margin-top:8px;font-size:.625rem;}
+}
+@media(prefers-reduced-motion:reduce) {
+ .clipt-launch-content,.clipt-launch-loading span {animation:none;}
+ .clipt-launch-enter {transition:none;}
+ .clipt-launch-enter:hover:not(:disabled) {transform:none;}
+}
+@media(forced-colors:active) {
+ .clipt-launch-art,.clipt-launch-shade {display:none;}
+ .clipt-launch,.clipt-launch-enter {background:Canvas;color:CanvasText;}
+ .clipt-launch-wordmark,.clipt-launch-tagline,.clipt-launch-kicker,.clipt-launch-status,.clipt-launch-motto,.clipt-launch-footer,.clipt-launch-footer a {color:CanvasText;text-shadow:none;}
+ .clipt-launch-enter {border-color:ButtonText;box-shadow:none;}
+}

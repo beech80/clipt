@@ -91,6 +91,15 @@ const App = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  // Only the public entrance bypasses the console shell. All application routes retain their gates.
+  if (location.pathname === '/' || location.pathname === '/start') {
+    return <><Toaster position="top-center" richColors />
+      <React.Suspense fallback={<main className="fixed inset-0 grid place-items-center bg-black text-white"><p role="status">Loading CLIPT…</p></main>}>
+        <Start />
+      </React.Suspense>
+    </>;
+  }
+
   return (
     <><Toaster position="top-center" richColors />
     <BetaAccessGate><MfaGate><MessagesProvider><CommentsProvider><ReportDialogProvider><div ref={authViewport} className={`app-container min-h-screen bg-black text-white${authPage ? ' clipt-auth-shell' : ''}`}>
