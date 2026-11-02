@@ -34,3 +34,43 @@ We rejected the test resource before starting any encoder and disabled it. No br
 Organization dashboard identifier: t0gc3o. We can provide the actual resource/request identifiers privately through the authenticated support case if needed.
 
 Redacted application run: https://github.com/beech80/clipt/actions/runs/41379289669
+
+## Independent official-client reproduction
+
+A second method ran at **2026-11-02 03:03:22.761 UTC** using the official **@mux/ts 16.0.0** SDK in the production Edge runtime. This request **omitted the optional test property**, following the official SDK production example. It retained the same 90-second duration, signed policies, plus quality and unique passthrough.
+
+The SDK used the same explicit production Basic credentials, fixed api.mux.com host, no bearer-token fallback, zero retries, 12-second timeout, disabled logging and blocked redirects. It created one resource only. The result was independently retrieved by ID through our original HTTP client, with exact identity/passthrough validation.
+
+Both observations agreed:
+
+```json
+{
+  "created": {
+    "identityValid": true,
+    "passthroughMatches": true,
+    "testField": "true",
+    "duration": 300,
+    "status": "idle",
+    "playbackCount": 1,
+    "signedOnly": true
+  },
+  "retrieved": {
+    "identityValid": true,
+    "passthroughMatches": true,
+    "testField": "true",
+    "duration": 300,
+    "status": "idle",
+    "playbackCount": 1,
+    "signedOnly": true
+  }
+}
+```
+
+Two independent code/documentation reviews found no request serialization or response-validation mistake. Ninety seconds is within the documented 60-second minimum. We did not attempt to PATCH test=false, because test is not documented as an update parameter.
+
+The test was rejected before encoder startup and the resource was disabled. Five total acceptance resources are now closed, with zero unresolved sessions. Our user broadcast switch remains off. No repeated automatic paid attempts are scheduled.
+
+Independent SDK reproduction: https://github.com/beech80/clipt/actions/runs/41380913803
+Implementation/review: https://github.com/beech80/clipt/pull/47
+
+Please investigate why both explicit test=false and omitted-test production creation return test=true under the owner-confirmed Pay as you go plan.
