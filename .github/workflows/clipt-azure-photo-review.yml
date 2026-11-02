@@ -1,0 +1,39 @@
+name: CLIPT Azure photo review
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        description: Verify synthetic inputs or process one queued photo post
+        options: [probe, tick]
+        default: tick
+  schedule:
+    - cron: '*/5 * * * *'
+  push:
+    branches: [main]
+    paths: ['operations/azure-photo-worker-request.json']
+permissions:
+  contents: read
+concurrency:
+  group: clipt-azure-photo-review
+  cancel-in-progress: false
+jobs:
+  review:
+    if: github.repository == 'beech80/clipt' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Process only server-selected public photo content
+        env:
+          CLIPT_PHOTO_ACTION: ${{ github.event_name == 'push' && 'probe' || inputs.action || 'tick' }}
+        run: node scripts/run-azure-photo-worker.mjs
