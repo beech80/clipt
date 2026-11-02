@@ -163,7 +163,7 @@ begin
   select * into s from clipt_private.obs_beta_sessions where acceptance and request_id=rid for update;
   if found then return clipt_private.obs_beta_json(s,false); end if;
   if exists(select 1 from clipt_private.obs_beta_sessions where state<>'ended')
-   or (select count(*) from clipt_private.obs_beta_sessions where acceptance and created_at>clock_timestamp()-interval '24 hours')>=4
+   or (select count(*) from clipt_private.obs_beta_sessions where acceptance and created_at>clock_timestamp()-interval '24 hours')>=5
    then raise exception 'Acceptance capacity reached' using errcode='P0001'; end if;
   mon:=date_trunc('month',clock_timestamp() at time zone 'UTC')::date;
   insert into clipt_private.obs_beta_usage(month) values(mon) on conflict do nothing;
