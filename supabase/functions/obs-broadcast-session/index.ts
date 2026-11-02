@@ -8,6 +8,7 @@ import {obsAcceptance,acceptanceRequestId} from './acceptance.ts';
 import {clearObsRecordings} from './recordings.ts';
 import {muxRejectionCode,obsProviderShape,muxAccountShape} from './diagnostics.ts';
 import {bootstrapObs} from './bootstrap.ts';
+import {createSdkAcceptance} from './sdk-acceptance.ts';
 const ORIGIN='https://slnjliheyiiummxhrgmk.supabase.co';
 const REVIEWED_RUNNER={".github/workflows/obs-beta-operations.yml":"cef7a8335a00726f43d9d69ee2b6a809f1f8e735f209c3c60758e4b5df978a81","scripts/obs-beta-operations.mjs":"a7239e306dfad1b295356d0718b1fc76f62fd74c2870eaa7220de513c451163b"};
 const env=(name:string)=>Deno.env.get(name)||'';
@@ -42,7 +43,7 @@ async function providerRequest(path:string,method='GET',body?:unknown){
 async function dependencies():Promise<ObsDependencies>{
  const config=await db('configuration');
  return {now:()=>Date.now(),db,provider:{
-  create:s=>providerRequest('/video/v1/live-streams','POST',{test:false,max_continuous_duration:s.maxDurationSeconds,
+  create:s=>s.acceptance===true?createSdkAcceptance(s,env('MUX_TOKEN_ID'),env('MUX_TOKEN_SECRET'),id=>providerRequest('/video/v1/live-streams/'+id)):providerRequest('/video/v1/live-streams','POST',{test:false,max_continuous_duration:s.maxDurationSeconds,
    playback_policies:['signed'],new_asset_settings:{playback_policies:['signed'],max_resolution_tier:'1080p',video_quality:'plus'},
    reconnect_window:60,latency_mode:'standard',passthrough:'clipt-obs:'+s.sessionId}),
   read:id=>providerRequest('/video/v1/live-streams/'+id),
