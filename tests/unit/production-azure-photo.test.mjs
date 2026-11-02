@@ -113,3 +113,23 @@ test('photo worker verifies the signed repository/workflow identity and rejects 
  await assert.rejects(verifyPhotoOidc(token({},true),opts));
  await assert.rejects(attestPhotoRunner(good,{'.github/workflows/clipt-azure-photo-review.yml':'0'.repeat(64),'scripts/run-azure-photo-worker.mjs':'0'.repeat(64)},{fetchImpl:async()=>new Response('changed source')}));
 });
+
+import {createRequire} from 'node:module';
+import ts from 'typescript';
+import React from 'react';
+const require=createRequire(import.meta.url);
+async function reviewUI({loaded=new Set(),decision=null,urls=['https://slnjliheyiiummxhrgmk.supabase.co/storage/v1/object/sign/media/one?token=fixture','https://slnjliheyiiummxhrgmk.supabase.co/storage/v1/object/sign/media/two?token=fixture'],withPreview=true}={}){
+ const source=await readFile(new URL('../../src/components/moderation/ProductionPhotoReviewQueue.tsx',import.meta.url),'utf8');
+ const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;
+ const mutations=[],calls=[],values=[withPreview?{id:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',urls,caption:'Original caption'}:null,loaded,decision];let n=0;
+ const deps={react:{...React,useEffect(){},useRef:x=>({current:x}),useState:x=>[values[n++]??(typeof x==='function'?x():x),()=>{}]},
+ '@tanstack/react-query':{useQueryClient:()=>({invalidateQueries:async()=>{}}),useQuery:()=>({data:[],isPending:false,isError:false}),useMutation:opts=>{mutations.push(opts);return {isPending:false,isError:false,mutate:()=>{throw Error('No automatic decisions');}};}},
+ '@/integrations/supabase/client':{storageProjectUrl:SOURCE,supabase:{rpc:async(name,args)=>{calls.push({name,args});return {data:true,error:null};},functions:{invoke:async()=>({data:{postId:'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',urls,caption:'Original caption'},error:null})}}},
+ '@/contexts/AuthContext':{useAuth:()=>({user:{id:staff}})},'@/components/ui/button':{Button:()=>null},'react-router-dom':{Link:()=>null}};
+ const mod={exports:{}};new Function('require','module','exports',code)(name=>deps[name]??require(name),mod,mod.exports);const tree=mod.exports.ProductionPhotoReviewQueue();return {mutations,calls,tree};
+}
+test('protected moderator preview rejects off-site media and releasing an album requires every image to load',async()=>{
+ const bad=await reviewUI({withPreview:false,urls:['https://other.invalid/private']});await assert.rejects(bad.mutations[0].mutationFn('dddddddd-dddd-4ddd-8ddd-dddddddddddd'),/Invalid protected preview/);
+ const partial=await reviewUI({loaded:new Set([0]),decision:'restore'});await assert.rejects(partial.mutations[1].mutationFn(),/every photo/);assert.equal(partial.calls.length,0);
+ const all=await reviewUI({loaded:new Set([0,1]),decision:'restore'});assert.equal(all.calls.length,0);await all.mutations[1].mutationFn();assert.deepEqual(all.calls,[{name:'resolve_production_photo_review',args:{p_job:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',p_decision:'restore'}}]);
+});
