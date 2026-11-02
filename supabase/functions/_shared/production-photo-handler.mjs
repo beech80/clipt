@@ -21,6 +21,7 @@ export function createAzurePhotoHandler({reviewedFiles,getEnv,analyze,review,fet
    const r=await fetchImpl(SOURCE+'/rest/v1/rpc/'+name,{method:'POST',redirect:'error',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(20000)});
    if(!r.ok){await r.body?.cancel();throw Error('state-unavailable');}const text=await r.text();if(text.length>50000)throw Error();return JSON.parse(text);
   }
+  let probeStage='worker_status';
   try{
    const status=await rpc('azure_photo_worker_status');
    if(action==='tick'&&status?.enabled!==true)return json({state:'disabled'});
@@ -30,10 +31,13 @@ export function createAzurePhotoHandler({reviewedFiles,getEnv,analyze,review,fet
    if(endpoint!=='https://clipt-content-safety-dev.cognitiveservices.azure.com/')return json({state:'configuration_required',missing:['approved_Azure_endpoint']},503);
    const scan=input=>analyze({endpoint,key:azureKey,tier:'F0',verifiedF0:true},input);
    if(action==='probe'){
+    probeStage='probe_budget';
     if(await rpc('reserve_azure_photo_probe',{p_run:claims.run_id,p_attempt:claims.run_attempt})!==true)return json({state:'held',reason:'probe_limit_or_replay'},409);
     for(const input of [{imageBase64:SYNTHETIC_PNG},{caption:'CLIPT moderation connection check.'}]){
+     probeStage=input.imageBase64?'provider_image':'provider_caption';
      if(!['no_flag_detected','needs_review'].includes(await scan(input)))throw Error('provider-unconfirmed');
     }
+    probeStage='probe_record';
     if(await rpc('record_azure_photo_worker',{p_state:'provider_verified'})!==true)throw Error('state-unavailable');
     return json({state:'provider_verified',syntheticOnly:true,userContentSent:false});
    }
@@ -84,6 +88,20 @@ export function createAzurePhotoHandler({reviewedFiles,getEnv,analyze,review,fet
    if(action==='probe'&&[400,401,403,404,408,409,413,415,422,429,500,502,503,504].includes(cause?.providerStatus)){
     const status=cause.providerStatus;
     return json({state:status===429||status>=500?'held':'configuration_required',reason:'provider_probe_failed'},status);
+   }
+   if(action==='probe'){
+    const messages={
+     'Verified free-tier moderation configuration required':'invalid_provider_configuration',
+     'Invalid moderation input':'invalid_input',
+     'One moderation input required':'invalid_input',
+     'Moderation response unavailable':'invalid_provider_response',
+     'Moderation temporarily unavailable':'provider_transport',
+     'Moderation quota reached; review remains pending':'provider_quota',
+     'state-unavailable':'database_rpc',
+     'provider-unconfirmed':'invalid_provider_result',
+    };
+    const kind=Object.hasOwn(messages,cause?.message)?messages[cause.message]:'internal_error';
+    return json({state:'held',reason:'probe_failed',diagnostic:{stage:probeStage,kind}},503);
    }
    return json({error:'Photo review unavailable; no approval was issued'},503);
   }
