@@ -1,6 +1,15 @@
 # CLIPT web beta launch checklist
 
-Updated November 1, 2026. The approved web release is published; see [the rollout receipt](WEB-BETA-ROLLOUT-2026-11-01.md). Use the [current release review](BETA-RELEASE-REVIEW-2026-10-31.md) for evidence, rollout order, invariants and rollback instructions. This checklist records verified results; it is not a legal, store or zero-defect certification.
+Updated November 2, 2026. The [final photo and operations acceptance receipt](WEB-BETA-ACCEPTANCE-2026-11-02.md) records the current closure evidence; older dated checks below remain historical. The approved web release is published; see [the rollout receipt](WEB-BETA-ROLLOUT-2026-11-01.md). Use the [current release review](BETA-RELEASE-REVIEW-2026-10-31.md) for evidence, rollout order, invariants and rollback instructions. This checklist records verified results; it is not a legal, store or zero-defect certification.
+
+## November 2 final web-beta acceptance
+
+- [x] The owner posted a real photo through CLIPT. The worker scanned the private JPEG and its caption, recorded no_flag_detected after two operations, completed the job and released the post with no unresolved quarantine. The owner explicitly confirmed the actual picture displays.
+- [x] The owner opened the production “Photo and caption review” section and confirmed “No photo posts require review,” the expected result for this clean photo. No live flagged-photo decision or agent-controlled signed-in browser session is claimed.
+- [x] Production Azure is enabled for eligible public photo posts/captions; the moderator authenticator is verified. Synthetic provider verification and the first enabled tick succeeded. Videos remain manually moderated; free-tier bounds and private media protections remain in place.
+- [x] CI41502935870 passed 903 app tests,12 monitor tests,type/CSS/build/audit0,53 Chromium UI+8 private-media checks,and WebKit4 codec+41 UI+3 repeated-playback checks.
+- [x] The latest production-monitor rerun passed all six probes first attempt at19:11 UTC and recorded recovery; incident50 is closed. The November2 backup/restore verified142 files/948205598bytes. Its receipt supersedes the November1 deferred-snapshot note.
+- [x] Within the approved free, invite-only web scope, the remaining planned acceptance check is complete. Keep operational monitoring, backups and moderation running. Explicitly deferred work below is not a new web-beta launch gate.
 
 ## Verified
 
@@ -48,5 +57,5 @@ Support and moderation contact: beecher@cliptgaming.com. Operational alerts use 
 - [x] CI41332357505 passed825 app tests,12 monitor tests, type/CSS/build/audit0,34 Chromium UI+8 private-media and WebKit4 codec+22 UI+3 repeated-feed checks. Centered geometry, player clearance, both hands, menu/focus and player identity are verified at1280x800,1024x768 and768x1024.
 - [x] Fresh independent production monitor (run41316337185, latest job124918571053) passed all probes. Production project is ACTIVE_HEALTHY on17.11.0.003. Security advisor has zero ERROR findings and no leaked-password warning; the managed pg_net placement warning remains documented.
 - [x] Current production inventory:142 objects,948205598 bytes,six private buckets,zero public buckets,23 configured game entries including verified Overwatch2016. Content was preserved.
-- [x] Owner decided to retain the$0 Backblaze download cap during beta and revisit the amount after beta, superseding the earlier$0.10 approval. No cap or billing setting was changed. The fresh142-file backup/isolated-restore check is explicitly deferred: destination downloads returnHTTP403 download_cap_exceeded. The earlier141-file snapshot remains verified; the latest upload is not yet covered by a completed verified snapshot. Keep scheduled backup attempts and deduplicated operational alerts active; do not claim current142-file coverage.
+- [x] Owner retained the$0 Backblaze download cap, superseding the earlier$0.10 approval. No cap or billing setting was changed. The November2 run41434994559 subsequently completed the backup and independent restore for all142 files/948205598bytes, with two ownerless files preserved and production unchanged. This supersedes the November1 cap-blocked verification note. New uploads follow the existing backup schedule; do not claim a snapshot includes future uploads.
 - [x] PR40 adds bounded, redacted backup diagnostics and updates exact source attestation. Production private-media-backup version2 was read back and matched reviewed files. Offline backup/security suite passed131 tests; download error bodies, private URLs and credentials are not logged.
