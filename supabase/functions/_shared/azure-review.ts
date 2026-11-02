@@ -47,9 +47,9 @@ export async function analyzeAzureReview(config: { endpoint: string; key: string
       headers: {'Content-Type':'application/json', 'Ocp-Apim-Subscription-Key':config.key},
       body: JSON.stringify({ ...(image ? {image:{content}} : {text:content}), categories, outputType:'FourSeverityLevels' }),
     })
-  } catch { throw new Error('Moderation temporarily unavailable') }
-  if (response.status === 429) throw new Error('Moderation quota reached; review remains pending')
-  if (!response.ok) throw new Error('Moderation temporarily unavailable')
+  } catch { throw Object.assign(new Error('Moderation temporarily unavailable'), {providerStatus: 502}) }
+  if (response.status === 429) throw Object.assign(new Error('Moderation quota reached; review remains pending'), {providerStatus: 429})
+  if (!response.ok) throw Object.assign(new Error('Moderation temporarily unavailable'), {providerStatus: response.status})
   // Bound response bytes; never log caption, image, key or raw provider errors.
   const reader = response.body?.getReader()
   if (!reader) throw new Error('Moderation response unavailable')
