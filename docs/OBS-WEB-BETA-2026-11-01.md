@@ -81,3 +81,14 @@ The existing web beta remains available. Do not label longer computer livestream
 - **Invited production broadcasting remains disabled until Mux creates a non-test resource and the real encoder/playback/webhook/shutdown test passes.** The next owner input is the actual plan label shown in Mux Organization Settings → Billing. Do not repeatedly rotate keys or retry resource creation without a new provider/configuration finding.
 
 - Account-correlation PR [46](https://github.com/beech80/clipt/pull/46) merged as `49820ff005451fb00ae064dfe7a1bbbf5bacca1a`. Its macOS WebKit job also completed successfully; this is automated browser-engine coverage, not physical-device/native broadcasting verification.
+
+## Explicit Pay as you go confirmation — 2026-11-02 02:49 UTC
+
+- Owner confirmed the Billing page says Pay as you go.
+- Fresh bounded check [41379289669](https://github.com/beech80/clipt/actions/runs/41379289669), source `337136654757a4380cc02091c8928aca831eafc5`, again returned `MUX_PAID_MODE_UNAVAILABLE` at 02:44:35 UTC before encoder startup.
+- Re-read provider diagnostics show four owned acceptance resources, all disabled, each with test=true and max_continuous_duration=300. Database confirms zero unresolved sessions, healthy cleanup and broadcasting disabled. No encoder was started by any of these four attempts.
+- The known Mux organization matches; production environment and Video/System write permissions are confirmed. The available evidence does not establish why Mux changes the explicit test=false request. Billing entitlement/activation is a provider-side hypothesis requiring confirmation, not a verified root cause.
+- Operator allowance of four checks per rolling 24 hours is exhausted; no quota was raised and no additional acceptance is scheduled. Normal tester limits remain unchanged.
+- Cleanup-only operation `8af57d8027d85879e2e956054c9ef2eeb730db0b` succeeded in [41379633940](https://github.com/beech80/clipt/actions/runs/41379633940).
+- Prepared [credential-free Mux support details](./MUX-LIVE-ACTIVATION-SUPPORT-2026-11-01.md). These have **not** been sent to Mux. Desktop read-only fallback timed out twice, so no signed-in Billing page was independently inspected.
+- Longer production OBS broadcasting remains gated until the provider mismatch is resolved and actual ingest, signed playback, verified webhook and shutdown acceptance succeeds. Web beta availability is unchanged.
