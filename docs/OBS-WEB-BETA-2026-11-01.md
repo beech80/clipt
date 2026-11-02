@@ -50,3 +50,20 @@ The owner-approved paid request returned a signed **test** resource with a 300-s
 The remaining provider step is to activate or correct non-test livestreaming in the Mux account (Organization Settings → Billing). A real paid ingest/signed playback/webhook/cleanup acceptance must pass afterward. If the dashboard already shows Pay as you go, verify the token's account/environment against that organization before retrying. Do not paste any keys or payment details in chat.
 
 The $25 planning budget is not a provider billing cap. Add $20 and $25 spending alerts to beecher@cliptgaming.com in Mux Billing. Dashboard confirmation is still pending.
+
+## Verified rollout receipt — 2026-11-02 00:49 UTC (November 1 in Chicago)
+
+- Implementation PR [43](https://github.com/beech80/clipt/pull/43) merged as `ede46ba96eb9b711ec2c9aac436eb5bc37c26161`.
+- Recovery/minute-expiry PR [44](https://github.com/beech80/clipt/pull/44) merged as `444d9a78f579012b8df854724b46562a1040d500`.
+- Production Vercel deployment `dpl_FLm2xWzggo9gQAdjiSLKvuZV6iwK` is READY at the stable web-beta alias, built from the tested UI merge `ede46ba96eb9b711ec2c9aac436eb5bc37c26161`. Subsequent backend/operations changes do not require a different frontend bundle.
+- Production `obs-broadcast-session` is version 7; `account-deletion` is version 5. Signing and webhook secrets are present in encrypted Vault, never returned to the operator.
+- Validation run [41368401843](https://github.com/beech80/clipt/actions/runs/41368401843): 845 application tests, 12 monitoring tests, typecheck, CSS checks, build and dependency audit passed with zero audit findings. Chromium regression/private-media checks and macOS WebKit conversion, channel/UI and repeated feed checks passed. The separate production OBS build verified five desktop/tablet/phone scenarios; development streaming checks also passed.
+- The Safari upload-readiness regression was corrected by checking decoded readiness after the same selected video's play promise resolves. The conversion test now withholds playing/preload events from React and passes through a real explicit gesture.
+- Both Supabase minute jobs executed successfully at consecutive minute boundaries. Provider-expiry requests returned HTTP 200 without timeouts. The cron command contains neither Authorization nor API-key headers.
+- The final bounded production attempt [41368943554](https://github.com/beech80/clipt/actions/runs/41368943554) returned `MUX_PAID_MODE_UNAVAILABLE` before encoder startup. This is **not** a successful real paid-stream/playback test.
+- At 00:49 UTC, automatic Supabase expiry had completed cleanup of both rejected acceptance resources: two stopped test sessions, zero unresolved sessions and healthy worker freshness.
+- **Production user broadcasting remains disabled.** Mux non-test livestreaming must be activated or corrected, then a new bounded real paid-stream acceptance must pass before enabling invited OBS publishing.
+- Mux spending-alert dashboard confirmation remains pending. $25/month is the approved planning target, not a provider hard cap.
+- Phone Camera Live/Screen Live, native signing/physical-device acceptance and app-store publishing remain deferred. App checkout/donations remain disabled. Backblaze's download cap remains $0.
+
+The existing web beta remains available. Do not label longer computer livestreaming launched while the provider activation gate is closed.
