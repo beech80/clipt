@@ -40,7 +40,7 @@ async function fixture(){
  alter table public.posts enable row level security;
  create policy visible on public.posts for select using(user_id=auth.uid() or (is_published and not moderation_hidden));
  `);
- await db.exec(await readFile(new URL('../../database/production_azure_photo_rollout.sql',import.meta.url),'utf8'));
+ const sourceSQL=await readFile(new URL('../../database/production_azure_photo_rollout.sql',import.meta.url),'utf8');try{await db.exec(sourceSQL);}catch(error){console.error({position:error.position,internalPosition:error.internalPosition,where:error.where,internalQuery:error.internalQuery?.slice(0,1000),around:sourceSQL.slice(Math.max(0,Number(error.position)-180),Number(error.position)+100)});throw error;}
  await db.query('insert into public.profiles(id) values($1),($2),($3)',[owner,staff,other]);
  await db.query("insert into public.user_roles values($1,'moderator')",[staff]);
  const actor=async(id,aal='aal1')=>{await db.exec('reset role');await db.query("select set_config('test.uid',$1,false),set_config('test.aal',$2,false)",[id,aal]);await db.exec('set role authenticated');};

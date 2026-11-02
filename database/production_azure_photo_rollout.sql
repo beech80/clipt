@@ -746,7 +746,7 @@ BEGIN
  FOREACH k IN ARRAY ARRAY['day:'||day_start::text,'month:'||month_start::text] LOOP
  INSERT INTO clipt_private.azure_review_budget(budget_key,operations) VALUES(k,2)
  ON CONFLICT(budget_key) DO UPDATE SET operations=azure_review_budget.operations+2 RETURNING operations INTO n;
- IF n>CASE WHEN k LIKE 'day:%' THEN 100 ELSE 1000 END THEN RAISE EXCEPTION 'Review quota reached'; END IF;
+ IF n>(CASE WHEN k LIKE 'day:%' THEN 100 ELSE 1000 END) THEN RAISE EXCEPTION 'Review quota reached'; END IF;
  END LOOP;
  INSERT INTO clipt_private.azure_provider_probes(run_id,run_attempt) VALUES(p_run,p_attempt);RETURN true;
 END $$;
