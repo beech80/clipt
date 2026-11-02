@@ -1,5 +1,6 @@
 {
-  "action": "reconcile",
+  "action": "acceptance",
   "requestedOn": "2026-11-01",
-  "purpose": "Both test-mode acceptance resources are stopped; keep cleanup running while awaiting Mux non-test activation"
+  "purpose": "Owner confirmed Mux billing activation; verify real paid ingest, signed playback, webhook and shutdown",
+  "maxDurationSeconds": 90
 }
