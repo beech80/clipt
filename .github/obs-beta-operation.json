@@ -1,6 +1,5 @@
 {
-  "action": "acceptance",
+  "action": "reconcile",
   "requestedOn": "2026-11-01",
-  "purpose": "Owner confirmed the Mux plan explicitly shows Pay as you go; perform the final bounded paid-ingest acceptance",
-  "maxDurationSeconds": 90
+  "purpose": "Cleanup-only after Mux returned a test resource despite the owner-confirmed Pay as you go plan"
 }
