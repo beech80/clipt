@@ -721,7 +721,8 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 BEGIN
  IF p_state NOT IN ('provider_verified','processed','idle','disabled','failed','held') THEN RAISE EXCEPTION 'Invalid worker state'; END IF;
  UPDATE clipt_private.azure_dispatch_settings SET last_worker_at=clock_timestamp(),last_worker_state=p_state,
- probe_verified_at=CASE WHEN p_state='provider_verified' THEN clock_timestamp() ELSE probe_verified_at END;
+ probe_verified_at=CASE WHEN p_state='provider_verified' THEN clock_timestamp() ELSE probe_verified_at END
+ WHERE singleton IS TRUE;
  RETURN FOUND;
 END $$;
 REVOKE ALL ON FUNCTION clipt_private.reconcile_stale_photo_reviews(),public.reconcile_stale_photo_reviews(),

@@ -133,3 +133,28 @@ test('protected moderator preview rejects off-site media and releasing an album 
  const partial=await reviewUI({loaded:new Set([0]),decision:'restore'});await assert.rejects(partial.mutations[1].mutationFn(),/every photo/);assert.equal(partial.calls.length,0);
  const all=await reviewUI({loaded:new Set([0,1]),decision:'restore'});assert.equal(all.calls.length,0);await all.mutations[1].mutationFn();assert.deepEqual(all.calls,[{name:'resolve_production_photo_review',args:{p_job:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',p_decision:'restore'}}]);
 });
+
+test('recording repair is idempotent, service-only, and reports no matching settings row honestly',async()=>{
+ const {db}=await fixture();try{
+  const repair=await readFile(new URL('../../database/production_azure_photo_recording_fix.sql',import.meta.url),'utf8');
+  await db.exec(repair);await db.exec(repair);
+  await db.exec('set role service_role');
+  assert.equal((await db.query("select record_azure_photo_worker('disabled') ok")).rows[0].ok,true);
+  await db.exec('reset role');
+  let row=(await db.query('select enabled,probe_verified_at,last_worker_state from clipt_private.azure_dispatch_settings')).rows[0];
+  assert.equal(row.enabled,false);assert.equal(row.probe_verified_at,null);assert.equal(row.last_worker_state,'disabled');
+  await db.exec('set role service_role');
+  assert.equal((await db.query("select record_azure_photo_worker('provider_verified') ok")).rows[0].ok,true);
+  await db.exec('reset role');
+  row=(await db.query('select enabled,probe_verified_at from clipt_private.azure_dispatch_settings')).rows[0];
+  assert.equal(row.enabled,false);assert.ok(row.probe_verified_at);
+  for(const role of ['anon','authenticated']){
+   await db.exec('set role '+role);
+   await assert.rejects(db.query("select record_azure_photo_worker('provider_verified')"),/permission denied/);
+   await db.exec('reset role');
+  }
+  await db.exec('delete from clipt_private.azure_dispatch_settings where singleton is true');
+  await db.exec('set role service_role');
+  assert.equal((await db.query("select record_azure_photo_worker('provider_verified') ok")).rows[0].ok,false);
+ }finally{await db.close();}
+});
