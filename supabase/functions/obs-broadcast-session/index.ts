@@ -6,7 +6,7 @@ import {importNativeSigningKey,nativePlaybackUrl} from '../native-broadcast-sess
 import {obsCommand,observeObs,reconcileObs,ObsError,uuid,type ObsDependencies} from './lifecycle.ts';
 import {obsAcceptance,acceptanceRequestId} from './acceptance.ts';
 import {clearObsRecordings} from './recordings.ts';
-import {muxRejectionCode,obsProviderShape} from './diagnostics.ts';
+import {muxRejectionCode,obsProviderShape,muxAccountShape} from './diagnostics.ts';
 import {bootstrapObs} from './bootstrap.ts';
 const ORIGIN='https://slnjliheyiiummxhrgmk.supabase.co';
 const REVIEWED_RUNNER={".github/workflows/obs-beta-operations.yml":"cef7a8335a00726f43d9d69ee2b6a809f1f8e735f209c3c60758e4b5df978a81","scripts/obs-beta-operations.mjs":"a7239e306dfad1b295356d0718b1fc76f62fd74c2870eaa7220de513c451163b"};
@@ -89,7 +89,7 @@ serve(async req=>{
   if(req.method==='GET'&&url.pathname.endsWith('/status')){
    if(url.searchParams.get('check')==='provider'){
     const account=await providerRequest('/system/v1/whoami'),resources=await providerRequest('/video/v1/live-streams?limit=100&page=1');
-    return jsonResponse({videoWrite:Array.isArray(account?.permissions)&&account.permissions.includes('video:write'),
+    return jsonResponse({account:muxAccountShape(account),videoWrite:Array.isArray(account?.permissions)&&account.permissions.includes('video:write'),
      systemWrite:Array.isArray(account?.permissions)&&account.permissions.includes('system:write'),
      obsResources:Array.isArray(resources)?resources.filter(p=>typeof p.passthrough==='string'&&p.passthrough.startsWith('clipt-obs:')).slice(0,5).map(p=>obsProviderShape(p)):[]});
    }
