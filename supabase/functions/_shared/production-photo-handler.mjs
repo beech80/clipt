@@ -27,6 +27,7 @@ export function createAzurePhotoHandler({reviewedFiles,getEnv,analyze,review,fet
    if(status?.verifiedFreeTier!==true)return json({state:'configuration_required',missing:['verified_F0_resource']},503);
    const endpoint=getEnv('AZURE_CONTENT_SAFETY_ENDPOINT'),azureKey=getEnv('AZURE_CONTENT_SAFETY_KEY');
    if(!endpoint||!azureKey)return json({state:'configuration_required',missing:[...(!endpoint?['AZURE_CONTENT_SAFETY_ENDPOINT']:[]),...(!azureKey?['AZURE_CONTENT_SAFETY_KEY']:[])]},503);
+   if(endpoint!=='https://clipt-content-safety-dev.cognitiveservices.azure.com/')return json({state:'configuration_required',missing:['approved_Azure_endpoint']},503);
    const scan=input=>analyze({endpoint,key:azureKey,tier:'F0',verifiedF0:true},input);
    if(action==='probe'){
     if(await rpc('reserve_azure_photo_probe',{p_run:claims.run_id,p_attempt:claims.run_attempt})!==true)return json({state:'held',reason:'probe_limit_or_replay'},409);

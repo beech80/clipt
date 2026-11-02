@@ -92,7 +92,7 @@ test('queued quota holds can be reviewed and stale processing jobs are quarantin
 });
 
 function handlerFixture({enabled=false,free=true,keys=true,tokenFails=false,attestFails=false}={}){
- const calls=[],env={SUPABASE_URL:SOURCE,SUPABASE_SERVICE_ROLE_KEY:'server-secret',...(keys?{AZURE_CONTENT_SAFETY_ENDPOINT:'https://fixture.cognitiveservices.azure.com/',AZURE_CONTENT_SAFETY_KEY:'azure-secret'}:{})};
+ const calls=[],env={SUPABASE_URL:SOURCE,SUPABASE_SERVICE_ROLE_KEY:'server-secret',...(keys?{AZURE_CONTENT_SAFETY_ENDPOINT:'https://clipt-content-safety-dev.cognitiveservices.azure.com/',AZURE_CONTENT_SAFETY_KEY:'azure-secret'}:{})};
  const handler=createAzurePhotoHandler({reviewedFiles:{},getEnv:k=>env[k],verifyToken:async()=>{if(tokenFails)throw Error();return {run_id:'1',run_attempt:'1'};},attestRunner:async()=>{if(attestFails)throw Error();},review:async()=>{throw Error('No user content in probe');},analyze:async(_c,input)=>{calls.push({provider:input});return 'no_flag_detected';},fetchImpl:async(url,options)=>{calls.push(url);if(url.endsWith('/azure_photo_worker_status'))return Response.json({enabled,verifiedFreeTier:free,moderatorReady:false});if(url.endsWith('/reserve_azure_photo_probe'))return Response.json(true);if(url.endsWith('/record_azure_photo_worker'))return Response.json(true);throw Error('Unexpected call');}});
  const request=action=>handler(new Request('https://worker.invalid',{method:'POST',headers:{Authorization:'Bearer fixture'},body:JSON.stringify({action})}));
  return {calls,request};
