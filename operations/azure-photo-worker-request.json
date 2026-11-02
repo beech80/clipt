@@ -1,0 +1,8 @@
+{
+  "format": "clipt-azure-photo-probe-request-v1",
+  "request": "production-synthetic-provider-verification-20261102-1",
+  "action": "probe",
+  "syntheticOnly": true,
+  "userContentSent": false,
+  "ownerApproved": true
+}
