@@ -1,6 +1,5 @@
 {
-  "action": "acceptance",
+  "action": "reconcile",
   "requestedOn": "2026-11-01",
-  "purpose": "Owner requested exactly one additional comparison through official Mux SDK 16.0.0 with test omitted and independent original-client readback",
-  "maxDurationSeconds": 90
+  "purpose": "Cleanup-only after the one owner-requested official SDK attempt also returned test mode"
 }
