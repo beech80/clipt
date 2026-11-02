@@ -14,6 +14,7 @@ const Signup = () => {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
   const submitting = useRef(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -34,10 +35,12 @@ const Signup = () => {
 
     try {
       const result = await signUp(email, password, { username });
-      toast.success(result.requiresEmailConfirmation
-        ? "Check your email to confirm your account before signing in."
-        : "Account created. You’re signed in.");
-      navigate(result.requiresEmailConfirmation ? "/login" : "/clipts");
+      if (result.requiresEmailConfirmation) {
+        setConfirmationEmail(email.trim().toLowerCase());
+      } else {
+        toast.success("Account created. You’re signed in.");
+        navigate("/clipts", { replace: true });
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to sign up";
       setError(errorMessage);
@@ -65,9 +68,9 @@ const Signup = () => {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">
-            Create Account
+            {confirmationEmail ? "Check your email" : "Create Account"}
           </h1>
-          <p className="text-indigo-200/70">Join the gaming community</p>
+          <p className="text-indigo-200/70">Join CLIPT’s free web beta. No invitation approval needed.</p>
         </div>
 
         {error && (
@@ -76,7 +79,14 @@ const Signup = () => {
           </Alert>
         )}
 
-        <form onSubmit={handleSignup} className="space-y-4">
+        {confirmationEmail ? <div className="space-y-4">
+          <div role="status" className="space-y-3 text-indigo-100">
+            <p>Check the inbox for <strong className="break-all">{confirmationEmail}</strong>.</p>
+            <p>Open the confirmation link to verify your email. You can then use CLIPT without waiting for approval.</p>
+          </div>
+          <Button type="button" className="w-full min-h-12" onClick={() => navigate("/login")}>Go to sign in</Button>
+          <Link className="block py-3 text-indigo-300" to="/resend-verification">Resend verification email</Link>
+        </div> : <form onSubmit={handleSignup} aria-busy={loading} className="space-y-4">
           <div>
             <Input
               type="email"
@@ -134,7 +144,7 @@ const Signup = () => {
               </Link>
             </p>
           </div>
-        </form>
+        </form>}
         <LegalLinks />
       </div>
     </main>
