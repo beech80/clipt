@@ -1,3 +1,4 @@
+import {openApp} from './fixtures/open-app';
 import {test,expect,type Page} from '@playwright/test';
 import {fileURLToPath} from 'node:url';
 const owner='00000000-0000-4000-8000-000000000077',known='00000000-0000-4000-8000-000000000078',picked='00000000-0000-4000-8000-000000000079',postId='00000000-0000-4000-8000-000000000080';
@@ -16,14 +17,14 @@ async function fixture(page:Page,hand='right'){
  });return {writes,searches:()=>searches,resolutions:()=>resolutions};
 }
 test('typing Overwatch opens the full catalog and retains the verified game until an intentional post',async({page})=>{
- const f=await fixture(page);await page.setViewportSize({width:390,height:844});await page.goto('/new-post');await page.getByRole('textbox',{name:'Find a game',exact:true}).fill('Overwatch');
+ const f=await fixture(page);await page.setViewportSize({width:390,height:844});await openApp(page,'/new-post');await page.getByRole('textbox',{name:'Find a game',exact:true}).fill('Overwatch');
  const result=page.getByRole('button',{name:'Overwatch 2016 multiplayer first-person shooter video game',exact:true});await expect(result).toBeVisible();expect(f.searches()).toBeGreaterThan(0);expect(f.writes).toHaveLength(0);await result.click();
  await expect(page.getByRole('combobox',{name:'Game / category',exact:true})).toHaveValue(picked);await expect(page.getByRole('combobox',{name:'Game / category',exact:true}).locator('option:checked')).toHaveText('Overwatch · 2016 · PC');expect(f.resolutions()).toBe(1);expect(f.writes).toHaveLength(0);
  await page.getByLabel('Caption',{exact:true}).fill('Keep the selected game');await page.getByLabel('Clipt video',{exact:true}).setInputFiles(fileURLToPath(new URL('./fixtures/clip-test-h264.mp4',import.meta.url)));await expect(page.getByRole('button',{name:'Post Clipt',exact:true})).toBeEnabled();await page.getByRole('button',{name:'Post Clipt',exact:true}).click();await expect.poll(()=>f.writes.length).toBe(1);expect(f.writes[0].game_id).toBe(picked);expect(f.writes[0].user_id).toBe(owner);
 });
 test('portrait swipe/menu pad follows expanded Safari chrome and stays below the video',async({page})=>{
  await page.addInitScript(()=>{const viewport=Object.assign(new EventTarget(),{width:390,height:620,offsetTop:0,offsetLeft:0,scale:1,pageTop:0,pageLeft:0});Object.defineProperty(window,'visualViewport',{configurable:true,value:viewport});(window as any).chromeViewportFixture=viewport;document.addEventListener('DOMContentLoaded',()=>Object.defineProperty(document.documentElement,'clientHeight',{configurable:true,get:()=>620}),{once:true});});
- await fixture(page);await page.setViewportSize({width:390,height:844});await page.goto('/clipts');const pad=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});await expect(pad).toBeVisible();
+ await fixture(page);await page.setViewportSize({width:390,height:844});await openApp(page,'/clipts');const pad=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});await expect(pad).toBeVisible();
  for(const [height,top] of [[620,0],[844,0],[720,10]]){
   await page.evaluate(({height,top})=>{const v=(window as any).chromeViewportFixture;v.height=height;v.offsetTop=top;v.dispatchEvent(new Event('resize'));},{height,top});
   await expect.poll(async()=>Math.round((await pad.boundingBox())!.y+(await pad.boundingBox())!.height)).toBe(height+top);
@@ -33,7 +34,7 @@ test('portrait swipe/menu pad follows expanded Safari chrome and stays below the
 });
 
 for(const hand of ['right','left'])test('roomy computer/tablet CLIPT navigation is centered and separate ('+hand+')',async({page},info)=>{
- await fixture(page,hand);await page.setViewportSize({width:1280,height:800});await page.goto('/clipts');
+ await fixture(page,hand);await page.setViewportSize({width:1280,height:800});await openApp(page,'/clipts');
  const home=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});
  const player=page.locator('[data-active-clip="true"] video');await expect(player).toBeVisible();
  await player.evaluate(element=>{element.dataset.wideLayoutProbe='kept';});
