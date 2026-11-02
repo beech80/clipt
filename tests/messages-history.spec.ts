@@ -1,3 +1,4 @@
+import {openApp} from './fixtures/open-app';
 import {test,expect} from '@playwright/test';
 
 test('DM history loads newest first, retries older pages, and preserves read state',async({page})=>{
@@ -24,7 +25,7 @@ test('DM history loads newest first, retries older pages, and preserves read sta
     }
     return route.fulfill({json:[]});
   });
-  await page.goto(`/messages/${peer}`);
+  await openApp(page,`/messages/${peer}`);
   await expect(page.getByText('Unable to load message history. Existing messages are unchanged.')).toBeVisible();
   await expect(page.getByText('No messages yet. Say hello!')).toHaveCount(0);
   fail=false;await page.getByRole('button',{name:'Retry message history'}).click();
