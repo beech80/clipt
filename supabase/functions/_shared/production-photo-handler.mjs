@@ -2,7 +2,7 @@ import {verifyPhotoOidc,attestPhotoRunner} from './photo-review-oidc.mjs';
 const SOURCE='https://slnjliheyiiummxhrgmk.supabase.co';
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
 const SYNTHETIC_PNG='iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAeklEQVR4nO3PUQkAIBTAwBfHOIY1oCH8OITBAtxm7fN1wwUNaEEDWtCAFjSgBQ1oQQNa0IAWNKAFDWhBA1rQgBY0oAUNaEEDWtCAFjSgBQ1oQQNa0IAWNKAFDWhBA1rQgBY0oAUNaEEDWtCAFjSgBQ1oQQNa0IAWPHYB8mfBD+BOTa4AAAAASUVORK5CYII=';
-export function createAzurePhotoHandler({reviewedFiles,getEnv,analyze,review,fetchImpl=fetch,verifyToken=verifyPhotoOidc,attestRunner=attestPhotoRunner}){
+export function createAzurePhotoHandler({reviewedFiles,getEnv,analyze,review,fetchImpl=fetch,verifyToken=verifyPhotoOidc,attestRunner=attestPhotoRunner,reportDiagnostic=()=>{}}){
  return async req=>{
   if(req.method!=='POST')return json({error:'Use POST'},405);
   let claims;
@@ -19,7 +19,20 @@ export function createAzurePhotoHandler({reviewedFiles,getEnv,analyze,review,fet
   if(getEnv('SUPABASE_URL')!==SOURCE||!key)return json({error:'Wrong worker environment'},503);
   async function rpc(name,body={}){
    const r=await fetchImpl(SOURCE+'/rest/v1/rpc/'+name,{method:'POST',redirect:'error',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(20000)});
-   if(!r.ok){await r.body?.cancel();throw Error('state-unavailable');}const text=await r.text();if(text.length>50000)throw Error();return JSON.parse(text);
+   if(!r.ok){
+    // Enumerated transport diagnostics only. Never log arguments, request
+    // headers, response messages/hints, or an arbitrary database error body.
+    const allowed=['PGRST000','PGRST001','PGRST002','PGRST003','PGRST102','PGRST116','PGRST202','PGRST203','PGRST204','PGRST205','PGRST301','PGRST302','42501','25006','23514','P0001','42883','42P01','23502','22P02','57014','53300','53400','55000','53200'];
+    let code='unclassified';
+    try{
+     const reader=r.body?.getReader();let size=0;const parts=[];
+     if(reader)for(;;){const next=await reader.read();if(next.done)break;size+=next.value.length;if(size>4096){await reader.cancel();break;}parts.push(next.value);}
+     if(size<=4096){const bytes=new Uint8Array(size);let offset=0;for(const part of parts){bytes.set(part,offset);offset+=part.length;}const body=JSON.parse(new TextDecoder().decode(bytes));if(allowed.includes(body.code))code=body.code;}
+    }catch{}
+    const operations=['azure_photo_worker_status','reserve_azure_photo_probe','record_azure_photo_worker','reconcile_stale_photo_reviews','claim_public_photo_review','finish_azure_review_with_quarantine','finish_public_photo_dispatch'];
+    if(operations.includes(name))reportDiagnostic({event:'azure_photo_rpc_failure',operation:name,status:r.status,code});
+    throw Error('state-unavailable');
+   }const text=await r.text();if(text.length>50000)throw Error();return JSON.parse(text);
   }
   let probeStage='worker_status';
   try{
@@ -31,6 +44,8 @@ export function createAzurePhotoHandler({reviewedFiles,getEnv,analyze,review,fet
    if(endpoint!=='https://clipt-content-safety-dev.cognitiveservices.azure.com/')return json({state:'configuration_required',missing:['approved_Azure_endpoint']},503);
    const scan=input=>analyze({endpoint,key:azureKey,tier:'F0',verifiedF0:true},input);
    if(action==='probe'){
+    // Verify the result-recording transport before reserving provider quota.
+    if(status.enabled!==true){probeStage='probe_record';await rpc('record_azure_photo_worker',{p_state:'disabled'});}
     probeStage='probe_budget';
     if(await rpc('reserve_azure_photo_probe',{p_run:claims.run_id,p_attempt:claims.run_attempt})!==true)return json({state:'held',reason:'probe_limit_or_replay'},409);
     for(const input of [{imageBase64:SYNTHETIC_PNG},{caption:'CLIPT moderation connection check.'}]){
