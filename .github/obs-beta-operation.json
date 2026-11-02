@@ -1,5 +1,6 @@
 {
-  "action": "reconcile",
+  "action": "acceptance",
   "requestedOn": "2026-11-01",
-  "purpose": "Cleanup-only after Mux returned a test resource despite the owner-confirmed Pay as you go plan"
+  "purpose": "Owner requested exactly one additional comparison through official Mux SDK 16.0.0 with test omitted and independent original-client readback",
+  "maxDurationSeconds": 90
 }
