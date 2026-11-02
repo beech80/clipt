@@ -1,6 +1,5 @@
 {
-  "action": "acceptance",
+  "action": "reconcile",
   "requestedOn": "2026-11-01",
-  "purpose": "Final bounded check of the current Mux paid mode after verified resource recovery and minute expiry",
-  "maxDurationSeconds": 90
+  "purpose": "Both test-mode acceptance resources are stopped; keep cleanup running while awaiting Mux non-test activation"
 }
