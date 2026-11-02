@@ -39,3 +39,15 @@ test('successful preflight still requires both real provider checks before recor
  assert.deepEqual(f.calls.map(x=>typeof x==='string'?x:x.operation),['azure_photo_worker_status','record_azure_photo_worker','reserve_azure_photo_probe','provider','provider','record_azure_photo_worker']);
  assert.equal(f.calls.at(-1).args.p_state,'provider_verified');assert.deepEqual(f.reports,[]);
 });
+
+test('documented SQLSTATE and PostgREST code formats remain visible without message text',async()=>{
+ for(const code of ['42703','42P18','PGRST106','PGRST122']){
+  const f=fixture({code,message:'private-service-key',details:'secret-details'});await f.run();
+  assert.equal(f.reports[0].code,code);assert.doesNotMatch(JSON.stringify(f.reports),/private-service-key|secret-details/);
+ }
+});
+test('arbitrary and overlong diagnostic code values stay redacted',async()=>{
+ for(const code of ['private-azure-key','ABCDE123456','PGRSTsecret','42703 secret','<script>','1234']){
+  const f=fixture({code});await f.run();assert.equal(f.reports[0].code,'unclassified');
+ }
+});
