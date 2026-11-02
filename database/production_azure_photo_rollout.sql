@@ -735,7 +735,7 @@ CREATE TABLE clipt_private.azure_provider_probes(run_id text,run_attempt text,cr
 ALTER TABLE clipt_private.azure_provider_probes ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON clipt_private.azure_provider_probes FROM PUBLIC,anon,authenticated;
 CREATE FUNCTION public.reserve_azure_photo_probe(p_run text,p_attempt text) RETURNS boolean
-LANGUAGE plpgsql SECURITY DEFINER SET search_path='' SET timezone='UTC' AS $
+LANGUAGE plpgsql SECURITY DEFINER SET search_path='' SET timezone='UTC' AS $$
 DECLARE day_start timestamptz:=date_trunc('day',clock_timestamp() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC';
  month_start timestamptz:=date_trunc('month',clock_timestamp() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC';n integer;k text;
 BEGIN
@@ -749,7 +749,7 @@ BEGIN
  IF n>CASE WHEN k LIKE 'day:%' THEN 100 ELSE 1000 END THEN RAISE EXCEPTION 'Review quota reached'; END IF;
  END LOOP;
  INSERT INTO clipt_private.azure_provider_probes(run_id,run_attempt) VALUES(p_run,p_attempt);RETURN true;
-END $;
+END $$;
 REVOKE ALL ON FUNCTION public.reserve_azure_photo_probe(text,text) FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.reserve_azure_photo_probe(text,text) TO service_role;
 
