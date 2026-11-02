@@ -89,14 +89,14 @@ test('real OBS SQL enforces invitation, idempotency, global quota, private lease
  assert.equal((await call('expiry_complete',{claimId:claim.claimId})).ok,false);
 
  // Retrying after a confirmed provider account change remains bounded:
- // four operator checks/day, each 90 seconds, without changing tester limits.
- for(let i=1;i<=3;i++){
+ // five operator checks/day (the owner's one additional independent SDK attempt), each 90 seconds, without changing tester limits.
+ for(let i=1;i<=4;i++){
   const requestId='40000000-0000-4000-8000-'+String(i).padStart(12,'0');
   const extra=await call('acceptance_reserve',{requestId});assert.equal(extra.maxDurationSeconds,90);
   await call('stop_internal',{sessionId:extra.sessionId});
   await call('finish',{sessionId:extra.sessionId});
  }
- await assert.rejects(call('acceptance_reserve',{requestId:'40000000-0000-4000-8000-000000000004'}));
+ await assert.rejects(call('acceptance_reserve',{requestId:'40000000-0000-4000-8000-000000000005'}));
 
  }finally{await db.close();}
 });
