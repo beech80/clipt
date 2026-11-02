@@ -1,6 +1,5 @@
 {
-  "action": "acceptance",
+  "action": "reconcile",
   "requestedOn": "2026-11-01",
-  "purpose": "Owner confirmed Mux billing activation; verify real paid ingest, signed playback, webhook and shutdown",
-  "maxDurationSeconds": 90
+  "purpose": "Confirm cleanup after Mux still returned test mode; do not start another broadcast"
 }
