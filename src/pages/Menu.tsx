@@ -11,7 +11,8 @@ import {
   Award,
   LogOut,
   Bell,
-  Crown
+  Crown,
+  BookOpen
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -49,7 +50,8 @@ const Menu = ({ embedded = false }: { embedded?: boolean }) => {
     { title: 'Creator Dashboard', icon: <Award className="h-6 w-6 mr-4" />, path: '/creator-dashboard' },
     { title: 'Boosts', icon: <Award className="h-6 w-6 mr-4" />, path: '/boosts' },
     { title: 'Achievements', icon: <Award className="h-6 w-6 mr-4" />, path: '/achievements' },
-    { title: 'Settings', icon: <SettingsIcon className="h-6 w-6 mr-4" />, path: '/settings' }
+    { title: 'Settings', icon: <SettingsIcon className="h-6 w-6 mr-4" />, path: '/settings' },
+    { title: 'Help / User Guide', icon: <BookOpen className="h-6 w-6 mr-4" />, path: '/docs/user-guide' }
   ];
 
   const handleLogout = async () => {

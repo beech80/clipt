@@ -126,7 +126,7 @@ export function useImmersiveController(eligible: boolean, preferences: Controlle
     let timer: ReturnType<typeof setTimeout>;
     const idle = () => {
       const blocked = controllerMustStayVisible(interacting.current, Boolean(rootRef.current?.contains(document.activeElement)),
-        Boolean(document.querySelector('[role="dialog"], [role="menu"], [data-state="open"][role="listbox"], .clipt-controller details[open]')));
+        Boolean(document.querySelector('[data-clipt-feed-tour], [role="dialog"], [role="menu"], [data-state="open"][role="listbox"], .clipt-controller details[open]')));
       if (blocked) timer = setTimeout(idle, CONTROLLER_IDLE_MS);
       else setHidden('auto');
     };

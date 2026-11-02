@@ -18,6 +18,7 @@ test('one feed-owned comment dock follows a sideways slide without closing or re
   const Dialog=()=>null,Hud=()=>null,Post=()=>null;
   const rows=[{id:'first',content:'First caption',profiles:{username:'one'}},{id:'second',content:'Second caption',profiles:{username:'two'}}];
   const deps={
+    '@/components/onboarding/HomeControlsTour':{HomeControlsTour:()=>null},
     '@/lib/publishing-status':{publishingSnapshot:()=>null,subscribePublishing:()=>()=>{}},
     react:{...React,useState:initial=>{const index=slot++;if(!(index in values))values[index]=initial;return [values[index],value=>{values[index]=typeof value==='function'?value(values[index]):value;}];},useEffect:fn=>effects.push(fn),useRef:initial=>{const index=refSlot++;return refs[index]??(refs[index]={current:initial});}},
     '@tanstack/react-query':{useQuery:()=>({isSuccess:true,data:[]}),useInfiniteQuery:()=>({data:{pages:[rows]},isPending:false})},
