@@ -1,3 +1,5 @@
+> November 2 update: the remaining real-photo moderation and owner phone checks passed. The fresh 142-file backup/restore and production monitor also passed. See [the final acceptance receipt](WEB-BETA-ACCEPTANCE-2026-11-02.md) for current results; older pending-check and backup-deferral statements below describe their dated historical state.
+
 # CLIPT web beta production rollout — November 1, 2026
 
 ## Current state
