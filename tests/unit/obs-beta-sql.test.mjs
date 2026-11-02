@@ -82,6 +82,11 @@ test('real OBS SQL enforces invitation, idempotency, global quota, private lease
  await call('list');
  assert.equal((await call('acceptance_current',{requestId:rid,sessionId:qa.sessionId})).state,'stopping');
  await call('finish',{sessionId:qa.sessionId,providerId:'qaprovider'});
+ const claim=await call('expiry_claim');assert.equal(claim.claimed,true);assert.deepEqual(claim.sessions,[]);
+ assert.equal((await call('expiry_claim')).claimed,false);
+ assert.equal((await call('expiry_complete',{claimId:owner})).ok,false);
+ assert.equal((await call('expiry_complete',{claimId:claim.claimId})).ok,true);
+ assert.equal((await call('expiry_complete',{claimId:claim.claimId})).ok,false);
 
  }finally{await db.close();}
 });

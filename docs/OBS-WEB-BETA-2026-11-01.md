@@ -21,7 +21,7 @@ The operations worker is bound to the immutable GitHub repository/owner IDs, mai
 
 One-time bootstrap creates a Mux signing key and the production OBS webhook. Private responses go directly from the Edge Function into Supabase Vault through a service-only RPC. A lost/ambiguous setup outcome remains claimed and requires review; it is not retried blindly. No secrets are queued through pg_net.
 
-A SQL-only minute job revokes local LIVE eligibility at expiry, invitation/session revocation or account erasure. Independent five-minute operations reconcile provider state and disable expired resources. Provider continuous duration is also bounded. A missing/stale healthy worker prevents new sessions; closing the browser does not extend the deadline or act as a shutdown mechanism.
+A SQL-only minute job revokes local LIVE eligibility at expiry, invitation/session revocation or account erasure. A second Supabase minute job sends a credential-free request to a rate-limited expiry-only endpoint. That endpoint derives stopping work solely from database state and cannot provision, bootstrap, sign playback or select a healthy session from caller input. It verifies provider shutdown and recording cleanup before updating worker health. GitHub's independent five-minute operations provide additional reconciliation, bootstrap and bounded acceptance; GitHub schedule timing is not used as an exact billing clock. Provider continuous duration is also bounded. A missing/stale healthy worker prevents new sessions; closing the browser does not extend the deadline or act as a shutdown mechanism.
 
 Mux webhooks are signature checked and then re-read against Mux before updating LIVE. Stale events cannot resurrect an ended session. Failed creation is durably uncertain; reconciliation must finish before capacity is released. Account deletion first confirms provider shutdown; it cannot silently delete its only cleanup record. This initial live-only beta removes this OBS session's Mux recordings after shutdown, verifying each asset's live-stream ownership and subsequent absence; it does not retain a replay. Cleanup failures remain durable and block a false completion.
 
@@ -42,3 +42,11 @@ In Mux: Organization Settings → Billing → Alerts. Add whole-dollar alerts at
 Phone Camera Live and Screen Live, native signing, physical native-device acceptance and app-store release remain deferred. Computer OBS is not mobile web camera or screen capture. App checkout and gifts/donations remain disabled. Backblaze's download cap stays at $0 under the owner's beta decision.
 
 Final validation and deployment receipt must be appended after the checks actually run.
+
+## Activation status after the first provider acceptance
+
+The owner-approved paid request returned a signed **test** resource with a 300-second duration. The paid-mode validator rejected it before starting the encoder. Video and System write permissions were verified; signing and webhook secrets were created directly in Vault. The rejected resource was disabled and its cleanup completed; no user broadcasting was enabled.
+
+The remaining provider step is to activate or correct non-test livestreaming in the Mux account (Organization Settings → Billing). A real paid ingest/signed playback/webhook/cleanup acceptance must pass afterward. If the dashboard already shows Pay as you go, verify the token's account/environment against that organization before retrying. Do not paste any keys or payment details in chat.
+
+The $25 planning budget is not a provider billing cap. Add $20 and $25 spending alerts to beecher@cliptgaming.com in Mux Billing. Dashboard confirmation is still pending.
