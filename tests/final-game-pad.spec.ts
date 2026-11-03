@@ -56,3 +56,71 @@ for(const hand of ['right','left'])test('roomy computer/tablet CLIPT navigation 
   await page.getByRole('button',{name:'Close',exact:true}).click();await expect(home).toBeFocused();
  }
 });
+
+
+async function captionFixture(page:Page,hand='right',autoHide=false){
+  const stats=await fixture(page,hand);
+  await page.addInitScript(({owner,autoHide})=>{
+    localStorage.setItem('clipt-home-controls-v1:'+owner,'completed');
+    localStorage.setItem('clipt-controller-preferences-v1',JSON.stringify({layout:'auto',autoHide}));
+  },{owner,autoHide});
+  const caption='A complete gaming caption with #Gaming and enough words to exercise the compact white preview without covering gameplay. '+ 'More original caption text. '.repeat(12);
+  const rows=[{id:postId,user_id:owner,content:caption,video_url:'/tests/fixtures/clip-test-h264.mp4',image_url:null,game_id:known,is_published:true,post_type:'clipt',created_at:'2026-11-03T00:00:00Z',profiles:{username:'FirstCreator',display_name:'First Creator',avatar_url:null}},
+    {id:'00000000-0000-4000-8000-000000000081',user_id:picked,content:'Second original caption #Gaming',video_url:'/tests/fixtures/clip-test-h264.mp4',image_url:null,game_id:known,is_published:true,post_type:'clipt',created_at:'2026-11-02T00:00:00Z',profiles:{username:'SecondCreator',display_name:'Second Creator',avatar_url:null}}];
+  await page.route('**/rest/v1/posts?**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(rows)}));
+  return {stats,caption};
+}
+for(const hand of ['right','left'])test('white creator and caption remain outside the video and navigation ('+hand+')',async({page},info)=>{
+  const {stats}=await captionFixture(page,hand);
+  for(const size of [{width:390,height:844},{width:844,height:390},{width:1280,height:800},{width:768,height:1024},{width:195,height:422}]){
+    await page.setViewportSize(size);await openApp(page,'/clipts');
+    const footer=page.getByRole('complementary',{name:'Current Clipt details',exact:true});
+    await expect(footer).toBeVisible();
+    const creator=footer.getByRole('link',{name:"View FirstCreator's profile",exact:true});
+    await expect(creator).toHaveText('First Creator');
+    expect(await creator.evaluate(element=>getComputedStyle(element).color)).toBe('rgb(255, 255, 255)');
+    const caption=footer.getByRole('button',{name:'Read full caption and comments',exact:true});
+    expect(await caption.evaluate(element=>getComputedStyle(element).color)).toBe('rgb(255, 255, 255)');
+    const f=(await footer.boundingBox())!,m=(await page.locator('[data-active-clip="true"] .clipt-cinematic-media').boundingBox())!;
+    expect(m.y+m.height).toBeLessThanOrEqual(f.y+1);
+    expect(f.x).toBeGreaterThanOrEqual(0);expect(f.x+f.width).toBeLessThanOrEqual(size.width+1);expect(f.y+f.height).toBeLessThanOrEqual(size.height+1);
+    const pad=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});
+    if(await page.locator('.clipt-controller').getAttribute('data-portrait-viewing')==='true'){
+      expect(f.y+f.height).toBeLessThanOrEqual((await pad.boundingBox())!.y);
+    }
+    for(const button of await page.locator('.clipt-controller-action,.clipt-controller-home').all()){
+      if(!await button.isVisible())continue;const b=(await button.boundingBox())!;
+      expect(f.x+f.width<=b.x||b.x+b.width<=f.x||f.y+f.height<=b.y||b.y+b.height<=f.y).toBe(true);
+    }
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&scrollY===0)).toBe(true);
+    await page.screenshot({path:info.outputPath('white-caption-'+hand+'-'+size.width+'x'+size.height+'.png')});
+  }
+  await page.emulateMedia({reducedMotion:'reduce'});
+  expect(await page.locator('.clipt-feed-caption').evaluate(element=>getComputedStyle(element).transitionDuration)).toBe('0s');
+  await page.getByRole('region',{name:'Clipts horizontal feed',exact:true}).focus();await page.keyboard.press('ArrowRight');
+  const footer=page.getByRole('complementary',{name:'Current Clipt details',exact:true});
+  await expect(footer.getByRole('link',{name:"View SecondCreator's profile",exact:true})).toBeVisible();
+  await expect(footer).toContainText('Second original caption #Gaming');
+  await footer.getByRole('link').click();await expect(page).toHaveURL(new RegExp('/user/'+picked+'$'));
+  expect(stats.writes).toHaveLength(0);
+});
+test('caption fades and returns with controls while focus and comments preserve it',async({page})=>{
+  const {caption,stats}=await captionFixture(page,'right',true);
+  await page.setViewportSize({width:390,height:844});await openApp(page,'/clipts');
+  const controller=page.locator('.clipt-controller'),footer=page.getByRole('complementary',{name:'Current Clipt details',exact:true}),video=page.locator('[data-active-clip="true"] video');
+  await expect(footer).toBeVisible();await video.evaluate(element=>{element.dataset.captionPlaybackProbe='same-player';});
+  const initial=(await page.locator('[data-active-clip="true"] .clipt-cinematic-media').boundingBox())!;
+  await expect(controller).toHaveAttribute('data-hidden','true',{timeout:16000});
+  await expect(footer).toBeHidden();
+  await expect(video).toHaveAttribute('data-caption-playback-probe','same-player');
+  expect((await page.locator('[data-active-clip="true"] .clipt-cinematic-media').boundingBox())!.height).toBe(initial.height);
+  await page.locator('[data-active-clip="true"] .clipt-cinematic-media').click({position:{x:10,y:10}});
+  await expect(controller).toHaveAttribute('data-hidden','false');await expect(footer).toBeVisible();
+  await footer.getByRole('link').focus();await page.waitForTimeout(10500);
+  await expect(controller).toHaveAttribute('data-hidden','false');await expect(footer).toBeVisible();
+  await footer.getByRole('button',{name:'Read full caption and comments',exact:true}).click();
+  await expect(page.locator('.clipt-engagement-hud[role="dialog"]')).toBeVisible();
+  await expect(page.locator('.clipt-comment-post-details')).toContainText(caption);
+  await expect(video).toHaveAttribute('data-caption-playback-probe','same-player');
+  expect(stats.writes).toHaveLength(0);
+});
