@@ -328,7 +328,7 @@ test('shared controller preserves analog, center guide and four icon actions',()
   assert.match(html,/id="clipt-feed-extra-controls"/);
   assert.match(html,/Open menu/);assert.doesNotMatch(html,/aria-label="POST"/);
   assert.equal((html.match(/data-controller-action=/g)||[]).length,4);
-  for(const label of ['Trophy — Rank this Clipt','Comment — Open engagement','Like','Follow creator'])assert.ok(html.includes(`aria-label="${label}"`));
+  for(const label of ['Trophy — Rank this Clipt','Comment — Open engagement','Like','View creator profile'])assert.ok(html.includes(`aria-label="${label}"`));
   assert.doesNotMatch(html,/d-pad|>A<|>B<|>X<|>Y</i);
 });
 test('live controller changes ranking action to donation, never paid Trophy',()=>{
