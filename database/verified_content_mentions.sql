@@ -19,7 +19,7 @@ begin
  return new;
 end; $$;
 revoke all on function clipt_private.capture_content_mentions() from public,anon,authenticated;
-create trigger clipt_post_mentions after insert or update of content,is_published on public.posts
+create trigger clipt_post_mentions after insert or update of content,is_published,moderation_hidden on public.posts
  for each row execute function clipt_private.capture_content_mentions();
 create trigger clipt_comment_mentions after insert or update of content on public.comments
  for each row execute function clipt_private.capture_content_mentions();

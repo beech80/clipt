@@ -35,8 +35,6 @@ export default function NewPost() {
   const [hashtags, setHashtags] = useState('');
   const [gameId, setGameId] = useState('');
   const [gameSearch, setGameSearch] = useState('');
-  const [gameQuery,setGameQuery]=useState('');
-  useEffect(()=>{const timer=setTimeout(()=>setGameQuery(gameSearch.trim()),300);return()=>clearTimeout(timer);},[gameSearch]);
   const [stage, setStage] = useState<'idle' | 'checking' | 'converting' | 'uploading' | 'publishing' | 'reward'>('idle');
   const [playable, setPlayable] = useState(false);
   const [conversionProgress, setConversionProgress] = useState<number | null>(null);
@@ -92,9 +90,9 @@ export default function NewPost() {
   });
   const squadReady = postingCapabilities.data === true;
   const games = useQuery({
-    queryKey: ['create-clip-games', gameQuery],
+    queryKey: ['create-clip-games', gameSearch],
     retry: false,
-    queryFn: ({ signal }) => completeGameCatalog(gameQuery, signal),
+    queryFn: ({ signal }) => completeGameCatalog(gameSearch, signal),
   });
   useEffect(() => {
     if (!file) { setPreview(''); return; }

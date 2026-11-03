@@ -54,7 +54,7 @@ test('hashtags preserve Unicode text and exact token boundaries without injectin
   assert.throws(()=>hashtags.hashtagSearchExpression('gaming|.*'));
   assert.throws(()=>hashtags.hashtagSearchExpression('gaming,content.eq.secret'));
   assert.ok(hashtags.hashtagSearchExpression('Gaming').includes('#gaming('));
-  const Hashtag=load('components/post/HashtagText.tsx',{'react-router-dom':{Link},'@/utils/hashtagUtils':hashtags}).HashtagText;
+  const Hashtag=load('components/post/HashtagText.tsx',{'react-router-dom':{Link},'@/utils/hashtagUtils':hashtags,'@/components/mentions/MentionProfileLink':{MentionProfileLink:({username})=>'@'+username}}).HashtagText;
   const html=renderToStaticMarkup(React.createElement(Hashtag,{text:'<img src=x onerror=alert(1)> #Gaming'}));
   assert.match(html,/href="\/hashtag\/gaming"/);
   assert.match(html,/&lt;img/);assert.doesNotMatch(html,/<img/);

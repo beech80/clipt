@@ -31,7 +31,7 @@ function harness({destination='clipts',draftId=null,draft=null,uploadError=null,
     '@/lib/community-text':load('lib/community-text.ts',{}),
     '@/lib/clip-upload':clipTools,'@/lib/prepare-clip':{prepareClipFile:async file=>file},'@/lib/clip-reward':{checkClipReward:()=>{calls.push(['reward']);return reward();},clipRewardMessage:()=> 'Reward not confirmed'},
     sonner:{toast:message=>notices.push(message)},
-    '@/components/ui/button':{Button:()=>null},'@/components/ui/input':{Input:()=>null},'@/components/ui/textarea':{Textarea:()=>null},'@/components/ui/back-button':{BackButton:()=>null},
+    '@/components/ui/button':{Button:()=>null},'@/components/ui/input':{Input:()=>null},'@/components/ui/textarea':{Textarea:()=>null},'@/components/mentions/MentionTextarea':{MentionTextarea:()=>null},'@/components/ui/back-button':{BackButton:()=>null},
   };
   const tree=load('pages/NewPost.tsx',deps).default();
   const findForm=node=>{if(!node||typeof node!=='object')return null;if(node.type==='form')return node;for(const child of React.Children.toArray(node.props?.children)){const found=findForm(child);if(found)return found;}return null;};

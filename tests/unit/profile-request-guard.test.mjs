@@ -14,6 +14,7 @@ test('late Profile requests cannot replace a newly selected profile',async()=>{
     let resolve;const promise=new Promise(done=>{resolve=done;});pending.set(id,{promise,resolve});
   }
   const dependencies={
+    '@/lib/achievement-snapshot':{loadAchievementSnapshot:async()=>({trophies:0,rows:[]})},
     react:{...React,useState:initial=>{const index=stateIndex++;return [initial,value=>updates.push({index,value})];},useRef:()=>revision,useCallback:fn=>fn,useEffect:fn=>effects.push(fn)},
     'react-router-dom':{useParams:()=>({id:target}),useNavigate:()=>()=>{}},
     'styled-components':{__esModule:true,default:{div:()=>()=>null}},

@@ -7,7 +7,7 @@ const achievement={id:'00000000-0000-4000-8000-000000000082',name:'Clip Rookie',
 async function setup(page:Page){
  const user={id:owner,aud:'authenticated',role:'authenticated',email:'fixture@example.invalid',app_metadata:{},user_metadata:{},created_at:'2026-09-19T00:00:00Z',factors:[]};
  const profile={id:creator,username:'Beecher89',display_name:'Beecher',avatar_url:null};
- const post={id:postId,user_id:creator,content:'A real #gaming @Beecher89 caption',video_url:'http://127.0.0.1:54321/storage/v1/object/public/media/'+creator+'/sample.mp4',image_url:null,post_type:'clipt',is_published:true,is_premium:false,is_subscriber_only:false,created_at:'2026-11-03T00:00:00Z',profiles:profile};
+ const post={id:postId,user_id:creator,content:'A real #gaming @Beecher89 caption',video_url:'http://127.0.0.1:54321/fixture-video.mp4',image_url:null,post_type:'clipt',is_published:true,is_premium:false,is_subscriber_only:false,created_at:'2026-11-03T00:00:00Z',profiles:profile};
  let refreshes=0,writes=0;
  await page.addInitScript(({user})=>{
   const exp=Math.floor(Date.now()/1000)+3600,enc=(v:object)=>btoa(JSON.stringify(v)).replaceAll('=','').replaceAll('+','-').replaceAll('/','_');
@@ -32,6 +32,7 @@ async function setup(page:Page){
   if(path==='/rest/v1/rpc/get_top_clipts')data=[{post_id:postId,creator_id:creator,content:post.content,username:'Beecher89',avatar_url:null,created_at:post.created_at,trophy_count:3}];
   if(path==='/rest/v1/game_channel_catalog')data=[{id:creator,name:'Overwatch',member_ids:[creator]}];
   if(path==='/rest/v1/follows')data=null;
+  if(path==='/fixture-video.mp4')return route.fulfill({status:200,contentType:'video/mp4',body:readFileSync(fileURLToPath(new URL('./fixtures/clip-test-h264.mp4',import.meta.url)))});
   if(path.startsWith('/storage/v1/object/sign/')){
    if(req.method()==='POST')data={signedURL:'/object/sign/media/'+creator+'/sample.mp4?token=fixture'};
    else return route.fulfill({status:200,contentType:'video/mp4',body:readFileSync(fileURLToPath(new URL('./fixtures/clip-test-h264.mp4',import.meta.url)))});
@@ -68,9 +69,8 @@ test('post comments can tag people and Share Clipt copies the exact post link',a
  await expect.poll(()=>page.evaluate(()=>(window as any).__copiedPost)).toBe('http://127.0.0.1:8081/post/'+postId);
  expect(f.writes()).toBe(0);
 });
-test('Top Clipts contains playable private-media video and its Trophy count',async({page})=>{
+test('Top Clipts contains playable video and its Trophy count',async({page})=>{
  const f=await setup(page);await openApp(page,'/top-clipts');
- const ranked=page.getByRole('region',{name:'Ranked Clipt video'}); // label is also usable by locator below
  const video=page.locator('[aria-label="Ranked Clipt video"] video').first();await expect(video).toBeVisible();
  await video.evaluate(async element=>{element.muted=true;await element.play();});
  await expect.poll(()=>video.evaluate(element=>element.currentTime)).toBeGreaterThan(0);

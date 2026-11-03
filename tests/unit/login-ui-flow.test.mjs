@@ -1,3 +1,4 @@
+import {loginDestination} from '../../src/lib/login-destination.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -10,7 +11,7 @@ function fixture(){
   const states=['test@example.com','unchanged-password',false,null],refs=[],calls=[],navigation=[];let stateIndex=0,refIndex=0,resolve,reject;
   const pending=new Promise((done,fail)=>{resolve=done;reject=fail;});
   const mockedReact={...React,useState(initial){const index=stateIndex++;if(!(index in states))states[index]=initial;return [states[index],value=>{states[index]=value;}];},useRef(initial){const index=refIndex++;return refs[index]??(refs[index]={current:initial});}};
-  const deps={react:mockedReact,'@/contexts/AuthContext':{useAuth:()=>({signIn:(...args)=>{calls.push(args);return pending;}})},'react-router-dom':{Link:'a',useNavigate:()=> (...args)=>navigation.push(args)}};
+  const deps={'@/lib/login-destination':{loginDestination},react:mockedReact,'@/contexts/AuthContext':{useAuth:()=>({signIn:(...args)=>{calls.push(args);return pending;}})},'react-router-dom':{Link:'a',useLocation:()=>({search:''}),useNavigate:()=> (...args)=>navigation.push(args)}};
   const source=readFileSync(new URL('../../src/pages/Login.tsx',import.meta.url),'utf8');
   const output=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
   const mod={exports:{}};new Function('require','module','exports',output)(name=>deps[name]??(name.startsWith('@/components/ui/')?new Proxy({},{get:(_,key)=>key}):require(name)),mod,mod.exports);

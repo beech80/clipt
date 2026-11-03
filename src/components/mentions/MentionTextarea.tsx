@@ -32,7 +32,7 @@ export const MentionTextarea=forwardRef<HTMLTextAreaElement,Props>(function Ment
   props.onChange?.({target:element,currentTarget:element} as React.ChangeEvent<HTMLTextAreaElement>);
   setDismissed(key);requestAnimationFrame(()=>{element.focus();element.setSelectionRange(next.caret,next.caret);setCaret(next.caret);});
  }
- return <div className="min-w-0 flex-1 space-y-2">
+ return <div className="clipt-mention-input min-w-0 flex-1 space-y-2">
   <Textarea {...props} ref={input} aria-autocomplete="list" aria-controls={open?id:undefined}
    aria-activedescendant={open&&rows[active]?id+'-'+active:undefined}
    onChange={event=>{setCaret(event.currentTarget.selectionStart);setDismissed(null);props.onChange?.(event);}}

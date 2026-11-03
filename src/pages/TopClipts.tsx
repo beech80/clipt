@@ -19,7 +19,7 @@ function RankedVideo({postId}:{postId:string}) {
   const {data,error}=await supabase.from('posts').select('id,video_url').eq('id',postId).maybeSingle();
   if(error)throw error;return data;
  }});
- return <div ref={frame} className="mt-4 overflow-hidden rounded-lg bg-black" aria-label="Ranked Clipt video">
+ return <div ref={frame} className="clipt-ranked-video mt-4 overflow-hidden rounded-lg bg-black" aria-label="Ranked Clipt video">
   {post.isPending?<p role="status" className="p-4">Loading video…</p>:post.isError?<button type="button" className="min-h-11 p-3 underline" onClick={()=>void post.refetch()}>Retry ranked video</button>:
    post.data?.video_url?<PostContent postId={postId} videoUrl={post.data.video_url}/>:<p className="p-4">Video is unavailable.</p>}
  </div>;
@@ -58,7 +58,7 @@ export default function TopClipts() {
         <Link to="/clipts" className="mt-3 inline-block underline">Discover Clipts and award a Trophy</Link>
       </div> : <ol aria-label="Clipt rankings" className="clipt-rankings">
         {ranking.data.map((clip, index) => <li key={clip.post_id} data-rank={index + 1} className={`rounded-xl border bg-card p-4 ${index < 3 ? 'border-yellow-400/60' : 'border-primary/30'}`}>
-          <div className="flex items-center gap-3">
+          <div className="clipt-ranking-summary flex items-center gap-3">
             <span className={`w-8 shrink-0 text-2xl font-bold ${index < 3 ? 'text-yellow-400' : 'text-muted-foreground'}`} aria-label={`Rank ${index + 1}`}>{index + 1}</span>
             <Avatar className="h-10 w-10 shrink-0"><AvatarImage src={clip.avatar_url ?? undefined} alt="" /><AvatarFallback>{(clip.username ?? '?').slice(0, 2)}</AvatarFallback></Avatar>
             <div className="min-w-0 flex-1">
