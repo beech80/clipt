@@ -326,8 +326,7 @@ export function ProfileEditForm() {
               <div className="flex-1">
                 <h3 className="font-medium text-lg mb-1">Profile Picture</h3>
                 <p className="text-muted-foreground text-sm mb-2">
-                  Recommended size: 400x400 pixels <br />
-                  Maximum size: 5MB
+                  JPG, PNG or WebP · Max 5 MB
                 </p>
                 <Button 
                   type="button" 
@@ -357,12 +356,7 @@ export function ProfileEditForm() {
                     disabled={!canChangeUsername || submitting || uploading}
                   />
                 </FormControl>
-                <FormDescription>
-                  {canChangeUsername 
-                    ? "This is your public display name. You can only change it once every two months."
-                    : `You can change your username again in ${daysUntilNextChange} days.`
-                  }
-                </FormDescription>
+                {!canChangeUsername && <FormDescription>Available again in {daysUntilNextChange} days.</FormDescription>}
                 {!canChangeUsername && (
                   <Alert className="mt-2">
                     <AlertCircle className="h-4 w-4" />
