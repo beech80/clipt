@@ -1,0 +1,43 @@
+/* Caption and creator share the controller's visibility, outside the picture. */
+.clipt-fyp {
+  --clipt-caption-height: 96px;
+  --clipt-caption-bottom: calc(12px + env(safe-area-inset-bottom,0px));
+}
+.clipt-feed-caption {
+  position: absolute; left: max(112px,env(safe-area-inset-left,0px)); right: max(90px,env(safe-area-inset-right,0px));
+  bottom: var(--clipt-caption-bottom); height: var(--clipt-caption-height); min-width: 0;
+  display: flex; flex-direction: column; justify-content: center; z-index: 4;
+  color: #fff; background: #000; padding: 4px 0; opacity: 1; visibility: visible;
+  transition: opacity 300ms ease, visibility 300ms;
+}
+.clipt-feed-caption-creator, .clipt-feed-caption-text {
+  display: flex; align-items: center; min-height: 44px; width: 100%; min-width: 0; max-width: 100%;
+  color: #fff; background: transparent; border: 0; text-align: left; padding: 0;
+}
+.clipt-feed-caption-creator { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clipt-feed-caption-text span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; line-height: 1.25; }
+body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp.clipt-fyp .clipt-cinematic-media {
+  bottom: calc(var(--clipt-caption-bottom) + var(--clipt-caption-height)) !important;
+  height: calc(100% - var(--clipt-caption-bottom) - var(--clipt-caption-height)) !important;
+}
+body:has(.clipt-controller[data-hidden="true"]) .clipt-feed-caption { opacity: 0; visibility: hidden; pointer-events: none; }
+.clipt-feed-caption:focus-within { opacity: 1 !important; visibility: visible !important; pointer-events: auto !important; }
+body:has(.clipt-engagement-hud[role="dialog"]) .clipt-feed-caption { visibility: hidden; pointer-events: none; }
+body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-fyp {
+  --clipt-caption-bottom: calc(var(--clipt-portrait-swipe-height,140px) + 12px + env(safe-area-inset-bottom,0px));
+}
+body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-feed-caption {
+  left: max(12px,env(safe-area-inset-left,0px)); right: calc(78px + env(safe-area-inset-right,0px));
+}
+body:has(.clipt-controller[data-portrait-viewing="true"][data-hand="left"]) .clipt-feed-caption {
+  left: calc(78px + env(safe-area-inset-left,0px)); right: max(12px,env(safe-area-inset-right,0px));
+}
+@media(min-width:600px) and (min-height:500px) and (orientation:landscape) {
+  .clipt-fyp { --clipt-caption-bottom: calc(80px + env(safe-area-inset-bottom,0px)); }
+  .clipt-feed-caption { left: max(200px,env(safe-area-inset-left,0px)); right: max(200px,env(safe-area-inset-right,0px)); }
+}
+@media(min-width:600px) and (min-height:500px) and (orientation:portrait) {
+  body:has(.clipt-controller[data-portrait-viewing="true"][data-hand]) .clipt-feed-caption { left: calc(78px + env(safe-area-inset-left,0px)); right: calc(78px + env(safe-area-inset-right,0px)); }
+}
+@media(prefers-reduced-motion:reduce) { .clipt-feed-caption { transition: none; } }
+html.reduce-motion .clipt-feed-caption { transition: none; }
