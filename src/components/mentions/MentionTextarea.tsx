@@ -15,7 +15,7 @@ export const MentionTextarea=forwardRef<HTMLTextAreaElement,Props>(function Ment
   if(!open||!token)return;
   const controller=new AbortController();setActive(0);setResult({key,rows:[],error:false,loading:true});
   const timer=setTimeout(()=>{void(async()=>{
-   const term=token.term.replaceAll('\\','\\\\').replaceAll('%','\\%').replaceAll('_','\\_');
+   const term=token.term.replace(/[%_\\]/g,'\\$&');
    const {data,error}=await supabase.from('profiles').select('id,username,display_name').ilike('username',term+'%').order('username').limit(8).abortSignal(controller.signal).retry(false);
    if(!controller.signal.aborted)setResult({key,rows:data??[],error:Boolean(error),loading:false});
   })().catch(()=>{if(!controller.signal.aborted)setResult({key,rows:[],error:true,loading:false});});},250);

@@ -1,7 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {useQuery as usePostQuery} from '@tanstack/react-query';
 import PostContent from '@/components/post/PostContent';
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Trophy } from 'lucide-react';
