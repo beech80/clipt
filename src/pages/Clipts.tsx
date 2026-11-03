@@ -15,6 +15,7 @@ import {GameChannelToolbar} from '@/components/GameChannelToolbar';
 import './clipt-console.css';
 import './clipt-feed-surface.css';
 import './clipt-channels.css';
+import './clipt-feed-caption.css';
 import { cancelClipScroll, scrollClipTo } from '@/lib/clip-carousel-scroll';
 import { usePortraitSwipe } from '@/hooks/usePortraitSwipe';
 import {publishingSnapshot,subscribePublishing} from '@/lib/publishing-status';
@@ -211,6 +212,14 @@ export default function Clipts() {
   return <main className="clipt-fyp" data-feed={feed} data-game-channel={gameId||undefined}>
     {gameId&&<GameChannelToolbar gameId={selectedGame.data?.id||gameId} name={invalidGame?'Invalid game channel':selectedGame.data?.name||'Game channel'}>{hasNextPage&&<Button onClick={()=>void fetchNextPage()} disabled={isFetchingNextPage}>Load more clips</Button>}</GameChannelToolbar>}
     {gameId?<div className="clipt-game-channel-viewport">{content}</div>:content}
+    {activePost && <aside className="clipt-feed-caption" data-controller-companion aria-label="Current Clipt details">
+      <Link className="clipt-feed-caption-creator" to={`/user/${encodeURIComponent(activePost.user_id)}`}
+        aria-label={`View ${activePost.profiles?.username || 'creator'}'s profile`}>
+        {activePost.profiles?.display_name || activePost.profiles?.username || 'Creator'}
+      </Link>
+      {activePost.content && <button type="button" className="clipt-feed-caption-text" aria-label="Read full caption and comments"
+        onClick={() => setEngagementOpen(true)}><span>{activePost.content}</span></button>}
+    </aside>}
     <button ref={swipeZoneRef} type="button" className="clipt-bottom-swipe-zone" data-swipe-menu
       aria-label="CLIPT — Open navigation" aria-haspopup="dialog" aria-controls="clipt-navigation-panel"
       onClick={() => window.dispatchEvent(new CustomEvent('clipt:open-navigation'))}><span>CLIPT</span></button>
