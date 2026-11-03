@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,9 +11,13 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn } = useAuth();
+  const { signIn, user, loading: sessionLoading } = useAuth();
   const navigate = useNavigate();
   const submitting = useRef(false);
+
+  // Email-confirmation links can already establish the verified session.
+  // The feed still mounts through the server-backed access and MFA gates.
+  if (!sessionLoading && user?.email_confirmed_at) return <Navigate to="/clipts" replace />;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

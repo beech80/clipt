@@ -23,17 +23,18 @@ function render({flag='true',pathname='/clipts',user={id:'invited'},loading=fals
   new Function('require','module','exports',code)(name=>dependencies[name],module,module.exports);
   return {html:renderToStaticMarkup(React.createElement(module.exports.BetaAccessGate,null,'PRIVATE CONTENT')),config};
 }
-test('beta UI denies guests, uninvited accounts and failed checks without mounting content',()=>{
+test('beta UI denies guests, ineligible accounts and failed checks without mounting content',()=>{
   for(const options of [{user:null},{query:{data:false}},{query:{data:true,isError:true}},{loading:true}]) {
     const {html}=render(options);assert.doesNotMatch(html,/PRIVATE CONTENT/);
   }
 });
-test('beta UI admits approved users and leaves public legal and account recovery reachable',()=>{
+test('beta UI admits server-eligible users and leaves public legal and account recovery reachable',()=>{
   assert.match(render({query:{data:true}}).html,/PRIVATE CONTENT/);
-  for(const pathname of ['/privacy','/terms','/login','/update-password','/delete-account']) {
+  for(const pathname of ['/privacy','/terms','/login','/signup','/update-password','/delete-account']) {
     const {html,config}=render({pathname,user:null});assert.match(html,/PRIVATE CONTENT/);assert.equal(config.enabled,false);
   }
-  assert.doesNotMatch(render({pathname:'/signup',user:null}).html,/PRIVATE CONTENT/);
+  const guest=render({user:null}).html;
+  assert.match(guest,/Create a free account/);assert.match(guest,/href="\/signup"/);assert.doesNotMatch(guest,/explicitly invited|active beta invitation/);
 });
 test('staged beta UI is disabled until coordinated activation and keys checks by identity',()=>{
   assert.match(render({flag:'false',user:null}).html,/PRIVATE CONTENT/);
