@@ -435,3 +435,7 @@ body:has(.clipt-controller[data-page-controller]) .page-content { padding-bottom
     bottom: calc(12px + env(safe-area-inset-bottom,0px));
   }
 }
+
+/* Preserve the teal control and target size while showing the current creator. */
+.clipt-controller-creator-picture { position: relative; display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; overflow: hidden; border-radius: 50%; background: #102b2a; }
+.clipt-controller-creator-picture img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

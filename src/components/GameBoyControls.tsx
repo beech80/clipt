@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Heart, MessageSquare, Trophy, UserPlus, Menu, Camera, DollarSign, SlidersHorizontal, X, Settings, MoreHorizontal, Clapperboard, UsersRound, Search, Gamepad2, Pencil, History, BarChart3, Coins, HelpCircle, Shield, Eye, Bell, Check, Radio } from 'lucide-react';
+import { Heart, MessageSquare, Trophy, UserRound, Menu, Camera, DollarSign, SlidersHorizontal, X, Settings, MoreHorizontal, Clapperboard, UsersRound, Search, Gamepad2, Pencil, History, BarChart3, Coins, HelpCircle, Shield, Eye, Bell, Check, Radio } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ControllerSettings } from './ControllerSettings';
 import { useControllerPreferences } from '@/hooks/useControllerPreferences';
@@ -22,7 +22,7 @@ const selectors: Record<Action, string> = {
   like: 'button[data-action="like"],button.like-button',
   comment: 'button[data-action="comment"],button.comment-button',
   trophy: 'button[data-action="trophy"],button.trophy-button',
-  follow: 'button[data-action="follow"],button.follow-button',
+  follow: 'button[data-action="creator-profile"]',
 };
 
 // Only real post containers are eligible. No IDs are inferred or fabricated.
@@ -54,7 +54,7 @@ function postButton(post: HTMLElement | null, action: Action) {
 }
 
 function liveButton(action: Action) {
-  return document.querySelector<HTMLButtonElement>(`[data-active-stream="true"] button[data-live-action="${action}"]`) ?? null;
+  return document.querySelector<HTMLButtonElement>(`[data-active-stream="true"] ${action === 'follow' ? '[data-live-action="creator"]' : `button[data-live-action="${action}"]`}`) ?? null;
 }
 
 function scrollContent(amount: number) {
@@ -131,6 +131,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
   const lastStep = useRef(0);
   const [enabled, setEnabled] = useState<Record<Action, boolean>>({ like: false, comment: false, trophy: false, follow: false });
   const [likeLabel, setLikeLabel] = useState('Like');
+  const [creatorProfile, setCreatorProfile] = useState({label: 'View creator profile', avatar: ''});
   const [selectedFeed, setSelectedFeed] = useState('clipts');
   const [counts, setCounts] = useState<Partial<Record<Action,string>>>({});
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -160,6 +161,10 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
     const actualFeed = document.querySelector<HTMLElement>('.clipt-fyp')?.dataset.feed === 'squad' ? 'squad' : 'clipts';
     setSelectedFeed(previous => previous === actualFeed ? previous : actualFeed);
     const post = visiblePost(currentPostId);
+    const creator = liveContext ? liveButton('follow') : postButton(post, 'follow');
+    const creatorName = creator?.dataset.creatorName;
+    const profile = {label: creatorName ? `View ${creatorName}'s profile` : 'View creator profile', avatar: creator?.querySelector('img')?.getAttribute('src') || ''};
+    setCreatorProfile(previous => previous.label === profile.label && previous.avatar === profile.avatar ? previous : profile);
     const state = Object.fromEntries(actions.map(action => {
       const button = liveContext ? liveButton(action) : postButton(post, action);
       return [action, Boolean(button && !button.disabled && button.getAttribute('aria-disabled') !== 'true')];
@@ -191,7 +196,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
       });
     };
     const observer = new MutationObserver(scheduleRefresh);
-    observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['disabled', 'hidden', 'inert', 'class', 'data-state', 'aria-pressed', 'data-post-id', 'data-active-clip', 'data-feed', 'aria-disabled', 'aria-label'] });
+    observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['disabled', 'hidden', 'inert', 'class', 'data-state', 'aria-pressed', 'data-post-id', 'data-active-clip', 'data-feed', 'aria-disabled', 'aria-label', 'data-creator-name', 'src'] });
     document.addEventListener('scroll', scheduleRefresh, true);
     window.addEventListener('resize', scheduleRefresh);
     window.addEventListener('blur', stop);
@@ -279,7 +284,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
     { action: 'trophy' as const, label: liveContext ? 'Donate — Live donation review' : 'Trophy — Rank this Clipt', Icon: liveContext ? DollarSign : Trophy },
     { action: 'comment' as const, label: liveContext ? 'Live Chat' : 'Comment — Open engagement', Icon: MessageSquare },
     { action: 'like' as const, label: likeLabel, Icon: Heart },
-    { action: 'follow' as const, label: 'Follow creator', Icon: UserPlus },
+    { action: 'follow' as const, label: creatorProfile.label, Icon: UserRound },
   ];
   const currentPage = pageState.path === location.pathname ? pageState.layout : pageControllerLayout(location.pathname);
   const definitions = mediaContext ? mediaDefinitions : currentPage.actions.map(action => ({action: action.slot, label: action.label, Icon: pageIcons[action.icon]}));
@@ -344,7 +349,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
         className={'clipt-controller-action clipt-controller-' + action} aria-label={label}
         title={label} aria-pressed={mediaContext ? action === 'like' ? /^unlike\b/i.test(likeLabel) : undefined : pageState.path === location.pathname ? pageState.pressed?.[pageAction(action)?.id ?? ''] : undefined}
         aria-describedby={mediaContext && immersive.immersive && counts[action] ? `clipt-controller-count-${action}` : undefined}
-        disabled={!actionEnabled(action)} onClick={() => activate(action)}><Icon key={mediaContext ? action : pageAction(action)?.id} size={18} aria-hidden="true" />{!mediaContext && <span className="clipt-controller-action-label">{label}</span>}{mediaContext && immersive.immersive && counts[action] && <span id={`clipt-controller-count-${action}`} className="clipt-controller-count">{counts[action]}</span>}</button>)}
+        disabled={!actionEnabled(action)} onClick={() => activate(action)}>{mediaContext && action === 'follow' ? <span className="clipt-controller-creator-picture" aria-hidden="true"><UserRound size={20} />{creatorProfile.avatar && <img key={creatorProfile.avatar} src={creatorProfile.avatar} alt="" decoding="async" onError={event => { event.currentTarget.style.display = 'none'; }} />}</span> : <Icon key={mediaContext ? action : pageAction(action)?.id} size={18} aria-hidden="true" />}{!mediaContext && <span className="clipt-controller-action-label">{label}</span>}{mediaContext && immersive.immersive && counts[action] && <span id={`clipt-controller-count-${action}`} className="clipt-controller-count">{counts[action]}</span>}</button>)}
       {horizontal && immersive.immersive && (portraitZoom ? <PortraitFeedToggle feed={gameNavigation?.feed||selectedFeed} channel={Boolean(gameNavigation)} onToggle={toggleFeed} /> : <FeedFlipButton feed={gameNavigation?.feed||selectedFeed} channel={Boolean(gameNavigation)} onToggle={toggleFeed} />)}
       {landscapeFeed && homeControl}
     </div>

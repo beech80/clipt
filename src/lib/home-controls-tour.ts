@@ -16,7 +16,7 @@ export const HOME_TOUR_STEPS=[
  {id:'post',title:'Create a post',body:'Choose your video or photo, add a game and caption, then publish. Your upload progress appears on Home.',color:'#c084fc',target:'.clipt-controller-post'},
  {id:'like',title:'Like a Clipt',body:'The pink heart likes the current post. Tap it again to remove your Like.',color:'#f472b6',target:'.clipt-controller-like'},
  {id:'comment',title:'Open the conversation',body:'The blue comment button opens the creator’s full caption and comments. Read, reply or add your own comment.',color:'#22d3ee',target:'.clipt-controller-comment'},
- {id:'follow',title:'Follow creators',body:'The teal Follow button follows the creator of the current post. Find posts from people you follow in Squad.',color:'#2dd4bf',target:'.clipt-controller-follow'},
+ {id:'follow',title:'Meet the creator',body:'Tap the teal profile picture to open the current creator’s profile. Follow them there to see their posts in Squad.',color:'#2dd4bf',target:'.clipt-controller-follow'},
  {id:'trophy',title:'Give a Trophy',body:'The gold Trophy button helps rank eligible public videos. Trophy rankings are video-only.',color:'#facc15',target:'.clipt-controller-trophy'},
  {id:'feeds',title:'Choose your feed',body:'FYP shows the latest Clipts. Squad shows posts from creators you follow. Use Discovery to find games and their CLIPT Channels.',color:'#c084fc',target:'.clipt-portrait-feed-toggle,.clipt-feed-flip,.clipt-feed-tabs [role="tablist"]'},
  {id:'finish',title:'You’re ready',body:'Make the controls yours in Settings → Accessibility → Hand Preference. You can replay this tutorial from Help / User Guide.',color:'#c084fc',target:''}

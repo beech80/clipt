@@ -247,3 +247,76 @@ test('post Like, Follow, Trophy and comment actions use the current post and pre
   await page.getByRole('button',{name:'Back to controls',exact:true}).click();
   expect(writes).toEqual(['likes:POST','likes:DELETE','follows:POST','follows:DELETE','clip_votes:POST','clip_votes:DELETE','comments:POST','comments:POST']);
 });
+
+
+for(const hand of ['right','left']) test('creator picture opens the current profile without following ('+hand+')',async({page},info)=>{
+  await fixture(page,hand);
+  await page.addInitScript(owner=>localStorage.setItem('clipt-home-controls-v1:'+owner,'completed'),owner);
+  const avatar='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==';
+  const first={...records[0],profiles:{username:'RecordedCreator',avatar_url:avatar}};
+  const second={...records[1],user_id:owner,profiles:{username:'MyCreatorAccount',avatar_url:null}};
+  let followWrites=0;
+  await page.route('**/rest/v1/posts?**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([first,second])}));
+  await page.route('**/rest/v1/follows?**',route=>{
+    if(['POST','DELETE','PATCH'].includes(route.request().method()))followWrites++;
+    return route.fulfill({status:200,contentType:'application/json',body:'[]',headers:{'content-range':'*/0'}});
+  });
+  for(const size of [{width:390,height:844},{width:844,height:390},{width:1280,height:800},{width:768,height:1024}]){
+    await page.setViewportSize(size);await openApp(page,'/clipts');
+    const shortcut=page.locator('.clipt-controller [data-controller-action="follow"]');
+    await expect(shortcut).toBeEnabled();
+    await expect(shortcut).toHaveAccessibleName("View RecordedCreator's profile");
+    await expect(shortcut.locator('img')).toHaveAttribute('src',avatar);
+    const box=(await shortcut.boundingBox())!;
+    expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);
+    await page.screenshot({path:info.outputPath('creator-'+hand+'-'+size.width+'x'+size.height+'.png')});
+    await shortcut.focus();await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(new RegExp('/user/'+creator+'$'));
+    await expect(page.getByRole('button',{name:'Follow',exact:true})).toBeVisible();
+    expect(followWrites).toBe(0);
+  }
+  await page.setViewportSize({width:390,height:844});await openApp(page,'/clipts');
+  const track=page.getByRole('region',{name:'Clipts horizontal feed',exact:true});
+  await track.focus();await page.keyboard.press('ArrowRight');
+  await expect(page.locator('[data-active-clip="true"]')).toHaveAttribute('data-post-id',second.id);
+  const shortcut=page.locator('.clipt-controller [data-controller-action="follow"]');
+  await expect(shortcut).toHaveAccessibleName("View MyCreatorAccount's profile");
+  await expect(shortcut.locator('img')).toHaveCount(0);
+  await shortcut.click();await expect(page).toHaveURL(new RegExp('/user/'+owner+'$'));
+  expect(followWrites).toBe(0);
+});
+
+test('long profile names and profile settings reflow on narrow portrait screens',async({page},info)=>{
+  await fixture(page);
+  const longName='user_'+'a'.repeat(45);
+  const profile={id:owner,username:longName,display_name:longName,avatar_url:null,website:'https://cliptgaming.com/',bio:'',created_at:'2026-11-02T00:00:00Z'};
+  await page.route('**/rest/v1/posts?**',route=>route.fulfill({status:200,contentType:'application/json',body:'[]'}));
+  await page.route('**/rest/v1/rpc/get_own_profile',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify((route.request().headers().accept||'').includes('vnd.pgrst.object')?profile:[profile])}));
+  for(const size of [{width:390,height:844},{width:320,height:740},{width:195,height:422},{width:768,height:1024}]){
+    await page.setViewportSize(size);await openApp(page,'/profile');
+    const heading=page.locator('.clipt-profile-header h1');
+    await expect(heading).toHaveText(longName);
+    expect(await heading.evaluate(element=>element.scrollWidth<=element.clientWidth+1)).toBe(true);
+    expect(await page.locator('.clipt-profile-header [role="button"]').evaluate(element=>element.scrollWidth<=element.clientWidth+1)).toBe(true);
+    const card=(await page.locator('.clipt-profile-header').boundingBox())!;
+    for(const stat of await page.locator('.clipt-profile-stats > button').all()){
+      const box=(await stat.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(card.x);expect(box.x+box.width).toBeLessThanOrEqual(card.x+card.width+1);
+    }
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await page.screenshot({path:info.outputPath('profile-reflow-'+size.width+'.png')});
+    await openApp(page,'/edit-profile');
+    await expect(page.getByRole('button',{name:'Upload New Picture',exact:true})).toBeVisible();
+    await expect(page.getByText('Recommended size: 400x400 pixels')).toHaveCount(0);
+    await expect(page.getByText('This is your public display name. You can only change it once every two months.',{exact:true})).toHaveCount(0);
+    for(const tab of await page.getByRole('tab').all()){
+      const box=(await tab.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(0);expect(box.x+box.width).toBeLessThanOrEqual(size.width+1);
+      expect(box.height).toBeGreaterThanOrEqual(44);
+    }
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await page.screenshot({path:info.outputPath('profile-edit-reflow-'+size.width+'.png')});
+    await page.getByRole('tab',{name:'Preferences',exact:true}).click();
+    await expect(page.getByRole('link',{name:'Open accessibility and display preferences'})).toBeVisible();
+  }
+});

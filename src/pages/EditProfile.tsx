@@ -10,11 +10,11 @@ const EditProfile = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
+    <div className="clipt-profile-edit min-w-0 max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex min-w-0 items-center gap-4">
             <Button 
               variant="ghost" 
               size="icon"
@@ -25,10 +25,7 @@ const EditProfile = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Profile Settings</h1>
-              <p className="text-muted-foreground">
-                Manage your account settings and preferences
-              </p>
+              <h1 className="text-3xl font-bold [overflow-wrap:anywhere]">Profile Settings</h1>
             </div>
           </div>
         </div>
@@ -45,7 +42,7 @@ const EditProfile = () => {
               <h2 className="text-xl font-semibold">Basic Information</h2>
             </div>
             <Tabs defaultValue="account">
-              <TabsList className="mb-4 dark:bg-slate-800">
+              <TabsList className="clipt-profile-edit-tabs mb-4 dark:bg-slate-800">
                 <TabsTrigger value="account">Account</TabsTrigger>
                 <TabsTrigger value="preferences">Preferences</TabsTrigger>
                 <TabsTrigger value="notifications">Notifications</TabsTrigger>

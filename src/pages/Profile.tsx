@@ -31,6 +31,7 @@ const ProfileContent = styled.div`
   /* Make sure content is fully visible */
   display: block;
   width: 100%;
+  min-width: 0;
 `;
 
 const Profile = () => {
@@ -247,19 +248,19 @@ const Profile = () => {
           </div>
           
           {/* Profile Info */}
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 w-full flex-1">
             <div className="flex flex-col md:flex-row gap-4 items-center md:items-start justify-between">
-              <div className="text-center md:text-left">
+              <div className="min-w-0 w-full text-center md:text-left">
                 <h1 className="text-2xl font-bold text-gaming-200 mb-1 break-words [overflow-wrap:anywhere]">
                   {profile.display_name || profile.username || 'User'}
                 </h1>
-                <UserLink username={profile.username} />
+                <UserLink username={profile.username} className="block max-w-full text-blue-400 hover:underline cursor-pointer [overflow-wrap:anywhere]" />
                 {profile.location && <p className="flex items-center gap-1 text-sm text-purple-200"><MapPin size={14} aria-hidden="true" />{profile.location}</p>}
-                <p className="text-gaming-300 max-w-md mb-4 break-words [overflow-wrap:anywhere]">{profile.bio || 'No bio provided'}</p>
+                {profile.bio && <p className="text-gaming-300 max-w-md mb-4 break-words [overflow-wrap:anywhere]">{profile.bio}</p>}
                 <ProfileWebsite value={profile.website} />
               </div>
               
-              <div className="flex justify-end gap-2">
+              <div className="flex max-w-full flex-wrap justify-center md:justify-end gap-2">
                 {isOwnProfile && (
                   <Button 
                     onClick={() => navigate('/profile/edit')} 
@@ -305,8 +306,8 @@ const Profile = () => {
       
       {/* Tabs */}
       {isOwnProfile && <Button variant="outline" className="mb-4" onClick={() => navigate('/drafts')}>Your private drafts</Button>}
-      <div className="flex mb-6">
-        <div className="gaming-card p-2">
+      <div className="min-w-0 max-w-full mb-6">
+        <div className="gaming-card max-w-full p-2">
           <div className="clipt-profile-tabs" aria-label="Profile content">
             <Toggle pressed={activeTab === 'posts'} onPressedChange={() => setActiveTab('posts')} variant="outline"><Grid className="w-4 h-4 mr-2" aria-hidden="true" />Posts</Toggle>
             <Toggle
