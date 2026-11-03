@@ -99,6 +99,9 @@ body:has(.clipt-controller[data-hidden="true"]) .clipt-feed-caption,
 body:has(.clipt-controller[data-mobile-v2="true"][data-layout="classic"][data-expanded="false"]) .clipt-feed-caption { opacity: 0; visibility: hidden; pointer-events: none; }
 .clipt-feed-caption:focus-within { opacity: 1 !important; visibility: visible !important; pointer-events: auto !important; }
 body:has(.clipt-engagement-hud[role="dialog"]) .clipt-feed-caption { visibility: hidden; pointer-events: none; }
+body:has(.clipt-controller[data-mobile-v2="true"][data-layout="classic"]) .clipt-feed-caption {
+  left: calc(200px + env(safe-area-inset-left,0px)); right: calc(200px + env(safe-area-inset-right,0px));
+}
 body:has(.clipt-controller[data-portrait-viewing="true"]) .clipt-fyp {
   --clipt-caption-bottom: calc(var(--clipt-portrait-swipe-height,140px) + 12px + env(safe-area-inset-bottom,0px));
 }
