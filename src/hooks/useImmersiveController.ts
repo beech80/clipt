@@ -84,7 +84,7 @@ export function useImmersiveController(eligible: boolean, preferences: Controlle
     const down = (event: PointerEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
-      if (rootRef.current?.contains(target)) { interacting.current = true; setActivity(value => value + 1); }
+      if (rootRef.current?.contains(target) || target.closest('[data-controller-companion]')) { interacting.current = true; setActivity(value => value + 1); }
       if (target.closest('.clipt-cinematic-media, [data-active-stream="true"] video')) {
         origin = {x: event.clientX, y: event.clientY};
         revealOnly.current = !viewport.landscape && hidden !== 'visible';
@@ -105,7 +105,7 @@ export function useImmersiveController(eligible: boolean, preferences: Controlle
         setHidden('visible'); setActivity(value => value + 1);
       }
     };
-    const focus = () => { if (rootRef.current?.contains(document.activeElement)) { setHidden('visible'); setActivity(value => value + 1); } };
+    const focus = () => { if (rootRef.current?.contains(document.activeElement) || document.activeElement?.closest?.('[data-controller-companion]')) { setHidden('visible'); setActivity(value => value + 1); } };
     let post = document.querySelector('[data-active-clip="true"]')?.getAttribute('data-post-id');
     const observer = new MutationObserver(() => {
       const next = document.querySelector('[data-active-clip="true"]')?.getAttribute('data-post-id');
@@ -125,7 +125,7 @@ export function useImmersiveController(eligible: boolean, preferences: Controlle
     if (!immersive || !preferences.autoHide || hidden !== 'visible') return;
     let timer: ReturnType<typeof setTimeout>;
     const idle = () => {
-      const blocked = controllerMustStayVisible(interacting.current, Boolean(rootRef.current?.contains(document.activeElement)),
+      const blocked = controllerMustStayVisible(interacting.current, Boolean(rootRef.current?.contains(document.activeElement) || document.activeElement?.closest?.('[data-controller-companion]')),
         Boolean(document.querySelector('[data-clipt-feed-tour], [role="dialog"], [role="menu"], [data-state="open"][role="listbox"], .clipt-controller details[open]')));
       if (blocked) timer = setTimeout(idle, CONTROLLER_IDLE_MS);
       else setHidden('auto');
