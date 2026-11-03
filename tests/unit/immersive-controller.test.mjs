@@ -180,7 +180,7 @@ test('controller social actions, primary navigation and joystick reuse existing 
   const saved=Object.fromEntries(['document','window','innerWidth','innerHeight','getComputedStyle','requestAnimationFrame','cancelAnimationFrame','CustomEvent'].map(key=>[key,globalThis[key]]));
   const activated=[],routes=[],events=[],frames=[];
   try {
-    const buttons=Object.fromEntries(['like','comment','trophy','follow'].map(action=>[action,{disabled:false,getAttribute:()=>null,click:()=>activated.push(action)}]));
+    const buttons=Object.fromEntries(['like','comment','trophy','follow'].map(action=>[action,{disabled:false,dataset:{creatorName:'fixture_creator'},querySelector:()=>null,getAttribute:()=>null,click:()=>activated.push(action)}]));
     const post={dataset:{postId:'real-post',activeClip:'true'},getBoundingClientRect:()=>({width:600,height:300,top:0,bottom:300,left:0,right:600}),querySelector:selector=>buttons[Object.keys(buttons).find(action=>selector.includes(action==='follow'?'creator-profile':action))]};
     globalThis.innerWidth=675;globalThis.innerHeight=312;globalThis.getComputedStyle=()=>({visibility:'visible'});
     globalThis.document={querySelector:()=>({dataset:{layout:'classic',mobileV2:'true'},getBoundingClientRect:()=>({top:0})}),querySelectorAll:()=>[post]};
