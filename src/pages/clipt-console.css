@@ -873,7 +873,8 @@ body:has(.clipt-controller[data-mobile-v2="true"][data-portrait-viewing="true"])
 }
 
 /* Profile text must reflow inside its card instead of widening the viewport. */
-.clipt-profile, .clipt-profile-header, .clipt-profile-edit { min-width: 0; max-width: 100%; }
+.clipt-profile, .clipt-profile-edit { min-width: 0; width: 100%; max-width: min(100%,72rem); }
+.clipt-profile-header { min-width: 0; max-width: 100%; }
 .clipt-profile-header > div { min-width: 0; width: 100%; }
 .clipt-profile .clipt-profile-stats, .clipt-creator-info .clipt-profile-stats { grid-template-columns: repeat(auto-fit,minmax(min(100%,96px),1fr)); }
 .clipt-profile .clipt-profile-stats p:last-child, .clipt-creator-info .clipt-profile-stats p:last-child { font-size: .875rem; overflow-wrap: anywhere; word-break: normal; }
