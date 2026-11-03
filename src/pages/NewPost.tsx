@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Camera, Upload, Globe, Users, FileEdit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { MentionTextarea as Textarea } from '@/components/mentions/MentionTextarea';
 import { BackButton } from '@/components/ui/back-button';
 import { supabase } from '@/lib/supabase';
 import { clipCaption, formatClipSize, MAX_CLIP_BYTES, videoPreviewReady } from '@/lib/clip-upload';
@@ -35,6 +35,8 @@ export default function NewPost() {
   const [hashtags, setHashtags] = useState('');
   const [gameId, setGameId] = useState('');
   const [gameSearch, setGameSearch] = useState('');
+  const [gameQuery,setGameQuery]=useState('');
+  useEffect(()=>{const timer=setTimeout(()=>setGameQuery(gameSearch.trim()),300);return()=>clearTimeout(timer);},[gameSearch]);
   const [stage, setStage] = useState<'idle' | 'checking' | 'converting' | 'uploading' | 'publishing' | 'reward'>('idle');
   const [playable, setPlayable] = useState(false);
   const [conversionProgress, setConversionProgress] = useState<number | null>(null);
@@ -90,9 +92,9 @@ export default function NewPost() {
   });
   const squadReady = postingCapabilities.data === true;
   const games = useQuery({
-    queryKey: ['create-clip-games', gameSearch],
+    queryKey: ['create-clip-games', gameQuery],
     retry: false,
-    queryFn: ({ signal }) => completeGameCatalog(gameSearch, signal),
+    queryFn: ({ signal }) => completeGameCatalog(gameQuery, signal),
   });
   useEffect(() => {
     if (!file) { setPreview(''); return; }

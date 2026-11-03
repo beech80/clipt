@@ -9505,6 +9505,7 @@ export type Database = {
       }
     }
     Functions: {
+      sync_my_achievements: { Args: Record<PropertyKey, never>; Returns: Json }
       clipt_beta_access: { Args: Record<PropertyKey, never>; Returns: boolean }
       my_photo_review_holds: { Args: Record<PropertyKey, never>; Returns: { post_id: string; state: string; created_at: string }[] }
       quarantined_photo_preview: { Args: { p_job: string }; Returns: { post_id: string; user_id: string; image_url: string; caption: string | null }[] }

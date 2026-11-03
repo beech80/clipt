@@ -45,7 +45,7 @@
 .clipt-fyp-brand { grid-column: 2; }
 .clipt-watch-page { color: #f5f3ff; background: radial-gradient(ellipse at 15% 5%,#7e22ce55,transparent 60%),linear-gradient(145deg,#1b102d99,#090510cc); }
 .clipt-watch-content { width: 100%; max-width: 960px; min-width: 0; }
-.clipt-watch-media .clipt-video-frame { aspect-ratio: auto !important; height: clamp(160px,calc(100dvh - var(--clipt-page-controller-space,160px) - 272px),640px); }
+.clipt-watch-media .clipt-video-frame { display: flex; align-items: center; justify-content: center; overflow: hidden; aspect-ratio: auto !important; height: clamp(160px,calc(100dvh - var(--clipt-page-controller-space,160px) - 272px),640px); }
 @media (max-height: 600px) {
   .clipt-watch-page > .clipt-watch-topbar { padding: 8px 12px; min-height: 60px; }
   .clipt-watch-page .clipt-watch-content { padding: 8px 12px calc(var(--clipt-page-controller-space,160px) + 24px); }
@@ -882,3 +882,6 @@ body:has(.clipt-controller[data-mobile-v2="true"][data-portrait-viewing="true"])
 .clipt-profile-edit-tabs > button { flex: 1 1 96px; min-width: 0; min-height: 44px; height: auto; white-space: normal; overflow-wrap: anywhere; }
 .clipt-profile-edit form, .clipt-profile-edit form .flex-1 { min-width: 0; max-width: 100%; }
 .clipt-profile-edit button { max-width: 100%; white-space: normal; height: auto; min-height: 44px; }
+
+/* Pin the replaced media element to the measured frame, including Safari native controls. */
+.clipt-watch-media .clipt-video-frame > video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; background: #000; }

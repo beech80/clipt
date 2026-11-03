@@ -35,7 +35,7 @@ export const ShareButton = ({
         toast.success('Successfully shared!');
       } else {
         // Fallback for browsers that don't support Web Share API
-        navigator.clipboard.writeText(url);
+        await navigator.clipboard.writeText(url);
         toast.success('Link copied to clipboard!');
       }
     } catch (error) {

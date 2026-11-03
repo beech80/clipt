@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { createComment } from '@/services/commentService';
 import { toast } from 'sonner';
 import { communityErrorMessage, communityTextWarning } from '@/lib/community-text';
-import { Input } from '@/components/ui/input';
+import { MentionTextarea as Input } from '@/components/mentions/MentionTextarea';
 import { Loader2, Smile } from 'lucide-react';
 import {
   Popover,
@@ -37,7 +37,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const { user } = useAuth();
 
@@ -119,9 +119,10 @@ export const CommentForm: React.FC<CommentFormProps> = ({
           </Avatar>
         )}
         
-        <div className="relative flex-grow flex bg-transparent rounded-full overflow-hidden pl-2 pr-1">
+        <div className="relative min-w-0 flex-grow flex bg-transparent rounded-full pl-2 pr-1">
           <Input
             ref={inputRef}
+            rows={1}
             value={commentText}
             onChange={(e) => { setCommentText(e.target.value); setSubmitError(''); }}
             placeholder={placeholder}

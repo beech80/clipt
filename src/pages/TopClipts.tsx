@@ -1,3 +1,6 @@
+import {useEffect,useRef,useState} from 'react';
+import {useQuery as usePostQuery} from '@tanstack/react-query';
+import PostContent from '@/components/post/PostContent';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -10,6 +13,18 @@ import { Button } from '@/components/ui/button';
 const periods = [['weekly', 'Weekly'], ['monthly', 'Monthly'], ['all-time', 'All Time']] as const;
 type Period = typeof periods[number][0];
 
+function RankedVideo({postId}:{postId:string}) {
+ const frame=useRef<HTMLDivElement>(null),[near,setNear]=useState(false);
+ useEffect(()=>{if(!frame.current)return;const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){setNear(true);observer.disconnect();}},{rootMargin:'200px'});observer.observe(frame.current);return()=>observer.disconnect();},[]);
+ const post=usePostQuery({enabled:near,queryKey:['ranked-video',postId],retry:false,queryFn:async()=>{
+  const {data,error}=await supabase.from('posts').select('id,video_url').eq('id',postId).maybeSingle();
+  if(error)throw error;return data;
+ }});
+ return <div ref={frame} className="mt-4 overflow-hidden rounded-lg bg-black" aria-label="Ranked Clipt video">
+  {post.isPending?<p role="status" className="p-4">Loading video…</p>:post.isError?<button type="button" className="min-h-11 p-3 underline" onClick={()=>void post.refetch()}>Retry ranked video</button>:
+   post.data?.video_url?<PostContent postId={postId} videoUrl={post.data.video_url}/>:<p className="p-4">Video is unavailable.</p>}
+ </div>;
+}
 export default function TopClipts() {
   const [period, setPeriod] = useState<Period>('weekly');
   const { user } = useAuth();
@@ -53,6 +68,7 @@ export default function TopClipts() {
             </div>
             <span className="shrink-0 text-sm text-yellow-300" aria-label={`${clip.trophy_count} Trophies`}>🏆 {clip.trophy_count.toLocaleString()}</span>
           </div>
+          <RankedVideo postId={clip.post_id}/>
         </li>)}
       </ol>}
   </main>;

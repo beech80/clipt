@@ -56,7 +56,7 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
   const currentValue = progress.currentValue || 0;
   const targetValue = achievement.target_value || 1;
   const percentComplete = Math.min(100, Math.round((currentValue / targetValue) * 100));
-  const isCompleted = currentValue >= targetValue;
+  const isCompleted = progress.completed;
 
   return (
     <div className="flex w-full overflow-hidden mb-3" aria-label={`${achievement.name}: ${currentValue} of ${targetValue}`}>
@@ -78,7 +78,7 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
       <div className="min-w-0 flex-1 p-3 bg-purple-950/20">
         <h3 className="text-white font-semibold text-lg [overflow-wrap:anywhere]">{achievement.name}</h3>
         <p className="text-gray-400 text-sm mb-2">
-          {achievement.description} - {currentValue}/{targetValue}
+          {achievement.description} - {isCompleted ? 'Earned · ' : ''}{currentValue}/{targetValue}
         </p>
         <div className="flex items-center gap-3 text-sm mb-1">
           <div className="min-w-0 flex-1">
