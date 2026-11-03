@@ -15,7 +15,6 @@ import {GameChannelToolbar} from '@/components/GameChannelToolbar';
 import './clipt-console.css';
 import './clipt-feed-surface.css';
 import './clipt-channels.css';
-import './clipt-feed-caption.css';
 import { cancelClipScroll, scrollClipTo } from '@/lib/clip-carousel-scroll';
 import { usePortraitSwipe } from '@/hooks/usePortraitSwipe';
 import {publishingSnapshot,subscribePublishing} from '@/lib/publishing-status';
