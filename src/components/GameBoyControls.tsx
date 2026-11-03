@@ -163,7 +163,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
     const post = visiblePost(currentPostId);
     const creator = liveContext ? liveButton('follow') : postButton(post, 'follow');
     const creatorName = creator?.dataset.creatorName;
-    const profile = {label: creatorName ? `View ${creatorName}'s profile` : 'View creator profile', avatar: creator?.dataset.creatorAvatar || ''};
+    const profile = {label: creatorName ? `View ${creatorName}'s profile` : 'View creator profile', avatar: creator?.querySelector('img')?.getAttribute('src') || ''};
     setCreatorProfile(previous => previous.label === profile.label && previous.avatar === profile.avatar ? previous : profile);
     const state = Object.fromEntries(actions.map(action => {
       const button = liveContext ? liveButton(action) : postButton(post, action);
@@ -196,7 +196,7 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
       });
     };
     const observer = new MutationObserver(scheduleRefresh);
-    observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['disabled', 'hidden', 'inert', 'class', 'data-state', 'aria-pressed', 'data-post-id', 'data-active-clip', 'data-feed', 'aria-disabled', 'aria-label', 'data-creator-name', 'data-creator-avatar'] });
+    observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['disabled', 'hidden', 'inert', 'class', 'data-state', 'aria-pressed', 'data-post-id', 'data-active-clip', 'data-feed', 'aria-disabled', 'aria-label', 'data-creator-name', 'src'] });
     document.addEventListener('scroll', scheduleRefresh, true);
     window.addEventListener('resize', scheduleRefresh);
     window.addEventListener('blur', stop);
