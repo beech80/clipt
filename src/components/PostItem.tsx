@@ -793,7 +793,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, onOpenEngagem
       {/* User Header */}
       <div className={`${cinematic ? "clipt-cinematic-header" : "clipt-post-header"} flex items-center justify-between p-4 border-b border-gaming-400/20`}>
         <div className="flex min-w-0 flex-1 items-center space-x-3">
-          <button type="button" data-action="creator-profile" data-creator-name={username} data-creator-avatar={avatarUrl || undefined} aria-label={`View ${username}'s profile`} onClick={() => handleProfileClick(post.user_id)} className="min-h-11 min-w-11 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300">
+          <button type="button" data-action="creator-profile" data-creator-name={username} aria-label={`View ${username}'s profile`} onClick={() => handleProfileClick(post.user_id)} className="min-h-11 min-w-11 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300">
           <Avatar
             className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200"
           >
