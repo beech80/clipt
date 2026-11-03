@@ -290,6 +290,7 @@ test('long profile names and profile settings reflow on narrow portrait screens'
   await fixture(page);
   const longName='user_'+'a'.repeat(45);
   const profile={id:owner,username:longName,display_name:longName,avatar_url:null,website:'https://cliptgaming.com/',bio:'',created_at:'2026-11-02T00:00:00Z'};
+  await page.route('**/rest/v1/posts?**',route=>route.fulfill({status:200,contentType:'application/json',body:'[]'}));
   await page.route('**/rest/v1/rpc/get_own_profile',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify((route.request().headers().accept||'').includes('vnd.pgrst.object')?profile:[profile])}));
   for(const size of [{width:390,height:844},{width:320,height:740},{width:195,height:422},{width:768,height:1024}]){
     await page.setViewportSize(size);await openApp(page,'/profile');
