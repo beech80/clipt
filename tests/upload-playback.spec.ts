@@ -14,7 +14,7 @@ const owner='00000000-0000-4000-8000-000000000077';
 const postId='00000000-0000-4000-8000-000000000078';
 const fixturePath=fileURLToPath(new URL('./fixtures/clip-test-h264.mp4',import.meta.url));
 const bytes=readFileSync(fixturePath);
-async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false,converted=false,neighbor=false}={}) {
+async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false,converted=false,neighbor=false,largeBytes=0}={}) {
   const user={id:owner,aud:'authenticated',role:'authenticated',email:'fixture@example.invalid',app_metadata:{},user_metadata:{},created_at:'2026-09-19T00:00:00Z',factors:[]};
   const profile={id:owner,username:'upload_tester',display_name:'Upload Tester',avatar_url:null,bio:'Recorded test profile'};
   await page.addInitScript(({user})=>{
@@ -40,15 +40,15 @@ async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false
     request.on('end',()=>{
       uploads++;uploadedPath=request.url!.slice('/storage/v1/object/'.length);
       const body=Buffer.concat(chunks);
-      if(converted) {
+      if(converted||largeBytes) {
         try {
           const boundary=String(request.headers['content-type']).match(/boundary=(?:"([^"]+)"|([^;]+))/);
           const marker=body.indexOf(Buffer.from('Content-Type: video/mp4'));
           const start=body.indexOf(Buffer.from('\r\n\r\n'),marker)+4;
           const end=body.indexOf(Buffer.from('\r\n--'+(boundary?.[1]||boundary?.[2])),start);
           if(marker<0||start<4||end<=start)throw Error('Invalid multipart video');
-          playbackBytes=body.subarray(start,end);convertedProof=inspectH264Mp4(playbackBytes);
-          convertedAudio=playbackBytes.includes(Buffer.from('mp4a'));uploadedBytesMatch=true;
+          playbackBytes=body.subarray(start,end);if(converted)convertedProof=inspectH264Mp4(playbackBytes);
+          convertedAudio=playbackBytes.includes(Buffer.from('mp4a'));uploadedBytesMatch=largeBytes?playbackBytes.length===largeBytes&&playbackBytes.subarray(0,bytes.length).equals(bytes):true;
         } catch {uploadedBytesMatch=false;}
       } else uploadedBytesMatch=body.includes(bytes);
       response.writeHead(uploadedBytesMatch?200:400,{'Content-Type':'application/json'});
@@ -114,7 +114,7 @@ async function setup(page:Page,{denied=false,holdRendition=false,gameLabel=false
     await route.fulfill({status,contentType:'application/json',headers:{'content-range':'0-0/0'},body:JSON.stringify(data)});
   });
   return {
-    stats:()=>({uploads,uploadedBytesMatch,signs,reads,publicReads,renditionRequested,rewardRequested,newestFirst,hashtagRequested,convertedProof,convertedAudio}),
+    stats:()=>({uploads,uploadedBytesMatch,signs,reads,publicReads,renditionRequested,rewardRequested,newestFirst,hashtagRequested,convertedProof,convertedAudio,uploadedFileBytes:playbackBytes.length}),
     allowSigning:()=>{denied=false;},releaseRendition,releaseReward,
     close:async()=>{receiver.closeAllConnections();await new Promise<void>(resolve=>receiver.close(()=>resolve()));rmSync(keyPath,{force:true});rmSync(certPath,{force:true});rmdirSync(certificateDir);},
   };
@@ -345,4 +345,27 @@ test('feed playback starts only the active visible clip and pauses the previous 
     await expect(first).toHaveAttribute('data-continuity','retained');
     expect(service.stats().publicReads).toBe(0);
   } finally {service.releaseRendition();service.releaseReward();await service.close();}
+});
+
+test('a 55.2 MB video uploads completely and plays privately',async({page})=>{
+ test.setTimeout(60000);
+ const size=Math.floor(55.2*1024*1024),service=await setup(page,{largeBytes:size});
+ try {
+  await page.setViewportSize({width:390,height:844});await openApp(page,'/new-post');
+  await page.getByLabel('Caption',{exact:true}).fill('Larger video verification');
+  await page.getByLabel('Clipt video',{exact:true}).evaluate(async(input:HTMLInputElement,size)=>{
+   const original=await (await fetch('/tests/fixtures/clip-test-h264.mp4')).arrayBuffer();
+   const free=new Uint8Array(size-original.byteLength);new DataView(free.buffer).setUint32(0,free.length);free.set([102,114,101,101],4);
+   const transfer=new DataTransfer();transfer.items.add(new File([original,free],'larger-video.mp4',{type:'video/mp4'}));
+   input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));
+  },size);
+  const submit=page.getByRole('button',{name:'Post Clipt',exact:true});await expect(submit).toBeEnabled({timeout:15000});
+  await submit.click();await expect(page).toHaveURL(/\/clipts$/);
+  await expect(page.getByText('Your post is ready below.',{exact:true})).toBeVisible();
+  const video=page.locator('[data-active-clip="true"] video');await expect(video).toBeVisible();
+  await video.evaluate(async element=>{element.muted=true;await element.play();});
+  await expect.poll(()=>video.evaluate(element=>element.currentTime),{timeout:15000}).toBeGreaterThan(0);
+  expect(service.stats().uploads).toBe(1);expect(service.stats().uploadedBytesMatch).toBe(true);
+  expect(service.stats().uploadedFileBytes).toBe(size);expect(service.stats().publicReads).toBe(0);
+ } finally {service.releaseRendition();service.releaseReward();await service.close();}
 });
