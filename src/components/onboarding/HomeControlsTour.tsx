@@ -1,7 +1,7 @@
 import {useEffect,useLayoutEffect,useRef,useState,type CSSProperties} from 'react';
 import {createPortal} from 'react-dom';
 import {useSearchParams} from 'react-router-dom';
-import {HOME_TOUR_STEPS,hasSeenHomeTour,rememberHomeTour,homeTourKey,homeTourPlacement,type TourRect,type TourViewport} from '@/lib/home-controls-tour';
+import {HOME_TOUR_STEPS,rememberHomeTour,homeTourKey,homeTourPlacement,type TourRect,type TourViewport} from '@/lib/home-controls-tour';
 import './home-controls-tour.css';
 
 function visible(element:Element):element is HTMLElement {
@@ -16,11 +16,11 @@ function rect(element:Element):TourRect{const r=element.getBoundingClientRect();
 function storage(){try{return window.localStorage;}catch{return null;}}
 function videoPixels(){const v=document.querySelector<HTMLVideoElement>('[data-active-clip="true"] video');if(!v?.videoWidth||!v.videoHeight)return null;const r=v.getBoundingClientRect(),scale=Math.min(r.width/v.videoWidth,r.height/v.videoHeight),w=v.videoWidth*scale,h=v.videoHeight*scale;return {left:r.left+(r.width-w)/2,top:r.top+(r.height-h)/2,right:r.left+(r.width+w)/2,bottom:r.top+(r.height+h)/2};}
 
-/** First home entry only; local preference metadata never authorizes backend access. */
+/** The walkthrough opens only on an explicit Help replay; sign-in never starts it. */
 export function HomeControlsTour({userId,ready=true}:{userId:string;ready?:boolean}){
  const [params,setParams]=useSearchParams();
  const replay=params.get('tour')==='controls';
- const [open,setOpen]=useState(false),[checked,setChecked]=useState(false),[step,setStep]=useState(0),[expanded,setExpanded]=useState(false);
+ const [open,setOpen]=useState(false),[checked,setChecked]=useState(true),[step,setStep]=useState(0),[expanded,setExpanded]=useState(false);
  const [layout,setLayout]=useState<{viewport:TourViewport;placement:ReturnType<typeof homeTourPlacement>;target:TourRect|null;targetName:string;portrait:boolean;postVisible:boolean;blocked:boolean;disabled:boolean}|null>(null);
  const card=useRef<HTMLElement>(null),nextButton=useRef<HTMLButtonElement>(null),previousFocus=useRef<HTMLElement|null>(null),focusAssigned=useRef(false);
  const watch=open||!checked||replay;
@@ -58,9 +58,8 @@ export function HomeControlsTour({userId,ready=true}:{userId:string;ready?:boole
  },[watch,step]);
 
  useEffect(()=>{
-  if(!ready||!layout||layout.blocked||checked&&!replay)return;
+  if(!ready||!layout||layout.blocked||!replay)return;
   setChecked(true);
-  if(!replay&&hasSeenHomeTour(userId,storage()))return;
   previousFocus.current=document.activeElement instanceof HTMLElement?document.activeElement:null;
   rememberHomeTour(userId,'seen',storage());focusAssigned.current=false;setStep(0);setExpanded(false);setOpen(true);
   if(replay){const next=new URLSearchParams(params);next.delete('tour');setParams(next,{replace:true});}
