@@ -361,7 +361,9 @@ test('a 55.2 MB video uploads completely and plays privately',async({page})=>{
   },size);
   const submit=page.getByRole('button',{name:'Post Clipt',exact:true});await expect(submit).toBeEnabled({timeout:15000});
   await submit.click();await expect(page).toHaveURL(/\/clipts$/);
-  await expect(page.getByText('Your post is ready below.',{exact:true})).toBeVisible();
+  await expect.poll(()=>service.stats().uploadedFileBytes,{timeout:30000}).toBe(size);
+  expect(service.stats().uploadedBytesMatch).toBe(true);
+  await expect(page.getByText('Your post is ready below.',{exact:true})).toBeVisible({timeout:30000});
   const video=page.locator('[data-active-clip="true"] video');await expect(video).toBeVisible();
   await video.evaluate(async element=>{element.muted=true;await element.play();});
   await expect.poll(()=>video.evaluate(element=>element.currentTime),{timeout:15000}).toBeGreaterThan(0);
