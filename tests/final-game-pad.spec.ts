@@ -71,10 +71,12 @@ async function captionFixture(page:Page,hand='right',autoHide=false){
   return {stats,caption};
 }
 async function openFeedComments(page:Page){
-  const comment=page.getByRole('button',{name:'Comment — Open engagement',exact:true});
+  const comment=page.locator('.clipt-controller [data-controller-action="comment"]');
+  const more=page.getByRole('button',{name:'All controller actions',exact:true});
+  await expect.poll(async()=>await comment.isVisible()||await more.isVisible()).toBe(true);
   if(await comment.isVisible()){await comment.click();return;}
-  await page.getByRole('button',{name:'All controller actions',exact:true}).click();
-  await page.getByRole('button',{name:'Comment — Open engagement',exact:true}).click();
+  await more.click();
+  await page.getByRole('dialog',{name:'Controller actions',exact:true}).getByRole('button',{name:/^Comment — Open engagement/}).click();
 }
 for(const hand of ['right','left'])test('captions appear only in Comments and stay with the current clip ('+hand+')',async({page},info)=>{
   test.setTimeout(90000);
