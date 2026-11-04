@@ -70,6 +70,12 @@ async function captionFixture(page:Page,hand='right',autoHide=false){
   await page.route('**/rest/v1/posts?**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(rows)}));
   return {stats,caption};
 }
+async function openFeedComments(page:Page){
+  const comment=page.getByRole('button',{name:'Comment — Open engagement',exact:true});
+  if(await comment.isVisible()){await comment.click();return;}
+  await page.getByRole('button',{name:'All controller actions',exact:true}).click();
+  await page.getByRole('button',{name:'Comment — Open engagement',exact:true}).click();
+}
 for(const hand of ['right','left'])test('captions appear only in Comments and stay with the current clip ('+hand+')',async({page},info)=>{
   test.setTimeout(90000);
   const {stats,caption}=await captionFixture(page,hand);
@@ -79,7 +85,7 @@ for(const hand of ['right','left'])test('captions appear only in Comments and st
     await expect(video).toBeVisible();await video.evaluate(v=>{v.dataset.commentsContinuity='same-player';});
     await expect(page.locator('.clipt-feed-caption')).toHaveCount(0);
     await expect(page.getByRole('button',{name:'Show caption',exact:true})).toHaveCount(0);
-    await page.locator('.clipt-controller [data-controller-action="comment"]').click();
+    await openFeedComments(page);
     const details=page.locator('.clipt-comment-post-details');
     await expect(details).toBeVisible();await expect(details).toContainText(caption);
     await expect(details.getByRole('link',{name:'@FirstCreator',exact:true})).toHaveAttribute('href','/user/'+owner);
@@ -94,7 +100,7 @@ for(const hand of ['right','left'])test('captions appear only in Comments and st
   const track=page.getByRole('region',{name:'Clipts horizontal feed',exact:true});
   await track.focus();await track.press('ArrowRight');
   await expect(page.locator('[data-active-clip="true"]')).toHaveAttribute('data-post-id','00000000-0000-4000-8000-000000000081');
-  await page.locator('.clipt-controller [data-controller-action="comment"]').click();
+  await openFeedComments(page);
   await expect(page.locator('.clipt-comment-post-details')).toContainText('Second original caption #Gaming');
   await expect(page.locator('.clipt-comment-post-details')).not.toContainText(caption);
   expect(stats.writes).toHaveLength(0);
@@ -108,7 +114,7 @@ test('comments remain available after controls fade without restoring a caption 
   await expect(page.locator('.clipt-feed-caption')).toHaveCount(0);
   await page.locator('[data-active-clip="true"] .clipt-cinematic-media').click({position:{x:10,y:10}});
   await expect(controller).toHaveAttribute('data-hidden','false');
-  await page.locator('.clipt-controller [data-controller-action="comment"]').click();
+  await openFeedComments(page);
   await expect(page.locator('.clipt-comment-post-details')).toContainText(caption);
   await expect(video).toHaveAttribute('data-comments-continuity','same-player');
   await expect(page.locator('.clipt-feed-caption')).toHaveCount(0);
