@@ -89,3 +89,18 @@ test('landscape post video stays inside its frame and outside the controller',as
   await page.screenshot({path:info.outputPath('uncropped-post-'+size.width+'.png')});
  }
 });
+
+test('long @ suggestions wrap at large zoom and keyboard selection scrolls only the list',async({page})=>{
+ await setup(page);await page.setViewportSize({width:195,height:422});
+ const people=Array.from({length:8},(_,index)=>({id:'person-'+index,username:'user_'+String(index)+'a'.repeat(44),display_name:null}));
+ await page.route('**/rest/v1/profiles?**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(people)}));
+ await openApp(page,'/new-post');const caption=page.getByLabel('Caption',{exact:true});await caption.fill('@user');
+ const list=page.getByRole('listbox',{name:'People to tag',exact:true});await expect(list.getByRole('option')).toHaveCount(8);
+ for(let index=0;index<7;index++)await caption.press('ArrowDown');
+ const selected=list.getByRole('option',{selected:true});await expect(selected).toContainText(people[7].username);
+ await expect.poll(()=>list.evaluate(element=>element.scrollTop)).toBeGreaterThan(0);
+ const bounds=(await list.boundingBox())!,row=(await selected.boundingBox())!;
+ expect(row.y+row.height).toBeLessThanOrEqual(bounds.y+bounds.height+1);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await caption.press('Enter');await expect(caption).toHaveValue('@'+people[7].username+' ');
+});

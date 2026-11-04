@@ -4,7 +4,7 @@ import {supabase} from '@/lib/supabase';
 import {mentionAtCaret,insertMention} from '@/lib/mention-input';
 type Props=React.ComponentProps<typeof Textarea>;
 export const MentionTextarea=forwardRef<HTMLTextAreaElement,Props>(function MentionTextarea(props,ref) {
- const input=useRef<HTMLTextAreaElement>(null);useImperativeHandle(ref,()=>input.current!);
+ const input=useRef<HTMLTextAreaElement>(null),list=useRef<HTMLDivElement>(null);useImperativeHandle(ref,()=>input.current!);
  const id=useId(),text=String(props.value??'');
  const [caret,setCaret]=useState(0),[dismissed,setDismissed]=useState<string|null>(null);
  const token=mentionAtCaret(text,caret),key=token?token.start+':'+token.term:null;
@@ -22,6 +22,13 @@ export const MentionTextarea=forwardRef<HTMLTextAreaElement,Props>(function Ment
   return()=>{clearTimeout(timer);controller.abort();};
  },[open,key]);
  const rows=result.key===key?result.rows:[];
+ useEffect(()=>{
+  const box=list.current,option=document.getElementById(id+'-'+active);
+  if(!open||!box||!option)return;
+  const bounds=box.getBoundingClientRect(),item=option.getBoundingClientRect();
+  if(item.top<bounds.top)box.scrollTop-=bounds.top-item.top;
+  else if(item.bottom>bounds.bottom)box.scrollTop+=item.bottom-bounds.bottom;
+ },[active,open,result.key,result.rows,id]);
  function select(username:string|null) {
   if(!token||!username||!input.current)return;
   const next=insertMention(text,token,username),element=input.current;
@@ -46,10 +53,10 @@ export const MentionTextarea=forwardRef<HTMLTextAreaElement,Props>(function Ment
    }}/>
   {open&&<div className="rounded-lg border border-purple-400/50 bg-[#100b20] p-2 text-white">
    {result.loading||result.key!==key?<p role="status">Finding people…</p>:result.error?<p role="status">People could not be loaded. You can keep writing.</p>:!rows.length?<p role="status">No matching people.</p>:null}
-   <div id={id} role="listbox" aria-label="People to tag" className="max-h-48 overflow-y-auto overscroll-contain">
+   <div ref={list} id={id} role="listbox" aria-label="People to tag" className="max-h-48 overflow-y-auto overscroll-contain">
     {rows.map((person,index)=><button key={person.id} id={id+'-'+index} type="button" role="option" aria-selected={active===index}
      className={'flex min-h-11 w-full items-center rounded px-3 text-left '+(active===index?'bg-purple-800':'')}
-     onPointerDown={event=>event.preventDefault()} onClick={()=>select(person.username)}>@{person.username}{person.display_name?' · '+person.display_name:''}</button>)}
+     onPointerDown={event=>event.preventDefault()} onClick={()=>select(person.username)}><span className="min-w-0 [overflow-wrap:anywhere]">@{person.username}{person.display_name?' · '+person.display_name:''}</span></button>)}
    </div>
   </div>}
  </div>;
