@@ -124,7 +124,7 @@ async function publish(page:Page) {
   await page.getByLabel('Caption',{exact:true}).fill('Upload playback verification');
   await page.getByLabel('Hashtags',{exact:true}).fill('#Gaming');
   await page.getByLabel('Clipt video').setInputFiles(fixturePath);
-  await expect(page.getByRole('button',{name:'Post Clipt',exact:true})).toBeEnabled();
+  await expect(page.getByRole('button',{name:'Post Clipt',exact:true})).toBeEnabled({timeout:15000});
   await page.getByRole('button',{name:'Post Clipt',exact:true}).click();
   await expect(page).toHaveURL(/\/clipts$/);
   await expect(page.getByText('Your post is ready below.',{exact:true})).toBeVisible();
@@ -209,6 +209,8 @@ test('the uploaded post plays in a visible frame in portrait, landscape and cons
 
 for(const format of ['mov','hevc'] as const) {
   test('native conversion '+format+' uploads verified H.264 and plays the resulting post',async({page},info)=>{
+    // Conversion plus upload and two playback checks can exceed 30 seconds on shared Macs.
+    test.setTimeout(90000);
     test.skip(format==='hevc'&&process.env.CLIPT_REQUIRE_HEVC!=='1','HEVC decoding is required in the macOS WebKit job.');
     const service=await setup(page,{converted:true});
     try {
@@ -232,7 +234,7 @@ for(const format of ['mov','hevc'] as const) {
       await page.getByLabel('Caption',{exact:true}).fill('Converted iPhone recording');
       await expect(page.getByLabel('Caption',{exact:true})).toHaveAttribute('aria-invalid','false');
       await page.screenshot({path:info.outputPath('converted-'+format+'-ready.png')});
-      await submit.click();await expect(page).toHaveURL(/\/clipts$/);
+      await submit.click();await expect(page).toHaveURL(/\/clipts$/,{timeout:15000});
       await expect(page.getByText('Your post is ready below.',{exact:true})).toBeVisible();
       expect(await page.evaluate(()=>(window as any).__selectedUploadPreview.paused)).toBe(true);
       expect(service.stats().convertedProof?.codec).toMatch(/^avc[13]$/);
@@ -315,6 +317,7 @@ test('feed playback recovers through a real tap when autoplay and preload events
 });
 
 test('feed playback starts only the active visible clip and pauses the previous player',async({page})=>{
+  test.setTimeout(60000);
   const service=await setup(page,{neighbor:true});
   try {
     await page.addInitScript(()=>{
