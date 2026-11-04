@@ -71,7 +71,7 @@ async function captionFixture(page:Page,hand='right',autoHide=false){
   return {stats,caption};
 }
 for(const hand of ['right','left'])test('white creator and caption remain outside the video and navigation ('+hand+')',async({page},info)=>{
-  const {stats}=await captionFixture(page,hand);
+  const {stats,caption:originalCaption}=await captionFixture(page,hand);
   for(const size of [{width:390,height:844},{width:844,height:390},{width:1280,height:800},{width:768,height:1024},{width:195,height:422}]){
     await page.setViewportSize(size);await openApp(page,'/clipts');
     const footer=page.getByRole('complementary',{name:'Current Clipt details',exact:true});
@@ -79,6 +79,10 @@ for(const hand of ['right','left'])test('white creator and caption remain outsid
     const creator=footer.getByRole('link',{name:"View FirstCreator's profile",exact:true});
     await expect(creator).toHaveText('First Creator');
     expect(await creator.evaluate(element=>getComputedStyle(element).color)).toBe('rgb(255, 255, 255)');
+    const toggle=footer.getByRole('button',{name:'Show caption',exact:true});
+    await expect(toggle).toHaveAttribute('aria-expanded','false');await expect(footer).not.toContainText(originalCaption);
+    await toggle.click();await expect(footer.getByRole('button',{name:'Hide caption',exact:true})).toHaveAttribute('aria-expanded','true');
+    await expect(footer).toContainText(originalCaption);
     const caption=footer.getByRole('button',{name:'Read full caption and comments',exact:true});
     expect(await caption.evaluate(element=>getComputedStyle(element).color)).toBe('rgb(255, 255, 255)');
     const f=(await footer.boundingBox())!,m=(await page.locator('[data-active-clip="true"] .clipt-cinematic-media').boundingBox())!;
@@ -100,7 +104,8 @@ for(const hand of ['right','left'])test('white creator and caption remain outsid
   await page.getByRole('region',{name:'Clipts horizontal feed',exact:true}).focus();await page.keyboard.press('ArrowRight');
   const footer=page.getByRole('complementary',{name:'Current Clipt details',exact:true});
   await expect(footer.getByRole('link',{name:"View SecondCreator's profile",exact:true})).toBeVisible();
-  await expect(footer).toContainText('Second original caption #Gaming');
+  await expect(footer).not.toContainText('Second original caption #Gaming');
+  await footer.getByRole('button',{name:'Show caption',exact:true}).click();await expect(footer).toContainText('Second original caption #Gaming');
   await footer.getByRole('link',{name:"View SecondCreator's profile",exact:true}).click();await expect(page).toHaveURL(new RegExp('/user/'+picked+'$'));
   expect(stats.writes).toHaveLength(0);
 });
@@ -118,6 +123,7 @@ test('caption fades and returns with controls while focus and comments preserve 
   await expect(controller).toHaveAttribute('data-hidden','false');await expect(footer).toBeVisible();
   await footer.getByRole('link',{name:"View FirstCreator's profile",exact:true}).focus();await page.waitForTimeout(10500);
   await expect(controller).toHaveAttribute('data-hidden','false');await expect(footer).toBeVisible();
+  await footer.getByRole('button',{name:'Show caption',exact:true}).click();
   await footer.getByRole('button',{name:'Read full caption and comments',exact:true}).click();
   await expect(page.locator('.clipt-engagement-hud[role="dialog"]')).toBeVisible();
   await expect(page.locator('.clipt-comment-post-details')).toContainText(caption);

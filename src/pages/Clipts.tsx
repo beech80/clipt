@@ -7,7 +7,7 @@ import PostItem from '@/components/PostItem';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { EngagementHud } from '@/components/post/EngagementHud';
-import { RefreshCw, Clapperboard, UsersRound } from 'lucide-react';
+import { RefreshCw, Clapperboard, UsersRound, Eye, EyeOff } from 'lucide-react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { validChannelGame } from '@/lib/channel-feeds';
 import {gameChannel} from '@/lib/game-catalog';
@@ -65,6 +65,7 @@ export default function Clipts() {
   });
   const [activeIndex, setActiveIndex] = useState(0);
   const [engagementOpen, setEngagementOpen] = useState(false);
+  const [captionPostId, setCaptionPostId] = useState<string | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const navigationTargetRef = useRef<number | null>(null);
   const activeIndexRef = useRef(activeIndex);
@@ -212,12 +213,20 @@ export default function Clipts() {
   return <main className="clipt-fyp" data-feed={feed} data-game-channel={gameId||undefined}>
     {gameId&&<GameChannelToolbar gameId={selectedGame.data?.id||gameId} name={invalidGame?'Invalid game channel':selectedGame.data?.name||'Game channel'}>{hasNextPage&&<Button onClick={()=>void fetchNextPage()} disabled={isFetchingNextPage}>Load more clips</Button>}</GameChannelToolbar>}
     {gameId?<div className="clipt-game-channel-viewport">{content}</div>:content}
-    {activePost && <aside className="clipt-feed-caption" data-controller-companion aria-label="Current Clipt details">
+    {activePost && <aside className="clipt-feed-caption" data-caption-visible={captionPostId===activePost.id} data-controller-companion aria-label="Current Clipt details">
+      <div className="clipt-feed-caption-heading">
       <Link className="clipt-feed-caption-creator" to={`/user/${encodeURIComponent(activePost.user_id)}`}
         aria-label={`View ${activePost.profiles?.username || 'creator'}'s profile`}>
         {activePost.profiles?.display_name || activePost.profiles?.username || 'Creator'}
       </Link>
-      {activePost.content && <div className="clipt-feed-caption-text">
+      {activePost.content && <button type="button" className="clipt-feed-caption-toggle"
+        aria-label={captionPostId===activePost.id?'Hide caption':'Show caption'} aria-expanded={captionPostId===activePost.id}
+        aria-controls={'clipt-caption-'+activePost.id} onClick={()=>setCaptionPostId(current=>current===activePost.id?null:activePost.id)}>
+        {captionPostId===activePost.id?<EyeOff size={18} aria-hidden="true"/>:<Eye size={18} aria-hidden="true"/>}
+        <span className="clipt-feed-caption-toggle-label">{captionPostId===activePost.id?'Hide caption':'Show caption'}</span>
+      </button>}
+      </div>
+      {activePost.content && captionPostId===activePost.id && <div id={'clipt-caption-'+activePost.id} className="clipt-feed-caption-text">
         <span className="clipt-feed-caption-preview"><HashtagText text={activePost.content}/></span>
         <button type="button" className="clipt-feed-caption-more" aria-label="Read full caption and comments"
           onClick={() => setEngagementOpen(true)}>…</button>
