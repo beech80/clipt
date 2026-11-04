@@ -19,6 +19,7 @@ import { cancelClipScroll, scrollClipTo } from '@/lib/clip-carousel-scroll';
 import { usePortraitSwipe } from '@/hooks/usePortraitSwipe';
 import {publishingSnapshot,subscribePublishing} from '@/lib/publishing-status';
 import {HomeControlsTour} from '@/components/onboarding/HomeControlsTour';
+import HashtagText from '@/components/post/HashtagText';
 
 const PAGE_SIZE = 20;
 const MEDIA_FILTER = 'and(video_url.not.is.null,video_url.neq.),and(image_url.not.is.null,image_url.neq.)';
@@ -216,8 +217,11 @@ export default function Clipts() {
         aria-label={`View ${activePost.profiles?.username || 'creator'}'s profile`}>
         {activePost.profiles?.display_name || activePost.profiles?.username || 'Creator'}
       </Link>
-      {activePost.content && <button type="button" className="clipt-feed-caption-text" aria-label="Read full caption and comments"
-        onClick={() => setEngagementOpen(true)}><span>{activePost.content}</span></button>}
+      {activePost.content && <div className="clipt-feed-caption-text">
+        <span className="clipt-feed-caption-preview"><HashtagText text={activePost.content}/></span>
+        <button type="button" className="clipt-feed-caption-more" aria-label="Read full caption and comments"
+          onClick={() => setEngagementOpen(true)}>…</button>
+      </div>}
     </aside>}
     <button ref={swipeZoneRef} type="button" className="clipt-bottom-swipe-zone" data-swipe-menu
       aria-label="CLIPT — Open navigation" aria-haspopup="dialog" aria-controls="clipt-navigation-panel"

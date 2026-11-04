@@ -90,7 +90,10 @@ body:has(.clipt-stream-viewer) .clipt-masthead { display: none; }
   color: #fff; background: transparent; border: 0; text-align: left; padding: 0;
 }
 .clipt-feed-caption-creator { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.clipt-feed-caption-text span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; line-height: 1.25; }
+.clipt-feed-caption-preview { flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; line-height: 1.25; }
+.clipt-feed-caption-preview a, .clipt-feed-caption-preview button { color: inherit; }
+.clipt-feed-caption-more { flex: 0 0 44px; min-width: 44px; min-height: 44px; color: inherit; background: transparent; border: 0; font-size: 1.5em; }
+.clipt-feed-caption-more:focus-visible { outline: 2px solid #d8b4fe; outline-offset: -2px; }
 body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp.clipt-fyp .clipt-cinematic-media {
   bottom: calc(var(--clipt-caption-bottom) + var(--clipt-caption-height)) !important;
   height: calc(100% - var(--clipt-caption-bottom) - var(--clipt-caption-height)) !important;
