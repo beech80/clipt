@@ -24,7 +24,7 @@ test('typing Overwatch opens the full catalog and retains the verified game unti
 });
 test('portrait swipe/menu pad follows expanded Safari chrome and stays below the video',async({page})=>{
  await page.addInitScript(()=>{const viewport=Object.assign(new EventTarget(),{width:390,height:620,offsetTop:0,offsetLeft:0,scale:1,pageTop:0,pageLeft:0});Object.defineProperty(window,'visualViewport',{configurable:true,value:viewport});(window as any).chromeViewportFixture=viewport;document.addEventListener('DOMContentLoaded',()=>Object.defineProperty(document.documentElement,'clientHeight',{configurable:true,get:()=>620}),{once:true});});
- await fixture(page);await page.setViewportSize({width:390,height:844});await openApp(page,'/clipts');const pad=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});await expect(pad).toBeVisible();
+ await fixture(page);await page.setViewportSize({width:390,height:844});await openApp(page,'/clipts');await page.getByRole('button',{name:'Fit video',exact:true}).click();const pad=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});await expect(pad).toBeVisible();
  for(const [height,top] of [[620,0],[844,0],[720,10]]){
   await page.evaluate(({height,top})=>{const v=(window as any).chromeViewportFixture;v.height=height;v.offsetTop=top;v.dispatchEvent(new Event('resize'));},{height,top});
   await expect.poll(async()=>Math.round((await pad.boundingBox())!.y+(await pad.boundingBox())!.height)).toBe(height+top);
@@ -34,7 +34,7 @@ test('portrait swipe/menu pad follows expanded Safari chrome and stays below the
 });
 
 for(const hand of ['right','left'])test('roomy computer/tablet CLIPT navigation is centered and separate ('+hand+')',async({page},info)=>{
- await fixture(page,hand);await page.setViewportSize({width:1280,height:800});await openApp(page,'/clipts');
+ await fixture(page,hand);await page.setViewportSize({width:1280,height:800});await openApp(page,'/clipts');await page.getByRole('button',{name:'Fit video',exact:true}).click();
  const home=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});
  const player=page.locator('[data-active-clip="true"] video');await expect(player).toBeVisible();
  await player.evaluate(element=>{element.dataset.wideLayoutProbe='kept';});
@@ -74,6 +74,7 @@ for(const hand of ['right','left'])test('white creator and caption remain outsid
   const {stats,caption:originalCaption}=await captionFixture(page,hand);
   for(const size of [{width:390,height:844},{width:844,height:390},{width:1280,height:800},{width:768,height:1024},{width:195,height:422}]){
     await page.setViewportSize(size);await openApp(page,'/clipts');
+    await page.getByRole('button',{name:'Fit video',exact:true}).click();
     const footer=page.getByRole('complementary',{name:'Current Clipt details',exact:true});
     await expect(footer).toBeVisible();
     const creator=footer.getByRole('link',{name:"View FirstCreator's profile",exact:true});
@@ -129,4 +130,30 @@ test('caption fades and returns with controls while focus and comments preserve 
   await expect(page.locator('.clipt-comment-post-details')).toContainText(caption);
   await expect(video).toHaveAttribute('data-caption-playback-probe','same-player');
   expect(stats.writes).toHaveLength(0);
+});
+
+for(const hand of ['right','left'])test('feed fills the screen by default and Fit video preserves playback ('+hand+')',async({page},info)=>{
+  test.setTimeout(60000);
+  await captionFixture(page,hand);
+  for(const size of [{width:390,height:844},{width:844,height:390},{width:768,height:1024},{width:1280,height:800},{width:195,height:422}]){
+    await page.setViewportSize(size);await openApp(page,'/clipts');
+    const feed=page.locator('.clipt-fyp'),video=page.locator('[data-active-clip="true"] video');
+    await expect(feed).toHaveAttribute('data-video-fit','cover');
+    await expect(video).toBeVisible();
+    await expect.poll(()=>video.evaluate(v=>getComputedStyle(v).objectFit)).toBe('cover');
+    await expect.poll(()=>video.evaluate(v=>{const stage=v.closest('.clipt-fyp-slide')!.getBoundingClientRect(),r=v.getBoundingClientRect();return Math.max(Math.abs(r.x-stage.x),Math.abs(r.y-stage.y),Math.abs(r.width-stage.width),Math.abs(r.height-stage.height));})).toBeLessThanOrEqual(1);
+    await video.evaluate(v=>{v.dataset.fitContinuity='retained';});
+    const source=await video.getAttribute('src');
+    await page.getByRole('button',{name:'Fit video',exact:true}).click();
+    await expect(feed).toHaveAttribute('data-video-fit','contain');
+    await expect.poll(()=>video.evaluate(v=>getComputedStyle(v).objectFit)).toBe('contain');
+    await expect(video).toHaveAttribute('data-fit-continuity','retained');expect(await video.getAttribute('src')).toBe(source);
+    await page.getByRole('button',{name:'Fill screen',exact:true}).click();
+    await expect(feed).toHaveAttribute('data-video-fit','cover');await expect(video).toHaveAttribute('data-fit-continuity','retained');
+    for(const control of await page.locator('.clipt-controller-action:visible,.clipt-controller-home:visible,.clipt-video-fit-toggle').all()){
+      const r=(await control.boundingBox())!;expect(r.x).toBeGreaterThanOrEqual(-1);expect(r.y).toBeGreaterThanOrEqual(-1);expect(r.x+r.width).toBeLessThanOrEqual(size.width+1);expect(r.y+r.height).toBeLessThanOrEqual(size.height+1);
+    }
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&scrollY===0)).toBe(true);
+    await page.screenshot({path:info.outputPath('fill-video-'+hand+'-'+size.width+'x'+size.height+'.png')});
+  }
 });

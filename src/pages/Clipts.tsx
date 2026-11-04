@@ -7,7 +7,7 @@ import PostItem from '@/components/PostItem';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { EngagementHud } from '@/components/post/EngagementHud';
-import { RefreshCw, Clapperboard, UsersRound, Eye, EyeOff } from 'lucide-react';
+import { RefreshCw, Clapperboard, UsersRound, Eye, EyeOff, Scan } from 'lucide-react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { validChannelGame } from '@/lib/channel-feeds';
 import {gameChannel} from '@/lib/game-catalog';
@@ -41,6 +41,7 @@ export default function Clipts() {
   const publishing=publishingState?.owner===user?.id?publishingState:null;
   const [hiddenPublishing,setHiddenPublishing]=useState('');
   const [feed, setFeed] = useState('clipts');
+  const [fitVideo, setFitVideo] = useState(false);
   useEffect(() => {
     const toggle = () => {if(gameId&&!invalidGame){navigate('/live?game='+(selectedGame.data?.id||gameId));return;}setFeed(current => current === 'squad' ? 'clipts' : 'squad');};
     window.addEventListener('clipt:toggle-feed', toggle);
@@ -209,8 +210,11 @@ export default function Clipts() {
           : <div className="clipt-fyp-placeholder">Clipt {index + 1}</div>}
       </section>)}
     </div>}
+    {activePost?.video_url && <button type="button" className="clipt-video-fit-toggle" data-controller-companion
+      aria-label={fitVideo?'Fill screen':'Fit video'} title={fitVideo?'Fill screen (crops edges)':'Fit video (show the full frame)'}
+      onClick={()=>setFitVideo(current=>!current)}><Scan size={20} aria-hidden="true"/><span>{fitVideo?'Fill screen':'Fit video'}</span></button>}
   </>;
-  return <main className="clipt-fyp" data-feed={feed} data-game-channel={gameId||undefined}>
+  return <main className="clipt-fyp" data-feed={feed} data-video-fit={activePost?.video_url?(fitVideo?'contain':'cover'):undefined} data-game-channel={gameId||undefined}>
     {gameId&&<GameChannelToolbar gameId={selectedGame.data?.id||gameId} name={invalidGame?'Invalid game channel':selectedGame.data?.name||'Game channel'}>{hasNextPage&&<Button onClick={()=>void fetchNextPage()} disabled={isFetchingNextPage}>Load more clips</Button>}</GameChannelToolbar>}
     {gameId?<div className="clipt-game-channel-viewport">{content}</div>:content}
     {activePost && <aside className="clipt-feed-caption" data-caption-visible={captionPostId===activePost.id} data-controller-companion aria-label="Current Clipt details">
