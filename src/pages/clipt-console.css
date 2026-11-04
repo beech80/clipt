@@ -889,3 +889,12 @@ body:has(.clipt-controller[data-mobile-v2="true"][data-portrait-viewing="true"])
 .clipt-ranked-video { min-width: 0; width: 100%; }
 .clipt-hud-comments form textarea { min-width: 0; width: 100%; min-height: 44px; font-size: 16px; }
 @media(max-width:767px) { .clipt-hud-comments form > .relative > div > .clipt-mention-input { grid-column: 1 / -1; } }
+
+/* Posting stays usable under page zoom; controls wrap rather than widen the page. */
+.clipt-create-layout { min-width: 0; }
+.clipt-create-layout fieldset { min-inline-size: 0; }
+.clipt-create-layout :is(button,select,input,textarea) { min-width: 0; max-width: 100%; }
+.clipt-create-details { overflow-wrap: anywhere; }
+.clipt-create-details button { height: auto; min-height: 44px; white-space: normal; }
+.clipt-create-media button { height: auto; white-space: normal; }
+@media(max-width:359px) { .clipt-create .clipt-post-destinations { grid-template-columns: 1fr; } }

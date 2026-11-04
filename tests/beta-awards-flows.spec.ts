@@ -101,6 +101,7 @@ test('long @ suggestions wrap at large zoom and keyboard selection scrolls only 
  await expect.poll(()=>list.evaluate(element=>element.scrollTop)).toBeGreaterThan(0);
  const bounds=(await list.boundingBox())!,row=(await selected.boundingBox())!;
  expect(row.y+row.height).toBeLessThanOrEqual(bounds.y+bounds.height+1);
- expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ const width=await page.evaluate(()=>({page:document.documentElement.scrollWidth,viewport:innerWidth,overflows:[...document.querySelectorAll('.clipt-create *')].filter(element=>{const r=element.getBoundingClientRect();return r.width>0&&r.right>innerWidth+1;}).slice(0,8).map(element=>({tag:element.tagName,className:element.className,text:element.textContent?.slice(0,70)}))}));
+ expect(width.page,JSON.stringify(width)).toBeLessThanOrEqual(width.viewport);
  await caption.press('Enter');await expect(caption).toHaveValue('@'+people[7].username+' ');
 });
