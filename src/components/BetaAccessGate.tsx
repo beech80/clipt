@@ -12,7 +12,8 @@ const publicPaths = new Set(['/login', '/signup', '/reset-password', '/forgot-pa
 /** Navigation UX only. Server account eligibility/RLS and Edge guards are authoritative. */
 export function BetaAccessGate({ children }: { children: ReactNode }) {
   const required = import.meta.env.VITE_BETA_ACCESS_REQUIRED === 'true';
-  const { pathname } = useLocation();
+  const { pathname,hash } = useLocation();
+  const next = /^\/post\/[0-9a-f-]{36}$/i.test(pathname) ? '?next='+encodeURIComponent(pathname+(hash==='#comments'?hash:'')) : '';
   const { user, loading, signOut } = useAuth();
   const publicPage = publicPaths.has(pathname);
   const access = useQuery({
@@ -37,7 +38,7 @@ export function BetaAccessGate({ children }: { children: ReactNode }) {
     {access.isError ? <><p role="alert">We couldn’t verify your account access. Please retry.</p>
       <button type="button" disabled={access.isFetching} onClick={() => void access.refetch()}>Retry access check</button></>
       : user ? <p role="status">This account cannot currently access the beta. Confirm your email or contact support for help.</p>
-      : <><Link className="block" to="/signup">Create a free account</Link><Link className="block" to="/login">Sign in</Link></>}
+      : <><Link className="block" to="/signup">Create a free account</Link><Link className="block" to={"/login"+next}>Sign in</Link></>}
     {user && <button type="button" onClick={() => void signOut().catch(() => undefined)}>Sign out to switch accounts</button>}
     <a className="block" href="mailto:beecher@cliptgaming.com">Contact beta support</a>
     <Link className="block" to="/delete-account">Manage account deletion</Link>

@@ -45,7 +45,7 @@
 .clipt-fyp-brand { grid-column: 2; }
 .clipt-watch-page { color: #f5f3ff; background: radial-gradient(ellipse at 15% 5%,#7e22ce55,transparent 60%),linear-gradient(145deg,#1b102d99,#090510cc); }
 .clipt-watch-content { width: 100%; max-width: 960px; min-width: 0; }
-.clipt-watch-media .clipt-video-frame { aspect-ratio: auto !important; height: clamp(160px,calc(100dvh - var(--clipt-page-controller-space,160px) - 272px),640px); }
+.clipt-watch-media .clipt-video-frame { display: flex; align-items: center; justify-content: center; overflow: hidden; aspect-ratio: auto !important; height: clamp(160px,calc(100dvh - var(--clipt-page-controller-space,160px) - 272px),640px); }
 @media (max-height: 600px) {
   .clipt-watch-page > .clipt-watch-topbar { padding: 8px 12px; min-height: 60px; }
   .clipt-watch-page .clipt-watch-content { padding: 8px 12px calc(var(--clipt-page-controller-space,160px) + 24px); }
@@ -423,11 +423,11 @@ html.high-contrast .clipt-engagement-hud[role="dialog"], html.high-contrast .cli
 @media(min-width:768px) {
   .clipt-rankings { grid-template-columns: repeat(3,minmax(0,1fr)); }
   .clipt-rankings > li:nth-child(-n+3) { min-height: 240px; display: grid; align-items: center; border-width: 2px; }
-  .clipt-rankings > li:nth-child(-n+3) > div { display: grid; grid-template-columns: auto auto; justify-content: center; text-align: center; }
-  .clipt-rankings > li:nth-child(-n+3) > div > span:first-child { width: auto; font-size: 64px; line-height: 1; text-shadow: 0 0 18px #fbbf2440; }
-  .clipt-rankings > li:nth-child(-n+3) > div > span:nth-child(2) { width: 88px; height: 88px; border: 2px solid #c084fc; box-shadow: 0 0 15px #9333ea80; }
-  .clipt-rankings > li:nth-child(-n+3) > div > div, .clipt-rankings > li:nth-child(-n+3) > div > span:last-child { grid-column: 1 / -1; }
-  .clipt-rankings > li:nth-child(-n+3) > div > span:last-child { font-size: 18px; padding: 8px; border-top: 1px solid #a855f740; }
+  .clipt-rankings > li:nth-child(-n+3) > .clipt-ranking-summary { display: grid; grid-template-columns: auto auto; justify-content: center; text-align: center; }
+  .clipt-rankings > li:nth-child(-n+3) > .clipt-ranking-summary > span:first-child { width: auto; font-size: 64px; line-height: 1; text-shadow: 0 0 18px #fbbf2440; }
+  .clipt-rankings > li:nth-child(-n+3) > .clipt-ranking-summary > span:nth-child(2) { width: 88px; height: 88px; border: 2px solid #c084fc; box-shadow: 0 0 15px #9333ea80; }
+  .clipt-rankings > li:nth-child(-n+3) > .clipt-ranking-summary > div, .clipt-rankings > li:nth-child(-n+3) > .clipt-ranking-summary > span:last-child { grid-column: 1 / -1; }
+  .clipt-rankings > li:nth-child(-n+3) > .clipt-ranking-summary > span:last-child { font-size: 18px; padding: 8px; border-top: 1px solid #a855f740; }
   .clipt-rankings > li:first-child { grid-column: 2; grid-row: 1; box-shadow: 0 0 22px #fbbf2430; }
   .clipt-rankings > li:nth-child(2) { grid-column: 1; grid-row: 1; }
   .clipt-rankings > li:nth-child(3) { grid-column: 3; grid-row: 1; }
@@ -882,3 +882,21 @@ body:has(.clipt-controller[data-mobile-v2="true"][data-portrait-viewing="true"])
 .clipt-profile-edit-tabs > button { flex: 1 1 96px; min-width: 0; min-height: 44px; height: auto; white-space: normal; overflow-wrap: anywhere; }
 .clipt-profile-edit form, .clipt-profile-edit form .flex-1 { min-width: 0; max-width: 100%; }
 .clipt-profile-edit button { max-width: 100%; white-space: normal; height: auto; min-height: 44px; }
+
+/* Pin the replaced media element to the measured frame, including Safari native controls. */
+.clipt-watch-media .clipt-video-frame > video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; background: #000; }
+
+.clipt-ranked-video { min-width: 0; width: 100%; }
+.clipt-hud-comments form textarea { min-width: 0; width: 100%; min-height: 44px; font-size: 16px; }
+@media(max-width:767px) { .clipt-hud-comments form > .relative > div > .clipt-mention-input { grid-column: 1 / -1; } }
+
+/* Posting stays usable under page zoom; controls wrap rather than widen the page. */
+.clipt-create-layout { min-width: 0; }
+.clipt-create-layout fieldset { min-inline-size: 0; }
+.clipt-create-layout :is(button,select,input,textarea) { min-width: 0; max-width: 100%; }
+.clipt-create-details { overflow-wrap: anywhere; }
+.clipt-create-details button { height: auto; min-height: 44px; white-space: normal; }
+.clipt-create-media button { height: auto; white-space: normal; }
+@media(max-width:359px) { .clipt-create .clipt-post-destinations { grid-template-columns: 1fr; } }
+
+@media(max-width:359px) { .clipt-create > div:first-child { flex-wrap: wrap; } .clipt-create h1 { min-width: 0; flex-wrap: wrap; overflow-wrap: anywhere; } }

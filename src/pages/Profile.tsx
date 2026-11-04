@@ -1,3 +1,4 @@
+import {loadAchievementSnapshot} from '@/lib/achievement-snapshot';
 import ProfileWebsite from '@/components/profile/ProfileWebsite';
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -110,7 +111,7 @@ const Profile = () => {
       const [followers, following, achievements] = await Promise.all([
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileId),
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileId),
-        supabase.from('user_achievements').select('*', { count: 'exact', head: true }).eq('user_id', profileId),
+        profileId===userId ? loadAchievementSnapshot().then(snapshot=>({error:null,count:snapshot.rows.filter(row=>row.completed).length})).catch(()=>supabase.from('user_achievements').select('*',{count:'exact',head:true}).eq('user_id',profileId)) : Promise.resolve({error:null,count:0}),
       ]);
       if (revision !== requestRevision.current) return;
       for (const result of [followers, following, achievements]) {

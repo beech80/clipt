@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Camera, Upload, Globe, Users, FileEdit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { MentionTextarea as Textarea } from '@/components/mentions/MentionTextarea';
 import { BackButton } from '@/components/ui/back-button';
 import { supabase } from '@/lib/supabase';
 import { clipCaption, formatClipSize, MAX_CLIP_BYTES, videoPreviewReady } from '@/lib/clip-upload';

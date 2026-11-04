@@ -43,7 +43,7 @@ export const AchievementProgress = () => {
   }
 
   const inProgressAchievements = progress.filter(
-    p => p.current_value < (p.achievement?.target_value || 0)
+    p => !p.completed && p.current_value < (p.achievement?.target_value || 0)
   );
 
   if (inProgressAchievements.length === 0 && !streaks?.length) {

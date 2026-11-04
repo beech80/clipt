@@ -1,3 +1,4 @@
+import {HashtagText} from '@/components/post/HashtagText';
 import React, { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -206,7 +207,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                       </span>
                     )}
                   </div>
-                  <p className="text-sm whitespace-pre-wrap break-words">{comment.content}</p>
+                  <p className="text-sm whitespace-pre-wrap break-words"><HashtagText text={comment.content}/></p>
                 </div>
               </>
             )}

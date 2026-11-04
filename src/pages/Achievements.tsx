@@ -1,5 +1,6 @@
 
 import React from 'react';
+import {loadAchievementSnapshot} from '@/lib/achievement-snapshot';
 import { Card } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Progress } from "@/components/ui/progress";
@@ -15,23 +16,7 @@ export default function Achievements() {
 
   const progressQuery = useQuery({
     queryKey: ['achievement-progress', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('achievement_progress')
-        .select(`
-          *,
-          achievement:achievements(*)
-        `)
-        .eq('user_id', user?.id)
-        // React Query owns retries; avoid multiplying its backoff with SDK retries.
-        .retry(false);
-
-      if (error) throw error;
-      return data.map(progress => ({
-        ...progress,
-        completed: !!progress.achievement && progress.current_value >= progress.achievement.target_value,
-      }));
-    },
+    queryFn: loadAchievementSnapshot,
     enabled: !!user?.id,
   });
 
@@ -50,7 +35,7 @@ export default function Achievements() {
     },
   });
 
-  const achievementProgress = progressQuery.data;
+  const achievementProgress = progressQuery.data?.rows;
   const achievements = achievementsQuery.data;
   const unavailable = progressQuery.isError || achievementsQuery.isError;
   const pending = progressQuery.isPending || achievementsQuery.isPending;
@@ -113,9 +98,10 @@ export default function Achievements() {
           </div>
           <div className="text-right">
             <p className="text-2xl font-bold text-yellow-500">{totalPoints} pts</p>
-            <p className="text-sm text-muted-foreground">Total Points Earned</p>
+            <p className="text-sm text-muted-foreground">Achievement Points</p><p className="text-yellow-200">{progressQuery.data?.trophies ?? 0} Trophies received</p>
           </div>
         </div>
+        <Button variant="outline" disabled={progressQuery.isFetching} onClick={()=>void progressQuery.refetch()}>Refresh achievements</Button>
         <Separator />
       </div>
 
@@ -133,7 +119,7 @@ export default function Achievements() {
               ?.filter(a => category === 'all' || a.category === category)
               .map(achievement => {
                 const progress = getProgressForAchievement(achievement.id);
-                const progressPercent = progress && achievement.target_value > 0
+                const progressPercent = progress?.tracked && achievement.target_value > 0
                   ? (progress.current_value / achievement.target_value) * 100
                   : 0;
 
@@ -167,8 +153,8 @@ export default function Achievements() {
 
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span>{progress?.completed ? 'Completed!' : 'Progress'}</span>
-                          <span>{Math.min(100, Math.round(progressPercent))}%</span>
+                          <span>{progress?.completed ? 'Earned!' : progress?.tracked ? 'Progress' : 'Tracking not available in web beta'}</span>
+                          {progress?.tracked && <span>{Math.min(100, Math.round(progressPercent))}%</span>}
                         </div>
                         <Progress 
                           aria-label={`${achievement.name} progress`}
@@ -176,7 +162,7 @@ export default function Achievements() {
                           className={`h-2 ${progress?.completed ? 'bg-purple-900/20' : ''}`}
                         />
                         <p className="text-xs text-muted-foreground">
-                          {progress?.current_value || 0} / {achievement.target_value} {achievement.progress_type === 'count' ? 'times' : 'points'}
+                          {progress?.tracked ? `${progress.current_value} / ${achievement.target_value}` : 'Requires verified event tracking before this award can be earned.'}
                         </p>
                       </div>
                     </div>

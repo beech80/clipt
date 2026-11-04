@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { loadAchievementSnapshot } from '@/lib/achievement-snapshot';
 import type { Achievement, AchievementProgress } from '@/types/profile';
 
 // Default achievement data to create for new users
@@ -361,15 +361,13 @@ const sampleUserProgress = [
 
 export const achievementService = {
   async getUserAchievements(userId: string): Promise<AchievementProgress[]> {
-    const { data, error } = await supabase.from('achievement_progress')
-      .select('*, achievement:achievements(*)').eq('user_id', userId).limit(500);
-    if (error) throw error;
-    return data.filter(row => row.achievement).map(row => {
+    const { rows: data } = await loadAchievementSnapshot();
+    return data.filter(row => row.achievement && (row.tracked || row.completed)).map(row => {
       const achievement = row.achievement;
       return {
-        id: row.id, userId: row.user_id, achievementId: row.achievement_id,
+        id: row.id ?? row.achievement_id, userId: row.user_id, achievementId: row.achievement_id,
         currentValue: row.current_value ?? 0,
-        completed: (row.current_value ?? 0) >= achievement.target_value,
+        completed: row.completed,
         achievement: {
           id: achievement.id, name: achievement.name, description: achievement.description,
           target_value: achievement.target_value, points: achievement.points,
