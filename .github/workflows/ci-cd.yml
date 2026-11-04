@@ -100,7 +100,7 @@ jobs:
 
   iphone-codec-webkit:
     needs: browser-local-fixtures
-    runs-on: macos-15
+    runs-on: macos-15-intel
     timeout-minutes: 20
     env:
       CLIPT_REQUIRE_HEVC: '1'
