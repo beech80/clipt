@@ -1,3 +1,4 @@
+import { MAX_CLIP_BYTES, formatClipSize } from '@/lib/clip-upload';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Video } from "lucide-react";
@@ -22,8 +23,8 @@ const VideoUpload = ({
   const handleVideoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 100000000) { // 100MB limit
-        toast.error("Video size should be less than 100MB");
+      if (file.size > MAX_CLIP_BYTES) {
+        toast.error(`Video size must be ${formatClipSize(MAX_CLIP_BYTES)} or smaller`);
         if (event.target) {
           event.target.value = ''; // Reset input
         }

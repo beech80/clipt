@@ -13,7 +13,7 @@ This preview is still under verification. It is not a production launch or a pro
 
 Open Post and choose Photo, Video or Live. For a photo or video, choose your media, add a caption and optional hashtags/game, then select a destination: Clipts for public discovery, Squad for your eligible followers, or Draft to keep it unpublished. Submit once and wait for confirmed publication or draft saving. Live opens stream setup; setup alone does not mean you are broadcasting.
 
-The current video upload limit is 50 MB. H.264 MP4 is recommended; WebM is accepted. Automatic conversion of new HEVC uploads is not available. Photo files have their own type/size checks; follow the upload form's validation message. A failed upload is not a saved draft. Squad posting depends on server-confirmed privacy support and must not fall back to public posting when unavailable. Scheduled publishing is not enabled. Private-media verification remains a beta gate; downloaded copies and previously issued links may outlive a visibility change.
+The current video upload limit is 100 MB. H.264 MP4 is recommended; WebM is accepted. HEVC/MOV files are converted to a compatible MP4 on supported devices; otherwise export an H.264 MP4 copy. Photo files have their own type/size checks; follow the upload form's validation message. A failed upload is not a saved draft. Squad posting depends on server-confirmed privacy support and must not fall back to public posting when unavailable. Scheduled publishing is not enabled. Private-media verification remains a beta gate; downloaded copies and previously issued links may outlive a visibility change.
 
 A network or reward error is not proof that publication failed. Check your profile before uploading the same video again.
 

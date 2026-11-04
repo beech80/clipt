@@ -6,7 +6,7 @@ const source = stripTypeScriptTypes(readFileSync(new URL('../../src/lib/clip-upl
 const {validateClipFile,clipCaption,clipUploadError,formatClipSize,MAX_CLIP_BYTES,videoPreviewReady} = await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 
 test('upload failures explain the cause without claiming an unsaved draft exists',()=>{
-  for(const [error,expected] of [[{statusCode:413},/50 MB/],[{statusCode:401},/sign-in expired/],[{statusCode:403},/MFA/],[{message:'mime type denied'},/format/],[{statusCode:429},/rate limited/],[{message:'private provider error'},/connection/]]) {
+  for(const [error,expected] of [[{statusCode:413},/100 MB/],[{statusCode:401},/sign-in expired/],[{statusCode:403},/MFA/],[{message:'mime type denied'},/format/],[{statusCode:429},/rate limited/],[{message:'private provider error'},/connection/]]) {
     const message=clipUploadError(error);
     assert.match(message,expected);assert.match(message,/no new draft was saved/);assert.doesNotMatch(message,/private provider error|draft is still here/);
   }
@@ -14,7 +14,7 @@ test('upload failures explain the cause without claiming an unsaved draft exists
 test('clip upload rejects empty, oversized and non-video inputs',async () => {
   await assert.rejects(validateClipFile(new File([],'empty.mp4',{type:'video/mp4'})));
   await assert.rejects(validateClipFile(new File(['<svg/>'],'bad.svg',{type:'image/svg+xml'})));
-  await assert.rejects(validateClipFile({type:'video/mp4',size:52428801}));
+  await assert.rejects(validateClipFile({type:'video/mp4',size:MAX_CLIP_BYTES+1}),/upload limit is 100 MB/);
 });
 test('clip upload detects HEVC sample entries including trailing metadata',async () => {
   for (const codec of ['hvc1','hev1']) {
@@ -32,13 +32,13 @@ test('clip caption validates and normalizes hashtags',() => {
 
 test('video selection distinguishes unreadable Photos files from an oversized export',async()=>{
   await assert.rejects(validateClipFile(new File([],'cloud-export.mp4',{type:'video/mp4'})),error=>/empty or could not be read/.test(error.message)&&/Download it to your device/.test(error.message)&&!/between 1 byte/.test(error.message));
-  await assert.rejects(validateClipFile({type:'video/mp4',size:51*1024*1024}),/This video is 51 MB.*limit is 50 MB/);
-  await assert.rejects(validateClipFile({type:'video/mp4',size:MAX_CLIP_BYTES+1}),/50\.1 MB/);
-  assert.equal(formatClipSize(MAX_CLIP_BYTES),'50 MB');
+  await assert.rejects(validateClipFile({type:'video/mp4',size:101*1024*1024}),/This video is 101 MB.*limit is 100 MB/);
+  await assert.rejects(validateClipFile({type:'video/mp4',size:MAX_CLIP_BYTES+1}),/100\.1 MB/);
+  assert.equal(formatClipSize(MAX_CLIP_BYTES),'100 MB');
   assert.equal(formatClipSize(0),'0 bytes');assert.equal(formatClipSize(1),'1 byte');
 });
 test('videos at and below the storage size boundary remain accepted',async()=>{
-  for(const size of [1,49*1024*1024,MAX_CLIP_BYTES])await validateClipFile({type:'video/webm',size});
+  for(const size of [1,49*1024*1024,Math.floor(55.2*1024*1024),99*1024*1024,MAX_CLIP_BYTES])await validateClipFile({type:'video/webm',size});
   for(const size of [-1,NaN,Infinity,0])await assert.rejects(validateClipFile({type:'video/webm',size}),/empty or could not be read/);
 });
 
