@@ -93,7 +93,7 @@ for(const hand of ['right','left'])test('captions appear only in Comments and st
     await expect(details.getByRole('link',{name:'@FirstCreator',exact:true})).toHaveAttribute('href','/user/'+owner);
     await expect(details.getByRole('link',{name:'#Gaming',exact:true})).toBeVisible();
     await expect(video).toHaveAttribute('data-comments-continuity','same-player');
-    await page.getByRole('button',{name:'Back to controls',exact:true}).click();
+    await page.locator('.clipt-engagement-hud .clipt-panel-close').click();
     await expect(page.locator('.clipt-engagement-hud[role="dialog"]')).toHaveCount(0);
     await expect(page.locator('.clipt-feed-caption')).toHaveCount(0);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&scrollY===0)).toBe(true);
