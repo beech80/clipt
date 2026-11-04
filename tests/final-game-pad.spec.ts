@@ -101,7 +101,7 @@ for(const hand of ['right','left'])test('white creator and caption remain outsid
   const footer=page.getByRole('complementary',{name:'Current Clipt details',exact:true});
   await expect(footer.getByRole('link',{name:"View SecondCreator's profile",exact:true})).toBeVisible();
   await expect(footer).toContainText('Second original caption #Gaming');
-  await footer.getByRole('link').click();await expect(page).toHaveURL(new RegExp('/user/'+picked+'$'));
+  await footer.getByRole('link',{name:"View SecondCreator's profile",exact:true}).click();await expect(page).toHaveURL(new RegExp('/user/'+picked+'$'));
   expect(stats.writes).toHaveLength(0);
 });
 test('caption fades and returns with controls while focus and comments preserve it',async({page})=>{
@@ -116,7 +116,7 @@ test('caption fades and returns with controls while focus and comments preserve 
   expect((await page.locator('[data-active-clip="true"] .clipt-cinematic-media').boundingBox())!.height).toBe(initial.height);
   await page.locator('[data-active-clip="true"] .clipt-cinematic-media').click({position:{x:10,y:10}});
   await expect(controller).toHaveAttribute('data-hidden','false');await expect(footer).toBeVisible();
-  await footer.getByRole('link').focus();await page.waitForTimeout(10500);
+  await footer.getByRole('link',{name:"View FirstCreator's profile",exact:true}).focus();await page.waitForTimeout(10500);
   await expect(controller).toHaveAttribute('data-hidden','false');await expect(footer).toBeVisible();
   await footer.getByRole('button',{name:'Read full caption and comments',exact:true}).click();
   await expect(page.locator('.clipt-engagement-hud[role="dialog"]')).toBeVisible();
