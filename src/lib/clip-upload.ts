@@ -1,10 +1,10 @@
-export const MAX_CLIP_BYTES = 50 * 1024 * 1024;
+export const MAX_CLIP_BYTES = 100 * 1024 * 1024;
 
 export function formatClipSize(bytes: number) {
   if (bytes < 1024) return `${bytes} ${bytes === 1 ? "byte" : "bytes"}`;
   const unit = bytes < 1024 * 1024 ? "KB" : "MB";
   const divisor = unit === "KB" ? 1024 : 1024 * 1024;
-  // Round upward so a file just over the limit never reads as exactly 50 MB.
+  // Round upward so a file just over the limit never reads as exactly the size limit.
   return `${Math.ceil(bytes / divisor * 10) / 10} ${unit}`;
 }
 
@@ -12,7 +12,7 @@ export function clipUploadError(error: { statusCode?: string | number; message?:
   const status = Number(error.statusCode);
   const detail = error.message?.toLowerCase() ?? '';
   const retained = ' Your video and caption remain in this form; no new draft was saved.';
-  if (status === 413 || /size|too large/.test(detail)) return 'This video exceeds the upload size limit of 50 MB.' + retained;
+  if (status === 413 || /size|too large/.test(detail)) return `This video exceeds the upload size limit of ${formatClipSize(MAX_CLIP_BYTES)}.` + retained;
   if (status === 401) return 'Your sign-in expired. Sign in again before uploading.' + retained;
   if (status === 403 || /row.level|unauthorized|permission/.test(detail)) return 'Upload access was denied. Complete any required MFA and retry; otherwise the development storage permissions need checking.' + retained;
   if (/mime|content.type/.test(detail)) return 'This video format is not accepted. Export H.264 MP4 or WebM and retry.' + retained;

@@ -1,4 +1,4 @@
-import { MAX_CLIP_BYTES } from './clip-upload';
+import { MAX_CLIP_BYTES, formatClipSize } from './clip-upload';
 
 export type ClipConversionOptions = { signal?: AbortSignal; onProgress?: (progress: number) => void };
 type MediaLibrary = typeof import('mediabunny');
@@ -53,7 +53,7 @@ export async function convertClip(file: File, options: ClipConversionOptions = {
     check();
     const data = (output.target as InstanceType<typeof media.BufferTarget>).buffer;
     if (!data?.byteLength) throw new Error('Video conversion produced no playable data. Choose another copy.');
-    if (data.byteLength > MAX_CLIP_BYTES) throw new Error('The converted video exceeds 50 MB. Trim it and try again.');
+    if (data.byteLength > MAX_CLIP_BYTES) throw new Error(`The converted video exceeds ${formatClipSize(MAX_CLIP_BYTES)}. Trim it and try again.`);
     const result = new File([data], file.name.replace(/\.[^.]+$/, '') + '-compatible.mp4', { type: 'video/mp4', lastModified: file.lastModified });
     const inspection = new media.Input({ formats: [media.MP4], source: new media.BlobSource(result) });
     try {
@@ -64,7 +64,7 @@ export async function convertClip(file: File, options: ClipConversionOptions = {
     return result;
   } catch (error) {
     check();
-    if (error instanceof Error && /browser cannot|could not|supports videos|exceeds 50 MB|took too long/.test(error.message)) throw error;
+    if (error instanceof Error && /browser cannot|could not|supports videos|exceeds .* MB|took too long/.test(error.message)) throw error;
     throw new Error('This video could not be converted on this device. Try a shorter clip or export an H.264 MP4 copy.');
   } finally {
     clearTimeout(timeout); options.signal?.removeEventListener('abort', abort);
