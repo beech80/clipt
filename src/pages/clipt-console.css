@@ -898,3 +898,5 @@ body:has(.clipt-controller[data-mobile-v2="true"][data-portrait-viewing="true"])
 .clipt-create-details button { height: auto; min-height: 44px; white-space: normal; }
 .clipt-create-media button { height: auto; white-space: normal; }
 @media(max-width:359px) { .clipt-create .clipt-post-destinations { grid-template-columns: 1fr; } }
+
+@media(max-width:359px) { .clipt-create > div:first-child { flex-wrap: wrap; } .clipt-create h1 { min-width: 0; flex-wrap: wrap; overflow-wrap: anywhere; } }
