@@ -76,6 +76,7 @@ body:has(.clipt-stream-viewer) .clipt-masthead { display: none; }
 /* Caption and creator share the controller's visibility, outside the picture. */
 .clipt-fyp {
   --clipt-caption-height: max(52px,3.25rem);
+  --clipt-media-caption-height: var(--clipt-caption-height);
   --clipt-caption-bottom: calc(12px + env(safe-area-inset-bottom,0px));
 }
 .clipt-feed-caption {
@@ -95,8 +96,8 @@ body:has(.clipt-stream-viewer) .clipt-masthead { display: none; }
 .clipt-feed-caption-more { flex: 0 0 44px; min-width: 44px; min-height: 44px; color: inherit; background: transparent; border: 0; font-size: 1.5em; }
 .clipt-feed-caption-more:focus-visible { outline: 2px solid #d8b4fe; outline-offset: -2px; }
 body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp.clipt-fyp .clipt-cinematic-media {
-  bottom: calc(var(--clipt-caption-bottom) + var(--clipt-caption-height)) !important;
-  height: calc(100% - var(--clipt-caption-bottom) - var(--clipt-caption-height)) !important;
+  bottom: calc(var(--clipt-caption-bottom) + var(--clipt-media-caption-height)) !important;
+  height: calc(100% - var(--clipt-caption-bottom) - var(--clipt-media-caption-height)) !important;
 }
 body:has(.clipt-controller[data-hidden="true"]) .clipt-feed-caption,
 body:has(.clipt-controller[data-mobile-v2="true"][data-layout="classic"][data-expanded="false"]) .clipt-feed-caption { opacity: 0; visibility: hidden; pointer-events: none; }
@@ -115,7 +116,7 @@ body:has(.clipt-controller[data-portrait-viewing="true"][data-hand="left"]) .cli
   left: calc(78px + env(safe-area-inset-left,0px)); right: max(12px,env(safe-area-inset-right,0px));
 }
 @media(min-width:600px) and (min-height:500px) and (orientation:landscape) {
-  .clipt-fyp { --clipt-caption-bottom: calc(80px + env(safe-area-inset-bottom,0px)); }
+  .clipt-fyp { --clipt-caption-bottom: calc(80px + env(safe-area-inset-bottom,0px)); --clipt-media-caption-height: max(96px,6rem); }
   .clipt-feed-caption { left: max(200px,env(safe-area-inset-left,0px)); right: max(200px,env(safe-area-inset-right,0px)); }
 }
 @media(min-width:600px) and (min-height:500px) and (orientation:portrait) {
