@@ -116,3 +116,14 @@ test('a manually typed mention opens the same profile regardless of letter case'
  await page.locator('.clipt-post-caption').getByRole('button',{name:"View @beecher89's profile",exact:true}).click();
  await expect(page).toHaveURL(new RegExp('/user/'+creator+'$'));
 });
+
+for(const size of [{width:390,height:844},{width:1024,height:768}])test('feed caption displays a tagged username and opens that profile at '+size.width,async({page})=>{
+ const f=await setup(page);await page.setViewportSize(size);
+ await page.route('**/rest/v1/public_clipt_discovery?**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:postId,user_id:creator,content:'A real #gaming @beecher89 caption',video_url:'/tests/fixtures/clip-test-h264.mp4',image_url:null,is_published:true,post_type:'clipt',created_at:'2026-11-03T00:00:00Z',profiles:{username:'Beecher89',avatar_url:null}}])}));
+ await openApp(page,'/clipts');const footer=page.getByRole('complementary',{name:'Current Clipt details',exact:true});
+ const tag=footer.getByRole('button',{name:"View @beecher89's profile",exact:true});
+ await expect(tag).toBeVisible();await expect(tag).toHaveText('@beecher89');
+ expect(await tag.evaluate(element=>getComputedStyle(element).color)).toBe('rgb(255, 255, 255)');
+ expect(await tag.evaluate(element=>Boolean(element.parentElement?.closest('button')))).toBe(false);
+ await tag.click();await expect(page).toHaveURL(new RegExp('/user/'+creator+'$'));expect(f.writes()).toBe(0);
+});
