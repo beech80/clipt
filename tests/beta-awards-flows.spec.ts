@@ -7,7 +7,7 @@ const achievement={id:'00000000-0000-4000-8000-000000000082',name:'Clip Rookie',
 async function setup(page:Page){
  const user={id:owner,aud:'authenticated',role:'authenticated',email:'fixture@example.invalid',app_metadata:{},user_metadata:{},created_at:'2026-09-19T00:00:00Z',factors:[]};
  const profile={id:creator,username:'Beecher89',display_name:'Beecher',avatar_url:null};
- const post={id:postId,user_id:creator,content:'A real #gaming @Beecher89 caption',video_url:'http://127.0.0.1:54321/fixture-video.mp4',image_url:null,post_type:'clipt',is_published:true,is_premium:false,is_subscriber_only:false,created_at:'2026-11-03T00:00:00Z',profiles:profile};
+ const post={id:postId,user_id:creator,content:'A real #gaming @beecher89 caption',video_url:'http://127.0.0.1:54321/fixture-video.mp4',image_url:null,post_type:'clipt',is_published:true,is_premium:false,is_subscriber_only:false,created_at:'2026-11-03T00:00:00Z',profiles:profile};
  let refreshes=0,writes=0;
  await page.addInitScript(({user})=>{
   const exp=Math.floor(Date.now()/1000)+3600,enc=(v:object)=>btoa(JSON.stringify(v)).replaceAll('=','').replaceAll('+','-').replaceAll('/','_');
@@ -104,4 +104,15 @@ test('long @ suggestions wrap at large zoom and keyboard selection scrolls only 
  const width=await page.evaluate(()=>({page:document.documentElement.scrollWidth,viewport:innerWidth,overflows:[...document.querySelectorAll('.clipt-create *')].filter(element=>{const r=element.getBoundingClientRect();return r.width>0&&r.right>innerWidth+1;}).slice(0,8).map(element=>({tag:element.tagName,className:element.className,text:element.textContent?.slice(0,70)}))}));
  expect(width.page,JSON.stringify(width)).toBeLessThanOrEqual(width.viewport);
  await caption.press('Enter');await expect(caption).toHaveValue('@'+people[7].username+' ');
+});
+
+test('a manually typed mention opens the same profile regardless of letter case',async({page})=>{
+ await setup(page);
+ await page.route('**/rest/v1/profiles?select=id&**',route=>{
+  expect(new URL(route.request().url()).searchParams.get('username')).toBe('ilike.beecher89');
+  return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({id:creator})});
+ });
+ await openApp(page,'/post/'+postId);
+ await page.locator('.clipt-post-caption').getByRole('button',{name:"View @beecher89's profile",exact:true}).click();
+ await expect(page).toHaveURL(new RegExp('/user/'+creator+'$'));
 });
