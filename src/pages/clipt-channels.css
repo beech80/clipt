@@ -75,7 +75,7 @@ body:has(.clipt-stream-viewer) .clipt-masthead { display: none; }
 
 /* Caption and creator share the controller's visibility, outside the picture. */
 .clipt-fyp {
-  --clipt-caption-height: max(96px,6rem);
+  --clipt-caption-height: max(52px,3.25rem);
   --clipt-caption-bottom: calc(12px + env(safe-area-inset-bottom,0px));
 }
 .clipt-feed-caption {
@@ -123,3 +123,10 @@ body:has(.clipt-controller[data-portrait-viewing="true"][data-hand="left"]) .cli
 }
 @media(prefers-reduced-motion:reduce) { .clipt-feed-caption { transition: none; } }
 html.reduce-motion .clipt-feed-caption { transition: none; }
+
+.clipt-fyp:has(.clipt-feed-caption[data-caption-visible="true"]) { --clipt-caption-height: max(96px,6rem); }
+.clipt-feed-caption-heading { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.clipt-feed-caption-heading .clipt-feed-caption-creator { flex: 1; width: auto; }
+.clipt-feed-caption-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 44px; flex-shrink: 0; color: inherit; background: transparent; border: 0; padding: 0 4px; }
+.clipt-feed-caption-toggle:focus-visible { outline: 2px solid #d8b4fe; outline-offset: -2px; }
+@media(max-width:320px) { .clipt-feed-caption-toggle-label { display: none; } }

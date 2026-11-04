@@ -126,6 +126,13 @@ for(const size of [{width:390,height:844},{width:1024,height:768}])test('a leadi
  for(const path of ['/clipts','/post/'+postId]){
   await openApp(page,path);
   const caption=path==='/clipts'?page.getByRole('complementary',{name:'Current Clipt details',exact:true}):page.locator('.clipt-post-caption');
+  if(path==='/clipts'){
+   await expect(caption).not.toContainText('@jayteevee2');
+   const show=caption.getByRole('button',{name:'Show caption',exact:true});await expect(show).toHaveAttribute('aria-expanded','false');await show.click();
+   await expect(caption).toContainText('@jayteevee2 test #clipt');
+   await caption.getByRole('button',{name:'Hide caption',exact:true}).click();await expect(caption).not.toContainText('@jayteevee2');
+   await caption.getByRole('button',{name:'Show caption',exact:true}).click();
+  }
   const tag=caption.getByRole('button',{name:"View @jayteevee2's profile",exact:true});
   await expect(tag).toBeVisible();await expect(tag).toHaveText('@jayteevee2');
   if(path==='/clipts')expect(await tag.evaluate(element=>getComputedStyle(element).color)).toBe('rgb(255, 255, 255)');
