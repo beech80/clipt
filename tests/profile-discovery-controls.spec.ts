@@ -250,6 +250,8 @@ test('post Like, Follow, Trophy and comment actions use the current post and pre
 
 
 for(const hand of ['right','left']) test('creator picture opens the current profile without following ('+hand+')',async({page},info)=>{
+  // Five full feed loads and profile transitions need a bounded shared-Mac budget.
+  test.setTimeout(60000);
   await fixture(page,hand);
   await page.addInitScript(owner=>localStorage.setItem('clipt-home-controls-v1:'+owner,'completed'),owner);
   const avatar='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==';
