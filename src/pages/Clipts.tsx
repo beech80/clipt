@@ -20,6 +20,14 @@ import { usePortraitSwipe } from '@/hooks/usePortraitSwipe';
 import {publishingSnapshot,subscribePublishing} from '@/lib/publishing-status';
 import {HomeControlsTour} from '@/components/onboarding/HomeControlsTour';
 
+function subscribeLandscape(onChange: () => void) {
+  const query = window.matchMedia('(orientation: landscape)');
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+}
+function landscapeSnapshot() {
+  return typeof window !== 'undefined' && window.matchMedia('(orientation: landscape)').matches;
+}
 const PAGE_SIZE = 20;
 const MEDIA_FILTER = 'and(video_url.not.is.null,video_url.neq.),and(image_url.not.is.null,image_url.neq.)';
 function centerClip(track: HTMLDivElement, slide: HTMLElement, behavior: ScrollBehavior, quick = false) {
@@ -40,7 +48,9 @@ export default function Clipts() {
   const publishing=publishingState?.owner===user?.id?publishingState:null;
   const [hiddenPublishing,setHiddenPublishing]=useState('');
   const [feed, setFeed] = useState('clipts');
-  const [fitVideo, setFitVideo] = useState(false);
+  const [videoSizing, setVideoSizing] = useState<'auto' | 'contain' | 'cover'>('auto');
+  const [portraitClips, setPortraitClips] = useState<Record<string, boolean>>({});
+  const landscape = useSyncExternalStore(subscribeLandscape, landscapeSnapshot, () => false);
   useEffect(() => {
     const toggle = () => {if(gameId&&!invalidGame){navigate('/live?game='+(selectedGame.data?.id||gameId));return;}setFeed(current => current === 'squad' ? 'clipts' : 'squad');};
     window.addEventListener('clipt:toggle-feed', toggle);
@@ -150,6 +160,7 @@ export default function Clipts() {
     if (posts.length && activeIndex >= posts.length - 3 && hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [activeIndex, posts.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const fitVideo = videoSizing === 'contain' || (videoSizing === 'auto' && landscape && Boolean(activePost && portraitClips[activePost.id]));
   const content = <>
     {gameId&&selectedGame.isError&&<div role="alert" className="clipt-feed-state">Channel could not be loaded. <Button onClick={()=>void selectedGame.refetch()}>Retry channel</Button></div>}
     {gameId&&!invalidGame&&selectedGame.isPending&&<p role="status" className="clipt-feed-state">Loading game channel…</p>}
@@ -210,9 +221,16 @@ export default function Clipts() {
     </div>}
     {activePost?.video_url && <button type="button" className="clipt-video-fit-toggle" data-controller-companion
       aria-label={fitVideo?'Fill screen':'Fit video'} title={fitVideo?'Fill screen (crops edges)':'Fit video (show the full frame)'}
-      onClick={()=>setFitVideo(current=>!current)}><Scan size={20} aria-hidden="true"/><span>{fitVideo?'Fill screen':'Fit video'}</span></button>}
+      onClick={()=>setVideoSizing(fitVideo?'cover':'contain')}><Scan size={20} aria-hidden="true"/><span>{fitVideo?'Fill screen':'Fit video'}</span></button>}
   </>;
-  return <main className="clipt-fyp" data-feed={feed} data-video-fit={activePost?.video_url?(fitVideo?'contain':'cover'):undefined} data-game-channel={gameId||undefined}>
+  return <main className="clipt-fyp" onLoadedMetadataCapture={event => {
+    const video = event.target;
+    if (!(video instanceof HTMLVideoElement) || !video.videoWidth || !video.videoHeight) return;
+    const postId = video.closest('[data-post-id]')?.getAttribute('data-post-id');
+    if (!postId) return;
+    const portrait = video.videoHeight > video.videoWidth;
+    setPortraitClips(current => current[postId] === portrait ? current : {...current, [postId]: portrait});
+  }} data-feed={feed} data-video-fit={activePost?.video_url?(fitVideo?'contain':'cover'):undefined} data-game-channel={gameId||undefined}>
     {gameId&&<GameChannelToolbar gameId={selectedGame.data?.id||gameId} name={invalidGame?'Invalid game channel':selectedGame.data?.name||'Game channel'}>{hasNextPage&&<Button onClick={()=>void fetchNextPage()} disabled={isFetchingNextPage}>Load more clips</Button>}</GameChannelToolbar>}
     {gameId?<div className="clipt-game-channel-viewport">{content}</div>:content}
     <button ref={swipeZoneRef} type="button" className="clipt-bottom-swipe-zone" data-swipe-menu

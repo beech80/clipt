@@ -148,3 +148,41 @@ for(const hand of ['right','left'])test('feed fills the screen by default and Fi
     await page.screenshot({path:info.outputPath('fill-video-'+hand+'-'+size.width+'x'+size.height+'.png')});
   }
 });
+
+for(const hand of ['right','left'])test('portrait clips automatically fit sideways while wide clips fill ('+hand+')',async({page},info)=>{
+  test.setTimeout(90000);
+  await fixture(page,hand);
+  const first={id:postId,user_id:owner,content:'Portrait recording',video_url:'/tests/fixtures/channel-hls/portrait.mp4',image_url:null,is_published:true,post_type:'clipt',created_at:'2026-11-04T00:00:00Z',profiles:{username:'fixture',avatar_url:null}};
+  const second={...first,id:picked,content:'Wide recording',video_url:'/tests/fixtures/clip-test-h264.mp4'};
+  await page.route('**/rest/v1/posts?**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([first,second])}));
+  await page.setViewportSize({width:844,height:390});await openApp(page,'/clipts');
+  const feed=page.locator('.clipt-fyp'),portrait=page.locator('[data-slide-index="0"] video');
+  await expect.poll(()=>portrait.evaluate(v=>v.videoHeight>v.videoWidth&&v.videoWidth>0)).toBe(true);
+  await portrait.evaluate(v=>{v.dataset.orientationContinuity='same-player';});
+  const source=await portrait.getAttribute('src');
+  for(const size of [{width:844,height:390},{width:390,height:844},{width:1024,height:768},{width:768,height:1024},{width:844,height:390}]){
+    await page.setViewportSize(size);
+    const mode=size.width>size.height?'contain':'cover';
+    await expect(feed).toHaveAttribute('data-video-fit',mode);
+    await expect.poll(()=>portrait.evaluate(v=>getComputedStyle(v).objectFit)).toBe(mode);
+    await expect(portrait).toHaveAttribute('data-orientation-continuity','same-player');
+    expect(await portrait.getAttribute('src')).toBe(source);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&scrollY===0)).toBe(true);
+    await page.screenshot({path:info.outputPath('portrait-auto-fit-'+hand+'-'+size.width+'x'+size.height+'.png')});
+  }
+  const track=page.getByRole('region',{name:'Clipts horizontal feed',exact:true});
+  await track.focus();await track.press('ArrowRight');
+  await expect(page.locator('[data-active-clip="true"]')).toHaveAttribute('data-post-id',picked);
+  const wide=page.locator('[data-slide-index="1"] video');
+  await expect.poll(()=>wide.evaluate(v=>v.videoWidth>v.videoHeight&&v.videoHeight>0)).toBe(true);
+  await expect(feed).toHaveAttribute('data-video-fit','cover');
+  await expect.poll(()=>wide.evaluate(v=>{const slide=v.closest('[data-slide-index]')!.getBoundingClientRect(),track=v.closest('[data-horizontal-feed]')!.getBoundingClientRect();return Math.abs(slide.left+slide.width/2-track.left-track.width/2);})).toBeLessThan(2);
+  await track.press('ArrowLeft');
+  await expect(page.locator('[data-active-clip="true"]')).toHaveAttribute('data-post-id',postId);
+  await expect(feed).toHaveAttribute('data-video-fit','contain');
+  await page.getByRole('button',{name:'Fill screen',exact:true}).click();
+  await expect(feed).toHaveAttribute('data-video-fit','cover');
+  await page.getByRole('button',{name:'Fit video',exact:true}).click();
+  await expect(feed).toHaveAttribute('data-video-fit','contain');
+  await expect(portrait).toHaveAttribute('data-orientation-continuity','same-player');
+});
