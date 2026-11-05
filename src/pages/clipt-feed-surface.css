@@ -10,7 +10,7 @@ body:has(.clipt-fyp) .app-container::after { display: none; }
 /* One restrained glow keeps the ribbon sharp without three stacked filters. */
 .clipt-fyp .clipt-swipe-trail path { filter: drop-shadow(0 0 4px #a855f7); transition: opacity 300ms ease-out; }
 
-/* Fill the viewing surface by default; Fit video restores the complete frame.
+/* Fill the viewing surface by default; portrait clips fit automatically in landscape.
    Scope this to the video feed: photos, profile cards and post pages keep their sizing. */
 body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp.clipt-fyp[data-video-fit="cover"] .clipt-cinematic-media:has(video) {
   inset: 0 !important; width: 100% !important; height: 100% !important; min-height: 0;
@@ -25,14 +25,3 @@ body:has(.clipt-controller[data-mobile-v2="true"]) .clipt-fyp.clipt-fyp[data-vid
 .clipt-fyp[data-video-fit="cover"] .clipt-feed-caption {
   background: linear-gradient(transparent,#000b); text-shadow: 0 1px 3px #000,0 0 5px #000;
 }
-.clipt-video-fit-toggle {
-  position: absolute; top: 8px; left: 8px; z-index: 6; display: inline-flex; align-items: center;
-  gap: 6px; min-width: 44px; min-height: 44px; max-width: calc(100% - 16px);
-  padding: 6px 10px; border: 1px solid #ffffff80; border-radius: 12px;
-  background: #000b; color: #fff; font-size: 12px; transition: opacity 300ms ease,visibility 300ms;
-}
-body:has(.clipt-controller[data-hidden="true"]) .clipt-video-fit-toggle,
-body:has(.clipt-engagement-hud[role="dialog"]) .clipt-video-fit-toggle { opacity: 0; visibility: hidden; pointer-events: none; }
-.clipt-video-fit-toggle:focus-visible { outline: 2px solid #e9d5ff; outline-offset: 2px; opacity: 1 !important; visibility: visible !important; pointer-events: auto !important; }
-@media(prefers-reduced-motion:reduce) { .clipt-video-fit-toggle { transition: none; } }
-html.reduce-motion .clipt-video-fit-toggle { transition: none; }

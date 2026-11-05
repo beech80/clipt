@@ -22,31 +22,31 @@ test('typing Overwatch opens the full catalog and retains the verified game unti
  await expect(page.getByRole('combobox',{name:'Game / category',exact:true})).toHaveValue(picked);await expect(page.getByRole('combobox',{name:'Game / category',exact:true}).locator('option:checked')).toHaveText('Overwatch · 2016 · PC');expect(f.resolutions()).toBe(1);expect(f.writes).toHaveLength(0);
  await page.getByLabel('Caption',{exact:true}).fill('Keep the selected game');await page.getByLabel('Clipt video',{exact:true}).setInputFiles(fileURLToPath(new URL('./fixtures/clip-test-h264.mp4',import.meta.url)));await expect(page.getByRole('button',{name:'Post Clipt',exact:true})).toBeEnabled();await page.getByRole('button',{name:'Post Clipt',exact:true}).click();await expect.poll(()=>f.writes.length).toBe(1);expect(f.writes[0].game_id).toBe(picked);expect(f.writes[0].user_id).toBe(owner);
 });
-test('portrait swipe/menu pad follows expanded Safari chrome and stays below the video',async({page})=>{
+test('portrait swipe/menu pad follows expanded Safari chrome at the bottom of the viewing area',async({page})=>{
  await page.addInitScript(()=>{const viewport=Object.assign(new EventTarget(),{width:390,height:620,offsetTop:0,offsetLeft:0,scale:1,pageTop:0,pageLeft:0});Object.defineProperty(window,'visualViewport',{configurable:true,value:viewport});(window as any).chromeViewportFixture=viewport;document.addEventListener('DOMContentLoaded',()=>Object.defineProperty(document.documentElement,'clientHeight',{configurable:true,get:()=>620}),{once:true});});
- await fixture(page);await page.setViewportSize({width:390,height:844});await openApp(page,'/clipts');await page.getByRole('button',{name:'Fit video',exact:true}).click();const pad=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});await expect(pad).toBeVisible();
+ await fixture(page);await page.setViewportSize({width:390,height:844});await openApp(page,'/clipts');const pad=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});await expect(pad).toBeVisible();
  for(const [height,top] of [[620,0],[844,0],[720,10]]){
   await page.evaluate(({height,top})=>{const v=(window as any).chromeViewportFixture;v.height=height;v.offsetTop=top;v.dispatchEvent(new Event('resize'));},{height,top});
   await expect.poll(async()=>Math.round((await pad.boundingBox())!.y+(await pad.boundingBox())!.height)).toBe(height+top);
-  const p=await pad.boundingBox(),video=await page.locator('[data-active-clip="true"] .clipt-cinematic-media').boundingBox();expect(p!.y).toBeGreaterThanOrEqual(video!.y+video!.height);expect(await page.evaluate(()=>scrollY)).toBe(0);
+  const p=await pad.boundingBox(),video=await page.locator('[data-active-clip="true"] .clipt-cinematic-media').boundingBox();expect(video!.y+video!.height).toBeGreaterThanOrEqual(p!.y+p!.height-1);expect(await page.evaluate(()=>scrollY)).toBe(0);
  }
  await pad.click();await expect(page.getByRole('dialog',{name:'CLIPT navigation',exact:true})).toBeVisible();
 });
 
 for(const hand of ['right','left'])test('roomy computer/tablet CLIPT navigation is centered and separate ('+hand+')',async({page},info)=>{
- await fixture(page,hand);await page.setViewportSize({width:1280,height:800});await openApp(page,'/clipts');await page.getByRole('button',{name:'Fit video',exact:true}).click();
+ await fixture(page,hand);await page.setViewportSize({width:1280,height:800});await openApp(page,'/clipts');
  const home=page.getByRole('button',{name:'CLIPT — Open navigation',exact:true});
  const player=page.locator('[data-active-clip="true"] video');await expect(player).toBeVisible();
  await player.evaluate(element=>{element.dataset.wideLayoutProbe='kept';});
  for(const size of [{width:1280,height:800},{width:1024,height:768},{width:768,height:1024}]){
   await page.setViewportSize(size);await expect(home).toBeVisible();
   await expect.poll(async()=>{const r=await home.boundingBox();return r?Math.abs(r.x+r.width/2-size.width/2):Infinity;}).toBeLessThanOrEqual(1);
-  const h=(await home.boundingBox())!;const media=(await page.locator('[data-active-clip="true"] .clipt-cinematic-media').boundingBox())!;expect(h.y).toBeGreaterThanOrEqual(media.y+media.height);expect(h.y+h.height).toBeLessThanOrEqual(size.height);expect(h.y).toBeGreaterThan(size.height-160);
+  const h=(await home.boundingBox())!;expect(h.y+h.height).toBeLessThanOrEqual(size.height);expect(h.y).toBeGreaterThan(size.height-160);
   const socialBottoms:number[]=[];
   for(const button of await page.locator('.clipt-controller-actions > .clipt-controller-action, .clipt-controller-actions > .clipt-feed-flip').all()){
    if(!await button.isVisible())continue;const r=(await button.boundingBox())!;
    expect(h.x+h.width<=r.x||r.x+r.width<=h.x||h.y+h.height<=r.y||r.y+r.height<=h.y).toBe(true);
-   if(size.width>size.height&&await button.getAttribute('data-controller-action')){expect(r.y).toBeGreaterThanOrEqual(media.y+media.height);socialBottoms.push(r.y+r.height);}
+   if(size.width>size.height&&await button.getAttribute('data-controller-action')){expect(r.y).toBeGreaterThanOrEqual(0);socialBottoms.push(r.y+r.height);}
   }
   if(size.width>size.height){expect(socialBottoms).toHaveLength(4);expect(Math.max(...socialBottoms)).toBeGreaterThanOrEqual(size.height-16);expect(Math.max(...socialBottoms)).toBeLessThanOrEqual(size.height);}
   await expect(player).toHaveAttribute('data-wide-layout-probe','kept');
@@ -123,29 +123,24 @@ test('comments remain available after controls fade without restoring a caption 
   expect(stats.writes).toHaveLength(0);
 });
 
-for(const hand of ['right','left'])test('feed fills the screen by default and Fit video preserves playback ('+hand+')',async({page},info)=>{
+for(const hand of ['right','left'])test('automatic sizing keeps the video and controls stable without a Fill/Fit button ('+hand+')',async({page},info)=>{
   test.setTimeout(60000);
-  await captionFixture(page,hand);
+  await captionFixture(page,hand);await page.setViewportSize({width:390,height:844});await openApp(page,'/clipts');
+  const feed=page.locator('.clipt-fyp'),video=page.locator('[data-active-clip="true"] video');
+  await expect(video).toBeVisible();await video.evaluate(v=>{v.dataset.fitContinuity='retained';});
+  const source=await video.getAttribute('src');
   for(const size of [{width:390,height:844},{width:844,height:390},{width:768,height:1024},{width:1280,height:800},{width:195,height:422}]){
-    await page.setViewportSize(size);await openApp(page,'/clipts');
-    const feed=page.locator('.clipt-fyp'),video=page.locator('[data-active-clip="true"] video');
+    await page.setViewportSize(size);
     await expect(feed).toHaveAttribute('data-video-fit','cover');
-    await expect(video).toBeVisible();
     await expect.poll(()=>video.evaluate(v=>getComputedStyle(v).objectFit)).toBe('cover');
     await expect.poll(()=>video.evaluate(v=>{const stage=v.closest('.clipt-fyp-slide')!.getBoundingClientRect(),r=v.getBoundingClientRect();return Math.max(Math.abs(r.x-stage.x),Math.abs(r.y-stage.y),Math.abs(r.width-stage.width),Math.abs(r.height-stage.height));})).toBeLessThanOrEqual(1);
-    await video.evaluate(v=>{v.dataset.fitContinuity='retained';});
-    const source=await video.getAttribute('src');
-    await page.getByRole('button',{name:'Fit video',exact:true}).click();
-    await expect(feed).toHaveAttribute('data-video-fit','contain');
-    await expect.poll(()=>video.evaluate(v=>getComputedStyle(v).objectFit)).toBe('contain');
     await expect(video).toHaveAttribute('data-fit-continuity','retained');expect(await video.getAttribute('src')).toBe(source);
-    await page.getByRole('button',{name:'Fill screen',exact:true}).click();
-    await expect(feed).toHaveAttribute('data-video-fit','cover');await expect(video).toHaveAttribute('data-fit-continuity','retained');
-    for(const control of await page.locator('.clipt-controller-action:visible,.clipt-controller-home:visible,.clipt-video-fit-toggle').all()){
+    await expect(page.getByRole('button',{name:/^(Fill screen|Fit video)$/})).toHaveCount(0);
+    for(const control of await page.locator('.clipt-controller-action:visible,.clipt-controller-home:visible').all()){
       const r=(await control.boundingBox())!;expect(r.x).toBeGreaterThanOrEqual(-1);expect(r.y).toBeGreaterThanOrEqual(-1);expect(r.x+r.width).toBeLessThanOrEqual(size.width+1);expect(r.y+r.height).toBeLessThanOrEqual(size.height+1);
     }
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&scrollY===0)).toBe(true);
-    await page.screenshot({path:info.outputPath('fill-video-'+hand+'-'+size.width+'x'+size.height+'.png')});
+    await page.screenshot({path:info.outputPath('auto-sizing-'+hand+'-'+size.width+'x'+size.height+'.png')});
   }
 });
 
@@ -183,9 +178,6 @@ for(const hand of ['right','left'])test('portrait clips automatically fit sidewa
   await track.press('ArrowLeft');
   await expect(page.locator('[data-active-clip="true"]')).toHaveAttribute('data-post-id',postId);
   await expect(feed).toHaveAttribute('data-video-fit','contain');
-  await page.getByRole('button',{name:'Fill screen',exact:true}).click();
-  await expect(feed).toHaveAttribute('data-video-fit','cover');
-  await page.getByRole('button',{name:'Fit video',exact:true}).click();
-  await expect(feed).toHaveAttribute('data-video-fit','contain');
+  await expect(page.getByRole('button',{name:/^(Fill screen|Fit video)$/})).toHaveCount(0);
   await expect(portrait).toHaveAttribute('data-orientation-continuity','same-player');
 });

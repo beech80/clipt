@@ -7,7 +7,7 @@ import PostItem from '@/components/PostItem';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { EngagementHud } from '@/components/post/EngagementHud';
-import { RefreshCw, Clapperboard, UsersRound, Scan } from 'lucide-react';
+import { RefreshCw, Clapperboard, UsersRound } from 'lucide-react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { validChannelGame } from '@/lib/channel-feeds';
 import {gameChannel} from '@/lib/game-catalog';
@@ -48,7 +48,6 @@ export default function Clipts() {
   const publishing=publishingState?.owner===user?.id?publishingState:null;
   const [hiddenPublishing,setHiddenPublishing]=useState('');
   const [feed, setFeed] = useState('clipts');
-  const [videoSizing, setVideoSizing] = useState<'auto' | 'contain' | 'cover'>('auto');
   const [portraitClips, setPortraitClips] = useState<Record<string, boolean>>({});
   const landscape = useSyncExternalStore(subscribeLandscape, landscapeSnapshot, () => false);
   useEffect(() => {
@@ -160,7 +159,7 @@ export default function Clipts() {
     if (posts.length && activeIndex >= posts.length - 3 && hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [activeIndex, posts.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const fitVideo = videoSizing === 'contain' || (videoSizing === 'auto' && landscape && Boolean(activePost && portraitClips[activePost.id]));
+  const fitVideo = landscape && Boolean(activePost && portraitClips[activePost.id]);
   const content = <>
     {gameId&&selectedGame.isError&&<div role="alert" className="clipt-feed-state">Channel could not be loaded. <Button onClick={()=>void selectedGame.refetch()}>Retry channel</Button></div>}
     {gameId&&!invalidGame&&selectedGame.isPending&&<p role="status" className="clipt-feed-state">Loading game channel…</p>}
@@ -219,9 +218,6 @@ export default function Clipts() {
           : <div className="clipt-fyp-placeholder">Clipt {index + 1}</div>}
       </section>)}
     </div>}
-    {activePost?.video_url && <button type="button" className="clipt-video-fit-toggle" data-controller-companion
-      aria-label={fitVideo?'Fill screen':'Fit video'} title={fitVideo?'Fill screen (crops edges)':'Fit video (show the full frame)'}
-      onClick={()=>setVideoSizing(fitVideo?'cover':'contain')}><Scan size={20} aria-hidden="true"/><span>{fitVideo?'Fill screen':'Fit video'}</span></button>}
   </>;
   const rememberVideoShape = (event: { target: EventTarget }) => {
     const video = event.target;
