@@ -223,14 +223,15 @@ export default function Clipts() {
       aria-label={fitVideo?'Fill screen':'Fit video'} title={fitVideo?'Fill screen (crops edges)':'Fit video (show the full frame)'}
       onClick={()=>setVideoSizing(fitVideo?'cover':'contain')}><Scan size={20} aria-hidden="true"/><span>{fitVideo?'Fill screen':'Fit video'}</span></button>}
   </>;
-  return <main className="clipt-fyp" onLoadedMetadataCapture={event => {
+  const rememberVideoShape = (event: { target: EventTarget }) => {
     const video = event.target;
     if (!(video instanceof HTMLVideoElement) || !video.videoWidth || !video.videoHeight) return;
     const postId = video.closest('[data-post-id]')?.getAttribute('data-post-id');
     if (!postId) return;
     const portrait = video.videoHeight > video.videoWidth;
     setPortraitClips(current => current[postId] === portrait ? current : {...current, [postId]: portrait});
-  }} data-feed={feed} data-video-fit={activePost?.video_url?(fitVideo?'contain':'cover'):undefined} data-game-channel={gameId||undefined}>
+  };
+  return <main className="clipt-fyp" onLoadedMetadataCapture={rememberVideoShape} onPlayingCapture={rememberVideoShape} data-feed={feed} data-video-fit={activePost?.video_url?(fitVideo?'contain':'cover'):undefined} data-game-channel={gameId||undefined}>
     {gameId&&<GameChannelToolbar gameId={selectedGame.data?.id||gameId} name={invalidGame?'Invalid game channel':selectedGame.data?.name||'Game channel'}>{hasNextPage&&<Button onClick={()=>void fetchNextPage()} disabled={isFetchingNextPage}>Load more clips</Button>}</GameChannelToolbar>}
     {gameId?<div className="clipt-game-channel-viewport">{content}</div>:content}
     <button ref={swipeZoneRef} type="button" className="clipt-bottom-swipe-zone" data-swipe-menu

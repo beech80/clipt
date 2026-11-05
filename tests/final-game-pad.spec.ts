@@ -152,6 +152,9 @@ for(const hand of ['right','left'])test('feed fills the screen by default and Fi
 for(const hand of ['right','left'])test('portrait clips automatically fit sideways while wide clips fill ('+hand+')',async({page},info)=>{
   test.setTimeout(90000);
   await fixture(page,hand);
+  if(hand==='left')await page.addInitScript(()=>document.addEventListener('loadedmetadata',event=>{
+    if(event.target instanceof HTMLVideoElement&&event.target.closest('.clipt-cinematic-media'))event.stopImmediatePropagation();
+  },true));
   const first={id:postId,user_id:owner,content:'Portrait recording',video_url:'/tests/fixtures/channel-hls/portrait.mp4',image_url:null,is_published:true,post_type:'clipt',created_at:'2026-11-04T00:00:00Z',profiles:{username:'fixture',avatar_url:null}};
   const second={...first,id:picked,content:'Wide recording',video_url:'/tests/fixtures/clip-test-h264.mp4'};
   await page.route('**/rest/v1/posts?**',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([first,second])}));
