@@ -1,5 +1,16 @@
 import {test,expect,type Page} from '@playwright/test';
 import {openApp} from './fixtures/open-app';
+test('support opens directly for a guest without exposing account or feed data',async({page})=>{
+ const stats=await fixture(page);await page.goto('/docs/user-guide');
+ await expect(page.getByRole('heading',{name:'User Guide',exact:true})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Contact support',exact:true})).toBeVisible();
+ await expect(page.getByRole('link',{name:'beecher@cliptgaming.com',exact:true})).toHaveAttribute('href','mailto:beecher@cliptgaming.com');
+ await expect(page.locator('.clipt-launch')).toHaveCount(0);
+ expect(stats.accessChecks).toBe(0);expect(stats.postsReads).toBe(0);expect(stats.rosterRequests).toBe(0);
+ await page.goto('/clipts');await page.getByRole('button',{name:/ENTER CLIPT/}).click();
+ await expect(page.getByRole('heading',{name:'CLIPT web beta',exact:true})).toBeVisible();
+ await expect(page.locator('.clipt-fyp')).toHaveCount(0);expect(stats.postsReads).toBe(0);
+});
 const owner='00000000-0000-4000-8000-000000000097';
 async function fixture(page:Page,{signedIn=false,allowed=true,signupError=false}={}){
  const user={id:owner,aud:'authenticated',role:'authenticated',email:'newplayer@example.invalid',email_confirmed_at:'2026-11-02T00:00:00Z',app_metadata:{},user_metadata:{username:'new_player'},created_at:'2026-11-02T00:00:00Z',factors:[]};

@@ -30,7 +30,7 @@ test('beta UI denies guests, ineligible accounts and failed checks without mount
 });
 test('beta UI admits server-eligible users and leaves public legal and account recovery reachable',()=>{
   assert.match(render({query:{data:true}}).html,/PRIVATE CONTENT/);
-  for(const pathname of ['/privacy','/terms','/login','/signup','/update-password','/delete-account']) {
+  for(const pathname of ['/privacy','/terms','/login','/signup','/update-password','/delete-account','/docs/user-guide']) {
     const {html,config}=render({pathname,user:null});assert.match(html,/PRIVATE CONTENT/);assert.equal(config.enabled,false);
   }
   const guest=render({user:null}).html;

@@ -16,6 +16,11 @@ const UserGuide = () => {
         <h1 className="text-2xl font-bold">User Guide</h1>
       </div>
       
+      <section aria-labelledby="support-contact" className="mb-6 space-y-2">
+        <h2 id="support-contact" className="text-xl font-semibold">Contact support</h2>
+        <p>For account, upload, playback or safety concerns, email <a className="underline break-all" href="mailto:beecher@cliptgaming.com">beecher@cliptgaming.com</a>. Never include your password, verification codes or private keys.</p>
+        <p><Link className="underline" to="/delete-account">Account deletion help</Link></p>
+      </section>
       <Button asChild className="mb-5"><Link to="/clipts?tour=controls">Replay Home tutorial</Link></Button>
       <div className="prose dark:prose-invert max-w-none">
         <ReactMarkdown 
