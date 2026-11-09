@@ -39,6 +39,8 @@ jobs:
           xcodebuild -version
           sdk=$(xcrun --sdk iphoneos --show-sdk-version)
           test "${sdk%%.*}" -ge 26
+      - name: Begin cold simulator startup while preparing the build
+        run: node scripts/ios-simulator-smoke.mjs --prepare-only
       - run: npm ci --ignore-scripts --no-fund --no-audit
       - run: npm run typecheck
       - run: npm test

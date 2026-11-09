@@ -19,9 +19,11 @@ if (!device || !/^[A-F0-9-]{36}$/i.test(device.udid)) throw Error('A current ava
 console.log('Selected ' + device.name + ' on ' + device.runtime);
 const ui = spawnSync('open', ['-a', 'Simulator', '--args', '-CurrentDeviceUDID', device.udid], { encoding: 'utf8', timeout: 30000 });
 if (ui.error || ui.status !== 0) throw Error('The Simulator application could not start.');
+// Start first-boot migration while dependencies and the app are compiled in CI.
+if (process.argv.includes('--prepare-only')) process.exit(0);
 // Simulator.app may already have booted this device since it was listed.
 // bootstatus -b boots only if needed and also waits for that existing boot.
-run(['bootstatus', device.udid, '-b'], 240000);
+run(['bootstatus', device.udid, '-b'], 600000);
 run(['install', device.udid, resolve('outputs/ios-store/simulator/Build/Products/Debug-iphonesimulator/App.app')]);
 run(['launch', '--terminate-running-process', device.udid, APP_ID]);
 await new Promise(done => setTimeout(done, 15000));
