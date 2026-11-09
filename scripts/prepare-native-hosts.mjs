@@ -79,7 +79,18 @@ public class MainActivity extends BridgeActivity {
   }
 }
 `);
-  await transform('app/src/main/AndroidManifest.xml', source => source.replace('android:allowBackup="true"', 'android:allowBackup="false"'));
+  await transform('app/src/main/AndroidManifest.xml', source => {
+    source = source.replace('android:allowBackup="true"', 'android:allowBackup="false"');
+    if (!source.includes('android:scheme="com.slnjliheyiiummxhrgmk.clip"')) source = replaceRequired(source, '</activity>', `
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.slnjliheyiiummxhrgmk.clip" android:host="auth" />
+            </intent-filter>
+        </activity>`);
+    return source;
+  });
 } else {
   const require = createRequire(cliPackage);
   const plist = require('plist');
@@ -118,6 +129,8 @@ final class CliptBridgeViewController: CAPBridgeViewController {
     const version = releaseVersion(process.env.CLIPT_APP_VERSION, process.env.CLIPT_BUILD_NUMBER);
     project.updateBuildProperty('MARKETING_VERSION', version.version);
     project.updateBuildProperty('CURRENT_PROJECT_VERSION', version.build);
+    // The bundled Vite target and controller CSS require Safari/WebKit 16+.
+    project.updateBuildProperty('IPHONEOS_DEPLOYMENT_TARGET', '16.0');
   }
   await writeFile(projectPath, project.writeSync());
   // cap sync manages this file. Restore our reviewed exact/local dependencies
@@ -126,7 +139,7 @@ final class CliptBridgeViewController: CAPBridgeViewController {
 import PackageDescription
 let package = Package(
     name: "CapApp-SPM",
-    platforms: [.iOS(.v15)],
+    platforms: [.iOS(.v${storeBuild ? '16' : '15'})],
     products: [.library(name: "CapApp-SPM", targets: ["CapApp-SPM"])],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.6.0"),

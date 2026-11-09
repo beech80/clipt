@@ -9,12 +9,15 @@ This is an isolated native release candidate. It does **not** deploy or modify t
 - Native authentication uses PKCE and exact custom-scheme callbacks, with cold/warm URL handling and duplicate-delivery protection. Password sign-in remains unchanged. Web confirmation/reset redirects remain unchanged.
 - Native lifecycle listeners stop token refresh and pause ordinary audio/video on backgrounding. Foregrounding resumes token refresh, not automatic audio playback. No background-broadcast entitlement is included.
 - Original CLIPT icon and black launch screen, media permission descriptions, version/build numbers, standard-encryption declaration, and an app privacy manifest are generated into the Xcode host.
+- The store candidate requires iOS/iPadOS 16 or later to match the existing Vite target and responsive CSS. iPad orientations remain available; the minimum OS is separate from Apple's newer SDK build requirement.
 - Optional analytics helper calls are disabled in store builds. Backend interactions (views, posts, messages, moderation) still process data and are disclosed; this is not a “collects no data” application.
 - Account deletion already exists at Settings → Data Privacy → Delete account. Reports, blocking and moderator review use existing systems. Their production readiness must be exercised with a disposable review/test account on the actual installed build.
 
 ## Build and inspect
 
 The **CLIPT iOS App Store preparation** GitHub workflow builds an iOS simulator app and an **unsigned** device archive, checks the packaged configuration/privacy manifest, and produces `clipt-ios-app-store-preparation`. It never uploads to App Store Connect. Check that every job passed on the candidate commit; do not use artifacts from a failed run.
+
+It also installs and launches the simulator app, checks that its process stays running, and captures `simulator-welcome.png`. This smoke check is not authenticated-flow or physical-device verification. `SIMULATOR-INFO.json` records that distinction.
 
 Requirements for local generation: Node 22.12+ (Node 24 also supported), Xcode with the iOS 26+ SDK, npm lockfile, and a Mac. Apple's currently documented submission minimum is Xcode 26/iOS 26 SDK (recheck before submission).
 
@@ -31,6 +34,8 @@ open ios/App/App.xcodeproj
 ```
 
 Choose a new build number for every App Store Connect upload. Never run the broadcasting owner-test helper against this store profile; it intentionally prepares a different, experimental development build. Re-running `cap sync` on its own overwrites the reviewed Swift package integration; use `prepare-native-hosts.mjs` to restore it.
+
+Build numbers in this preparation path are limited to 1–9999. The native sharing plugin is included alongside the App plugin; shared post links point to the public CLIPT site rather than `capacitor://localhost`.
 
 The prepared ZIP retains the relative layout of `ios/App` and `node_modules/@capacitor/app`, so Xcode can resolve the local App plugin. It contains no private signing material. Verify `SHA256SUMS.txt` and `BUILD-INFO.json`, then unzip on the Mac. Open the project, not the unsigned archive, for the signing build.
 

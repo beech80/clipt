@@ -34,7 +34,7 @@ test('release build accepts only the production public client config and rejects
   for (const input of [null, [], { ...good, secret: 'x' }, { ...good, supabaseUrl: 'https://dev.example' },
     { ...good, supabaseAnonKey: 'sb_secret_' + 'a'.repeat(32) }, { ...good, supabaseAnonKey: good.supabaseAnonKey + '\nEVIL=true' }])
     assert.throws(() => storePublicEnvironment(input));
-  for (const values of [['1.0', '1'], ['1.0.0', '0'], ['1.0.0', '1\nEVIL']]) assert.throws(() => releaseVersion(...values));
+  for (const values of [['1.0', '1'], ['1.0.0', '0'], ['1.0.0', '10000'], ['1.0.0', '1\nEVIL']]) assert.throws(() => releaseVersion(...values));
 });
 test('store profile removes experimental permissions, background modes and native broadcasting', () => {
   const info = storeInfoPlist({ UIBackgroundModes: ['audio', 'screen-capture'], NSScreenCaptureUsageDescription: 'old', CLIPTNativeBroadcastEnabled: true }, releaseVersion('1.0.0', '7'));

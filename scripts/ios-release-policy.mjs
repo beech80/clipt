@@ -4,7 +4,7 @@ export const PRODUCTION_ORIGIN = 'https://slnjliheyiiummxhrgmk.supabase.co';
 
 export function releaseVersion(version = '1.0.0', build = '1') {
   if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version)
-      || !/^[1-9]\d{0,8}$/.test(build)) throw Error('Use a three-part app version and a positive numeric build number.');
+      || !/^[1-9]\d{0,3}$/.test(build)) throw Error('Use a three-part app version and a build number from 1 to 9999.');
   return { version, build };
 }
 
@@ -35,6 +35,8 @@ export function storeInfoPlist(info, version) {
     NSPhotoLibraryUsageDescription: 'Choose the photos and videos you want to share in CLIPT.',
     ITSAppUsesNonExemptEncryption: false, CLIPTNativeBroadcastEnabled: false,
     CLIPTReleaseProfile: 'app-store',
+    'UISupportedInterfaceOrientations~ipad': ['UIInterfaceOrientationPortrait',
+      'UIInterfaceOrientationPortraitUpsideDown', 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight'],
   };
   delete result.UIBackgroundModes;
   delete result.NSScreenCaptureUsageDescription;

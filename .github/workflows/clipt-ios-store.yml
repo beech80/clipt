@@ -50,6 +50,8 @@ jobs:
       - run: node scripts/verify-ios-store.mjs
       - name: Build simulator
         run: xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -configuration Debug -derivedDataPath outputs/ios-store/simulator CODE_SIGNING_ALLOWED=NO build
+      - name: Install and launch the native app on an iPhone simulator
+        run: node scripts/ios-simulator-smoke.mjs
       - name: Archive for physical iPhone and iPad without signing
         run: xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphoneos -destination generic/platform=iOS -configuration Release -archivePath outputs/ios-store/CLIPT.xcarchive CODE_SIGNING_ALLOWED=NO archive
       - run: node scripts/verify-ios-store.mjs outputs/ios-store/CLIPT.xcarchive
@@ -74,5 +76,7 @@ jobs:
             outputs/ios-store/*.zip
             outputs/ios-store/BUILD-INFO.json
             outputs/ios-store/SHA256SUMS.txt
+            outputs/ios-store/SIMULATOR-INFO.json
+            outputs/ios-store/simulator-welcome.png
             outputs/native-brand/*.png
           retention-days: 14

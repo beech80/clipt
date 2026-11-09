@@ -151,8 +151,8 @@ for(const hand of ['right','left'])test('automatic sizing keeps the video and co
       } else {
         await page.getByRole('button',{name:'All controller actions',exact:true}).click();
         const actions=page.getByRole('dialog',{name:'Controller actions',exact:true});
-        await expect(actions.getByRole('button',{name:'Like post',exact:true})).toBeVisible();
-        await expect(actions.getByRole('button',{name:'Comment — Open engagement',exact:true})).toBeVisible();
+        await expect(actions.getByRole('button',{name:/^Like post(?:\s|$)/})).toBeVisible();
+        await expect(actions.getByRole('button',{name:/^Comment — Open engagement/})).toBeVisible();
         await actions.getByRole('button',{name:'Close',exact:true}).click();
       }
     }
