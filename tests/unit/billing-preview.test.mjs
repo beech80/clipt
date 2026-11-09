@@ -16,7 +16,7 @@ test('global menu exposes the subscription route without initiating checkout', (
 test('membership is wired into the mounted App rather than only the unused route catalog', () => {
   const app = readFileSync(new URL('../../src/App.tsx', import.meta.url), 'utf8');
   assert.match(app, /React\.lazy\(\(\) => import\('\.\/pages\/Subscription'\)\)/);
-  assert.match(app, /path="\/subscription" element=\{<Subscription \/>\}/);
+  assert.match(app, /path="\/subscription" element=\{isAppStoreBuild\(\) \? <NativeUnavailable \/> : <Subscription \/>\}/);
   assert.match(app, /path="\/membership" element=\{<Navigate to="\/subscription" replace \/>\}/);
   assert.match(app, /path="\/payment-success" element=\{<PaymentSuccess \/>\}/);
 });

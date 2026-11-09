@@ -5,6 +5,7 @@ import {createRequire} from 'node:module';
 import ts from 'typescript';
 import React from 'react';
 import * as clipCarouselScroll from '../../src/lib/clip-carousel-scroll.ts';
+import * as feedVideoFit from '../../src/lib/feed-video-fit.ts';
 const require=createRequire(import.meta.url);
 test('all collage sizes report real image loading and failure to the parent',()=>{
   const Collage=load('components/post/PhotoCollage.tsx',{});
@@ -47,6 +48,7 @@ test('photo retry reloads an unchanged authorized URL only after successful acce
 function load(path,deps) {
   const source=ts.transpileModule(readFileSync(new URL('../../src/'+path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
   const imports={
+    '@/lib/feed-video-fit':feedVideoFit,
     '@/components/onboarding/HomeControlsTour':{HomeControlsTour:()=>null},
     '@/components/post/HashtagText':{default:({text})=>text,__esModule:true},'./clipt-feed-surface.css':{},'./clipt-channels.css':{},'@/lib/game-catalog':{gameChannel:async()=>null},'@/components/GameChannelToolbar':{GameChannelToolbar:()=>null},'@/lib/channel-feeds':{validChannelGame:()=>true},'@/lib/clip-carousel-scroll':clipCarouselScroll,'@/lib/publishing-status':{publishingSnapshot:()=>null,subscribePublishing:()=>()=>{}},...deps};
   if(imports.react)imports.react={...imports.react,useSyncExternalStore:()=>null};

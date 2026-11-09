@@ -12,7 +12,8 @@ import * as pageController from '../../src/lib/page-controller.ts';
 import * as publishingStatus from '../../src/lib/publishing-status.ts';
 import * as trophyEligibility from '../../src/lib/trophy-eligibility.ts';
 
-const require=createRequire(import.meta.url);
+const nodeRequire=createRequire(import.meta.url);
+const require=name=>name==='@/native/app/share'?{shareClipt:async()=>{throw Error('Share not configured in this rendering fixture');}}:nodeRequire(name);
 test('mobile engagement reserves a full-width typing row without changing the comment handler',()=>{
   const css=readFileSync(new URL('../../src/pages/clipt-console.css',import.meta.url),'utf8');
   assert.match(css,/\.clipt-hud-comments form input \{[^}]*grid-column: 1 \/ -1;[^}]*font-size: 16px/);

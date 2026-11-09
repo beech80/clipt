@@ -61,6 +61,9 @@ jobs:
           cp docs/NATIVE-IOS-OWNER-TEST.md outputs/native-ios-owner-test/project/README.md
           cp -R ios outputs/native-ios-owner-test/project/
           cp -R native/ios outputs/native-ios-owner-test/project/native/
+          mkdir -p outputs/native-ios-owner-test/project/node_modules/@capacitor
+          cp -R node_modules/@capacitor/app outputs/native-ios-owner-test/project/node_modules/@capacitor/
+          cp -R node_modules/@capacitor/share outputs/native-ios-owner-test/project/node_modules/@capacitor/
           tar --exclude='.build' --exclude='.swiftpm' --exclude='build' --exclude='xcuserdata' -czf outputs/native-ios-owner-test/CLIPT-prepared-iPhone-project.tar.gz -C outputs/native-ios-owner-test/project .
           ditto -c -k --sequesterRsrc --keepParent outputs/native-ios-unsigned/CLIPT.xcarchive outputs/native-ios-owner-test/CLIPT-unsigned-device-archive.zip
           cp docs/NATIVE-IOS-OWNER-TEST.md outputs/native-ios-owner-test/README.md
