@@ -20,6 +20,8 @@ const info = await readPlist(resolve(app, 'Info.plist'));
 function check(ok, message) { if (!ok) throw Error(message); }
 check(info.CLIPTReleaseProfile === 'app-store' && info.CLIPTNativeBroadcastEnabled === false, 'Release profile must disable native broadcasting.');
 check(!info.UIBackgroundModes?.length && !info.NSScreenCaptureUsageDescription, 'Experimental background/capture modes are forbidden.');
+check(!info.NSAppTransportSecurity?.NSAllowsArbitraryLoads && !info.NSAppTransportSecurity?.NSAllowsArbitraryLoadsInWebContent,
+  'Unrestricted cleartext transport exceptions are forbidden.');
 check(info.CFBundleURLTypes?.some(type => type.CFBundleURLSchemes?.includes(APP_ID)), 'The exact native auth callback is missing.');
 for (const key of ['NSCameraUsageDescription','NSMicrophoneUsageDescription','NSPhotoLibraryUsageDescription']) check(Boolean(info[key]), 'A media permission description is missing.');
 const privacy = await readPlist(resolve(app, 'PrivacyInfo.xcprivacy'));
@@ -40,6 +42,10 @@ check(!/sb_secret_[A-Za-z0-9_-]{16,}|-----BEGIN (?:RSA )?PRIVATE KEY-----/.test(
 if (archive) {
   check(info.CFBundleIdentifier === APP_ID && Number(info.DTSDKName?.match(/iphoneos(\d+)/)?.[1]) >= 26, 'Archive needs the correct app ID and an iOS 26+ SDK.');
   check(Number(info.MinimumOSVersion) >= 16, 'The store app requires iOS/iPadOS 16+ for the existing web UI.');
+  check(info.CFBundleVersion === receipt.build && info.CFBundleShortVersionString === receipt.version,
+    'Archive version/build must match the prepared assets. Rebuild assets and host together when changing release versions.');
+  const architecture = spawnSync('lipo', ['-archs', resolve(app, info.CFBundleExecutable)], { encoding: 'utf8' });
+  check(architecture.status === 0 && architecture.stdout.trim().split(/\s+/).includes('arm64'), 'The archive must include the physical-device arm64 architecture.');
   const linked = spawnSync('otool', ['-L', resolve(app, info.CFBundleExecutable)], { encoding: 'utf8' });
   check(linked.status === 0 && !/CliptBroadcaster|HaishinKit|Logboard/.test(linked.stdout), 'Experimental broadcaster must not be linked into the release.');
   const strings = spawnSync('strings', [resolve(app, info.CFBundleExecutable)], { encoding: 'utf8', maxBuffer: 5 * 1024 * 1024 });

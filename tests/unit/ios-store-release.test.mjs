@@ -55,8 +55,9 @@ test('release build accepts only the production public client config and rejects
 test('store profile removes experimental permissions, background modes and native broadcasting', () => {
   const info = storeInfoPlist({ UIBackgroundModes: ['audio', 'screen-capture'], NSScreenCaptureUsageDescription: 'old', CLIPTNativeBroadcastEnabled: true }, releaseVersion('1.0.0', '7'));
   assert.equal(info.UIBackgroundModes, undefined); assert.equal(info.NSScreenCaptureUsageDescription, undefined);
-  assert.equal(info.CLIPTNativeBroadcastEnabled, false); assert.equal(info.CFBundleVersion, '7');
+  assert.equal(info.CLIPTNativeBroadcastEnabled, false); assert.equal(info.CFBundleVersion, '$(CURRENT_PROJECT_VERSION)');
   assert.deepEqual(info.CFBundleURLTypes[0].CFBundleURLSchemes, [APP_ID]);
+  assert.deepEqual(info.UIRequiredDeviceCapabilities, ['arm64']);
   const privacy = storePrivacyManifest(); assert.equal(privacy.NSPrivacyTracking, false);
   assert.ok(privacy.NSPrivacyCollectedDataTypes.some(type => type.NSPrivacyCollectedDataType === 'NSPrivacyCollectedDataTypePhotosorVideos'));
   assert.ok(privacy.NSPrivacyCollectedDataTypes.every(type => type.NSPrivacyCollectedDataTypeLinked && !type.NSPrivacyCollectedDataTypeTracking));

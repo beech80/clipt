@@ -36,8 +36,9 @@ export function storePublicEnvironment(value) {
 }
 
 export function storeInfoPlist(info, version) {
+  releaseVersion(version.version, version.build);
   const result = { ...info,
-    CFBundleShortVersionString: version.version, CFBundleVersion: version.build,
+    CFBundleShortVersionString: '$(MARKETING_VERSION)', CFBundleVersion: '$(CURRENT_PROJECT_VERSION)',
     CFBundleURLTypes: [{ CFBundleTypeRole: 'Editor', CFBundleURLName: APP_ID,
       CFBundleURLSchemes: [CALLBACK_SCHEME] }],
     NSCameraUsageDescription: 'Take a photo or video when you choose to create a CLIPT post.',
@@ -45,6 +46,7 @@ export function storeInfoPlist(info, version) {
     NSPhotoLibraryUsageDescription: 'Choose the photos and videos you want to share in CLIPT.',
     ITSAppUsesNonExemptEncryption: false, CLIPTNativeBroadcastEnabled: false,
     CLIPTReleaseProfile: 'app-store',
+    UIRequiredDeviceCapabilities: ['arm64'],
     'UISupportedInterfaceOrientations~ipad': ['UIInterfaceOrientationPortrait',
       'UIInterfaceOrientationPortraitUpsideDown', 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight'],
   };
