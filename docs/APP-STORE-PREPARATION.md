@@ -17,7 +17,7 @@ This is an isolated native release candidate. It does **not** deploy or modify t
 
 The **CLIPT iOS App Store preparation** GitHub workflow builds an iOS simulator app and an **unsigned** device archive, checks the packaged configuration/privacy manifest, and produces `clipt-ios-app-store-preparation`. It never uploads to App Store Connect. Check that every job passed on the candidate commit; do not use artifacts from a failed run.
 
-It also installs and launches the simulator app, checks that its process stays running, and captures `simulator-welcome.png`. This smoke check is not authenticated-flow or physical-device verification. `SIMULATOR-INFO.json` records that distinction.
+It also installs and launches the simulator app, verifies the native App bridge initialized and the CLIPT welcome screen rendered, checks that its process stays running, and captures `simulator-welcome.png`. A Debug-only local cache receipt connects the native host to that rendered-UI check; its Swift probe is excluded from Release archives and sends no telemetry. This smoke check is not authenticated-flow or physical-device verification. `SIMULATOR-INFO.json` records that distinction.
 
 Requirements for local generation: Node 22.12+ (Node 24 also supported), Xcode with the iOS 26+ SDK, npm lockfile, and a Mac. Apple's currently documented submission minimum is Xcode 26/iOS 26 SDK (recheck before submission).
 

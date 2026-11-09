@@ -42,6 +42,8 @@ if (archive) {
   check(Number(info.MinimumOSVersion) >= 16, 'The store app requires iOS/iPadOS 16+ for the existing web UI.');
   const linked = spawnSync('otool', ['-L', resolve(app, info.CFBundleExecutable)], { encoding: 'utf8' });
   check(linked.status === 0 && !/CliptBroadcaster|HaishinKit|Logboard/.test(linked.stdout), 'Experimental broadcaster must not be linked into the release.');
+  const strings = spawnSync('strings', [resolve(app, info.CFBundleExecutable)], { encoding: 'utf8', maxBuffer: 5 * 1024 * 1024 });
+  check(strings.status === 0 && !/CLIPT-native-smoke[.]json|CliptBroadcaster|HaishinKit/.test(strings.stdout), 'Debug UI probes and experimental capture code must be excluded from the Release binary.');
 }
 const commit = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim();
 await mkdir(resolve(root, 'outputs/ios-store'), { recursive: true });

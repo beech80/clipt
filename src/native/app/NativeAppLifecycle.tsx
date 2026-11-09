@@ -14,6 +14,7 @@ export default function NativeAppLifecycle() {
   useEffect(() => { navigateRef.current = navigate; }, [navigate]);
   useEffect(() => {
     if (!isNativeApp()) return;
+    document.documentElement.dataset.cliptNativeReady = 'false';
     let disposed = false;
     const handles: PluginListenerHandle[] = [];
     const register = async (value: Promise<PluginListenerHandle>) => {
@@ -44,12 +45,14 @@ export default function NativeAppLifecycle() {
         activity(state.isActive);
         const launch = await App.getLaunchUrl();
         if (!disposed && launch?.url) await consume(launch.url);
+        if (!disposed) document.documentElement.dataset.cliptNativeReady = 'true';
       } catch {
         if (!disposed) toast.error('The app connection could not start. Close and reopen CLIPT.');
       }
     })();
     return () => {
       disposed = true;
+      document.documentElement.dataset.cliptNativeReady = 'false';
       handles.forEach(handle => { void handle.remove(); });
       void supabase.auth.stopAutoRefresh();
     };

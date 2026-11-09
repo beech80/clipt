@@ -2,6 +2,16 @@ export const APP_ID = 'com.slnjliheyiiummxhrgmk.clip';
 export const CALLBACK_SCHEME = APP_ID;
 export const PRODUCTION_ORIGIN = 'https://slnjliheyiiummxhrgmk.supabase.co';
 
+export function selectStoreSimulator(devices) {
+  return Object.entries(devices).flatMap(([runtime, entries]) => {
+    const version = runtime.match(/\.iOS-(\d+)-(\d+)(?:-(\d+))?$/);
+    if (!version || Number(version[1]) < 26 || !Array.isArray(entries)) return [];
+    return entries.filter(device => device.isAvailable && device.name?.startsWith('iPhone')
+      && /^[A-F0-9-]{36}$/i.test(device.udid)).map(device => ({ ...device, runtime, version: version.slice(1).map(n => Number(n || 0)).join('.') }));
+  }).sort((a, b) => b.version.localeCompare(a.version, undefined, { numeric: true })
+    || Number(b.state === 'Booted') - Number(a.state === 'Booted'))[0];
+}
+
 export function releaseVersion(version = '1.0.0', build = '1') {
   if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version)
       || !/^[1-9]\d{0,3}$/.test(build)) throw Error('Use a three-part app version and a build number from 1 to 9999.');

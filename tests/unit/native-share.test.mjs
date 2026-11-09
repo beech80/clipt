@@ -8,7 +8,7 @@ test('native sharing uses the native sheet and public post URL; web keeps Share 
  const oldWindow=globalThis.window,oldNavigator=Object.getOwnPropertyDescriptor(globalThis,'navigator');
  try {
   for(const native of [true,false])for(const browserShare of [true,false]){
-   const calls=[];globalThis.window={location:{origin:native?'capacitor://localhost':'https://web.example'}};
+   const calls=[];globalThis.window={location:{origin:native?'null':'https://web.example'}};
    Object.defineProperty(globalThis,'navigator',{configurable:true,value:{share:browserShare?async x=>calls.push(['web',x]):undefined,clipboard:{writeText:async x=>calls.push(['copy',x])}}});
    const deps={'@capacitor/share':{Share:{share:async x=>calls.push(['native',x])}},'./runtime':{isNativeApp:()=>native},'@/lib/public-app-url':urls};
    const mod={exports:{}};new Function('require','module','exports',output)(key=>deps[key],mod,mod.exports);

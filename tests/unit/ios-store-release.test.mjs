@@ -1,10 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { authRedirect, parseNativeAuthLink, createAuthLinkConsumer } from '../../src/native/app/auth-links.ts';
-import { storeInfoPlist, storePublicEnvironment, storePrivacyManifest, releaseVersion, APP_ID } from '../../scripts/ios-release-policy.mjs';
+import { storeInfoPlist, storePublicEnvironment, storePrivacyManifest, releaseVersion, APP_ID, selectStoreSimulator } from '../../scripts/ios-release-policy.mjs';
 
 const code = 'a-valid-pkce-code-123456789';
 const callback = APP_ID + '://auth/recovery?code=' + code;
+test('the simulator smoke selects the newest supported available iPhone runtime, not the first old runtime', () => {
+  const device={udid:'00000000-0000-4000-8000-000000000001',name:'iPhone test',isAvailable:true,state:'Shutdown'};
+  const selected=selectStoreSimulator({
+    'com.apple.CoreSimulator.SimRuntime.iOS-26-0':[{...device,state:'Booted'}],
+    'com.apple.CoreSimulator.SimRuntime.iOS-26-6':[{...device,name:'iPhone current'}],
+    'com.apple.CoreSimulator.SimRuntime.iOS-27-0':[{...device,isAvailable:false}],
+  });
+  assert.equal(selected.name,'iPhone current');
+  assert.equal(selectStoreSimulator({'com.apple.CoreSimulator.SimRuntime.iOS-15-0':[device]}),undefined);
+});
 test('web redirects stay on the current origin; native callbacks use the installed app only', () => {
   assert.equal(authRedirect('/login', false, 'https://web.example'), 'https://web.example/login');
   assert.equal(authRedirect('/update-password', false, 'https://web.example'), 'https://web.example/update-password');
@@ -27,6 +37,12 @@ test('cold/warm duplicate delivery exchanges once; failed exchanges never naviga
   const rejected = createAuthLinkConsumer(async () => { throw Error('private-provider-detail'); }, () => assert.fail('must not navigate'), () => failures++);
   await rejected(callback); assert.equal(failures, 1);
   await rejected('https://evil.example'); assert.equal(failures, 1);
+  let exchanges=0, errors=0;
+  const expired=createAuthLinkConsumer(async()=>{exchanges++;return{error:null};},()=>assert.fail('expired link must not navigate'),()=>errors++);
+  await expired(APP_ID+'://auth/recovery#error=access_denied&error_description=private-description');
+  await expired(APP_ID+'://auth/recovery#error=access_denied');
+  await expired('https://foreign.example/auth/recovery?error=access_denied');
+  assert.equal(exchanges,0);assert.equal(errors,1);
 });
 test('release build accepts only the production public client config and rejects injected environment flags', () => {
   const good = { supabaseUrl: 'https://slnjliheyiiummxhrgmk.supabase.co', supabaseAnonKey: 'sb_publishable_' + 'a'.repeat(32) };

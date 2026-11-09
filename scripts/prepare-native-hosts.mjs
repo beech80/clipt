@@ -114,7 +114,31 @@ final class CliptBridgeViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         ${storeBuild ? '// Broadcasting is excluded from the first App Store binary.' : 'bridge?.registerPluginInstance(CliptBroadcasterPlugin())'}
         webView?.scrollView.bounces = false
+        ${storeBuild ? '#if DEBUG\n        recordSmoke(attempts: 30)\n        #endif' : ''}
     }
+    ${storeBuild ? `#if DEBUG
+    // Local simulator evidence only; this code is absent from Release archives.
+    private func recordSmoke(attempts: Int) {
+        let script = "JSON.stringify({bridgeReady: document.documentElement.dataset.cliptNativeReady === 'true', welcomeVisible: !!document.querySelector('.clipt-launch')?.getClientRects().length})"
+        webView?.evaluateJavaScript(script) { [weak self] value, error in
+            guard let self = self else { return }
+            let text = value as? String ?? "{}"
+            let data = text.data(using: .utf8) ?? Data()
+            var state = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
+            let ready = state["bridgeReady"] as? Bool == true && state["welcomeVisible"] as? Bool == true
+            if !ready && attempts > 0 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self.recordSmoke(attempts: attempts - 1) }
+                return
+            }
+            state["build"] = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""
+            if let cache = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first,
+               let output = try? JSONSerialization.data(withJSONObject: state) {
+                try? FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
+                try? output.write(to: cache.appendingPathComponent("CLIPT-native-smoke.json"), options: .atomic)
+            }
+        }
+    }
+    #endif` : ''}
 }
 `);
   const projectPath = resolve(host, 'App/App.xcodeproj/project.pbxproj');
