@@ -9,6 +9,7 @@ const directPaths = new Set([
   '/reset-password', '/forgot-password', '/update-password', '/resend-verification',
   '/privacy', '/terms', '/docs/privacy-policy', '/docs/terms-of-service',
   '/delete-account', '/payment-success',
+  '/docs/user-guide',
 ]);
 const authParameters = ['code', 'token', 'token_hash', 'access_token', 'refresh_token',
   'error', 'error_code', 'error_description'];

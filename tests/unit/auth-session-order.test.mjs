@@ -10,6 +10,8 @@ function harness(){
   let listener;const effects=[];const users=[];const resends=[];let stateIndex=0;let clears=0;let invalidations=0;
   const require=createRequire(import.meta.url);
   const dependencies={
+    '@/native/app/runtime':{isNativeApp:()=>false},
+    '@/native/app/auth-links':{authRedirect:(path,native,origin)=>origin+path},
     react:{...React,useState:initial=>{const index=stateIndex++;return [initial,value=>{if(index===0)users.push(value);}];},useEffect:fn=>effects.push(fn),useMemo:fn=>fn(),useCallback:fn=>fn},
     '@/lib/supabase':{supabase:{auth:{resend:async input=>{resends.push(input);return {error:null};},getSession:()=>initial,onAuthStateChange:fn=>{listener=fn;return {data:{subscription:{unsubscribe:()=>{}}}};}}}},
     sonner:{toast:{success:()=>{}}},

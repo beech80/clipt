@@ -19,6 +19,7 @@ import { cancelClipScroll, scrollClipTo } from '@/lib/clip-carousel-scroll';
 import { usePortraitSwipe } from '@/hooks/usePortraitSwipe';
 import {publishingSnapshot,subscribePublishing} from '@/lib/publishing-status';
 import {HomeControlsTour} from '@/components/onboarding/HomeControlsTour';
+import {feedVideoFit} from '@/lib/feed-video-fit';
 
 function subscribeLandscape(onChange: () => void) {
   const query = window.matchMedia('(orientation: landscape)');
@@ -159,7 +160,7 @@ export default function Clipts() {
     if (posts.length && activeIndex >= posts.length - 3 && hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [activeIndex, posts.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const fitVideo = landscape && Boolean(activePost && portraitClips[activePost.id]);
+  const videoFit = feedVideoFit(activePost ? portraitClips[activePost.id] : undefined, landscape);
   const content = <>
     {gameId&&selectedGame.isError&&<div role="alert" className="clipt-feed-state">Channel could not be loaded. <Button onClick={()=>void selectedGame.refetch()}>Retry channel</Button></div>}
     {gameId&&!invalidGame&&selectedGame.isPending&&<p role="status" className="clipt-feed-state">Loading game channel…</p>}
@@ -227,7 +228,7 @@ export default function Clipts() {
     const portrait = video.videoHeight > video.videoWidth;
     setPortraitClips(current => current[postId] === portrait ? current : {...current, [postId]: portrait});
   };
-  return <main className="clipt-fyp" onLoadedMetadataCapture={rememberVideoShape} onPlayingCapture={rememberVideoShape} data-feed={feed} data-video-fit={activePost?.video_url?(fitVideo?'contain':'cover'):undefined} data-game-channel={gameId||undefined}>
+  return <main className="clipt-fyp" onLoadedMetadataCapture={rememberVideoShape} onPlayingCapture={rememberVideoShape} data-feed={feed} data-video-fit={activePost?.video_url?videoFit:undefined} data-game-channel={gameId||undefined}>
     {gameId&&<GameChannelToolbar gameId={selectedGame.data?.id||gameId} name={invalidGame?'Invalid game channel':selectedGame.data?.name||'Game channel'}>{hasNextPage&&<Button onClick={()=>void fetchNextPage()} disabled={isFetchingNextPage}>Load more clips</Button>}</GameChannelToolbar>}
     {gameId?<div className="clipt-game-channel-viewport">{content}</div>:content}
     <button ref={swipeZoneRef} type="button" className="clipt-bottom-swipe-zone" data-swipe-menu

@@ -16,7 +16,7 @@ test('only a reload after Enter skips the welcome; unentered reloads still welco
  assert.equal(needsAppWelcome(route('/clipts'),'back_forward',true),true);
 });
 test('legal, deletion and recovery destinations remain directly accessible',()=>{
- for(const path of ['/privacy','/terms','/delete-account','/reset-password','/forgot-password','/update-password','/resend-verification','/docs/privacy-policy','/docs/terms-of-service','/payment-success']){
+ for(const path of ['/privacy','/terms','/delete-account','/reset-password','/forgot-password','/update-password','/resend-verification','/docs/privacy-policy','/docs/terms-of-service','/payment-success','/docs/user-guide']){
   assert.equal(isDirectEntry(route(path)),true,path);
   assert.equal(needsAppWelcome(route(path),'navigate',false),false,path);
  }

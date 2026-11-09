@@ -28,7 +28,12 @@ test('portrait swipe/menu pad follows expanded Safari chrome at the bottom of th
  for(const [height,top] of [[620,0],[844,0],[720,10]]){
   await page.evaluate(({height,top})=>{const v=(window as any).chromeViewportFixture;v.height=height;v.offsetTop=top;v.dispatchEvent(new Event('resize'));},{height,top});
   await expect.poll(async()=>Math.round((await pad.boundingBox())!.y+(await pad.boundingBox())!.height)).toBe(height+top);
-  const p=await pad.boundingBox(),video=await page.locator('[data-active-clip="true"] .clipt-cinematic-media').boundingBox();expect(video!.y+video!.height).toBeGreaterThanOrEqual(p!.y+p!.height-1);expect(await page.evaluate(()=>scrollY)).toBe(0);
+  const p=await pad.boundingBox(),video=await page.locator('[data-active-clip="true"] .clipt-cinematic-media').boundingBox();
+  const surface=await page.locator('.clipt-fyp').boundingBox();
+  expect(surface!.y+surface!.height).toBeGreaterThanOrEqual(p!.y+p!.height-1);
+  expect(video!.y).toBeGreaterThanOrEqual(top-1);expect(video!.y+video!.height).toBeLessThanOrEqual(height+top+1);
+  expect(await page.locator('.clipt-fyp').evaluate(v=>getComputedStyle(v).backgroundColor)).toBe('rgb(0, 0, 0)');
+  expect(await page.evaluate(()=>scrollY)).toBe(0);
  }
  await pad.click();await expect(page.getByRole('dialog',{name:'CLIPT navigation',exact:true})).toBeVisible();
 });
@@ -131,9 +136,26 @@ for(const hand of ['right','left'])test('automatic sizing keeps the video and co
   const source=await video.getAttribute('src');
   for(const size of [{width:390,height:844},{width:844,height:390},{width:768,height:1024},{width:1280,height:800},{width:195,height:422}]){
     await page.setViewportSize(size);
-    await expect(feed).toHaveAttribute('data-video-fit','cover');
-    await expect.poll(()=>video.evaluate(v=>getComputedStyle(v).objectFit)).toBe('cover');
-    await expect.poll(()=>video.evaluate(v=>{const stage=v.closest('.clipt-fyp-slide')!.getBoundingClientRect(),r=v.getBoundingClientRect();return Math.max(Math.abs(r.x-stage.x),Math.abs(r.y-stage.y),Math.abs(r.width-stage.width),Math.abs(r.height-stage.height));})).toBeLessThanOrEqual(1);
+    const fit=size.width>size.height?'cover':'contain';
+    await expect(feed).toHaveAttribute('data-video-fit',fit);
+    await expect.poll(()=>video.evaluate(v=>getComputedStyle(v).objectFit)).toBe(fit);
+    if(fit==='cover')await expect.poll(()=>video.evaluate(v=>{const stage=v.closest('.clipt-fyp-slide')!.getBoundingClientRect(),r=v.getBoundingClientRect();return Math.max(Math.abs(r.x-stage.x),Math.abs(r.y-stage.y),Math.abs(r.width-stage.width),Math.abs(r.height-stage.height));})).toBeLessThanOrEqual(1);
+    if(fit==='contain') {
+      expect(await video.evaluate(v=>v.controls)).toBe(true);
+      await expect(page.locator('.clipt-bottom-swipe-zone')).toBeVisible();
+      const controller=page.locator('.clipt-controller');
+      if(await controller.getAttribute('data-hidden')==='true')await page.getByRole('button',{name:'Show controls',exact:true}).click();
+      const like=page.locator('[data-controller-action="like"]');
+      if(await like.isVisible()) {
+        await expect(page.locator('[data-controller-action="comment"]')).toBeVisible();
+      } else {
+        await page.getByRole('button',{name:'All controller actions',exact:true}).click();
+        const actions=page.getByRole('dialog',{name:'Controller actions',exact:true});
+        await expect(actions.getByRole('button',{name:/^Like post(?:\s|$)/})).toBeVisible();
+        await expect(actions.getByRole('button',{name:/^Comment — Open engagement/})).toBeVisible();
+        await actions.getByRole('button',{name:'Close',exact:true}).click();
+      }
+    }
     await expect(video).toHaveAttribute('data-fit-continuity','retained');expect(await video.getAttribute('src')).toBe(source);
     await expect(page.getByRole('button',{name:/^(Fill screen|Fit video)$/})).toHaveCount(0);
     for(const control of await page.locator('.clipt-controller-action:visible,.clipt-controller-home:visible').all()){

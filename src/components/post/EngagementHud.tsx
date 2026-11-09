@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CommentList } from './CommentList';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { AdjustablePanel } from '@/components/AdjustablePanel';
+import { shareClipt } from '@/native/app/share';
 
 export function CaptionText({ text }: { text: string }) {
   return <>{text.split(/(https?:\/\/[^\s<>]+)/g).map((part, index) =>
@@ -85,10 +86,10 @@ export function EngagementHud({ postId, creatorId, username, caption, avatarUrl,
       if (shareInProgress.current) return;
       shareInProgress.current = true;
       setSharing(true); setShareStatus('');
-      const url = new URL('/post/' + encodeURIComponent(postId), window.location.origin).href;
+      const url = '/post/' + encodeURIComponent(postId);
       try {
-        if (navigator.share) { await navigator.share({ title: 'Clipt', url }); setShareStatus('Share dialog completed.'); }
-        else { await navigator.clipboard.writeText(url); setShareStatus('Clipt link copied.'); }
+        const result = await shareClipt({ title: 'Clipt', url });
+        setShareStatus(result === 'shared' ? 'Share dialog completed.' : 'Clipt link copied.');
       } catch (cause) {
         if (!(cause instanceof DOMException && cause.name === 'AbortError')) setShareStatus('Could not share this Clipt. Please try again.');
       } finally { shareInProgress.current = false; setSharing(false); }

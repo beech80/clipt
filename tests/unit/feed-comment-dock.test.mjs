@@ -5,6 +5,7 @@ import {createRequire} from 'node:module';
 import ts from 'typescript';
 import React from 'react';
 import * as clipCarouselScroll from '../../src/lib/clip-carousel-scroll.ts';
+import * as feedVideoFit from '../../src/lib/feed-video-fit.ts';
 const require=createRequire(import.meta.url);
 const read=path=>readFileSync(new URL('../../src/'+path,import.meta.url),'utf8');
 function walk(node,predicate){
@@ -18,6 +19,7 @@ test('one feed-owned comment dock follows a sideways slide without closing or re
   const Dialog=()=>null,Hud=()=>null,Post=()=>null;
   const rows=[{id:'first',content:'First caption',profiles:{username:'one'}},{id:'second',content:'Second caption',profiles:{username:'two'}}];
   const deps={
+    '@/lib/feed-video-fit':feedVideoFit,
     '@/components/onboarding/HomeControlsTour':{HomeControlsTour:()=>null},
     '@/components/post/HashtagText':{default:({text})=>text,__esModule:true},
     '@/lib/publishing-status':{publishingSnapshot:()=>null,subscribePublishing:()=>()=>{}},

@@ -7,6 +7,7 @@ import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { configurationError } from './integrations/supabase/client';
+import NativeAppLifecycle from './native/app/NativeAppLifecycle';
 
 // Create a client with proper configuration
 const queryClient = new QueryClient({
@@ -44,6 +45,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <NativeAppLifecycle />
           <App />
         </AuthProvider>
       </QueryClientProvider>

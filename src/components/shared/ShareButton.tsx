@@ -1,7 +1,7 @@
 import { Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { shareClipt } from '@/native/app/share';
 
 interface ShareButtonProps {
   title: string;
@@ -20,24 +20,10 @@ export const ShareButton = ({
   size = 'sm',
   className = ''
 }: ShareButtonProps) => {
-  const [isSupported] = useState(() => {
-    return typeof navigator !== 'undefined' && !!navigator.share;
-  });
-
   const handleShare = async () => {
     try {
-      if (isSupported) {
-        await navigator.share({
-          title,
-          text,
-          url,
-        });
-        toast.success('Successfully shared!');
-      } else {
-        // Fallback for browsers that don't support Web Share API
-        await navigator.clipboard.writeText(url);
-        toast.success('Link copied to clipboard!');
-      }
+      const result = await shareClipt({ title, text, url });
+      toast.success(result === 'shared' ? 'Successfully shared!' : 'Link copied to clipboard!');
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
         toast.error('Failed to share content');

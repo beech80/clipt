@@ -7,7 +7,7 @@ import { LegalLinks } from '@/components/LegalLinks';
 
 const publicPaths = new Set(['/login', '/signup', '/reset-password', '/forgot-password',
   '/update-password', '/resend-verification', '/privacy', '/terms',
-  '/docs/privacy-policy', '/docs/terms-of-service', '/delete-account']);
+  '/docs/privacy-policy', '/docs/terms-of-service', '/delete-account', '/docs/user-guide']);
 
 /** Navigation UX only. Server account eligibility/RLS and Edge guards are authoritative. */
 export function BetaAccessGate({ children }: { children: ReactNode }) {

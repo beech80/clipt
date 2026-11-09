@@ -5,9 +5,11 @@ import path from 'path';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ mode, command }) => {
+  const envDir = process.env.CLIPT_ISOLATED_ENV_DIR || process.cwd();
   // A successful build must not silently ship the inert configuration-error UI.
-  if (command === 'build') readPublicEnvironment(loadEnv(mode, process.cwd(), 'VITE_'));
+  if (command === 'build') readPublicEnvironment(loadEnv(mode, envDir, 'VITE_'));
   return ({
+  envDir,
   base: '/',
   plugins: [react(), tailwindcss()],
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
