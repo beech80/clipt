@@ -1,5 +1,6 @@
 import { posthog } from 'posthog-js';
 import * as Sentry from "@sentry/browser";
+import { isAppStoreBuild } from '@/native/app/runtime';
 
 // Add type declaration for gtag
 declare global {
@@ -10,6 +11,7 @@ declare global {
 }
 
 export const trackEvent = (eventName: string, properties?: Record<string, unknown>) => {
+  if (isAppStoreBuild()) return;
   try {
     // Track event in PostHog
     posthog.capture(eventName, properties);
@@ -26,6 +28,7 @@ export const trackEvent = (eventName: string, properties?: Record<string, unknow
 };
 
 export const identifyUser = (userId: string, traits?: Record<string, unknown>) => {
+  if (isAppStoreBuild()) return;
   try {
     // Identify user in PostHog
     posthog.identify(userId, traits);
@@ -42,6 +45,7 @@ export const identifyUser = (userId: string, traits?: Record<string, unknown>) =
 };
 
 export const trackPageView = (pageName: string) => {
+  if (isAppStoreBuild()) return;
   try {
     // Track page view in PostHog
     posthog.capture('$pageview', {

@@ -3,9 +3,12 @@ import { resolve, dirname, relative, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
+import { storeInfoPlist, storePrivacyManifest, releaseVersion } from './ios-release-policy.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const platform = process.argv[2];
+const storeBuild = process.env.CLIPT_NATIVE_PROFILE === 'app-store';
+if (storeBuild && platform !== 'ios') throw Error('The App Store release profile is iOS only.');
 if (!['ios', 'android'].includes(platform)) throw Error('Choose ios or android.');
 const cliPackage = resolve(root, 'node_modules/@capacitor/cli/package.json');
 const version = JSON.parse(await readFile(cliPackage, 'utf8')).version;
@@ -17,6 +20,11 @@ if (await exists(host) && !(await exists(marker))) {
   throw Error('An existing native project was found. Preserve it and integrate manually; this generator never replaces an unmarked project.');
 }
 if (!(await exists(resolve(root, 'dist/index.html')))) throw Error('Build the web app before preparing native hosts.');
+if (storeBuild) {
+  const receipt = JSON.parse(await readFile(resolve(root, 'dist/clipt-native-release.json'), 'utf8'));
+  if (receipt.profile !== 'app-store' || receipt.backend !== 'https://slnjliheyiiummxhrgmk.supabase.co'
+      || receipt.broadcasting !== false || receipt.purchases !== false) throw Error('Build the isolated App Store assets first.');
+}
 function cap(...args) {
   const result = spawnSync(process.execPath, [resolve(root, 'node_modules/@capacitor/cli/bin/capacitor'), ...args], {
     cwd: root, env: { ...process.env, CI: 'true' }, stdio: 'inherit', timeout: 180000,
@@ -77,21 +85,23 @@ public class MainActivity extends BridgeActivity {
   const plist = require('plist');
   const xcode = require('xcode');
   const infoPath = resolve(host, 'App/App/Info.plist');
-  const info = plist.parse(await readFile(infoPath, 'utf8'));
+  let info = plist.parse(await readFile(infoPath, 'utf8'));
   info.NSCameraUsageDescription = 'Use your camera when you choose Camera Live.';
   info.NSMicrophoneUsageDescription = 'Include your microphone when you choose audio for a live broadcast.';
   info.NSScreenCaptureUsageDescription = 'Share the screen you select when you choose Screen Live.';
   info.UIBackgroundModes = ['audio', 'screen-capture'];
   info.CLIPTNativeBroadcastEnabled = process.env.CLIPT_NATIVE_BACKEND_READY === 'true';
+  if (storeBuild) info = storeInfoPlist(info, releaseVersion(process.env.CLIPT_APP_VERSION, process.env.CLIPT_BUILD_NUMBER));
+  else info.CFBundleURLTypes = [{ CFBundleTypeRole: 'Editor', CFBundleURLName: 'CLIPT Auth', CFBundleURLSchemes: ['com.slnjliheyiiummxhrgmk.clip'] }];
   info.UIApplicationSceneManifest.UIApplicationSupportsMultipleScenes = false;
   await writeFile(infoPath, plist.build(info));
   await transform('App/App/SceneDelegate.swift', source => source.replace('CAPBridgeViewController()', 'CliptBridgeViewController()'));
   const controller = 'CliptBridgeViewController.swift';
   await writeFile(resolve(host, 'App/App', controller), `import Capacitor
-import CliptBroadcaster
+${storeBuild ? '' : 'import CliptBroadcaster'}
 final class CliptBridgeViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
-        bridge?.registerPluginInstance(CliptBroadcasterPlugin())
+        ${storeBuild ? '// Broadcasting is excluded from the first App Store binary.' : 'bridge?.registerPluginInstance(CliptBroadcasterPlugin())'}
         webView?.scrollView.bounces = false
     }
 }
@@ -102,6 +112,13 @@ final class CliptBridgeViewController: CAPBridgeViewController {
   const group = project.findPBXGroupKey({ path: 'App' });
   if (!group) throw Error('App group was not found.');
   if (!project.hasFile(controller)) project.addSourceFile(controller, { target: project.getFirstTarget().uuid }, group);
+  if (storeBuild) {
+    await writeFile(resolve(host, 'App/App/PrivacyInfo.xcprivacy'), plist.build(storePrivacyManifest()));
+    if (!project.hasFile('PrivacyInfo.xcprivacy')) project.addResourceFile('PrivacyInfo.xcprivacy', { target: project.getFirstTarget().uuid }, group);
+    const version = releaseVersion(process.env.CLIPT_APP_VERSION, process.env.CLIPT_BUILD_NUMBER);
+    project.updateBuildProperty('MARKETING_VERSION', version.version);
+    project.updateBuildProperty('CURRENT_PROJECT_VERSION', version.build);
+  }
   await writeFile(projectPath, project.writeSync());
   // cap sync manages this file. Restore our reviewed exact/local dependencies
   // after every sync; one resolver identity is shared by host and plugin.
@@ -113,12 +130,14 @@ let package = Package(
     products: [.library(name: "CapApp-SPM", targets: ["CapApp-SPM"])],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.6.0"),
-        .package(path: "../../../native/ios")
+        .package(path: "../../../node_modules/@capacitor/app"),
+        .package(path: "../../../node_modules/@capacitor/share")${storeBuild ? '' : ',\n        .package(path: "../../../native/ios")'}
     ],
     targets: [.target(name: "CapApp-SPM", dependencies: [
         .product(name: "Capacitor", package: "capacitor-swift-pm"),
         .product(name: "Cordova", package: "capacitor-swift-pm"),
-        .product(name: "CliptBroadcaster", package: "ios")
+        .product(name: "CapacitorApp", package: "app"),
+        .product(name: "CapacitorShare", package: "share")${storeBuild ? '' : ',\n        .product(name: "CliptBroadcaster", package: "ios")'}
     ])]
 )
 `);

@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { readPublicEnvironment } from '@/lib/environment';
+import { isNativeApp } from '@/native/app/runtime';
 
 let configuration: ReturnType<typeof readPublicEnvironment> | undefined;
 export let configurationError: string | undefined;
@@ -20,7 +21,8 @@ export const supabase = createClient<Database>(
     auth: {
       autoRefreshToken: Boolean(configuration),
       persistSession: Boolean(configuration),
-      detectSessionInUrl: Boolean(configuration),
+      detectSessionInUrl: Boolean(configuration) && !isNativeApp(),
+      flowType: isNativeApp() ? 'pkce' : 'implicit',
     },
     global: configuration ? {} : {
       fetch: async () => { throw new Error(configurationError); },

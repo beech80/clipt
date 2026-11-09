@@ -131,9 +131,18 @@ for(const hand of ['right','left'])test('automatic sizing keeps the video and co
   const source=await video.getAttribute('src');
   for(const size of [{width:390,height:844},{width:844,height:390},{width:768,height:1024},{width:1280,height:800},{width:195,height:422}]){
     await page.setViewportSize(size);
-    await expect(feed).toHaveAttribute('data-video-fit','cover');
-    await expect.poll(()=>video.evaluate(v=>getComputedStyle(v).objectFit)).toBe('cover');
-    await expect.poll(()=>video.evaluate(v=>{const stage=v.closest('.clipt-fyp-slide')!.getBoundingClientRect(),r=v.getBoundingClientRect();return Math.max(Math.abs(r.x-stage.x),Math.abs(r.y-stage.y),Math.abs(r.width-stage.width),Math.abs(r.height-stage.height));})).toBeLessThanOrEqual(1);
+    const fit=size.width>size.height?'cover':'contain';
+    await expect(feed).toHaveAttribute('data-video-fit',fit);
+    await expect.poll(()=>video.evaluate(v=>getComputedStyle(v).objectFit)).toBe(fit);
+    if(fit==='cover')await expect.poll(()=>video.evaluate(v=>{const stage=v.closest('.clipt-fyp-slide')!.getBoundingClientRect(),r=v.getBoundingClientRect();return Math.max(Math.abs(r.x-stage.x),Math.abs(r.y-stage.y),Math.abs(r.width-stage.width),Math.abs(r.height-stage.height));})).toBeLessThanOrEqual(1);
+    if(fit==='contain') {
+      expect(await video.evaluate(v=>v.controls)).toBe(true);
+      await expect(page.locator('.clipt-bottom-swipe-zone')).toBeVisible();
+      const controller=page.locator('.clipt-controller');
+      if(await controller.getAttribute('data-hidden')==='true')await page.getByRole('button',{name:'Show controls',exact:true}).click();
+      await expect(page.locator('[data-controller-action="like"]')).toBeVisible();
+      await expect(page.locator('[data-controller-action="comment"]')).toBeVisible();
+    }
     await expect(video).toHaveAttribute('data-fit-continuity','retained');expect(await video.getAttribute('src')).toBe(source);
     await expect(page.getByRole('button',{name:/^(Fill screen|Fit video)$/})).toHaveCount(0);
     for(const control of await page.locator('.clipt-controller-action:visible,.clipt-controller-home:visible').all()){

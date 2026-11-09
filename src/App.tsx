@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { isDirectEntry, needsAppWelcome, readAppEntry, rememberAppEntry } from '@/lib/app-entry';
 import {installNativeBroadcastAccountGuard} from '@/native/broadcast/accountGuard';
+import { isAppStoreBuild } from '@/native/app/runtime';
 import './pages/clipt-console.css';
 import './pages/clipt-auth-layout.css';
 import {useAuthViewport} from './hooks/useAuthViewport';
@@ -57,6 +58,10 @@ const AutomaticPhotoCheck = ['development','staging'].includes(import.meta.env.V
   && import.meta.env.VITE_SUPABASE_URL === 'https://akiksrlzdqvipqbbjxpw.supabase.co'
   ? React.lazy(() => import('./pages/AutomaticPhotoCheck')) : null;
 const PaymentSuccess = React.lazy(() => import('./pages/payment-success'));
+const NativeUnavailable = ({ broadcasting = false }: { broadcasting?: boolean }) => <main className="mx-auto max-w-lg p-6 space-y-4">
+  <h1 className="text-2xl font-bold">{broadcasting ? 'Broadcasting is coming later' : 'Memberships are unavailable in this release'}</h1>
+  <p>{broadcasting ? 'You can watch available streams. Camera and screen broadcasting are not enabled in this iPhone release.' : 'CLIPT is free to use. Paid memberships and purchases are not enabled in this iPhone release.'}</p>
+</main>;
 import { AuthGuard } from './components/AuthGuard';
 import { MfaGate } from './components/MfaGate';
 import { BetaAccessGate } from './components/BetaAccessGate';
@@ -145,7 +150,7 @@ const App = () => {
           <Route path="/admin" element={<AuthGuard><Admin /></AuthGuard>} />
           <Route path="/moderation" element={<AuthGuard><Admin /></AuthGuard>} />
           <Route path="/tokens" element={<AuthGuard><TokenStore /></AuthGuard>} />
-          <Route path="/subscription" element={<Subscription />} />
+          <Route path="/subscription" element={isAppStoreBuild() ? <NativeUnavailable /> : <Subscription />} />
           {DevelopmentStorageCheck && <Route path="/development-storage-check" element={<AuthGuard><DevelopmentStorageCheck /></AuthGuard>} />}
           {DevelopmentAzureCheck && <Route path="/development-azure-check" element={<AuthGuard><DevelopmentAzureCheck /></AuthGuard>} />}
           {DevelopmentBillingCheck && <Route path="/development-billing-check" element={<AuthGuard><DevelopmentBillingCheck /></AuthGuard>} />}
@@ -182,7 +187,7 @@ const App = () => {
           <Route path="/retro-search" element={<RetroSearchPage />} />
           <Route path="/streaming/:id" element={<Streaming />} />
           <Route path="/live" element={<LiveDiscovery />} />
-          <Route path="/stream-setup" element={<AuthGuard><StreamSetup /></AuthGuard>} />
+          <Route path="/stream-setup" element={<AuthGuard>{isAppStoreBuild() ? <NativeUnavailable broadcasting /> : <StreamSetup />}</AuthGuard>} />
           <Route path="/streaming" element={<Navigate to="/live" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
