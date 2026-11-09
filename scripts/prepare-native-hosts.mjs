@@ -4,11 +4,14 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { storeInfoPlist, storePrivacyManifest, releaseVersion } from './ios-release-policy.mjs';
+import { prepareAndroidStore } from './prepare-android-store.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const platform = process.argv[2];
-const storeBuild = process.env.CLIPT_NATIVE_PROFILE === 'app-store';
-if (storeBuild && platform !== 'ios') throw Error('The App Store release profile is iOS only.');
+const profile = process.env.CLIPT_NATIVE_PROFILE;
+const storeBuild = ['app-store', 'play-store'].includes(profile);
+if (storeBuild && (profile === 'app-store' ? platform !== 'ios' : platform !== 'android'))
+  throw Error('The selected native store profile does not match the platform.');
 if (!['ios', 'android'].includes(platform)) throw Error('Choose ios or android.');
 const cliPackage = resolve(root, 'node_modules/@capacitor/cli/package.json');
 const version = JSON.parse(await readFile(cliPackage, 'utf8')).version;
@@ -19,10 +22,13 @@ async function exists(path) { try { await access(path); return true; } catch { r
 if (await exists(host) && !(await exists(marker))) {
   throw Error('An existing native project was found. Preserve it and integrate manually; this generator never replaces an unmarked project.');
 }
+if (platform === 'android' && storeBuild && await exists(host)
+    && JSON.parse(await readFile(marker, 'utf8')).profile !== 'play-store')
+  throw Error('Preserve the existing development Android host and generate the store profile in a fresh checkout.');
 if (!(await exists(resolve(root, 'dist/index.html')))) throw Error('Build the web app before preparing native hosts.');
 if (storeBuild) {
   const receipt = JSON.parse(await readFile(resolve(root, 'dist/clipt-native-release.json'), 'utf8'));
-  if (receipt.profile !== 'app-store' || receipt.backend !== 'https://slnjliheyiiummxhrgmk.supabase.co'
+  if (receipt.profile !== profile || receipt.backend !== 'https://slnjliheyiiummxhrgmk.supabase.co'
       || receipt.broadcasting !== false || receipt.purchases !== false) throw Error('Build the isolated App Store assets first.');
 }
 function cap(...args) {
@@ -33,7 +39,7 @@ function cap(...args) {
 }
 if (!(await exists(host))) {
   cap('add', platform);
-  await writeFile(marker, JSON.stringify({ generator: 'clipt-native-host-v1', capacitor: version }) + '\n');
+  await writeFile(marker, JSON.stringify({ generator: 'clipt-native-host-v1', capacitor: version, profile: storeBuild ? profile : 'development' }) + '\n');
 }
 cap('sync', platform);
 async function transform(path, change) {
@@ -46,6 +52,8 @@ function replaceRequired(source, search, replacement) {
   return source.replace(search, replacement);
 }
 if (platform === 'android') {
+  if (storeBuild) await prepareAndroidStore(host, releaseVersion(process.env.CLIPT_APP_VERSION, process.env.CLIPT_BUILD_NUMBER));
+  else {
   await transform('settings.gradle', source => source.includes("include ':clipt-broadcaster'") ? source : source +
     "\ninclude ':clipt-broadcaster'\nproject(':clipt-broadcaster').projectDir = new File('../native/android')\n");
   await transform('build.gradle', source => {
@@ -91,6 +99,7 @@ public class MainActivity extends BridgeActivity {
         </activity>`);
     return source;
   });
+  }
 } else {
   const require = createRequire(cliPackage);
   const plist = require('plist');

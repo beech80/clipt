@@ -6,6 +6,9 @@ import { spawnSync } from 'node:child_process';
 import { storePublicEnvironment, releaseVersion } from './ios-release-policy.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const platform = process.env.CLIPT_STORE_PLATFORM || 'ios';
+if (!['ios', 'android'].includes(platform)) throw Error('Unsupported native store platform.');
+const profile = platform === 'android' ? 'play-store' : 'app-store';
 const publicConfig = JSON.parse(await readFile(resolve(root, 'native/store-client.json'), 'utf8'));
 const env = storePublicEnvironment(publicConfig);
 const version = releaseVersion(process.env.CLIPT_APP_VERSION, process.env.CLIPT_BUILD_NUMBER);
@@ -21,10 +24,10 @@ try {
     cwd: root, env: { ...clean, ...env, CLIPT_ISOLATED_ENV_DIR: envDir }, stdio: 'inherit', timeout: 600000,
   });
   if (build.error || build.status !== 0) throw Error('The isolated native web build failed.');
-  await mkdir(resolve(root, 'outputs/ios-store'), { recursive: true });
-  await writeFile(resolve(root, 'dist/clipt-native-release.json'), JSON.stringify({ profile: 'app-store',
+  await mkdir(resolve(root, 'outputs/' + platform + '-store'), { recursive: true });
+  await writeFile(resolve(root, 'dist/clipt-native-release.json'), JSON.stringify({ profile,
     appId: 'com.slnjliheyiiummxhrgmk.clip', ...version, backend: env.VITE_SUPABASE_URL,
     broadcasting: false, purchases: false, tracking: false,
   }, null, 2) + '\n');
-  console.log('Built bundled App Store assets. No deployment, signing or submission performed.');
+  console.log('Built bundled ' + profile + ' assets. No deployment, signing or submission performed.');
 } finally { await rm(envDir, { recursive: true, force: true }); }
