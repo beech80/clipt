@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {checkClipReward,clipRewardMessage} from '@/lib/clip-reward';
+import {streamingEnabled} from '@/config/featureFlags';
 
 export default function TokenStore() {
   const { user } = useAuth();
@@ -53,7 +54,7 @@ export default function TokenStore() {
       <Link to="/subscription" className="block underline">Premium and Maxed memberships</Link>
       <p className="text-sm">Tokens buy virtual gifts and Boost exposure. They are not Trophy votes and do not increase Top Clipts rankings.</p>
       <Link to="/boosts" className="block underline">Browse Boosts</Link>
-      <Link to="/live" className="inline-block underline">Find a live creator to support</Link>
+      {streamingEnabled&&<Link to="/live" className="inline-block underline">Find a live creator to support</Link>}
     </section>
     <section id="token-earn" className="space-y-3 rounded-xl border border-primary/30 p-5" aria-label="Publication rewards">
       <h2 className="text-lg font-semibold">Earn from a Clipt</h2>
@@ -82,3 +83,4 @@ export default function TokenStore() {
     </section>}
   </main>;
 }
+
