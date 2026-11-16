@@ -13,6 +13,7 @@ import NavigationMenu from '@/pages/Menu';
 import { pageControllerLayout, pageControllerContext, pageActionTarget, activatePageControl, type PageControllerAction, type PageControllerLayout } from '@/lib/page-controller';
 
 import {gameFeedNavigation} from '@/lib/game-feed-navigation';
+import {streamingEnabled} from '@/config/featureFlags';
 
 const pageIcons = { search: Search, games: Gamepad2, clips: Clapperboard, users: UsersRound, edit: Pencil, settings: Settings, message: MessageSquare, history: History, chart: BarChart3, coins: Coins, help: HelpCircle, shield: Shield, eye: Eye, camera: Camera, bell: Bell, check: Check, radio: Radio };
 
@@ -95,7 +96,7 @@ export function PortraitFeedToggle({ feed, onToggle, channel=false }: { feed: st
 export default function GameBoyControls({ currentPostId }: { currentPostId?: string | null }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const gameNavigation=gameFeedNavigation(location.pathname,location.search||'');
+  const gameNavigation=streamingEnabled?gameFeedNavigation(location.pathname,location.search||''):null;
   const activePathRef = useRef(location.pathname);
   activePathRef.current = location.pathname;
   const horizontal = location.pathname === '/' || location.pathname === '/clipts';
@@ -399,3 +400,4 @@ export default function GameBoyControls({ currentPostId }: { currentPostId?: str
     </div>}
   </DialogContent></Dialog></>;
 }
+
