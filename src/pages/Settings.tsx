@@ -15,6 +15,7 @@ import { DataPrivacySettings } from "@/components/settings/DataPrivacySettings";
 import { PhotoSafetyNotices } from "@/components/settings/PhotoSafetyNotices";
 import { CreatorSafetySettings } from '@/components/settings/CreatorSafetySettings';
 import { StreamSettings } from "@/components/streaming/StreamSettings";
+import { streamingEnabled } from "@/config/featureFlags";
 import {
   Bell,
   Volume2,
@@ -195,7 +196,7 @@ const Settings = () => {
             {id:'notifications',label:'Notifications',icon:Bell},
             {id:'accessibility',label:'Accessibility',icon:Layout},
             {id:'storage',label:'Device storage',icon:HardDrive},
-            {id:'stream',label:'Stream preferences',icon:Video},
+            ...(streamingEnabled ? [{id:'stream',label:'Stream preferences',icon:Video}] : []),
             {id:'help',label:'Help & documentation',icon:BookOpen},
           ].map(({id,label,icon:Icon}) => <Link key={id} to={`#settings-${id}`} onClick={() => document.getElementById(`settings-${id}`)?.scrollIntoView({block:'start'})} aria-current={activeSection === `#settings-${id}` ? 'location' : undefined}><Icon aria-hidden="true" className="h-5 w-5 shrink-0" /><span>{label}</span></Link>)}
         </nav>
@@ -328,7 +329,7 @@ const Settings = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
+                {streamingEnabled && <div className="flex items-center justify-between">
                   <Label htmlFor="stream-notifications">Stream Notifications</Label>
                   <Switch
                     id="stream-notifications"
@@ -336,7 +337,7 @@ const Settings = () => {
                     checked={notificationPreferences?.stream_notifications}
                     onCheckedChange={(checked) => handleNotificationToggle('stream_notifications', checked)}
                   />
-                </div>
+                </div>}
 
                 <div className="flex items-center justify-between">
                   <Label htmlFor="mention-notifications">Mention Notifications</Label>
@@ -360,7 +361,7 @@ const Settings = () => {
               </div>
             </Card>
 
-            {user && <section id="settings-stream" aria-label="Stream preferences"><StreamSettings userId={user.id} /></section>}
+            {streamingEnabled && user && <section id="settings-stream" aria-label="Stream preferences"><StreamSettings userId={user.id} /></section>}
           </div>
         </div>
         </div>
@@ -370,3 +371,4 @@ const Settings = () => {
 };
 
 export default Settings;
+
