@@ -18,6 +18,7 @@ import {
 import { SlidersHorizontal } from "lucide-react";
 import { SearchFilters as SearchFiltersType } from "@/types/post";
 import { toast } from "sonner";
+import { streamingEnabled } from "@/config/featureFlags";
 
 interface SearchFiltersProps {
   filters: SearchFiltersType;
@@ -48,6 +49,7 @@ export function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) 
               value={filters.type}
               onValueChange={(value) => {
                 if (value !== 'all' && value !== 'posts' && value !== 'profiles' && value !== 'streams') return;
+                if (!streamingEnabled && value === 'streams') return;
                 onFiltersChange({ ...filters, type: value });
                 toast.success(`Filtering by ${value}`);
               }}
@@ -59,7 +61,7 @@ export function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) 
                 <SelectItem value="all">All</SelectItem>
                 <SelectItem value="posts">Posts</SelectItem>
                 <SelectItem value="profiles">Profiles</SelectItem>
-                <SelectItem value="streams">Streams</SelectItem>
+                {streamingEnabled && <SelectItem value="streams">Streams</SelectItem>}
               </SelectContent>
             </Select>
           </div>
@@ -116,3 +118,4 @@ export function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) 
     </Sheet>
   );
 }
+
