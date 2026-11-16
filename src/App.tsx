@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { isDirectEntry, needsAppWelcome, readAppEntry, rememberAppEntry } from '@/lib/app-entry';
 import {installNativeBroadcastAccountGuard} from '@/native/broadcast/accountGuard';
+import { streamingEnabled } from '@/config/featureFlags';
 import './pages/clipt-console.css';
 import './pages/clipt-auth-layout.css';
 import {useAuthViewport} from './hooks/useAuthViewport';
@@ -71,7 +72,7 @@ import ConsoleMasthead from './components/ConsoleMasthead';
 
 // Main App component
 const App = () => {
-  React.useEffect(installNativeBroadcastAccountGuard, []);
+  React.useEffect(() => streamingEnabled ? installNativeBroadcastAccountGuard() : undefined, []);
   useApplyAccessibilityPreferences();
   const location = useLocation();
   const navigate = useNavigate();
@@ -178,12 +179,12 @@ const App = () => {
           <Route path="/drafts" element={<AuthGuard><Drafts /></AuthGuard>} />
           <Route path="/post/:id/comments" element={<CommentsPage />} />
           <Route path="/comments/:id" element={<CommentsPage />} />
-          <Route path="/game-streamers/:id" element={<GameStreamers />} />
+          <Route path="/game-streamers/:id" element={streamingEnabled ? <GameStreamers /> : <Navigate to="/clipts" replace />} />
           <Route path="/retro-search" element={<RetroSearchPage />} />
-          <Route path="/streaming/:id" element={<Streaming />} />
-          <Route path="/live" element={<LiveDiscovery />} />
-          <Route path="/stream-setup" element={<AuthGuard><StreamSetup /></AuthGuard>} />
-          <Route path="/streaming" element={<Navigate to="/live" replace />} />
+          <Route path="/streaming/:id" element={streamingEnabled ? <Streaming /> : <Navigate to="/clipts" replace />} />
+          <Route path="/live" element={streamingEnabled ? <LiveDiscovery /> : <Navigate to="/clipts" replace />} />
+          <Route path="/stream-setup" element={streamingEnabled ? <AuthGuard><StreamSetup /></AuthGuard> : <Navigate to="/clipts" replace />} />
+          <Route path="/streaming" element={<Navigate to={streamingEnabled ? "/live" : "/clipts"} replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </React.Suspense>
@@ -198,3 +199,4 @@ const App = () => {
 };
 
 export default App;
+
