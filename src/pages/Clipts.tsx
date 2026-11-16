@@ -19,6 +19,7 @@ import { cancelClipScroll, scrollClipTo } from '@/lib/clip-carousel-scroll';
 import { usePortraitSwipe } from '@/hooks/usePortraitSwipe';
 import {publishingSnapshot,subscribePublishing} from '@/lib/publishing-status';
 import {HomeControlsTour} from '@/components/onboarding/HomeControlsTour';
+import { streamingEnabled } from '@/config/featureFlags';
 
 function subscribeLandscape(onChange: () => void) {
   const query = window.matchMedia('(orientation: landscape)');
@@ -51,7 +52,7 @@ export default function Clipts() {
   const [portraitClips, setPortraitClips] = useState<Record<string, boolean>>({});
   const landscape = useSyncExternalStore(subscribeLandscape, landscapeSnapshot, () => false);
   useEffect(() => {
-    const toggle = () => {if(gameId&&!invalidGame){navigate('/live?game='+(selectedGame.data?.id||gameId));return;}setFeed(current => current === 'squad' ? 'clipts' : 'squad');};
+    const toggle = () => {if(streamingEnabled&&gameId&&!invalidGame){navigate('/live?game='+(selectedGame.data?.id||gameId));return;}setFeed(current => current === 'squad' ? 'clipts' : 'squad');};
     window.addEventListener('clipt:toggle-feed', toggle);
     return () => window.removeEventListener('clipt:toggle-feed', toggle);
   }, [gameId,invalidGame,selectedGame.data?.id,navigate]);
@@ -244,3 +245,4 @@ export default function Clipts() {
     </Button>}
   </main>;
 }
+
