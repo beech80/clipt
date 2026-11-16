@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { Trophy, Gamepad2, Users, Radio } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
+import {streamingEnabled} from '@/config/featureFlags';
 
 export default function Achievements() {
   const { user } = useAuth();
@@ -108,15 +109,15 @@ export default function Achievements() {
       <Tabs defaultValue="all" className="space-y-6">
         <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="streaming">Streaming</TabsTrigger>
+          {streamingEnabled&&<TabsTrigger value="streaming">Streaming</TabsTrigger>}
           <TabsTrigger value="social">Social</TabsTrigger>
           <TabsTrigger value="gaming">Gaming</TabsTrigger>
         </TabsList>
 
-        {['all', 'streaming', 'social', 'gaming'].map(category => (
+        {(streamingEnabled?['all', 'streaming', 'social', 'gaming']:['all','social','gaming']).map(category => (
           <TabsContent key={category} value={category} className="clipt-achievement-catalog">
             {achievements
-              ?.filter(a => category === 'all' || a.category === category)
+              ?.filter(a => (streamingEnabled || a.category !== 'streaming') && (category === 'all' || a.category === category))
               .map(achievement => {
                 const progress = getProgressForAchievement(achievement.id);
                 const progressPercent = progress?.tracked && achievement.target_value > 0
@@ -182,3 +183,4 @@ export default function Achievements() {
     </div>
   );
 }
+
