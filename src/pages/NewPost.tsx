@@ -20,6 +20,7 @@ import {checkClipReward,clipRewardMessage} from '@/lib/clip-reward';
 import {toast} from 'sonner';
 import { communityErrorMessage, communityTextWarning } from '@/lib/community-text';
 import {beginPublishing,publishingBlocked,publishingUncertain,updatePublishing,subscribePublishing,publishingSnapshot} from '@/lib/publishing-status';
+import { streamingEnabled } from '@/config/featureFlags';
 
 export default function NewPost() {
   const navigate = useNavigate();
@@ -238,7 +239,7 @@ export default function NewPost() {
     <nav aria-label="Create content" className="flex flex-wrap gap-2">
       {(['video', 'photo'] as const).map(value => <Button key={value} type="button" variant={kind === value ? 'default' : 'outline'} aria-pressed={kind === value}
         disabled={Boolean(draftId) || submitting || preparing} onClick={() => { selection.current += 1; setKind(value); setFile(null); setPlayable(false); setError(''); }}>{value === 'video' ? 'Video' : 'Photo'}</Button>)}
-      <Button asChild variant="outline"><Link to="/stream-setup">Live stream</Link></Button>
+      {streamingEnabled && <Button asChild variant="outline"><Link to="/stream-setup">Live stream</Link></Button>}
     </nav>
     <form onSubmit={publish} className="clipt-create-layout">
       <section className="clipt-create-media space-y-5" aria-label="Media preview and upload">
@@ -292,3 +293,4 @@ export default function NewPost() {
     </form>
   </main>;
 }
+
