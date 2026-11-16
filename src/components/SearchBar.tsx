@@ -13,6 +13,7 @@ import { SearchResults } from "./search/SearchResults";
 import type { SearchResultData } from "./search/SearchResults";
 import { collectSearchResults } from "@/lib/search-results";
 import { Json, Tables } from "@/integrations/supabase/types";
+import { streamingEnabled } from "@/config/featureFlags";
 
 export function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -114,7 +115,7 @@ export function SearchBar() {
         );
       }
 
-      if (filters.type === 'all' || filters.type === 'streams') {
+      if (streamingEnabled && (filters.type === 'all' || filters.type === 'streams')) {
         let query = supabase
           .from('streams')
           .select(`
@@ -148,7 +149,7 @@ export function SearchBar() {
     const saved = historyItem.filters;
     if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
       setFilters({
-        type: saved.type === 'posts' || saved.type === 'profiles' || saved.type === 'streams' ? saved.type : 'all',
+        type: saved.type === 'posts' || saved.type === 'profiles' || (streamingEnabled && saved.type === 'streams') ? saved.type : 'all',
         dateRange: saved.dateRange === 'today' || saved.dateRange === 'week' || saved.dateRange === 'month' ? saved.dateRange : 'all',
         hasMedia: saved.hasMedia === true,
         sortBy: saved.sortBy === 'relevant' ? 'relevant' : 'recent',
@@ -202,3 +203,4 @@ export function SearchBar() {
     </div>
   );
 }
+
