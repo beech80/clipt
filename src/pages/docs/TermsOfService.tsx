@@ -73,7 +73,7 @@ const TermsOfService = () => {
         <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
           <li>If you stream live, you are responsible for what you broadcast.</li>
           <li>Beta features can change, be limited or be unavailable. Displaying a feature does not mean purchases or payouts are enabled.</li>
-          <li>Sandbox checkout is for testing, not real charges. Returning from checkout alone does not confirm payment or membership.</li>
+          <li>CLIPT's current social-media launch is free. Paid membership tiers are postponed and unavailable to users.</li>
           <li>Any real paid offering must show its price, renewal and cancellation terms before purchase. These Terms do not enable real billing or promise creator earnings.</li>
           <li>Tokens, Trophy votes and other in-app activity are not a promise of cash value, investment returns or redemption.</li>
         </ul>

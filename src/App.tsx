@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { isDirectEntry, needsAppWelcome, readAppEntry, rememberAppEntry } from '@/lib/app-entry';
-import { streamingEnabled } from '@/config/featureFlags';
+import { membershipsEnabled, streamingEnabled } from '@/config/featureFlags';
 import './pages/clipt-console.css';
 import './pages/clipt-auth-layout.css';
 import {useAuthViewport} from './hooks/useAuthViewport';
@@ -47,7 +47,7 @@ const UserGuide = React.lazy(() => import('./pages/docs/UserGuide'));
 const PrivacyPolicy = React.lazy(() => import('./pages/docs/PrivacyPolicy'));
 const TermsOfService = React.lazy(() => import('./pages/docs/TermsOfService'));
 const DeleteAccount = React.lazy(() => import('./pages/DeleteAccount'));
-const Subscription = React.lazy(() => import('./pages/Subscription'));
+const Subscription = membershipsEnabled ? React.lazy(() => import('./pages/Subscription')) : null;
 const DevelopmentStorageCheck = import.meta.env.DEV ? React.lazy(() => import('./pages/DevelopmentStorageCheck')) : null;
 const DevelopmentAzureCheck = ['development','staging'].includes(import.meta.env.VITE_APP_ENV)
   && import.meta.env.VITE_SUPABASE_URL === 'https://akiksrlzdqvipqbbjxpw.supabase.co'
@@ -56,7 +56,7 @@ const DevelopmentBillingCheck = import.meta.env.DEV ? React.lazy(() => import('.
 const AutomaticPhotoCheck = ['development','staging'].includes(import.meta.env.VITE_APP_ENV)
   && import.meta.env.VITE_SUPABASE_URL === 'https://akiksrlzdqvipqbbjxpw.supabase.co'
   ? React.lazy(() => import('./pages/AutomaticPhotoCheck')) : null;
-const PaymentSuccess = React.lazy(() => import('./pages/payment-success'));
+const PaymentSuccess = membershipsEnabled ? React.lazy(() => import('./pages/payment-success')) : null;
 import { AuthGuard } from './components/AuthGuard';
 import { MfaGate } from './components/MfaGate';
 import { BetaAccessGate } from './components/BetaAccessGate';
@@ -148,13 +148,13 @@ const App = () => {
           <Route path="/admin" element={<AuthGuard><Admin /></AuthGuard>} />
           <Route path="/moderation" element={<AuthGuard><Admin /></AuthGuard>} />
           <Route path="/tokens" element={<AuthGuard><TokenStore /></AuthGuard>} />
-          <Route path="/subscription" element={<Subscription />} />
+          <Route path="/subscription" element={Subscription ? <Subscription /> : <Navigate to="/tokens" replace />} />
           {DevelopmentStorageCheck && <Route path="/development-storage-check" element={<AuthGuard><DevelopmentStorageCheck /></AuthGuard>} />}
           {DevelopmentAzureCheck && <Route path="/development-azure-check" element={<AuthGuard><DevelopmentAzureCheck /></AuthGuard>} />}
           {DevelopmentBillingCheck && <Route path="/development-billing-check" element={<AuthGuard><DevelopmentBillingCheck /></AuthGuard>} />}
           {AutomaticPhotoCheck && <Route path="/development-photo-check" element={<AuthGuard><AutomaticPhotoCheck /></AuthGuard>} />}
-          <Route path="/payment-success" element={<PaymentSuccess />} />
-          <Route path="/membership" element={<Navigate to="/subscription" replace />} />
+          <Route path="/payment-success" element={PaymentSuccess ? <PaymentSuccess /> : <Navigate to="/tokens" replace />} />
+          <Route path="/membership" element={<Navigate to={membershipsEnabled ? "/subscription" : "/tokens"} replace />} />
           <Route path="/creator-dashboard" element={<AuthGuard><CreatorDashboard /></AuthGuard>} />
           <Route path="/boosts" element={<AuthGuard><Boosts /></AuthGuard>} />
           <Route path="/messages/:userId" element={<AuthGuard><Messages /></AuthGuard>} />

@@ -83,3 +83,16 @@ test('production bundle exposes exactly the five social Boosts to an authenticat
   for(const pack of packages)await expect(page.getByText(String(pack.name),{exact:true})).toBeVisible();
   await expect(page.getByText(/STREAM SURGE/i)).toHaveCount(0);
 });
+
+test('production free launch hides tiers and redirects legacy billing routes', async ({page})=>{
+  test.skip(!process.env.LIVE_BASE_URL,'Only runs against an explicitly supplied production URL.');
+  for(const route of ['/subscription','/membership','/payment-success']){
+    await page.goto(route,{waitUntil:'domcontentloaded'});
+    const enter=page.getByRole('button',{name:'ENTER CLIPT',exact:true});
+    if(await enter.isVisible().catch(()=>false))await enter.click();
+    const gate=page.getByRole('heading',{name:'CLIPT web beta',exact:true});
+    if(await gate.isVisible().catch(()=>false))continue;
+    await expect(page).toHaveURL(/\/tokens(?:[?#]|$)/);
+    await expect(page.getByText(/Premium|Maxed|Subscribe in sandbox/i)).toHaveCount(0);
+  }
+});

@@ -18,7 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { LegalLinks } from '@/components/LegalLinks';
-import { streamingEnabled } from '@/config/featureFlags';
+import { membershipsEnabled, streamingEnabled } from '@/config/featureFlags';
 
 const Menu = ({ embedded = false }: { embedded?: boolean }) => {
   const navigate = useNavigate();
@@ -40,7 +40,9 @@ const Menu = ({ embedded = false }: { embedded?: boolean }) => {
     { title: 'Clipts (Home)', icon: <Home className="h-6 w-6 mr-4" />, path: '/clipts' },
     { title: 'Post / Create', icon: <Video className="h-6 w-6 mr-4" />, path: '/new-post' },
     { title: 'Profile', icon: <User className="h-6 w-6 mr-4" />, path: '/profile' },
-    { title: 'Membership / Subscription', icon: <Crown className="h-6 w-6 mr-4" />, path: '/subscription' },
+    ...(membershipsEnabled ? [
+      { title: 'Membership / Subscription', icon: <Crown className="h-6 w-6 mr-4" />, path: '/subscription' },
+    ] : []),
     ...(streamingEnabled ? [
       { title: 'Live Streams', icon: <Video className="h-6 w-6 mr-4" />, path: '/live' },
       { title: 'Stream Setup', icon: <Video className="h-6 w-6 mr-4" />, path: '/stream-setup' },

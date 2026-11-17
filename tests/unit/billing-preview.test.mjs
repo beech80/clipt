@@ -6,19 +6,21 @@ const source = stripTypeScriptTypes(readFileSync(new URL('../../src/lib/billing-
 const { billingPreviewMode } = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
 const development = { VITE_APP_ENV: 'development', VITE_SUPABASE_URL: 'https://akiksrlzdqvipqbbjxpw.supabase.co' };
 
-test('global menu exposes the subscription route without initiating checkout', () => {
+test('free launch hides the subscription menu while preserving the future tier source', () => {
   const menu = readFileSync(new URL('../../src/pages/Menu.tsx', import.meta.url), 'utf8');
+  assert.match(menu, /membershipsEnabled \? \[/);
   assert.match(menu, /title: 'Membership \/ Subscription'.*path: '\/subscription'/);
-  assert.ok(menu.indexOf("title: 'Membership / Subscription'") < menu.indexOf("title: 'Live Streams'"));
   assert.match(menu, /<Link to=\{item.path\}>/);
   assert.doesNotMatch(menu, /create-checkout|manage-subscription/);
 });
-test('membership is wired into the mounted App rather than only the unused route catalog', () => {
+test('free launch redirects tier and payment routes while preserving lazy future pages', () => {
   const app = readFileSync(new URL('../../src/App.tsx', import.meta.url), 'utf8');
-  assert.match(app, /React\.lazy\(\(\) => import\('\.\/pages\/Subscription'\)\)/);
-  assert.match(app, /path="\/subscription" element=\{<Subscription \/>\}/);
-  assert.match(app, /path="\/membership" element=\{<Navigate to="\/subscription" replace \/>\}/);
-  assert.match(app, /path="\/payment-success" element=\{<PaymentSuccess \/>\}/);
+  assert.match(app, /membershipsEnabled \? React\.lazy\(\(\) => import\('\.\/pages\/Subscription'\)\) : null/);
+  assert.match(app, /path="\/subscription" element=\{Subscription \? <Subscription \/> : <Navigate to="\/tokens" replace \/>\}/);
+  assert.match(app, /path="\/payment-success" element=\{PaymentSuccess \? <PaymentSuccess \/> : <Navigate to="\/tokens" replace \/>\}/);
+  assert.match(app, /membershipsEnabled \? "\/subscription" : "\/tokens"/);
+  const flags=readFileSync(new URL('../../src/config/featureFlags.ts',import.meta.url),'utf8');
+  assert.match(flags,/VITE_MEMBERSHIPS_ENABLED === 'true'/);
 });
 test('return page cannot grant membership and checkout retry keys require server confirmation or verified expiry',()=>{
  const returned=readFileSync(new URL('../../src/pages/payment-success.tsx',import.meta.url),'utf8');

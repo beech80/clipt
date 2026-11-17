@@ -10,7 +10,7 @@ import { userRoutes } from "./routes/userRoutes";
 import { gameRoutes } from "./routes/gameRoutes";
 import { paymentRoutes } from "./routes/paymentRoutes";
 import { moderationRoutes } from "./routes/moderationRoutes";
-import Subscription from "@/pages/Subscription";
+import { Navigate } from "react-router-dom";
 
 export const routes: RouteObject[] = [
   {
@@ -31,7 +31,7 @@ export const routes: RouteObject[] = [
   },
   {
     path: "/subscription",
-    element: <Subscription />,
+    element: <Navigate to="/tokens" replace />,
   },
   ...authRoutes,
   docsRoutes,

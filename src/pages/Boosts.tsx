@@ -9,6 +9,7 @@ import {Button} from '@/components/ui/button';
 import {Card} from '@/components/ui/card';
 import {Select,SelectTrigger,SelectValue,SelectContent,SelectItem} from '@/components/ui/select';
 import {AlertDialog,AlertDialogContent,AlertDialogHeader,AlertDialogTitle,AlertDialogDescription,AlertDialogFooter} from '@/components/ui/alert-dialog';
+import {membershipsEnabled} from '@/config/featureFlags';
 
 const packageCodes=['squad_blast','hidden_gem','chain_reaction','squad_recruit','king_now'] as const;
 type PackageCode=(typeof packageCodes)[number];
@@ -101,9 +102,9 @@ export default function Boosts(){
       <Button onClick={()=>void economy.refetch()}>Retry</Button></Card>}
     {!economy.isError&&data&&<>
       <Card className="p-5 border-primary/40 space-y-2" aria-label="Token balance">
-        <p className="text-sm uppercase tracking-widest text-muted-foreground">{data.membership} membership</p>
+        <p className="text-sm uppercase tracking-widest text-muted-foreground">{membershipsEnabled?`${data.membership} membership`:'Free account'}</p>
         <p className="text-3xl font-bold tabular-nums">{data.balance.toLocaleString()} <span className="text-base font-normal">Tokens</span></p>
-        <p className="text-sm">{data.discount_percent}% membership Boost discount · Prices confirmed by the server</p>
+        <p className="text-sm">Boost prices are confirmed by the server for every free account.</p>
         <p className="text-xs text-muted-foreground">Tokens are earned, not purchased. The server validates balances and activation limits atomically.</p>
         <Button variant="outline" asChild><Link to="/tokens">Token history</Link></Button>
       </Card>
@@ -127,7 +128,7 @@ export default function Boosts(){
         return <Card key={pack.code} data-boost-package={pack.code} className="clipt-boost-package p-5 space-y-3 border-primary/30">
           <Icon aria-hidden className="h-6 w-6 text-primary"/><h2 className="font-bold break-words">{pack.name}</h2>
           <p className="text-2xl font-bold tabular-nums">{pack.final_price} <span className="text-sm font-normal">Tokens</span></p>
-          {data.discount_percent>0&&<p className="text-sm text-muted-foreground"><s>{pack.base_price} Tokens</s> · {data.discount_percent}% membership discount</p>}
+          {membershipsEnabled&&data.discount_percent>0&&<p className="text-sm text-muted-foreground"><s>{pack.base_price} Tokens</s> · {data.discount_percent}% membership discount</p>}
           <p className="text-sm">{duration(pack.duration_seconds)}</p><p className="text-sm text-muted-foreground">{pack.description}</p>
           {data.balance<pack.final_price&&<p className="text-sm">Insufficient Tokens for this Boost.</p>}
           {hiddenGemTooNew&&<p className="text-sm">Hidden Gem requires content that is at least 6 hours old.</p>}

@@ -41,17 +41,16 @@ export default function TokenStore() {
   return <main className="clipt-token-store mx-auto max-w-6xl space-y-6 px-4 py-6">
     <h1 className="flex items-center gap-3 text-2xl font-bold"><Coins className="text-yellow-300" aria-hidden="true" />Token Store</h1>
     <div className="clipt-store-topbar">
-    <nav className="clipt-store-nav" aria-label="Token economy"><a href="#token-buy"><Coins aria-hidden="true" />Membership</a><Link to="/boosts"><Rocket aria-hidden="true" />Boosts / My Boosts</Link><a href="#token-earn"><Gift aria-hidden="true" />Earn Tokens</a><a href="#token-history"><History aria-hidden="true" />Transaction History</a></nav>
+    <nav className="clipt-store-nav" aria-label="Token economy"><a href="#token-free"><Coins aria-hidden="true" />Free Tokens</a><Link to="/boosts"><Rocket aria-hidden="true" />Boosts / My Boosts</Link><a href="#token-earn"><Gift aria-hidden="true" />Earn Tokens</a><a href="#token-history"><History aria-hidden="true" />Transaction History</a></nav>
     <section className="clipt-store-balance rounded-xl border border-primary/50 bg-card p-5" aria-label="Token balance">
       <h2 className="text-sm text-muted-foreground">Your balance</h2>
       {wallet.isPending ? <p role="status">Loading balance…</p> : wallet.isError ? <div role="alert"><p>Balance is unavailable, not zero.</p><Button onClick={() => void wallet.refetch()}>Retry balance</Button></div> :
         <p className="mt-2 text-3xl font-bold text-yellow-300">{(wallet.data?.balance ?? 0).toLocaleString()} tokens</p>}
     </section>
     </div>
-    <section id="token-buy" className="space-y-3 rounded-xl border border-primary/30 p-5">
+    <section id="token-free" className="space-y-3 rounded-xl border border-primary/30 p-5">
       <h2 className="text-lg font-semibold">Earned Tokens</h2>
-      <p className="text-sm text-muted-foreground">Tokens cannot be purchased. Earn them through eligible activity; membership changes earning limits and Boost benefits.</p>
-      <Link to="/subscription" className="block underline">Premium and Maxed memberships</Link>
+      <p className="text-sm text-muted-foreground">CLIPT is free. Tokens cannot be purchased; earn them through eligible activity and use them for Boosts.</p>
       <p className="text-sm">Tokens buy virtual gifts and Boost exposure. They are not Trophy votes and do not increase Top Clipts rankings.</p>
       <Link to="/boosts" className="block underline">Browse Boosts</Link>
       {streamingEnabled&&<Link to="/live" className="inline-block underline">Find a live creator to support</Link>}
@@ -59,7 +58,7 @@ export default function TokenStore() {
     <section id="token-earn" className="space-y-3 rounded-xl border border-primary/30 p-5" aria-label="Publication rewards">
       <h2 className="text-lg font-semibold">Earn from a Clipt</h2>
       <p className="text-sm text-muted-foreground">Eligible public H.264 MP4 uploads can earn up to 3 Tokens after server file checks. Ten distinct non-author likes on a verified Clipt can earn up to 3 more, once per Clipt. Daily and storage limits apply. Identical re-uploads do not earn again. WebM, watch, comment and live earning adapters are not yet enabled.</p>
-      <p className="text-xs text-muted-foreground">Free: 15 earned/day, 200 stored · Premium: 30/day, 400 stored · Maxed: 50/day, 1,000 stored. Daily limits reset at 00:00 UTC. Balances are not trimmed on downgrade.</p>
+      <p className="text-xs text-muted-foreground">All accounts can earn up to 15 Tokens per day and store up to 200. Daily limits reset at 00:00 UTC.</p>
       {publications.isPending&&<p role="status">Loading recent publications…</p>}
       {publications.isError&&<><p role="alert">Recent publications could not be loaded.</p><Button onClick={()=>void publications.refetch()}>Retry publications</Button></>}
       {!publications.isError&&publications.data?.map(post=><div key={post.id} className="space-y-2 border-t border-primary/20 pt-3"><Link className="block underline break-words" to={`/post/${post.id}`}>{post.content?.slice(0,120)||'Clipt'}</Link>

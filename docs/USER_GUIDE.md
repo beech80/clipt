@@ -30,9 +30,7 @@ Boosts increase eligible discovery opportunities, not guaranteed views or engage
 - Squad Blast: 40 Tokens, 24 hours.
 - Chain Reaction: 60 Tokens, 6 hours.
 - I'm the King Now: 80 Tokens, 2 hours; a separate labeled game spotlight, never purchased Trophy ranking.
-- Stream Surge: 50 Tokens, 30 minutes; unavailable until actual live ingestion can be verified.
-
-Eligible Premium and Maxed memberships receive server-calculated discounts. Weekly free-Boost/Mega redemption rules are not fully implemented. Review the displayed final price and wait for authoritative activation before treating a Boost as active.
+CLIPT's social-media launch is free and paid memberships are not currently offered. Review the displayed Token cost and wait for authoritative activation before treating a Boost as active.
 
 ## Connect and report problems
 
