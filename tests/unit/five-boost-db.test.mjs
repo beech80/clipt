@@ -41,6 +41,7 @@ test('five-Boost social launch preserves atomic wallet and enforces discovery co
   await db.exec(erasure.slice(erasure.indexOf('create or replace function'),erasure.lastIndexOf('commit;')));
   await db.exec(await file('20260929234810_premium_weekly_squad_blast'));
   await db.exec(await file('20261117121453_five_boost_social_launch'));
+  await db.exec(await file('20261117124824_harden_boost_event_audit_table'));
   await db.query('insert into auth.users(id) values($1),($2),($3),($4),($5),($6)',[owner,viewer,limited,poor,banned,racer]);
   const asRole=async(role,user=owner)=>{
    await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claims',$2,false)",[user,JSON.stringify({sub:user,aal:'aal2'})]);await db.exec(`set role ${role}`);
