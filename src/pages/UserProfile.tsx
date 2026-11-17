@@ -1,6 +1,6 @@
 import ProfileWebsite from '@/components/profile/ProfileWebsite';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
 import { User, Settings, Grid, ListVideo, Trophy, Loader2 } from 'lucide-react';
@@ -35,6 +35,7 @@ interface ProfileData {
 
 const UserProfile = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const userId = user?.id;
@@ -48,6 +49,17 @@ const UserProfile = () => {
   const followBusy = useRef(false);
   const [posts, setPosts] = useState<ProfilePost[]>([]);
   const [clips, setClips] = useState<ProfilePost[]>([]);
+  const boostAttribution = searchParams.get('boost');
+  const validBoostAttribution = boostAttribution && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(boostAttribution)
+    ? boostAttribution : null;
+
+  useEffect(() => {
+    if (!userId || !id || !validBoostAttribution || userId === id) return;
+    void supabase.rpc('record_content_boost_event', {
+      p_boost_id: validBoostAttribution,
+      p_event_type: 'profile_visit',
+    });
+  }, [id, userId, validBoostAttribution]);
 
   const fetchProfileData = useCallback(async () => {
     const revision = ++requestRevision.current;
@@ -156,6 +168,10 @@ const UserProfile = () => {
           is_following: true,
           followers_count: (prev.followers_count || 0) + 1
         } : prev);
+        if (validBoostAttribution) void supabase.rpc('record_content_boost_event', {
+          p_boost_id: validBoostAttribution,
+          p_event_type: 'follow',
+        });
         toast.success(`Following @${profileData.username}`);
       }
       

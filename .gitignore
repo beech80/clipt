@@ -36,7 +36,11 @@ supabase/.temp/
 *.tsbuildinfo
 
 # Reproducible native hosts and build products (source lives under native/)
-/ios/
+# The Capacitor iOS host is committed so a Mac can open the reviewed project
+# directly in Xcode. DerivedData, Pods, and generated build output stay ignored.
+/ios/App/build/
+/ios/App/DerivedData/
+/ios/App/Pods/
 /android/
 /native/**/build/
 /native/**/.gradle/

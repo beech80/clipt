@@ -9522,7 +9522,8 @@ export type Database = {
       purchase_content_boost: { Args: { p_post_id: string; p_package_code: string; p_idempotency_key: string; p_expected_cost: number }; Returns: string }
       redeem_weekly_squad_blast: { Args: { p_post_id: string; p_idempotency_key: string; p_expected_week: string }; Returns: string }
       activate_content_boost: { Args: { p_post_id: string; p_package_code: string; p_idempotency_key: string }; Returns: string }
-      get_boosted_discovery: { Args: { p_game_id?: string }; Returns: { boost_id: string; post_id: string; package_code: string; expires_at: string; caption: string | null; image_url: string | null }[] }
+      get_boosted_discovery: { Args: { p_game_id?: string }; Returns: { boost_id: string; post_id: string; creator_id: string; package_code: string; expires_at: string; caption: string | null; image_url: string | null }[] }
+      record_content_boost_event: { Args: { p_boost_id: string; p_event_type: string }; Returns: boolean }
       review_content_report: {
         Args: { report_id: string; decision: string; moderator_notes?: string }
         Returns: string

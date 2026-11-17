@@ -1,7 +1,6 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { isDirectEntry, needsAppWelcome, readAppEntry, rememberAppEntry } from '@/lib/app-entry';
-import {installNativeBroadcastAccountGuard} from '@/native/broadcast/accountGuard';
 import { streamingEnabled } from '@/config/featureFlags';
 import './pages/clipt-console.css';
 import './pages/clipt-auth-layout.css';
@@ -10,7 +9,7 @@ import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-
 import { Toaster } from 'sonner';
 
 // Import all page components directly
-const LiveDiscovery = React.lazy(() => import('./pages/LiveDiscovery'));
+const LiveDiscovery = streamingEnabled ? React.lazy(() => import('./pages/LiveDiscovery')) : null;
 const Achievements = React.lazy(() => import('./pages/Achievements'));
 const Start = React.lazy(() => import('./pages/Start'));
 const ResendVerification = React.lazy(() => import('./pages/ResendVerification'));
@@ -38,10 +37,10 @@ const UserProfile = React.lazy(() => import('./pages/UserProfile'));
 const NewPost = React.lazy(() => import('./pages/NewPost'));
 const Drafts = React.lazy(() => import('./pages/Drafts'));
 const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
-const GameStreamers = React.lazy(() => import('./pages/GameStreamers'));
+const GameStreamers = streamingEnabled ? React.lazy(() => import('./pages/GameStreamers')) : null;
 const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
-const Streaming = React.lazy(() => import('./pages/Streaming'));
-const StreamSetup = React.lazy(() => import('./pages/StreamSetup'));
+const Streaming = streamingEnabled ? React.lazy(() => import('./pages/Streaming')) : null;
+const StreamSetup = streamingEnabled ? React.lazy(() => import('./pages/StreamSetup')) : null;
 const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
 const UpdatePassword = React.lazy(() => import('./pages/UpdatePassword'));
 const UserGuide = React.lazy(() => import('./pages/docs/UserGuide'));
@@ -72,7 +71,10 @@ import ConsoleMasthead from './components/ConsoleMasthead';
 
 // Main App component
 const App = () => {
-  React.useEffect(() => streamingEnabled ? installNativeBroadcastAccountGuard() : undefined, []);
+  React.useEffect(() => {
+    if (!streamingEnabled) return;
+    void import('@/native/broadcast/accountGuard').then(module => module.installNativeBroadcastAccountGuard());
+  }, []);
   useApplyAccessibilityPreferences();
   const location = useLocation();
   const navigate = useNavigate();
@@ -90,7 +92,7 @@ const App = () => {
   const authPage=['/login','/signup','/reset-password','/forgot-password','/update-password','/resend-verification'].includes(location.pathname);
   const authViewport=useAuthViewport(authPage);
   const [currentPostId, setCurrentPostId] = React.useState<string | null>(null);
-  
+
   // Extract post ID from URL if viewing a post
   React.useEffect(() => {
     if (location.pathname.includes('/post/')) {
@@ -179,11 +181,11 @@ const App = () => {
           <Route path="/drafts" element={<AuthGuard><Drafts /></AuthGuard>} />
           <Route path="/post/:id/comments" element={<CommentsPage />} />
           <Route path="/comments/:id" element={<CommentsPage />} />
-          <Route path="/game-streamers/:id" element={streamingEnabled ? <GameStreamers /> : <Navigate to="/clipts" replace />} />
+          <Route path="/game-streamers/:id" element={GameStreamers ? <GameStreamers /> : <Navigate to="/clipts" replace />} />
           <Route path="/retro-search" element={<RetroSearchPage />} />
-          <Route path="/streaming/:id" element={streamingEnabled ? <Streaming /> : <Navigate to="/clipts" replace />} />
-          <Route path="/live" element={streamingEnabled ? <LiveDiscovery /> : <Navigate to="/clipts" replace />} />
-          <Route path="/stream-setup" element={streamingEnabled ? <AuthGuard><StreamSetup /></AuthGuard> : <Navigate to="/clipts" replace />} />
+          <Route path="/streaming/:id" element={Streaming ? <Streaming /> : <Navigate to="/clipts" replace />} />
+          <Route path="/live" element={LiveDiscovery ? <LiveDiscovery /> : <Navigate to="/clipts" replace />} />
+          <Route path="/stream-setup" element={StreamSetup ? <AuthGuard><StreamSetup /></AuthGuard> : <Navigate to="/clipts" replace />} />
           <Route path="/streaming" element={<Navigate to={streamingEnabled ? "/live" : "/clipts"} replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
