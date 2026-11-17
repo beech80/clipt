@@ -13,7 +13,7 @@ test('patched matching dependencies support the existing TypeScript ESLint confi
 });
 test('patched glob preserves file discovery and rejects cancelled walks',async()=>{
  const {glob}=await import('glob');
- assert.deepEqual(await glob('src/App.tsx',{cwd:root}),['src/App.tsx']);
+ assert.deepEqual((await glob('src/App.tsx',{cwd:root})).map(path=>path.replaceAll('\\','/')),['src/App.tsx']);
  const controller=new AbortController();controller.abort();
  await assert.rejects(glob('src/**',{cwd:root,signal:controller.signal}),error=>error.name==='AbortError');
 });

@@ -18,6 +18,7 @@ test('one feed-owned comment dock follows a sideways slide without closing or re
   const Dialog=()=>null,Hud=()=>null,Post=()=>null;
   const rows=[{id:'first',content:'First caption',profiles:{username:'one'}},{id:'second',content:'Second caption',profiles:{username:'two'}}];
   const deps={
+    '@/config/featureFlags':{streamingEnabled:false},
     '@/components/onboarding/HomeControlsTour':{HomeControlsTour:()=>null},
     '@/components/post/HashtagText':{default:({text})=>text,__esModule:true},
     '@/lib/publishing-status':{publishingSnapshot:()=>null,subscribePublishing:()=>()=>{}},

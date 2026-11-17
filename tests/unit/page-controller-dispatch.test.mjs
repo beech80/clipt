@@ -23,7 +23,7 @@ for(const [pathname,context={}] of cases) test(`real controller dispatch delegat
   globalThis.KeyboardEvent=class {constructor(type,options){this.type=type;Object.assign(this,options);}};
   globalThis.requestAnimationFrame=fn=>{fn();return 1;};
   try{
-    const deps={'@/lib/game-feed-navigation':gameFeedNavigation,
+    const deps={'@/config/featureFlags':{streamingEnabled:false},'@/lib/game-feed-navigation':gameFeedNavigation,
       react:{...React,useState:initial=>[initial&&typeof initial==='object'&&'path' in initial?{path:pathname,layout,enabled:layout.actions.map(a=>a.id)}:initial,()=>{}],useRef:initial=>({current:initial}),useEffect:()=>{},useCallback:fn=>fn},
       'react-router-dom':{useLocation:()=>({pathname}),useNavigate:()=>to=>calls.push(['navigate',to])},
       '@/lib/page-controller':model,'./GameBoyControls.css':{},'@/pages/Menu':{default:()=>null},

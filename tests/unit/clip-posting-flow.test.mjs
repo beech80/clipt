@@ -6,6 +6,7 @@ import ts from 'typescript';
 import React from 'react';
 const require=createRequire(import.meta.url);
 function load(path,deps) {
+  deps={'@/config/featureFlags':{streamingEnabled:false},...deps};
   const output=ts.transpileModule(readFileSync(new URL('../../src/'+path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
   const mod={exports:{}};new Function('require','module','exports',output)(name=>name==='@/components/GameCatalogLookup'?{GameCatalogLookup:()=>null}:deps[name]??require(name),mod,mod.exports);return mod.exports;
 }

@@ -260,7 +260,17 @@ test('an unsupported HEVC decoder gives a recovery message without uploading',as
       VideoDecoder.isConfigSupported=async config=>/^(hvc1|hev1)/.test(config.codec)?{supported:false,config}:check(config);
     });
     await openApp(page,'/new-post');await page.getByLabel('Caption',{exact:true}).fill('Keep this caption');
-    await page.getByLabel('Clipt video',{exact:true}).setInputFiles(fileURLToPath(new URL('./fixtures/clip-test-hevc.mp4',import.meta.url)));
+    // Only the codec declaration is needed for this negative path. Build it
+    // from the checked-in MP4 so the test does not depend on an LFS-only HEVC
+    // sample that is absent from ordinary Windows checkouts.
+    const unsupportedHevc=Buffer.from(bytes);let codecOffset=-1,searchOffset=0;
+    while((searchOffset=unsupportedHevc.indexOf(Buffer.from('avc1'),searchOffset))>=0){
+      const boxSize=searchOffset>=4?unsupportedHevc.readUInt32BE(searchOffset-4):0;
+      if(boxSize>=8&&boxSize<=unsupportedHevc.length-searchOffset+4){codecOffset=searchOffset;break;}
+      searchOffset+=4;
+    }
+    expect(codecOffset).toBeGreaterThanOrEqual(0);unsupportedHevc.write('hvc1',codecOffset,'ascii');
+    await page.getByLabel('Clipt video',{exact:true}).setInputFiles({name:'unsupported-hevc.mp4',mimeType:'video/mp4',buffer:unsupportedHevc});
     await expect(page.getByRole('alert')).toContainText('This browser cannot convert this iPhone video.');
     await expect(page.getByRole('button',{name:'Post Clipt',exact:true})).toBeDisabled();
     await expect(page.getByLabel('Caption',{exact:true})).toHaveValue('Keep this caption');

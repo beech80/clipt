@@ -1,17 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-test('homepage has title and login button', async ({ page }) => {
+test('homepage has the current title and public entrance', async ({ page }) => {
   await page.goto('/');
-  
-  // Check title
-  await expect(page).toHaveTitle(/Clip - Share Your Gaming Moments/);
-  
-  // Verify main content
-  await expect(page.locator('[role="main"]')).toBeVisible();
-  
-  // Check for login elements when not authenticated
-  const heading = page.locator('h1');
-  await expect(heading).toContainText('Share Your Epic Gaming Moments');
+
+  await expect(page).toHaveTitle('Clipt');
+  await expect(page.getByRole('button', { name: 'ENTER CLIPT', exact: true })).toBeVisible();
 });
 
 test('login flow', async ({ page }) => {

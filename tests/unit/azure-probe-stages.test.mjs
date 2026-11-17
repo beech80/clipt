@@ -52,7 +52,7 @@ test('runner prints only allowlisted diagnostic stage/kind values',async()=>{
 });
 test('worker attestation pins the exact reviewed workflow and runner bytes',async()=>{
  for(const [path,digest]of Object.entries(REVIEWED_PHOTO_FILES)){
-  const content=await readFile(new URL('../../'+path,import.meta.url));
+  const content=(await readFile(new URL('../../'+path,import.meta.url),'utf8')).replace(/\r\n/g,'\n');
   assert.equal(createHash('sha256').update(content).digest('hex'),digest,path);
  }
 });

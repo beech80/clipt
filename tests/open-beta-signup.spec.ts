@@ -3,7 +3,7 @@ import {openApp} from './fixtures/open-app';
 const owner='00000000-0000-4000-8000-000000000097';
 async function fixture(page:Page,{signedIn=false,allowed=true,signupError=false}={}){
  const user={id:owner,aud:'authenticated',role:'authenticated',email:'newplayer@example.invalid',email_confirmed_at:'2026-11-02T00:00:00Z',app_metadata:{},user_metadata:{username:'new_player'},created_at:'2026-11-02T00:00:00Z',factors:[]};
- const stats={signups:0,accessChecks:0,postsReads:0,rosterRequests:0,signins:0,body:null as any,redirect:null as string|null};
+ const stats={signups:0,accessChecks:0,postsReads:0,rosterRequests:0,signins:0,body:null as null|{email?:string;data?:{username?:string}},redirect:null as string|null};
  if(signedIn)await page.addInitScript(user=>{
   const exp=Math.floor(Date.now()/1000)+3600,enc=(x:object)=>btoa(JSON.stringify(x)).replaceAll('=','').replaceAll('+','-').replaceAll('/','_');
   localStorage.setItem('sb-127-auth-token',JSON.stringify({access_token:enc({alg:'HS256'})+'.'+enc({sub:user.id,exp,aal:'aal1',role:'authenticated'})+'.fixture',refresh_token:'fixture',expires_at:exp,expires_in:3600,token_type:'bearer',user}));
@@ -38,24 +38,30 @@ test('signup is reachable with the real admission flag enabled and waits for ema
  await page.screenshot({path:info.outputPath('self-service-email-confirmation.png')});
  await page.getByRole('button',{name:'Go to sign in',exact:true}).click();await expect(page.getByRole('heading',{name:'Welcome Back'})).toBeVisible();
 });
-test('a confirmed session enters the feed without a membership request or another password form',async({page})=>{
+test('a confirmed session enters the open launch without a beta membership check or another password form',async({page})=>{
  const stats=await fixture(page,{signedIn:true});await openApp(page,'/login');
  await expect(page).toHaveURL(/\/clipts$/);await expect(page.locator('.clipt-fyp')).toBeVisible();
- expect(stats.accessChecks).toBeGreaterThan(0);expect(stats.rosterRequests).toBe(0);expect(stats.signins).toBe(0);
+ expect(stats.accessChecks).toBe(0);expect(stats.rosterRequests).toBe(0);expect(stats.signins).toBe(0);
 });
-test('server-denied identities remain blocked and guest signup does not reveal the feed',async({page})=>{
+test('the disabled beta gate cannot block a confirmed launch user',async({page})=>{
  const stats=await fixture(page,{signedIn:true,allowed:false});await openApp(page,'/clipts');
- await expect(page.getByRole('heading',{name:'CLIPT web beta',exact:true})).toBeVisible();
- await expect(page.getByText('This account cannot currently access the beta. Confirm your email or contact support for help.',{exact:true})).toBeVisible();
- await expect(page.locator('.clipt-fyp')).toHaveCount(0);expect(stats.postsReads).toBe(0);
+ await expect(page.locator('.clipt-fyp')).toBeVisible();
+ await expect(page.getByRole('heading',{name:'CLIPT web beta',exact:true})).toHaveCount(0);
+ expect(stats.accessChecks).toBe(0);expect(stats.rosterRequests).toBe(0);
 });
-test('guest admission screen links to signup without allowing anonymous data access',async({page})=>{
+test('the open social launch lets guests discover public posts without a beta admission screen',async({page})=>{
  const stats=await fixture(page);await openApp(page,'/clipts');
- await expect(page.getByRole('heading',{name:'CLIPT web beta',exact:true})).toBeVisible();
- await page.getByRole('link',{name:'Create a free account',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Create Account',exact:true})).toBeVisible();expect(stats.postsReads).toBe(0);
- await page.reload();await expect(page.getByRole('heading',{name:'Create Account',exact:true})).toBeVisible();
- await expect(page.locator('.clipt-launch')).toHaveCount(0);
+ await expect(page.locator('.clipt-fyp')).toBeVisible();
+ await expect(page.getByRole('heading',{name:'CLIPT web beta',exact:true})).toHaveCount(0);
+ expect(stats.accessChecks).toBe(0);expect(stats.rosterRequests).toBe(0);expect(stats.postsReads).toBeGreaterThan(0);
+});
+test('media-only launch redirects every former streaming entry point to Clipts',async({page})=>{
+ await fixture(page,{signedIn:true});
+ for(const route of ['/streaming','/live','/stream-setup','/streaming/legacy-id']){
+  await openApp(page,route);
+  await expect(page).toHaveURL(/\/clipts$/);
+  await expect(page.locator('.clipt-fyp')).toBeVisible();
+ }
 });
 test('signup rejection preserves the form without claiming a confirmation email was sent',async({page})=>{
  const stats=await fixture(page,{signupError:true});await openApp(page,'/signup');

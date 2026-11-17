@@ -47,7 +47,8 @@ const GifConverter = ({ videoFile, onConvert }: GifConverterProps) => {
 
       // Read the resulting file
       const data = await ffmpeg.readFile(outputName);
-      const gifBlob = new Blob([data], { type: 'image/gif' });
+      const gifData = typeof data === 'string' ? data : Uint8Array.from(data).buffer;
+      const gifBlob = new Blob([gifData], { type: 'image/gif' });
       
       onConvert(gifBlob);
       toast.success("Video converted to GIF successfully!");

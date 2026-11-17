@@ -36,6 +36,7 @@ test('narrow Token navigation stacks icons without breaking label words',()=>{
   for(const rule of ['flex-direction: column','overflow-wrap: normal','word-break: normal']) assert.ok(narrow.includes(rule));
 });
 function load(path, replacements={}) {
+  replacements = {'@/config/featureFlags':{streamingEnabled:false},...replacements};
   replacements = {'@/components/mentions/MentionTextarea':{MentionTextarea:props=>React.createElement('textarea',props)},'@/components/post/PostContent':{__esModule:true,default:()=>null},'@/lib/game-feed-navigation':gameFeedNavigation,'@/components/GameCatalogLookup':{GameCatalogLookup:()=>null},'@/components/post/HashtagText':{HashtagText:({text})=>text},'@/lib/page-controller':pageController,'@/lib/publishing-status':publishingStatus,'@/lib/trophy-eligibility':trophyEligibility, ...replacements};
   replacements={'@/hooks/useMobileControlsPreferences':{useMobileControlsPreferences:()=>({preferences:{hand:'right',trail:true},update(){},saved:true})},'./accessibility/HandPreferenceSettings':{HandPreferenceSettings:()=>null},'./AdjustablePanel':{AdjustablePanel:()=>null},'@/components/AdjustablePanel':{AdjustablePanel:()=>null},'@/pages/Menu':{default:()=>null,__esModule:true},...replacements};
   const output=ts.transpileModule(readFileSync(new URL(`../../src/${path}`,import.meta.url),'utf8'),{
@@ -123,7 +124,7 @@ test('message reference materials preserve actual content, receipts and accessib
   assert.match(styles,/\.clipt-dm-composer input \{ min-width: 0/);
   assert.doesNotMatch(source,/Online •|Nashville, TN|appreciate you!/);
 });
-test('Boost confirmation uses the controller-safe HUD without changing server confirmation',()=>{
+test('five-Boost confirmation uses the controller-safe HUD and earned-Token server confirmation',()=>{
   const source=readFileSync(new URL('../../src/pages/Boosts.tsx',import.meta.url),'utf8');
   const styles=readFileSync(new URL('../../src/pages/clipt-console.css',import.meta.url),'utf8');
   assert.match(source,/AlertDialogContent className="clipt-boost-review overflow-y-auto"/);
@@ -131,7 +132,9 @@ test('Boost confirmation uses the controller-safe HUD without changing server co
   assert.match(styles,/\.clipt-boost-review\[role="alertdialog"\]\s*\{[\s\S]*?bottom: calc\(160px/);
   assert.match(styles,/\.clipt-boost-review\[role="alertdialog"\]\s*\{[\s\S]*?max-height: calc\(100dvh - 180px/);
   assert.match(source,/rpc\('purchase_content_boost'/);
-  assert.match(source,/rpc\('redeem_weekly_squad_blast'/);
+  assert.doesNotMatch(source,/rpc\('redeem_weekly_squad_blast'/);
+  for(const code of ['squad_blast','hidden_gem','chain_reaction','squad_recruit','king_now']) assert.match(source,new RegExp(code));
+  assert.match(source,/Tokens are earned, not purchased/);
   assert.match(source,/z\.string\(\)\.uuid\(\)\.safeParse\(id\)\.success/);
 });
 test('token reference top bar uses actual balance and preserves unavailable purchase state',()=>{

@@ -117,9 +117,9 @@ export const registerPushSubscriptionHelper = async (): Promise<PushSubscription
     // Subscribe to push notifications
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(
+      applicationServerKey: Uint8Array.from(urlBase64ToUint8Array(
         'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U'
-      ),
+      )).buffer,
     });
     
     return subscription as unknown as PushSubscription;

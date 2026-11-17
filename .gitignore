@@ -30,6 +30,7 @@ dist-ssr
 outputs/
 playwright-report/
 test-results/
+test-results-*/
 .playwright/
 .supabase/
 supabase/.temp/

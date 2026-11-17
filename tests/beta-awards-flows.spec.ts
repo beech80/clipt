@@ -20,7 +20,7 @@ async function setup(page:Page,caption='A real #gaming @beecher89 caption'){
   const req=route.request(),url=new URL(req.url()),path=url.pathname;
   if(url.origin==='http://127.0.0.1:8081')return route.continue();
   if(url.origin!=='http://127.0.0.1:54321')return route.abort();
-  let data:any=[],status=200;const head=req.method()==='HEAD';
+  let data:any=[];const status=200,head=req.method()==='HEAD';
   if(path==='/auth/v1/user')data=user;
   if(path==='/rest/v1/profiles')data=url.searchParams.get('select')==='id'?{id:creator}:[profile];
   if(path==='/rest/v1/posts')data=url.searchParams.has('id')?post:[post];

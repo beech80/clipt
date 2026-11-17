@@ -33,8 +33,9 @@ async function harness({ authorized = true, wrongProject = false, failBucket = n
     throw Error('Unexpected provider boundary');
   };
   const Deno={serve:h=>{handler=h;},env:{get:name=>{secretReads++;return name==='SUPABASE_SERVICE_ROLE_KEY'?'synthetic-private-service-key':wrongProject?'https://other.supabase.co':'https://slnjliheyiiummxhrgmk.supabase.co';}}};
-  const javascript=ts.transpileModule(code.replace(/^import .*\n/,''),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
-  new Function('Deno','fetch','verifyCutoverOidc','MEDIA_BUCKETS','validateRollbackFlags','validateCutoverSamples',javascript)(Deno,fetchImpl,async()=>{if(!authorized)throw Error('Unauthorized');return true;},MEDIA_BUCKETS,validateRollbackFlags,validateCutoverSamples);
+  const javascript=ts.transpileModule(code.replace(/^import .*\r?\n/,''),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
+  const module={exports:{}};
+  new Function('Deno','fetch','verifyCutoverOidc','MEDIA_BUCKETS','validateRollbackFlags','validateCutoverSamples','exports','module',javascript)(Deno,fetchImpl,async()=>{if(!authorized)throw Error('Unauthorized');return true;},MEDIA_BUCKETS,validateRollbackFlags,validateCutoverSamples,module.exports,module);
   const request=body=>handler(new Request('https://slnjliheyiiummxhrgmk.supabase.co/functions/v1/private-media-cutover',{method:'POST',headers:{Authorization:'Bearer synthetic.jwt.token'},body:JSON.stringify(body)}));
   return {request,buckets,calls,get secretReads(){return secretReads;}};
 }
