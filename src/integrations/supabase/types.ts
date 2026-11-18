@@ -3296,6 +3296,12 @@ export type Database = {
         }
         Relationships: []
       }
+      hashtag_search_counts: {
+        Row: { tag: string; search_count: number; updated_at: string }
+        Insert: { tag: string; search_count?: number; updated_at?: string }
+        Update: { tag?: string; search_count?: number; updated_at?: string }
+        Relationships: []
+      }
       keyboard_shortcuts: {
         Row: {
           action: string
@@ -9505,6 +9511,8 @@ export type Database = {
       }
     }
     Functions: {
+      search_hashtags: { Args: { p_term?: string; p_limit?: number }; Returns: { tag: string; search_count: number; post_count: number }[] }
+      record_hashtag_search: { Args: { p_tag: string }; Returns: number }
       sync_my_achievements: { Args: Record<PropertyKey, never>; Returns: Json }
       clipt_beta_access: { Args: Record<PropertyKey, never>; Returns: boolean }
       my_photo_review_holds: { Args: Record<PropertyKey, never>; Returns: { post_id: string; state: string; created_at: string }[] }

@@ -185,7 +185,7 @@ html.high-contrast .app-container .gaming-card, html.high-contrast .app-containe
 .clipt-search > .clipt-search-heading { display: flex; align-items: center; gap: 10px; border: 0; padding-bottom: 0; }
 .clipt-search-heading > div { min-width: 0; }
 .clipt-search form > button[type="submit"] { background: linear-gradient(135deg,#9500ff,#5300bc); border-color: #d8b4fe; box-shadow: 0 0 16px #a855f770; }
-.clipt-search .clipt-search-categories { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; padding: 0; background: transparent; }
+.clipt-search .clipt-search-categories { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; padding: 0; background: transparent; }
 .clipt-search-categories [role="tab"] { min-width: 0; min-height: 58px; display: flex; flex-direction: column; gap: 5px; border: 1px solid #9254c780; border-radius: 8px; background: #060a18; color: #e9d5ff; }
 .clipt-search-categories [role="tab"] svg { width: 20px; height: 20px; }
 .clipt-search-categories [role="tab"][data-state="active"] { background: linear-gradient(135deg,#9500ff,#5300bc); border-color: #d8b4fe; color: #fff; box-shadow: 0 0 16px #a855f770; }
@@ -896,6 +896,15 @@ body:has(.clipt-controller[data-mobile-v2="true"][data-portrait-viewing="true"])
 .clipt-create-layout :is(button,select,input,textarea) { min-width: 0; max-width: 100%; }
 .clipt-create-details { overflow-wrap: anywhere; }
 .clipt-create-details button { height: auto; min-height: 44px; white-space: normal; }
+.clipt-game-choice { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.clipt-catalog-picker { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:12px; }
+.clipt-catalog-choice.clipt-catalog-choice { display:flex; align-items:center; gap:12px; width:100%; height:auto; min-height:88px; padding:10px; white-space:normal; text-align:left; justify-content:flex-start; border-color:#a855f780; background:linear-gradient(135deg,#31134d,#080613); }
+.clipt-catalog-art { display:block; width:64px; height:76px; flex-shrink:0; overflow:hidden; border-radius:10px; }
+.clipt-catalog-art .clipt-game-cover { width:100%; height:100%; object-fit:cover; }
+.clipt-search[data-search-category="all"] .clipt-search-results { grid-auto-flow:row; grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr)); grid-auto-columns:auto; overflow-x:visible; }
+.clipt-search,.clipt-create { width: 100%; max-width: 100%; overflow-x: clip; }
+.clipt-search *,.clipt-create * { min-width: 0; }
+@media(max-width:520px) { .clipt-search .clipt-search-categories { grid-template-columns: repeat(3,minmax(0,1fr)); } }
 .clipt-create-media button { height: auto; white-space: normal; }
 @media(max-width:359px) { .clipt-create .clipt-post-destinations { grid-template-columns: 1fr; } }
 

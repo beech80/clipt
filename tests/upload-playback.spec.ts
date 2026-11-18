@@ -224,7 +224,7 @@ for(const format of ['mov','hevc'] as const) {
       const submit=page.getByRole('button',{name:'Post Clipt',exact:true});await expect(submit).toBeDisabled();
       await expect(page.getByText('Tap Play to check this video before posting.',{exact:true})).toBeVisible();
       await page.locator('.clipt-create-media video').evaluate(element=>{element.loop=true;(window as any).__selectedUploadPreview=element;});
-      await page.getByRole('button',{name:'Play video preview',exact:true}).click();
+      await page.getByRole('button',{name:'Play preview',exact:true}).click();
       await expect(submit).toBeEnabled();
       await submit.click();
       await expect(page.getByRole('alert')).toContainText('Add a caption before posting.');

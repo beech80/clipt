@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Camera, Upload, Globe, Users, FileEdit } from 'lucide-react';
+import { Camera, Upload, Globe, Users, FileEdit, Gamepad2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MentionTextarea as Textarea } from '@/components/mentions/MentionTextarea';
 import { BackButton } from '@/components/ui/back-button';
 import { supabase } from '@/lib/supabase';
-import { clipCaption, formatClipSize, MAX_CLIP_BYTES, videoPreviewReady } from '@/lib/clip-upload';
+import { clipCaption, videoPreviewReady } from '@/lib/clip-upload';
 import { prepareClipFile } from '@/lib/prepare-clip';
 import { preparePhoto, photoUploadError } from '@/lib/photo-upload';
 import {GameCatalogLookup} from '@/components/GameCatalogLookup';
@@ -46,6 +46,7 @@ export default function NewPost() {
   const [kind, setKind] = useState<'video' | 'photo'>('video');
   const [captionError, setCaptionError] = useState('');
   const [selectedCatalogGame,setSelectedCatalogGame]=useState<CatalogGameSelection|null>(null);
+  const [lifePost, setLifePost] = useState(false);
   const captionInput = useRef<HTMLTextAreaElement>(null);
   const previewVideo = useRef<HTMLVideoElement>(null);
   const busy = useRef(false);
@@ -58,7 +59,7 @@ export default function NewPost() {
     selection.current += 1;
     initializedDraft.current = null;
     setConversionProgress(null); setConverted(false); setStage('idle');
-    setFile(null); setCaption(''); setHashtags(''); setGameId(''); setGameSearch(''); setSelectedCatalogGame(null);
+    setFile(null); setCaption(''); setHashtags(''); setGameId(''); setGameSearch(''); setSelectedCatalogGame(null); setLifePost(false);
     setDestination('clipts'); setKind('video'); setPlayable(false); setError(''); setCaptionError(''); setUncertain(false);
     return () => { selection.current += 1; prepareAbort.current?.abort(); };
   }, [draftId, user?.id]);
@@ -246,38 +247,39 @@ export default function NewPost() {
       <Button type="button" variant="outline" className="w-full min-h-24" disabled={submitting || preparing} onClick={() => input.current?.click()}>
         <Upload className="mr-2" aria-hidden="true" />{file ? `Replace ${kind}` : `Choose ${kind}`}
       </Button>
-      <input ref={input} type="file" aria-describedby="clip-media-help" aria-label={kind === 'photo' ? 'Clipt photo' : 'Clipt video'} accept={kind === 'photo' ? 'image/jpeg,image/png,image/webp' : 'video/mp4,video/quicktime,video/webm'} className="sr-only" disabled={submitting || preparing}
+      <input ref={input} type="file" aria-label={kind === 'photo' ? 'Clipt photo' : 'Clipt video'} accept={kind === 'photo' ? 'image/jpeg,image/png,image/webp' : 'video/mp4,video/quicktime,video/webm'} className="sr-only" disabled={submitting || preparing}
         onChange={event => { void chooseFile(event.target.files?.[0]); event.target.value = ''; }} />
-      {kind === 'photo' ? <><Button type="button" variant="outline" disabled={submitting || preparing} onClick={() => cameraInput.current?.click()}><Camera className="mr-2" aria-hidden="true" />Take photo</Button>
-        <input ref={cameraInput} type="file" aria-label="Take a Clipt photo" accept="image/jpeg,image/png,image/webp" capture="environment" className="sr-only" disabled={submitting || preparing} onChange={event => { void chooseFile(event.target.files?.[0]); event.target.value = ''; }} />
-        <p id="clip-media-help" className="text-sm text-slate-300">One JPEG, PNG or WebP photo, up to 5 MB. Photos are processed to remove embedded metadata. Camera capture depends on your device/browser; otherwise choose a photo. HEIC, SVG and animated files are not supported.</p></> : <p id="clip-media-help" className="text-sm text-slate-300">One MP4, MOV or WebM video, up to {formatClipSize(MAX_CLIP_BYTES)}. HEVC/MOV videos are converted on supported devices before upload. Your original stays unchanged.</p>}
+      {kind === 'photo' && <><Button type="button" variant="outline" disabled={submitting || preparing} onClick={() => cameraInput.current?.click()}><Camera className="mr-2" aria-hidden="true" />Take photo</Button>
+        <input ref={cameraInput} type="file" aria-label="Take a Clipt photo" accept="image/jpeg,image/png,image/webp" capture="environment" className="sr-only" disabled={submitting || preparing} onChange={event => { void chooseFile(event.target.files?.[0]); event.target.value = ''; }} /></>}
       {stage === 'converting' && <div className="space-y-3"><p role="status">Converting video… {conversionProgress ?? 0}% · Keep this page open.</p><progress className="w-full" aria-label="Video conversion progress" max={100} value={conversionProgress ?? 0} /><Button type="button" variant="outline" className="min-h-11" onClick={() => { selection.current += 1; prepareAbort.current?.abort(); prepareAbort.current = null; setStage('idle'); setConversionProgress(null); setError('Conversion cancelled. Your caption has been kept.'); }}>Cancel conversion</Button></div>}
-      {converted && file && <p className="text-sm text-violet-200">Converted to a compatible MP4 on your device. Your original is unchanged.</p>}
-      {file && kind === 'video' && <p role="status" className="break-all text-sm text-violet-200">Selected video: {file.name} · {formatClipSize(file.size)}</p>}
+      {converted && file && <p role="status" className="text-sm text-violet-200">Video ready.</p>}
       {draftId && draft.isPending && <p role="status">Opening your draft…</p>}
       {draftId && draft.isError && <p role="alert">This draft could not be opened. <Button type="button" onClick={() => void draft.refetch()}>Retry draft</Button></p>}
       {savedMedia.error && !file && <p role="alert">Draft media access failed. <Button type="button" onClick={() => void savedMedia.retry()}>Retry media</Button></p>}
       {(preview || savedMedia.src) && (kind === 'photo' ? <img key={preview || savedMedia.src} src={preview || savedMedia.src} alt="Selected photo preview" className="max-h-72 w-full rounded-xl bg-black object-contain" onLoad={() => setPlayable(true)} onError={() => { setPlayable(false); setError('Photo preview failed. Choose a supported photo and retry.'); }} /> : <video ref={previewVideo} key={preview || savedMedia.src} src={preview || savedMedia.src} controls playsInline preload="auto" className="max-h-72 w-full rounded-xl bg-black"
         onLoadedMetadata={event => previewReady(event.currentTarget)} onLoadedData={event => previewReady(event.currentTarget)} onCanPlay={event => previewReady(event.currentTarget)} onPlaying={event => previewReady(event.currentTarget)}
         onError={() => { setPlayable(false); setError('This browser cannot decode the video. Export H.264 MP4 or WebM and try again.'); }} />)}
-      {kind === 'video' && (preview || savedMedia.src) && !preparing && <div className="space-y-2"><Button type="button" variant="outline" className="min-h-11" disabled={submitting} onClick={playPreview}>Play video preview</Button>{!playable && <p role="status" className="text-sm text-violet-200">Tap Play to check this video before posting.</p>}</div>}
+      {kind === 'video' && (preview || savedMedia.src) && !preparing && <Button type="button" variant="outline" className="min-h-11" disabled={submitting} onClick={playPreview}>Play preview</Button>}
       </section>
       <section className="clipt-create-details space-y-5" aria-label="Clipt details">
-      <div className="space-y-2"><label htmlFor="clip-caption">Caption</label><Textarea ref={captionInput} id="clip-caption" value={caption} maxLength={kind==='photo'&&destination==='clipts'?500:2000} required={destination !== 'draft'} disabled={submitting} aria-describedby={captionError && destination !== 'draft' ? "clip-caption-help clip-caption-count clip-caption-error" : "clip-caption-help clip-caption-count"} aria-invalid={Boolean(captionError && destination !== 'draft')}
+      <div className="space-y-2"><label htmlFor="clip-caption">Caption</label><Textarea ref={captionInput} id="clip-caption" value={caption} maxLength={kind==='photo'&&destination==='clipts'?500:2000} required={destination !== 'draft'} disabled={submitting} aria-describedby={captionError && destination !== 'draft' ? "clip-caption-count clip-caption-error" : "clip-caption-count"} aria-invalid={Boolean(captionError && destination !== 'draft')}
         onInvalid={event => { event.preventDefault(); requireCaption(); }}
-        onChange={event => { setCaption(event.target.value); setCaptionError(''); }} placeholder="Share your gaming moment…" />
-        <p id="clip-caption-help" className="text-sm text-violet-200">{destination === 'draft' ? 'Optional for this private draft.' : 'Required before posting.'}</p>
+        onChange={event => { setCaption(event.target.value); setCaptionError(''); }} placeholder={lifePost?"Share a moment from your life…":"Share your gaming moment…"} />
         {captionError && destination !== 'draft' && <p id="clip-caption-error" role="alert" className="text-red-200">{captionError}</p>}
         <p id="clip-caption-count" className="text-right text-xs text-slate-300">{caption.length.toLocaleString()} / {kind==='photo'&&destination==='clipts'?'500':'2,000'} characters</p></div>
-      {kind==='photo'&&destination==='clipts'&&<p className="text-sm text-slate-300">Public photo captions and hashtags together are limited to 500 characters for safety review. When automated review is enabled, the photo stays out of public discovery until review completes. Check Photo safety notices in Notifications for status.</p>}
       <label className="block space-y-2"><span>Hashtags</span><Input value={hashtags} disabled={submitting} onChange={event => setHashtags(event.target.value)} placeholder="#gaming #clipt" /></label>
-      <label className="block space-y-2"><span>Find a game</span><Input value={gameSearch} onKeyDown={event=>{if(event.key==='Enter'&&!event.nativeEvent.isComposing)event.preventDefault();}} disabled={submitting} onChange={event => { setGameSearch(event.target.value); setGameId(''); setSelectedCatalogGame(null); }} placeholder="Search games…" /></label>
+      <div className="clipt-game-choice" role="group" aria-label="Post topic">
+        <Button type="button" variant={!lifePost?'default':'outline'} aria-pressed={!lifePost} disabled={submitting} onClick={()=>setLifePost(false)}><Gamepad2 className="mr-2" aria-hidden="true"/>Gaming</Button>
+        <Button type="button" variant={lifePost?'default':'outline'} aria-pressed={lifePost} disabled={submitting} onClick={()=>{setLifePost(true);setGameId('');setGameSearch('');setSelectedCatalogGame(null);}}><Sparkles className="mr-2" aria-hidden="true"/>Life / No Game</Button>
+      </div>
+      {!lifePost&&<><label className="block space-y-2"><span>Find a game</span><Input value={gameSearch} onKeyDown={event=>{if(event.key==='Enter'&&!event.nativeEvent.isComposing)event.preventDefault();}} disabled={submitting} onChange={event => { setGameSearch(event.target.value); setGameId(''); setSelectedCatalogGame(null); }} placeholder="Search your game or discover a new channel…" /></label>
       <label className="block space-y-2"><span>Game / category</span><select aria-label="Game / category" className="w-full rounded-md border border-purple-500 bg-slate-950 p-3" value={gameId} disabled={submitting || games.isPending}
         onChange={event => setGameId(event.target.value)}><option value="">No game selected</option>{selectedCatalogGame&&!games.data?.some(game=>game.id===selectedCatalogGame.id)&&<option value={selectedCatalogGame.id}>{gameLabel(selectedCatalogGame)}</option>}{games.data?.map(game => <option key={game.id} value={game.id}>{gameLabel(game)}</option>)}</select></label>
       <GameCatalogLookup disabled={submitting} searchOnType term={gameSearch} onChoose={game=>{setSelectedCatalogGame(game);setGameSearch('');setGameId(game.id);}}/>
       {games.isPending && <p role="status">Loading game categories…</p>}
       {!games.isPending && !games.isError && !games.data?.length && <p role="status">{gameSearch.trim() ? 'No configured channels match. Search the full game catalog above to choose another game.' : 'No game categories are available. You can post without a game.'}</p>}
       {games.isError && <div role="alert">Games could not be loaded. <Button type="button" variant="outline" disabled={games.isFetching} onClick={() => games.refetch()}>Retry games</Button></div>}
+      </>}
       <fieldset className="clipt-post-destinations" disabled={submitting}><legend>Where do you want to post?</legend>
         {[{value:'clipts' as const,label:'Clipts',description:'Public · For You',Icon:Globe},{value:'squad' as const,label:'Squad',description:'People who follow you',Icon:Users},{value:'draft' as const,label:'Drafts',description:'Private · Only you',Icon:FileEdit}].map(({value,label,description,Icon}) => <label key={value} data-selected={destination===value}><input type="radio" name="clip-destination" value={value} checked={destination===value} disabled={value==='squad' && !squadReady} onChange={()=>setDestination(value)}/><Icon aria-hidden="true"/><strong>{label}</strong><span>{description}</span></label>)}
       </fieldset>
@@ -286,8 +288,7 @@ export default function NewPost() {
       {error && <p role="alert" className="text-red-200">{error}</p>}
       {publishingUncertain(user?.id) && <p role="alert">An earlier post has an uncertain result. Check your profile before retrying; duplicate posting is blocked in this session.</p>}
       {stage !== 'idle' && stage !== 'converting' && <p role="status">{stage === 'checking' ? 'Checking media…' : stage === 'uploading' ? 'Uploading media…' : stage === 'reward' ? 'Clipt published. Checking Token reward…' : 'Publishing Clipt…'}</p>}
-      <p id="clip-post-help" aria-live="polite" className="text-sm text-violet-200">{uncertain || publishingUncertain(user?.id) ? 'Check your profile before retrying an uncertain post.' : submitting ? 'Posting is in progress. Keep this page open.' : preparing ? 'Finish preparing the media first.' : !file && !savedReference ? 'Choose a video or photo first.' : !playable ? (kind === 'video' ? 'Play the video preview above before posting.' : 'Wait for the photo preview to load.') : destination !== 'draft' && !caption.trim() ? 'Add a caption, then press Post.' : 'Ready to post.'}</p>
-      <Button type="submit" className="w-full" aria-describedby="clip-post-help" disabled={uncertain || submitting || (!file && !savedReference) || !playable || preparing || Boolean(draftId && !draft.isSuccess)}>{submitting ? 'Please wait…' : destination === 'draft' ? 'Save Draft' : destination === 'squad' ? 'Post to Squad' : 'Post Clipt'}</Button>
+      <Button type="submit" className="w-full" disabled={uncertain || submitting || (!file && !savedReference) || !playable || preparing || Boolean(draftId && !draft.isSuccess)}>{submitting ? 'Please wait…' : destination === 'draft' ? 'Save Draft' : destination === 'squad' ? 'Post to Squad' : 'Post Clipt'}</Button>
       {uncertain && <Button type="button" variant="outline" onClick={() => navigate('/profile')}>Check my profile</Button>}
       </section>
     </form>
