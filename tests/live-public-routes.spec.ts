@@ -86,12 +86,26 @@ test('production bundle exposes exactly the five social Boosts to an authenticat
 
 test('production free launch hides tiers and redirects legacy billing routes', async ({page})=>{
   test.skip(!process.env.LIVE_BASE_URL,'Only runs against an explicitly supplied production URL.');
+  const owner='00000000-0000-4000-8000-000000000098';
+  const user={id:owner,aud:'authenticated',role:'authenticated',email:'free-release@example.invalid',
+    email_confirmed_at:'2026-11-17T00:00:00Z',app_metadata:{},user_metadata:{},created_at:'2026-11-17T00:00:00Z',factors:[]};
+  await page.addInitScript(user=>{
+    const exp=Math.floor(Date.now()/1000)+3600,enc=(value:object)=>btoa(JSON.stringify(value)).replaceAll('=','').replaceAll('+','-').replaceAll('/','_');
+    localStorage.setItem('sb-slnjliheyiiummxhrgmk-auth-token',JSON.stringify({access_token:enc({alg:'HS256'})+'.'+enc({sub:user.id,exp,aal:'aal1',role:'authenticated'})+'.fixture',refresh_token:'fixture',expires_at:exp,expires_in:3600,token_type:'bearer',user}));
+  },user);
+  await page.route('https://slnjliheyiiummxhrgmk.supabase.co/**',async route=>{
+    const url=new URL(route.request().url());let data:unknown=[];
+    if(url.pathname==='/auth/v1/user')data=user;
+    else if(url.pathname==='/rest/v1/rpc/clipt_beta_access')data=true;
+    else if(url.pathname==='/rest/v1/rpc/get_boost_economy')data={membership:'free',discount_percent:0,daily_earned_cap:15,stored_balance_cap:200,balance:0,packages:[]};
+    else if(url.pathname==='/rest/v1/profiles'||url.pathname==='/rest/v1/rpc/get_own_profile')data={id:owner,username:'free_release',avatar_url:null};
+    await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
+  });
+  await page.goto('/');
+  await page.getByRole('button',{name:'ENTER CLIPT',exact:true}).click();
+  await expect(page.getByRole('button',{name:'ENTER CLIPT',exact:true})).toHaveCount(0);
   for(const route of ['/subscription','/membership','/payment-success']){
-    await page.goto(route,{waitUntil:'domcontentloaded'});
-    const enter=page.getByRole('button',{name:'ENTER CLIPT',exact:true});
-    if(await enter.isVisible().catch(()=>false))await enter.click();
-    const gate=page.getByRole('heading',{name:'CLIPT web beta',exact:true});
-    if(await gate.isVisible().catch(()=>false))continue;
+    await page.evaluate(route=>{history.pushState({},'',route);window.dispatchEvent(new PopStateEvent('popstate'));},route);
     await expect(page).toHaveURL(/\/tokens(?:[?#]|$)/);
     await expect(page.getByText(/Premium|Maxed|Subscribe in sandbox/i)).toHaveCount(0);
   }
