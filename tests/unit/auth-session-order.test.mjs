@@ -12,6 +12,7 @@ function harness(){
   const dependencies={
     react:{...React,useState:initial=>{const index=stateIndex++;return [initial,value=>{if(index===0)users.push(value);}];},useEffect:fn=>effects.push(fn),useMemo:fn=>fn(),useCallback:fn=>fn},
     '@/lib/supabase':{supabase:{auth:{resend:async input=>{resends.push(input);return {error:null};},getSession:()=>initial,onAuthStateChange:fn=>{listener=fn;return {data:{subscription:{unsubscribe:()=>{}}}};}}}},
+    '@/lib/auth-redirect':{authRedirect:path=>'http://127.0.0.1:5180'+path},
     sonner:{toast:{success:()=>{}}},
     '@tanstack/react-query':{useQueryClient:()=>({clear:()=>{clears++;},invalidateQueries:async()=>{invalidations++;}})},
   };

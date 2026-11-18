@@ -3,6 +3,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { authRedirect } from '@/lib/auth-redirect';
 
 interface AuthContextType {
   user: User | null;
@@ -106,7 +107,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email: email.trim().toLowerCase(),
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/login`,
+          emailRedirectTo: authRedirect('/login'),
           data: metadata
         },
       });
@@ -144,7 +145,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-        redirectTo: `${window.location.origin}/update-password`,
+        redirectTo: authRedirect('/update-password'),
       });
       if (error) throw error;
       toast.success('If an account exists, a reset link has been requested. Check your inbox.');
@@ -160,7 +161,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: email.trim().toLowerCase(),
-        options: { emailRedirectTo: `${window.location.origin}/login` },
+        options: { emailRedirectTo: authRedirect('/login') },
       });
       if (error) throw error;
       toast.success('Verification request accepted. Check your inbox; delivery is not yet verified.');
